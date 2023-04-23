@@ -11,7 +11,7 @@ local machine for development and testing purposes.
   ([download](https://visualstudio.microsoft.com/downloads/))
 * Visual Studio Code (For Mac)
   ([download](https://code.visualstudio.com/Download))
-* .NET Framework (4.8) & .NET Core (6.0) Developer Packs
+* .NET Framework (4.8) & .NET Core (7.0) Developer Packs
   ([download](https://www.microsoft.com/net/download/visual-studio-sdks))
 * Rhino
   ([download v7](https://www.rhino3d.com/download/rhino/7.0))
@@ -22,10 +22,10 @@ local machine for development and testing purposes.
 1. Clone the repository. At the command prompt, enter the following command:
 
     ```console
-    git clone --recursive https://github.com/clicketyclackety/crash.git
+    git clone --recursive https://github.com/crashcloud/crash.git
     ```
 
-2. In Visual Studio, open `Crash\Crash.sln`.
+2. In Visual Studio, open `Crash.sln`.
 3. Press F5 or Debug
 
 ## Installing & Uninstalling
