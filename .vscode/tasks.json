@@ -1,0 +1,31 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-plugin-netcore",
+            "command": "dotnet build ${workspaceFolder}/src/Crash/Crash.csproj -f net7.0",
+            "type": "shell",
+            "args": [],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "presentation": {
+                "reveal": "always"
+            },
+            "group": "build"
+        },
+        {
+            "label": "build-plugin-netframework",
+            "command": "dotnet build ${workspaceFolder}/src/Crash/Crash.csproj -f net48",
+            "type": "shell",
+            "args": [],
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "presentation": {
+                "reveal": "always"
+            },
+            "group": "build"
+        },
+    ]
+}
