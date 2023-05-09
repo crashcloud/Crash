@@ -61,6 +61,11 @@ namespace Crash.Handlers
 			CrashDocumentState state = Create();
 			Register(state, rhinoDoc);
 
+			state.Document.Queue.OnCompletedQueue += (s, e) =>
+			{
+				rhinoDoc.Views.Redraw();
+			};
+
 			return state.Document;
 		}
 
