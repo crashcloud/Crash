@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net48;net7.0</TargetFrameworks>
+		<TargetFrameworks>net48;net7.0-macos</TargetFrameworks>
 		<Version>1.1.1</Version>
 		<Title>Crash</Title>
 		<Description> A multi-user collaborative environment for Rhino </Description>
