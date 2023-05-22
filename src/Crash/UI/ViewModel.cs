@@ -146,6 +146,7 @@ namespace Crash.UI
 				}
 
 				user.Camera = state;
+				UpdateCrashUserTable();
 			}
 
 			NotifyPropertyChanged(nameof(Users));

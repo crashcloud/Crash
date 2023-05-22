@@ -67,6 +67,8 @@ namespace Crash.Utils
 			}
 
 			rObj.UserDictionary.Set(ChangeIdKey, Change.Id);
+
+			RhinoChangeKeys.Remove(Change.Id);
 			RhinoChangeKeys.Add(Change.Id, rObj);
 		}
 

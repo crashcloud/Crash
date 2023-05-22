@@ -17,12 +17,12 @@ namespace Crash.Common.Tables
 
 		private readonly CrashDoc _crashDoc;
 
-		private readonly Dictionary<User, FixedSizedQueue<Camera>> cameraLocations;
+		private readonly Dictionary<string, FixedSizedQueue<Camera>> cameraLocations;
 
 
 		public CameraTable(CrashDoc hostDoc)
 		{
-			cameraLocations = new Dictionary<User, FixedSizedQueue<Camera>>();
+			cameraLocations = new Dictionary<string, FixedSizedQueue<Camera>>();
 			_crashDoc = hostDoc;
 		}
 
@@ -40,7 +40,7 @@ namespace Crash.Common.Tables
 			CameraIsInvalid = true;
 
 			// Add to Cache
-			if (cameraLocations.TryGetValue(user, out var previousCameras))
+			if (cameraLocations.TryGetValue(user.Name, out var previousCameras))
 			{
 				previousCameras.Enqueue(newCamera);
 			}
@@ -48,18 +48,25 @@ namespace Crash.Common.Tables
 			{
 				var newStack = new FixedSizedQueue<Camera>(MAX_CAMERAS_IN_QUEUE);
 				newStack.Enqueue(newCamera);
-				cameraLocations.Add(user, newStack);
+				cameraLocations.Add(user.Name, newStack);
 			}
 		}
 
 		public Dictionary<User, Camera> GetActiveCameras()
 		{
-			return cameraLocations.ToDictionary(cl => cl.Key, cl => cl.Value.FirstOrDefault());
+			Dictionary<User, Camera> cameras = new Dictionary<User, Camera>(cameraLocations.Count);
+			foreach(var cameraLocation in cameraLocations)
+			{
+				User user = _crashDoc.Users.Get(cameraLocation.Key);
+				cameras.Add(user, cameraLocation.Value.FirstOrDefault());
+			}
+
+			return cameras;
 		}
 
 		public bool TryAddCamera(CameraChange cameraChange)
 		{
-			var user = new User(cameraChange.Owner);
+			var user = cameraChange.Owner;
 			FixedSizedQueue<Camera>? queue;
 
 			if (!cameraLocations.ContainsKey(user))
@@ -87,7 +94,7 @@ namespace Crash.Common.Tables
 
 		public bool TryGetCamera(User user, out FixedSizedQueue<Camera> cameras)
 		{
-			bool test = cameraLocations.TryGetValue(user, out cameras);
+			bool test = cameraLocations.TryGetValue(user.Name, out cameras);
 			;
 			return test;
 		}
