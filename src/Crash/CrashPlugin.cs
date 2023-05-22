@@ -79,7 +79,7 @@ namespace Crash
 			foreach (CrashDoc crashDoc in CrashDocRegistry.GetOpenDocuments())
 			{
 				crashDoc?.LocalServer?.Stop();
-				crashDoc?.LocalClient?.StopAsync().RunSynchronously();
+				crashDoc?.LocalClient?.StopAsync();
 			}
 		}
 

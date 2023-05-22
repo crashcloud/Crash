@@ -36,6 +36,9 @@ namespace Crash.UI
 				Camera = user.Camera;
 				Visible = user.Visible;
 			}
+
+			public override string ToString() => Name;
+
 		}
 
 		internal ObservableCollection<UserObject> Users { get; set; }
