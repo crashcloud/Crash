@@ -5,6 +5,8 @@ using Crash.Handlers;
 
 using Rhino.Commands;
 
+using static Crash.UI.SharedModelViewModel;
+
 namespace Crash.Commands
 {
 
@@ -31,6 +33,8 @@ namespace Crash.Commands
 		/// <inheritdoc />
 		public override string EnglishName => "OpenSharedModel";
 
+		SharedModelViewModel model = new SharedModelViewModel();
+
 		/// <inheritdoc />
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
@@ -44,10 +48,28 @@ namespace Crash.Commands
 				return Result.Cancel;
 			}
 
-			if (!_GetServerURL(ref LastURL))
+			if (mode == RunMode.Interactive)
 			{
-				RhinoApp.WriteLine("Invalid URL Input");
-				return Result.Nothing;
+				var window = new SharedModelWindow();
+				var dialog = new Eto.Forms.Dialog<SharedModel>
+				{
+					Title = "Available Models",
+					Content = window,
+					DataContext = window.Model,
+				};
+
+				var model = dialog.ShowModal(Rhino.UI.RhinoEtoApp.MainWindowForDocument(doc));
+
+				if (model is null) return Result.Failure;
+				LastURL = model.ModelAddress;
+			}
+			else
+			{
+				if (!_GetServerURL(ref LastURL))
+				{
+					RhinoApp.WriteLine("Invalid URL Input");
+					return Result.Nothing;
+				}
 			}
 
 			crashDoc = CrashDocRegistry.CreateAndRegisterDocument(doc);
