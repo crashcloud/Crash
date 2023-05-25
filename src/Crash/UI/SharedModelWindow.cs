@@ -41,7 +41,10 @@ namespace Crash.UI
 				RowHeight = 25,
 			};
 
-			var openCell = new CustomCell();
+			var openCell = new CustomCell()
+			{
+				
+			};
 			openCell.CreateCell = (args) =>
 			{
 				;
@@ -50,13 +53,15 @@ namespace Crash.UI
 				var val = (args.Grid as GridView).DataStore.ToArray()[row];
 				var model = val as SharedModel;
 
-				return new Button()
+				var button = new Button()
 				{
 					Text = "Open",
-					Size = new Size(12, 20),
 					ToolTip = "Open the Shared Model",
-					Command = new Command(Clicked) { DataContext = model }
+					Command = new Command(Clicked) { DataContext = model },
+					Enabled = model.Loaded == true
 				};
+
+				return button;
 			};
 
 			view.Columns.Add(new GridColumn()
@@ -70,7 +75,7 @@ namespace Crash.UI
 				Width = 240,
 				Resizable = false,
 				Editable = false,
-				DataCell = new TextBoxCell { Binding = Binding.Property<SharedModel, string>(s => s.ModelAddress) }
+				DataCell = new TextBoxCell { Binding = Binding.Property<SharedModel, string>(s => s.ModelAddress) },
 			});
 			var dividerCell = new DrawableCell();
 			dividerCell.Paint += (sender, args) =>
@@ -99,8 +104,11 @@ namespace Crash.UI
 			{
 				Width = 30,
 				Resizable = false,
-				DataCell = new ImageViewCell { Binding = Binding.Property<SharedModel, Image>(s => s.Signal) }
+				DataCell = new ImageViewCell { Binding = Binding.Property<SharedModel, Image>(s => s.Signal) },
 			});
+
+			view.GridLines = GridLines.Horizontal;
+			view.Height = (Model.SharedModels.Count * view.RowHeight) + view.RowHeight + 6;
 
 			Content = new StackLayout
 			{

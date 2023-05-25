@@ -27,7 +27,7 @@ using static Crash.UI.SharedModelViewModel;
 namespace Crash.UI
 {
 
-	internal sealed class SharedModelViewModel : BaseViewModel
+	internal sealed class SharedModelViewModel : BaseViewModel, IDisposable
 	{
 		private const string PREVIOUS_MODELS_KEY = "PREVIOUS_SHARED_MODELS";
 
@@ -38,52 +38,82 @@ namespace Crash.UI
 		[Serializable]
 		public sealed class SharedModel
 		{
+			[JsonIgnore]
+			internal SharedModelViewModel ViewModel;
+
 			// Conditionals
 			[JsonIgnore]
-			internal bool Loaded { get; set; } = false;
-			public Bitmap Signal => Loaded ? Icons.wifi.ToEto() : Icons.wifi_off.ToEto();
+			internal bool? Loaded { get; set; } = false;
+			[JsonIgnore]
+			public Bitmap Signal => Loaded switch
+			{
+				true => Icons.wifi.ToEto(),
+				false => Icons.wifi_off.ToEto(),
+				null => Icons.wifi_unstable.ToEto(),
+			};
+			[JsonIgnore]
 			public Bitmap UserIcon => Icons.user.ToEto();
-			public Color BackgroundColour => Loaded ? new Color(0, 0, 255) : new Color(0, 255, 0);
 
 			// View Properties
 			[JsonIgnore]
-			public string UserCount { get; set; } = "0";
+			public string UserCount => Users?.Length.ToString() ?? "0";
 
 			// Serialized Proeprties
+			// [JsonConverter]
 			public Bitmap Thumbnail { get; set; }
 			public string ModelAddress { get; set; }
 			public string[] Users { get; set; } = Array.Empty<string>();
 
-		}
+			public SharedModel() { }
 
-		public event Action<Change[]> OnInitialize;
-		public async Task LoadModel(SharedModel model)
-		{
-			HubConnection hub = new HubConnectionBuilder()
-				   .WithUrl(model.ModelAddress).AddJsonProtocol()
-				   .AddJsonProtocol((opts) => CrashClient.JsonOptions())
-				   .WithAutomaticReconnect(new[] { TimeSpan.FromMilliseconds(10),
+			public SharedModel(SharedModelViewModel sharedModel)
+			{
+				ViewModel = sharedModel;
+			}
+
+			public event Action<Change[]> OnInitialize;
+			public async Task LoadModel()
+			{
+				HubConnection hub = new HubConnectionBuilder()
+					   .WithUrl($"{this.ModelAddress}/Crash").AddJsonProtocol()
+					   .AddJsonProtocol((opts) => CrashClient.JsonOptions())
+					   .WithAutomaticReconnect(new[] { TimeSpan.FromMilliseconds(10),
 											   TimeSpan.FromMilliseconds(100),
 											   TimeSpan.FromSeconds(1),
-											   TimeSpan.FromSeconds(10) })
-				   .Build();
-			hub.On<Change[]>("Initialize", (Changes) => OnInitialize?.Invoke(Changes));
-			OnInitialize += (changes) =>
-			{
-				model.Users = changes.Select(c => c.Owner).ToHashSet().ToArray() ?? Array.Empty<string>();
-				model.Loaded = true;
-			};
+											   TimeSpan.FromSeconds(2) })
+					   .Build();
+				hub.On<Change[]>("Initialize", (Changes) => OnInitialize?.Invoke(Changes));
+				OnInitialize += (changes) =>
+				{
+					var uniqueUsers = changes.Select(c => c.Owner).ToHashSet().ToArray();
+					this.Users = uniqueUsers;
+					this.Loaded = true;
+				};
+				hub.Closed += async (args) =>
+				{
+					this.Loaded = false;
+					ViewModel.OnLoaded?.Invoke(this, null);
+					await Task.CompletedTask;
+				};
+				hub.Reconnecting += async (args) =>
+				{
+					this.Loaded = null;
+					ViewModel.OnLoaded?.Invoke(this, null);
+					await Task.CompletedTask;
+				};
 
-			try
-			{
-				await hub.StartAsync();
-				OnLoaded?.Invoke(null, null);
-			}
-			catch(Exception ex)
-			{
-				;
+				try
+				{
+					await hub.StartAsync();
+					ViewModel.OnLoaded?.Invoke(this, null);
+				}
+				catch (Exception ex)
+				{
+					;
+				}
 			}
 		}
+
 
 		internal SharedModelViewModel()
 		{
@@ -95,12 +125,27 @@ namespace Crash.UI
 			AddSharedModel(new SharedModel("http://mcneel.rhino.com"));
 			AddSharedModel(new SharedModel("http://localhost:5000"));*/
 
-			AddSharedModel(new SharedModel() { ModelAddress = "http://localhost:5000/Crash" });
+			// AddSharedModel(new SharedModel(this) { ModelAddress = "http://localhost:5000" });
+			// AddSharedModel(new SharedModel(this) { ModelAddress = "http://notvalid.com" });
+
+			RhinoDoc.BeginSaveDocument += SaveSharedModels;
 		}
 
-		private void SaveSharedModels()
+		public void Dispose()
 		{
-			var json = JsonSerializer.Serialize(SharedModels);
+			RhinoDoc.BeginSaveDocument -= SaveSharedModels;
+		}
+
+		JsonSerializerOptions opts = new JsonSerializerOptions()
+		{
+			IgnoreReadOnlyFields = true,
+			IgnoreReadOnlyProperties = true,
+			IncludeFields = false
+		};
+
+		private void SaveSharedModels(object sender, DocumentSaveEventArgs args)
+		{
+			var json = JsonSerializer.Serialize(SharedModels, opts);
 
 			if (string.IsNullOrEmpty(json))
 				return;
@@ -112,16 +157,25 @@ namespace Crash.UI
 		{
 			if (Crash.CrashPlugin.Instance.Settings.TryGetString(PREVIOUS_MODELS_KEY, out string json))
 			{
-				var deserial = JsonSerializer.Deserialize<List<SharedModel>>(json);
+				var deserial = JsonSerializer.Deserialize<List<SharedModel>>(json, opts);
 				if (deserial is null) return;
-				SharedModels = deserial;
+
+				foreach(var sharedModel in deserial)
+				{
+					AddSharedModel(sharedModel);
+				}
 			}
 		}
 
 		private async Task AddSharedModel(SharedModel model)
 		{
-			SharedModels.Add(model);
-			await LoadModel(model);
+			if (!SharedModels.Select(sm => sm.ModelAddress.ToLowerInvariant()).Contains(model.ModelAddress.ToLowerInvariant()))
+			{
+				model.ViewModel = this;
+
+				SharedModels.Add(model);
+				await model.LoadModel();
+			}
 		}
 
 	}

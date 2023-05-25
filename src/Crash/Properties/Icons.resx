@@ -127,6 +127,9 @@
   <data name="CameraVisible" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\CameraVisible.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="crashlogo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\crashlogo.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="user" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\user.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -135,5 +138,8 @@
   </data>
   <data name="wifi_off" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\wifi-off.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="wifi_unstable" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\wifi-unstable.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

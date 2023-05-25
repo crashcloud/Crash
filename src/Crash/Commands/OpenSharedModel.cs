@@ -2,8 +2,10 @@
 using Crash.Common.Document;
 using Crash.Communications;
 using Crash.Handlers;
+using Crash.Properties;
 
 using Rhino.Commands;
+using Rhino.UI;
 
 using static Crash.UI.SharedModelViewModel;
 
@@ -56,6 +58,7 @@ namespace Crash.Commands
 					Title = "Available Models",
 					Content = window,
 					DataContext = window.Model,
+					Icon = Icons.crashlogo.ToEto(),
 				};
 
 				var model = dialog.ShowModal(Rhino.UI.RhinoEtoApp.MainWindowForDocument(doc));
@@ -75,12 +78,20 @@ namespace Crash.Commands
 			crashDoc = CrashDocRegistry.CreateAndRegisterDocument(doc);
 			_CreateCurrentUser(crashDoc, name);
 
-			CommandUtils.StartLocalClient(crashDoc, LastURL);
-
-			InteractivePipe.Active.Enabled = true;
-			UsersForm.ShowForm();
-
-			return Result.Success;
+			bool success = CommandUtils.StartLocalClient(crashDoc, LastURL).Wait(3000);
+			// Rhino.UI.StatusBar.UpdateProgressMeter(0, true)
+			if (success)
+			{
+				InteractivePipe.Active.Enabled = true;
+				UsersForm.ShowForm();
+				return Result.Success;
+			}
+			else
+			{
+				crashDoc.LocalClient.StopAsync();
+				RhinoApp.WriteLine($"Failed to load URL {LastURL}");
+				return Result.Failure;
+			}
 		}
 
 
