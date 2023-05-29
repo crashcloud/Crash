@@ -62,17 +62,13 @@ namespace Crash.Commands
 				*/
 				viewModel = new SharedModelViewModel();
 
-				var window = new SharedModelWindow(viewModel);
+				var dialog = new Eto.Forms.Dialog<SharedModel>();
+				var window = new SharedModelWindow(viewModel, dialog);
 
-				var dialog = new Eto.Forms.Dialog<SharedModel>
-				{
-					Title = "Available Models",
-					Content = window,
-					DataContext = window.viewModel,
-					Icon = Icons.crashlogo.ToEto(),
-					Size = new Eto.Drawing.Size(440, -1),
-					BackgroundColor = System.Drawing.Color.White.ToEto()
-				};
+				dialog.Title = "Available Models";
+				dialog.Content = window;
+				dialog.Icon = Icons.crashlogo.ToEto();
+				dialog.Size = new Eto.Drawing.Size(440, -1);
 
 				var model = dialog.ShowModal(Rhino.UI.RhinoEtoApp.MainWindowForDocument(doc));
 

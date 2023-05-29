@@ -25,6 +25,7 @@ namespace Crash.UI
 	{
 
 		internal SharedModelViewModel viewModel;
+		internal Eto.Forms.Dialog<SharedModel> Dialog;
 
 		public EventHandler<EventArgs> Clicked;
 		public EventHandler<EventArgs> AddNewModel;
@@ -95,6 +96,9 @@ namespace Crash.UI
 		private void ResizeView(GridView gridView)
 		{
 			gridView.Height = sharedModelHeight;
+			Dialog.Size = new Size(Dialog.Width, sharedModelHeight + 70);
+			
+			// Dialog.Invalidate(true);
 			// gridView.Invalidate(true);
 		}
 
@@ -130,6 +134,12 @@ namespace Crash.UI
 			newModelView = CreateGridView();
 			newModelView.DataStore = viewModel.AddModels;
 			newModelView.Height = sharedModelsView.RowHeight;
+			newModelView.KeyDown += (sender, args) =>
+			{
+				// Get Cell
+				// addNewSharedFunc()
+			};
+			// newModelView.GetCellAt(new PointF(6, 0))
 
 			Func<CellEventArgs, Control> addNewSharedFunc = (args) =>
 			{
@@ -175,9 +185,10 @@ namespace Crash.UI
 		}
 
 		const string BUTTON_STYLE = "button_style";
-		internal SharedModelWindow(SharedModelViewModel viewModel)
+		internal SharedModelWindow(SharedModelViewModel viewModel, Eto.Forms.Dialog<SharedModel> dialog)
 		{
 			this.viewModel = viewModel;
+			this.Dialog = dialog;
 
 			InitializeComponent();
 			Clicked += (sender, args) =>
@@ -189,7 +200,6 @@ namespace Crash.UI
 
 			AddNewModel += (sender, args) =>
 			{
-				// var model = (sender as Command)?.DataContext as SharedModel;
 				viewModel.AddSharedModel(new SharedModel
 				{
 					Loaded = false,
@@ -199,16 +209,13 @@ namespace Crash.UI
 
 				viewModel.AddModels.Clear();
 				viewModel.AddModels.Add(new SharedModel() { Loaded = true, ModelAddress = "" } );
-				// ResizeView(sharedModelsView);
 
-				// sharedModelsView.Height = sharedModelHeight;
-				// ResizeView(sharedModelsView);
-				sharedModelsView.Invalidate(true);
-
-				// var layout = sharedModelsView.Parent as Eto.Forms.StackLayout;
-				// layout.Invalidate(false);
-				// sharedModelsView.Invalidate();
+				ResizeView(sharedModelsView);
+				// Dialog.Invalidate(true);
+				// sharedModelsView.Invalidate(true);
 			};
+
+			this.KeyDown += (sender, args) => { };
 
 		}
 
