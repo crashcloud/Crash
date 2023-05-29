@@ -13,6 +13,8 @@ using Crash.Properties;
 using Eto.Drawing;
 using Eto.Forms;
 
+using Microsoft.Extensions.Logging.Abstractions;
+
 using Rhino.UI;
 
 using static Crash.UI.SharedModelViewModel;
@@ -215,8 +217,11 @@ namespace Crash.UI
 				// sharedModelsView.Invalidate(true);
 			};
 
-			this.KeyDown += (sender, args) => { };
-
+			// this.KeyDown += (sender, args) => { };
+			this.UnLoad += (sender, args) =>
+			{
+				viewModel.SaveSharedModels(null, null);
+			};
 		}
 
 		private GridView CreateGridView() => new GridView()

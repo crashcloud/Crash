@@ -139,7 +139,7 @@ namespace Crash.UI
 			IncludeFields = false
 		};
 
-		private void SaveSharedModels(object sender, DocumentSaveEventArgs args)
+		internal void SaveSharedModels(object sender, DocumentSaveEventArgs args)
 		{
 			var json = JsonSerializer.Serialize(SharedModels, opts);
 

@@ -56,10 +56,6 @@ namespace Crash.Commands
 
 			if (mode == RunMode.Interactive)
 			{
-				/*
-				if (viewModel is null)
-					viewModel = new SharedModelViewModel();
-				*/
 				viewModel = new SharedModelViewModel();
 
 				var dialog = new Eto.Forms.Dialog<SharedModel>();
@@ -69,6 +65,7 @@ namespace Crash.Commands
 				dialog.Content = window;
 				dialog.Icon = Icons.crashlogo.ToEto();
 				dialog.Size = new Eto.Drawing.Size(440, -1);
+				dialog.BackgroundColor = System.Drawing.Color.White.ToEto();
 
 				var model = dialog.ShowModal(Rhino.UI.RhinoEtoApp.MainWindowForDocument(doc));
 
