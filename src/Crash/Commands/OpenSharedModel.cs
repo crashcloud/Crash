@@ -1,8 +1,12 @@
-﻿using Crash.Client;
+﻿using System.Drawing;
+
+using Crash.Client;
 using Crash.Common.Document;
 using Crash.Communications;
 using Crash.Handlers;
 using Crash.Properties;
+
+using Eto.Drawing;
 
 using Rhino.Commands;
 using Rhino.UI;
@@ -35,7 +39,7 @@ namespace Crash.Commands
 		/// <inheritdoc />
 		public override string EnglishName => "OpenSharedModel";
 
-		SharedModelViewModel model = new SharedModelViewModel();
+		SharedModelViewModel viewModel;
 
 		/// <inheritdoc />
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
@@ -52,13 +56,22 @@ namespace Crash.Commands
 
 			if (mode == RunMode.Interactive)
 			{
-				var window = new SharedModelWindow();
+				/*
+				if (viewModel is null)
+					viewModel = new SharedModelViewModel();
+				*/
+				viewModel = new SharedModelViewModel();
+
+				var window = new SharedModelWindow(viewModel);
+
 				var dialog = new Eto.Forms.Dialog<SharedModel>
 				{
 					Title = "Available Models",
 					Content = window,
-					DataContext = window.Model,
+					DataContext = window.viewModel,
 					Icon = Icons.crashlogo.ToEto(),
+					Size = new Eto.Drawing.Size(440, -1),
+					BackgroundColor = System.Drawing.Color.White.ToEto()
 				};
 
 				var model = dialog.ShowModal(Rhino.UI.RhinoEtoApp.MainWindowForDocument(doc));

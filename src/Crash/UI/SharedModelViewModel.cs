@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data.Common;
 using System.Linq;
@@ -31,7 +32,8 @@ namespace Crash.UI
 	{
 		private const string PREVIOUS_MODELS_KEY = "PREVIOUS_SHARED_MODELS";
 
-		internal List<SharedModel> SharedModels;
+		internal ObservableCollection<SharedModel> SharedModels { get; private set; }
+		internal ObservableCollection<SharedModel> AddModels { get; private set; }
 
 		public event EventHandler OnLoaded;
 
@@ -105,7 +107,7 @@ namespace Crash.UI
 				try
 				{
 					await hub.StartAsync();
-					ViewModel.OnLoaded?.Invoke(this, null);
+					ViewModel?.OnLoaded?.Invoke(this, null);
 				}
 				catch (Exception ex)
 				{
@@ -118,15 +120,9 @@ namespace Crash.UI
 		internal SharedModelViewModel()
 		{
 			SharedModels = new();
+			AddModels = new();
+			AddModels.Add(new SharedModel() { Loaded = true, ModelAddress = "" });
 			LoadSharedModels();
-
-			/*AddSharedModel(new SharedModel("http://mcneel.rhino.com"));
-			AddSharedModel(new SharedModel("http://mcneel.yak.com"));
-			AddSharedModel(new SharedModel("http://mcneel.rhino.com"));
-			AddSharedModel(new SharedModel("http://localhost:5000"));*/
-
-			// AddSharedModel(new SharedModel(this) { ModelAddress = "http://localhost:5000" });
-			// AddSharedModel(new SharedModel(this) { ModelAddress = "http://notvalid.com" });
 
 			RhinoDoc.BeginSaveDocument += SaveSharedModels;
 		}
@@ -167,12 +163,16 @@ namespace Crash.UI
 			}
 		}
 
-		private async Task AddSharedModel(SharedModel model)
+		internal async Task AddSharedModel(SharedModel model)
 		{
-			if (!SharedModels.Select(sm => sm.ModelAddress.ToLowerInvariant()).Contains(model.ModelAddress.ToLowerInvariant()))
+			if (string.IsNullOrEmpty(model?.ModelAddress)) return;
+
+			var models = SharedModels.ToArray();
+			bool alreadyExists = models.Select(sm => sm.ModelAddress.ToLowerInvariant()).Contains(model.ModelAddress.ToLowerInvariant());
+			if (!alreadyExists)
 			{
 				model.ViewModel = this;
-
+				 
 				SharedModels.Add(model);
 				await model.LoadModel();
 			}
