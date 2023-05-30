@@ -220,7 +220,7 @@ namespace Crash.UI
 			// this.KeyDown += (sender, args) => { };
 			this.UnLoad += (sender, args) =>
 			{
-				viewModel.SaveSharedModels(null, null);
+				// viewModel.OnServerClose(null, null);
 			};
 		}
 

@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 
 using Crash.Client;
 using Crash.Common.Document;
+using Crash.Common.Events;
+using Crash.Handlers;
 using Crash.Properties;
 
 using Eto.Drawing;
@@ -21,6 +23,7 @@ using Eto.Forms;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 
+using Rhino;
 using Rhino.UI;
 
 using static Crash.UI.SharedModelViewModel;
@@ -36,6 +39,28 @@ namespace Crash.UI
 		internal ObservableCollection<SharedModel> AddModels { get; private set; }
 
 		public event EventHandler OnLoaded;
+
+		private class BitmapConverter : JsonConverter<Bitmap>
+		{
+			public override Bitmap? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			{
+				if (reader.TokenType == JsonTokenType.StartObject)
+				{
+					reader.Read();
+					return null;
+				}
+
+				byte[] bytes = reader.GetBytesFromBase64();
+				Bitmap bitmap = new Bitmap(bytes);
+				return bitmap;
+			}
+
+			public override void Write(Utf8JsonWriter writer, Bitmap value, JsonSerializerOptions options)
+			{
+				byte[] bytes = value.ToByteArray(ImageFormat.Bitmap);
+				writer.WriteBase64StringValue(bytes);
+			}
+		}
 
 		[Serializable]
 		public sealed class SharedModel
@@ -62,7 +87,9 @@ namespace Crash.UI
 
 			// Serialized Proeprties
 			// [JsonConverter]
+			[JsonConverter(typeof(BitmapConverter))]
 			public Bitmap Thumbnail { get; set; }
+
 			public string ModelAddress { get; set; }
 			public string[] Users { get; set; } = Array.Empty<string>();
 
@@ -124,12 +151,16 @@ namespace Crash.UI
 			AddModels.Add(new SharedModel() { Loaded = true, ModelAddress = "" });
 			LoadSharedModels();
 
-			RhinoDoc.BeginSaveDocument += SaveSharedModels;
+			RhinoDoc.CloseDocument += SaveSharedModels;
+			CrashClient.OnInit += (sender, args) =>
+			{
+				SaveThumbnail(args.CrashDoc);
+			};
 		}
 
 		public void Dispose()
 		{
-			RhinoDoc.BeginSaveDocument -= SaveSharedModels;
+			RhinoDoc.CloseDocument -= SaveSharedModels;
 		}
 
 		JsonSerializerOptions opts = new JsonSerializerOptions()
@@ -139,8 +170,10 @@ namespace Crash.UI
 			IncludeFields = false
 		};
 
-		internal void SaveSharedModels(object sender, DocumentSaveEventArgs args)
+		internal void SaveSharedModels(object sender, DocumentEventArgs args)
 		{
+			if (args is null) return;
+
 			var json = JsonSerializer.Serialize(SharedModels, opts);
 
 			if (string.IsNullOrEmpty(json))
@@ -149,16 +182,39 @@ namespace Crash.UI
 			Crash.CrashPlugin.Instance.Settings.SetString(PREVIOUS_MODELS_KEY, json);
 		}
 
+		private void SaveThumbnail(CrashDoc crashDoc)
+		{
+			RhinoDoc rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
+
+			string address = crashDoc.LocalClient.Address?.Replace("/Crash", "");
+
+			foreach (var sharedModel in SharedModels)
+			{
+				if (!sharedModel.ModelAddress.Equals(address)) continue;
+
+				var view = rhinoDoc.Views.ActiveView;
+				Bitmap bitmap = view.CaptureToBitmap().ToEto();
+				sharedModel.Thumbnail = bitmap;
+			}
+		}
+
 		private void LoadSharedModels()
 		{
 			if (Crash.CrashPlugin.Instance.Settings.TryGetString(PREVIOUS_MODELS_KEY, out string json))
 			{
-				var deserial = JsonSerializer.Deserialize<List<SharedModel>>(json, opts);
-				if (deserial is null) return;
-
-				foreach(var sharedModel in deserial)
+				try
 				{
-					AddSharedModel(sharedModel);
+					var deserial = JsonSerializer.Deserialize<List<SharedModel>>(json, opts);
+					if (deserial is null) return;
+
+					foreach (var sharedModel in deserial)
+					{
+						AddSharedModel(sharedModel);
+					}
+				}
+				catch
+				{
+					Crash.CrashPlugin.Instance.Settings.DeleteItem(PREVIOUS_MODELS_KEY);
 				}
 			}
 		}

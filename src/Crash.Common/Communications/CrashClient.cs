@@ -39,6 +39,8 @@ namespace Crash.Client
 		public bool IsConnected => _connection.State != HubConnectionState.Disconnected;
 		public HubConnectionState State => _connection.State;
 
+		public readonly string Address;
+
 		/// <summary>
 		/// Closed event
 		/// </summary>
@@ -61,7 +63,11 @@ namespace Crash.Client
 		/// Stop async task
 		/// </summary>
 		/// <returns></returns>
-		public Task StopAsync() => _connection.StopAsync();
+		public async Task StopAsync()
+		{
+			OnStop?.Invoke(this, new CrashEventArgs(_crashDoc));
+			await _connection.StopAsync();
+		}
 
 		/// <summary>
 		/// Crash client constructor
@@ -83,6 +89,7 @@ namespace Crash.Client
 				throw new UriFormatException("URL must end in /Crash to connect!");
 			}
 
+			Address = url.AbsoluteUri;
 			_crashDoc = crashDoc;
 			_user = userName;
 			_connection = GetHubConnection(url);
@@ -172,6 +179,7 @@ namespace Crash.Client
 
 		private Task ConnectionClosedAsync(Exception? arg)
 		{
+			if (arg is null) return Task.CompletedTask;
 			Console.WriteLine(arg);
 			return Task.CompletedTask;
 		}
@@ -256,6 +264,7 @@ namespace Crash.Client
 		private Task StartAsync() => _connection.StartAsync();
 
 		public static event EventHandler<CrashInitArgs> OnInit;
+		public static event EventHandler<CrashEventArgs> OnStop;
 
 		public sealed class CrashInitArgs : CrashEventArgs
 		{

@@ -84,7 +84,7 @@ namespace Crash.Commands
 			crashDoc = CrashDocRegistry.CreateAndRegisterDocument(doc);
 			_CreateCurrentUser(crashDoc, name);
 
-			bool success = CommandUtils.StartLocalClient(crashDoc, LastURL).Wait(3000);
+			bool success = CommandUtils.StartLocalClient(crashDoc, LastURL).Wait(5000);
 			// Rhino.UI.StatusBar.UpdateProgressMeter(0, true)
 			if (success)
 			{
