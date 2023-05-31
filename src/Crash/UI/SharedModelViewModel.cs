@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data.Common;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.Policy;
 using System.Text;
 using System.Text.Json;
@@ -25,6 +26,7 @@ using Rhino.UI;
 
 using static Crash.UI.SharedModelViewModel;
 
+[assembly:InternalsVisibleTo("Crash.UI.Tests")]
 namespace Crash.UI
 {
 
@@ -151,7 +153,10 @@ namespace Crash.UI
 
 		private void LoadSharedModels()
 		{
-			if (Crash.CrashPlugin.Instance.Settings.TryGetString(PREVIOUS_MODELS_KEY, out string json))
+			var inst = Crash.CrashPlugin.Instance;
+			if (inst is null) return;
+
+			if (inst.Settings.TryGetString(PREVIOUS_MODELS_KEY, out string json))
 			{
 				var deserial = JsonSerializer.Deserialize<List<SharedModel>>(json, opts);
 				if (deserial is null) return;
