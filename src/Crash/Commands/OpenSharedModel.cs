@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Threading.Tasks;
 
 using Crash.Client;
 using Crash.Common.Document;
@@ -84,19 +85,24 @@ namespace Crash.Commands
 			crashDoc = CrashDocRegistry.CreateAndRegisterDocument(doc);
 			_CreateCurrentUser(crashDoc, name);
 
-			bool success = CommandUtils.StartLocalClient(crashDoc, LastURL).Wait(3000);
+			StartServer();
+
+			return Result.Success;
+		}
+
+		private async Task StartServer()
+		{
+			bool success = await CommandUtils.StartLocalClient(crashDoc, LastURL);
 			// Rhino.UI.StatusBar.UpdateProgressMeter(0, true)
 			if (success)
 			{
 				InteractivePipe.Active.Enabled = true;
 				UsersForm.ShowForm();
-				return Result.Success;
 			}
 			else
 			{
-				crashDoc.LocalClient.StopAsync();
+				await crashDoc.LocalClient.StopAsync();
 				RhinoApp.WriteLine($"Failed to load URL {LastURL}");
-				return Result.Failure;
 			}
 		}
 
