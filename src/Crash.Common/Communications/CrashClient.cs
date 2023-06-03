@@ -99,7 +99,7 @@ namespace Crash.Client
 											   TimeSpan.FromSeconds(10) })
 			   .Build();
 
-		internal static JsonHubProtocolOptions JsonOptions() => new JsonHubProtocolOptions()
+		public static JsonHubProtocolOptions JsonOptions() => new JsonHubProtocolOptions()
 		{
 			PayloadSerializerOptions = new System.Text.Json.JsonSerializerOptions()
 			{

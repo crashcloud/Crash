@@ -4,6 +4,7 @@ using Crash.Client;
 using Crash.Common.Document;
 
 using Rhino.Commands;
+using Rhino.DocObjects.Custom;
 
 namespace Crash.Commands
 {
@@ -48,14 +49,22 @@ namespace Crash.Commands
 		private static bool _GetUsersName(ref string name)
 			=> SelectionUtils.GetValidString("Your Name", ref name);
 
-		public static async Task StartLocalClient(CrashDoc crashDoc, string url)
+		public static async Task<bool> StartLocalClient(CrashDoc crashDoc, string url)
 		{
 			// TODO : Ensure Requested Server is available, and notify if not
 			string userName = crashDoc.Users.CurrentUser.Name;
 			var crashClient = new CrashClient(crashDoc, userName, new Uri($"{url}/Crash"));
 			crashDoc.LocalClient = crashClient;
 
-			await crashClient.StartLocalClientAsync();
+			try
+			{
+				await crashClient.StartLocalClientAsync();
+				return true;
+			}
+			catch
+			{
+				return false;
+			}
 		}
 
 		public static bool CheckForRunningServer(CrashDoc crashDoc)

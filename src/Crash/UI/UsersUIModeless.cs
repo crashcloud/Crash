@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel;
 
+using Crash.Properties;
+
 using Eto.Drawing;
 using Eto.Forms;
 
@@ -73,6 +75,7 @@ namespace Crash.UI
 			Owner = RhinoEtoApp.MainWindow;
 			ViewModel = new UsersViewModel();
 			CreateForm();
+			Icon = Icons.crashlogo.ToEto();
 		}
 
 		private void CreateForm()
