@@ -93,7 +93,6 @@ namespace Crash.Commands
 		private async Task StartServer()
 		{
 			bool success = await CommandUtils.StartLocalClient(crashDoc, LastURL);
-			// Rhino.UI.StatusBar.UpdateProgressMeter(0, true)
 			if (success)
 			{
 				InteractivePipe.Active.Enabled = true;
