@@ -217,10 +217,20 @@ namespace Crash.Client
 			await _connection.InvokeAsync(ADD, _user, Change);
 		}
 
-		/// <summary>Done</summary>
+		/// <summary>Release</summary>
 		public async Task DoneAsync()
 		{
 			await _connection.InvokeAsync(DONE, _user);
+		}
+
+		/// <summary>Release Selected</summary>
+		public async Task DoneAsync(IEnumerable<Guid> changeIds)
+		{
+			string _user = _crashDoc.Users.CurrentUser.Name;
+			string payload = string.Join(';', changeIds);
+
+			Change change = new Change(Guid.NewGuid(), _user, payload);
+			await _connection.InvokeAsync(DONE, change);
 		}
 
 		/// <summary>Select event</summary>
