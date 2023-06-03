@@ -8,9 +8,10 @@
 [![MIT License][license-shield]][license-url]
 
 <!-- PROJECT LOGO -->
+
 <div align="center">
   <a href="https://github.com/clicketyclackety/Crash">
-    <img src="Logo.png" alt="Logo" width="400" height="300">
+    <img src="art\crash-logo.jpg" alt="Logo">
   </a>
 
   <p align="center">
@@ -25,6 +26,7 @@
 </div>
 
 <!-- TABLE OF CONTENTS -->
+
 <details>
   <summary>Table of Contents</summary>
   <ol>
@@ -113,7 +115,7 @@ You can also build and debug on MacOS using VS Code!
 
 Clone the repo
    ```sh
-   git clone https://github.com/crashcloud/Crash.git
+   git clone https://github.com/crashcloud/crash.git
    ```
 
 ### Building
