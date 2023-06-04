@@ -2,6 +2,7 @@
 
 using Crash.Common.Document;
 using Crash.Communications;
+using Crash.Handlers.Server;
 
 namespace Crash.Common.Tests.Communications
 {
@@ -22,6 +23,7 @@ namespace Crash.Common.Tests.Communications
 		}
 
 		[Test]
+		[NonParallelizable]
 		public void GetExePath()
 		{
 			CrashServer server = new CrashServer(new CrashDoc());
@@ -31,6 +33,7 @@ namespace Crash.Common.Tests.Communications
 		}
 
 		[Test]
+		[NonParallelizable]
 		public void RegisterServerProcess()
 		{
 			CrashServer server = new CrashServer(new CrashDoc());
@@ -46,6 +49,7 @@ namespace Crash.Common.Tests.Communications
 		}
 
 		[Test]
+		[NonParallelizable]
 		public void RegisterServerProcess_InvalidInputs()
 		{
 			CrashServer server = new CrashServer(new CrashDoc());
@@ -53,13 +57,41 @@ namespace Crash.Common.Tests.Communications
 		}
 
 		[Test]
-		public void StartServer()
+		[NonParallelizable]
+		public async Task StartServer()
 		{
 			string url = $"{CrashServer.DefaultURL}:{CrashServer.DefaultPort}";
 			CrashServer server = new CrashServer(new CrashDoc());
-			Assert.DoesNotThrow(() => server.Start(GetStartInfo(url)));
+
+			await ServerInstaller.EnsureServerExecutableExists();
+
+			Assert.DoesNotThrow(() => server.Start(url));
 
 			var msgs = server.Messages;
+
+			Assert.That(server.process, Is.Not.Null);
+			Assert.That(server.IsRunning, Is.True);
+		}
+
+		[Test]
+		[NonParallelizable]
+		public void VerifyFunctionalServer()
+		{
+			CrashServer server = new CrashServer(new CrashDoc());
+			string exe = server.getServerExecutablePath();
+			string url = $"{CrashServer.DefaultURL}:{CrashServer.DefaultPort}";
+
+			var startInfo = new ProcessStartInfo()
+			{
+				FileName = exe,
+				Arguments = $"--urls \"{url}\"",
+				CreateNoWindow = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				UseShellExecute = false,
+			};
+
+			Assert.DoesNotThrow(() => server.createAndRegisterServerProcess(startInfo));
 
 			Assert.That(server.process, Is.Not.Null);
 			Assert.That(server.IsRunning, Is.True);
@@ -98,33 +130,11 @@ namespace Crash.Common.Tests.Communications
 			return startInfo;
 		}
 
-		[Test]
-		public void VerifyFunctionalServer()
-		{
-			CrashServer server = new CrashServer(new CrashDoc());
-			string exe = server.getServerExecutablePath();
-			string url = $"{CrashServer.DefaultURL}:{CrashServer.DefaultPort}";
-
-			var startInfo = new ProcessStartInfo()
-			{
-				FileName = exe,
-				Arguments = $"--urls \"{url}\"",
-				CreateNoWindow = false,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				UseShellExecute = false,
-			};
-
-			Assert.DoesNotThrow(() => server.createAndRegisterServerProcess(startInfo));
-
-			Assert.That(server.process, Is.Not.Null);
-			Assert.That(server.IsRunning, Is.True);
-		}
-
 		public void Dispose()
 		{
 			CrashServer.ForceCloselocalServers();
 		}
+
 	}
 
 }

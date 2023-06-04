@@ -9,10 +9,10 @@ using Crash.Geometry;
 namespace Crash.Common.Tables.Tests
 {
 
-	[TestFixture]
 	public class CameraTableTests
 	{
 
+		[Parallelizable]
 		[TestCaseSource(typeof(CameraChanges), nameof(CameraChanges.TestCases))]
 		public void TestAddCamera(CameraChange change)
 		{
@@ -30,6 +30,7 @@ namespace Crash.Common.Tables.Tests
 			Assert.That(cameras.Length, Is.EqualTo(1));
 		}
 
+		[Parallelizable]
 		[TestCaseSource(typeof(CameraChanges), nameof(CameraChanges.TestCases))]
 		public void TestGetCamera(CameraChange change)
 		{
@@ -46,7 +47,7 @@ namespace Crash.Common.Tables.Tests
 			Assert.That(cameras.Count, Is.GreaterThanOrEqualTo(1));
 		}
 
-		[Test]
+		[Test][Parallelizable]
 		public void TestAddMoreThanMaxCameras()
 		{
 			// Arrange
@@ -71,7 +72,7 @@ namespace Crash.Common.Tables.Tests
 			Assert.That(cameras.Count, Is.EqualTo(CameraTable.MAX_CAMERAS_IN_QUEUE));
 		}
 
-		[Test]
+		[Test][Parallelizable]
 		public void TestGetActiveCameras()
 		{
 			CameraTable cameraTable = new CameraTable(new CrashDoc());

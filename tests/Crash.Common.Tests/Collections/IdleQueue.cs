@@ -7,7 +7,8 @@ namespace Crash.Common.Tests
 
 	public sealed class IdleQueueTests
 	{
-		[Test]
+
+		[Test][Parallelizable]
 		public void Count_ReturnsZero_WhenQueueIsEmpty()
 		{
 			// Arrange
@@ -20,7 +21,7 @@ namespace Crash.Common.Tests
 			Assert.That(count, Is.EqualTo(0));
 		}
 
-		[Test]
+		[Test][Parallelizable]
 		public async Task Count_ReturnsCorrectCount_AfterEnqueueingItemsAsync()
 		{
 			int expectedCount = 3;
@@ -29,7 +30,7 @@ namespace Crash.Common.Tests
 			var queue = new IdleQueue(new CrashDoc());
 			for (int i = 0; i < expectedCount; i++)
 			{
-				await queue.AddActionAsync(new IdleAction(null, null));
+				await queue.AddActionAsync(new IdleAction((args) => { }, new IdleArgs(null, null)));
 			}
 
 			// Act
@@ -39,7 +40,7 @@ namespace Crash.Common.Tests
 			Assert.That(expectedCount, Is.EqualTo(realCount));
 		}
 
-		[Test]
+		[Test][Parallelizable]
 		public void RunNextAction_DoesNothing_WhenQueueIsEmpty()
 		{
 			// Arrange
@@ -52,12 +53,12 @@ namespace Crash.Common.Tests
 			Assert.That(queue.Count, Is.EqualTo(0));
 		}
 
-		[Test]
+		[Test][Parallelizable]
 		public async Task RunNextAction_InvokesAction_WhenQueueIsNotEmpty()
 		{
 			// Arrange
 			var queue = new IdleQueue(new CrashDoc());
-			IdleAction action = new IdleAction(DisposableCrashEvent, null);
+			IdleAction action = new IdleAction(DisposableCrashEvent, new IdleArgs(null, null));
 			await queue.AddActionAsync(action);
 
 			// Act
@@ -67,7 +68,7 @@ namespace Crash.Common.Tests
 			Assert.IsTrue(action.Invoked);
 		}
 
-		[Test]
+		[Test][Parallelizable]
 		public async Task RunNextAction_RemovesActionFromQueue_AfterInvoking()
 		{
 			int expectedCount = 3;
@@ -76,7 +77,7 @@ namespace Crash.Common.Tests
 			var queue = new IdleQueue(new CrashDoc());
 			for (int i = 0; i < expectedCount; i++)
 			{
-				await queue.AddActionAsync(new IdleAction(DisposableCrashEvent, null));
+				await queue.AddActionAsync(new IdleAction(DisposableCrashEvent, new IdleArgs(null, null)));
 			}
 
 			// Act
@@ -89,7 +90,7 @@ namespace Crash.Common.Tests
 			Assert.That(queue.Count, Is.EqualTo(expectedCount - 1));
 		}
 
-		[Test]
+		[Test][Parallelizable]
 		public void RunNextAction_NoInvokeOnCompletedQueueEvent_WhenQueueIsEmpty()
 		{
 			// Arrange
@@ -104,12 +105,12 @@ namespace Crash.Common.Tests
 			Assert.IsFalse(eventRaised);
 		}
 
-		[Test]
+		[Test][Parallelizable]
 		public async Task RunNextAction_InvokeOnCompletedQueueEvent()
 		{
 			// Arrange
 			var queue = new IdleQueue(new CrashDoc());
-			await queue.AddActionAsync(new IdleAction(DisposableCrashEvent, null));
+			await queue.AddActionAsync(new IdleAction(DisposableCrashEvent, new IdleArgs(null, null)));
 
 			bool eventRaised = false;
 			queue.OnCompletedQueue += (sender, args) => { eventRaised = true; };
