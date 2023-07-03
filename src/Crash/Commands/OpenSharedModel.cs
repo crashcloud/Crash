@@ -1,13 +1,10 @@
-﻿using System.Drawing;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 using Crash.Client;
 using Crash.Common.Document;
 using Crash.Communications;
 using Crash.Handlers;
 using Crash.Properties;
-
-using Eto.Drawing;
 
 using Rhino.Commands;
 using Rhino.UI;
@@ -50,10 +47,7 @@ namespace Crash.Commands
 
 			CommandUtils.CheckAlreadyConnected(crashDoc);
 
-			if (!CommandUtils.GetUserName(out string name))
-			{
-				return Result.Cancel;
-			}
+			string name = Environment.UserName;
 
 			if (mode == RunMode.Interactive)
 			{
@@ -75,6 +69,13 @@ namespace Crash.Commands
 			}
 			else
 			{
+
+				if (!CommandUtils.GetUserName(out name))
+				{
+					RhinoApp.WriteLine("Invalid Name Input");
+					return Result.Cancel;
+				}
+
 				if (!_GetServerURL(ref LastURL))
 				{
 					RhinoApp.WriteLine("Invalid URL Input");
