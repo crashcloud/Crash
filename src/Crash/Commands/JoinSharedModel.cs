@@ -16,7 +16,7 @@ namespace Crash.Commands
 
 	/// <summary>Command to Open a Shared Model</summary>
 	[CommandStyle(Style.ScriptRunner)]
-	public sealed class OpenSharedModel : Command
+	public sealed class JoinSharedModel : Command
 	{
 
 		private RhinoDoc rhinoDoc;
@@ -26,16 +26,16 @@ namespace Crash.Commands
 
 
 		/// <summary>Default Constructor</summary>
-		public OpenSharedModel()
+		public JoinSharedModel()
 		{
 			Instance = this;
 		}
 
 		/// <inheritdoc />
-		public static OpenSharedModel Instance { get; private set; }
+		public static JoinSharedModel Instance { get; private set; }
 
 		/// <inheritdoc />
-		public override string EnglishName => "OpenSharedModel";
+		public override string EnglishName => "JoinSharedModel";
 
 		SharedModelViewModel viewModel;
 
