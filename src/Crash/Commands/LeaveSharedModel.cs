@@ -27,7 +27,11 @@ namespace Crash.Commands
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
 			Client.CrashClient? client = CrashDocRegistry.ActiveDoc?.LocalClient;
-			if (null == client) return Result.Success;
+			if (null == client)
+			{
+				RhinoApp.WriteLine("You aren't in a shared model.");
+				return Result.Success;
+			}
 
 			bool? choice = _GetReleaseChoice();
 			if (null == choice)
