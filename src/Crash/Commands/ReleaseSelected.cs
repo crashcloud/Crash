@@ -23,7 +23,7 @@ namespace Crash.Commands
 		public static ReleaseSelected Instance { get; private set; }
 
 		/// <inheritdoc />
-		public override string EnglishName => "Release";
+		public override string EnglishName => "ReleaseSelected";
 
 		/// <inheritdoc />
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
