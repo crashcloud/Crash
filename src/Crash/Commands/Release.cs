@@ -9,17 +9,17 @@ namespace Crash.Commands
 
 	/// <summary>Command to Release Changes</summary>
 	[CommandStyle(Style.DoNotRepeat | Style.NotUndoable)]
-	public sealed class ReleaseCommand : Command
+	public sealed class Release : Command
 	{
 
 		/// <summary>Default Constructor</summary>
-		public ReleaseCommand()
+		public Release()
 		{
 			Instance = this;
 		}
 
 		/// <inheritdoc />
-		public static ReleaseCommand Instance { get; private set; }
+		public static Release Instance { get; private set; }
 
 		/// <inheritdoc />
 		public override string EnglishName => "Release";

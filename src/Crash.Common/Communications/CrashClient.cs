@@ -221,6 +221,16 @@ namespace Crash.Client
 		public async Task DoneAsync()
 		{
 			await _connection.InvokeAsync(DONE, _user);
+			public async Task DoneAsync()
+			{
+				await _connection.InvokeAsync(DONE, _user);
+			}
+		}
+
+		/// <summary>Releases a collection of changes</summary>
+		public async Task DoneAsync(IEnumerable<Guid> changeIds)
+		{
+			await _connection.InvokeAsync(DONE, _user, changeIds);
 		}
 
 		/// <summary>Select event</summary>
