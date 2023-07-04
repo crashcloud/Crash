@@ -221,10 +221,6 @@ namespace Crash.Client
 		public async Task DoneAsync()
 		{
 			await _connection.InvokeAsync(DONE, _user);
-			public async Task DoneAsync()
-			{
-				await _connection.InvokeAsync(DONE, _user);
-			}
 		}
 
 		/// <summary>Releases a collection of changes</summary>

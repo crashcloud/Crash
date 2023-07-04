@@ -4,7 +4,6 @@ using Crash.Client;
 using Crash.Common.Document;
 
 using Rhino.Commands;
-using Rhino.DocObjects.Custom;
 
 namespace Crash.Commands
 {
@@ -22,7 +21,7 @@ namespace Crash.Commands
 					return Result.Cancel;
 
 				if (RhinoApp.RunScript(LeaveSharedModel.Instance.EnglishName, true))
-					RhinoApp.RunScript(OpenSharedModel.Instance.EnglishName, true);
+					RhinoApp.RunScript(JoinSharedModel.Instance.EnglishName, true);
 			}
 
 			return Result.Success;
