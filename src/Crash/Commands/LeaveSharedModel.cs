@@ -7,21 +7,21 @@ namespace Crash.Commands
 
 	/// <summary>Command to Close a Shared Model</summary>
 	[CommandStyle(Style.ScriptRunner)]
-	public sealed class CloseSharedModel : Command
+	public sealed class LeaveSharedModel : Command
 	{
 		private bool defaultValue = false;
 
 		/// <summary>Default Constructor</summary>
-		public CloseSharedModel()
+		public LeaveSharedModel()
 		{
 			Instance = this;
 		}
 
 		/// <inheritdoc />
-		public static CloseSharedModel Instance { get; private set; }
+		public static LeaveSharedModel Instance { get; private set; }
 
 		/// <inheritdoc />
-		public override string EnglishName => "CloseSharedModel";
+		public override string EnglishName => "LeaveSharedModel";
 
 		/// <inheritdoc />
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
