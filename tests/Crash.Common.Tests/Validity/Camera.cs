@@ -6,7 +6,6 @@ using Crash.Geometry;
 namespace Crash.Common.Tests.Validity
 {
 
-	[TestFixture]
 	public sealed class CameraValidity
 	{
 		const double MIN = -123456789.123456789;

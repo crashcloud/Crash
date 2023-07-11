@@ -66,18 +66,18 @@ namespace Crash.Common.Tables
 
 		public bool TryAddCamera(CameraChange cameraChange)
 		{
-			var user = cameraChange.Owner;
+			var user = new User(cameraChange.Owner);
 			FixedSizedQueue<Camera>? queue;
 
-			if (!cameraLocations.ContainsKey(user))
+			if (!cameraLocations.ContainsKey(user.Name))
 			{
 				queue = new FixedSizedQueue<Camera>(MAX_CAMERAS_IN_QUEUE);
 				queue.Enqueue(cameraChange.Camera);
-				cameraLocations.Add(user, queue);
+				cameraLocations.Add(user.Name, queue);
 			}
 			else
 			{
-				if (!cameraLocations.TryGetValue(user, out queue)) return false;
+				if (!cameraLocations.TryGetValue(user.Name, out queue)) return false;
 				queue.Enqueue(cameraChange.Camera);
 			}
 
@@ -93,11 +93,7 @@ namespace Crash.Common.Tables
 		}
 
 		public bool TryGetCamera(User user, out FixedSizedQueue<Camera> cameras)
-		{
-			bool test = cameraLocations.TryGetValue(user.Name, out cameras);
-			;
-			return test;
-		}
+			=> cameraLocations.TryGetValue(user.Name, out cameras);
 
 		public IEnumerator<Camera> GetEnumerator() => cameraLocations.Values.SelectMany(c => c).GetEnumerator();
 

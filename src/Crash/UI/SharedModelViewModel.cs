@@ -1,32 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Data.Common;
-using System.Linq;
+﻿using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
-using System.Security.Policy;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Crash.Client;
-using Crash.Common.Document;
 using Crash.Properties;
 
 using Eto.Drawing;
-using Eto.Forms;
 
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 
 using Rhino.UI;
 
-using static Crash.UI.SharedModelViewModel;
-
-[assembly:InternalsVisibleTo("Crash.UI.Tests")]
+[assembly: InternalsVisibleTo("Crash.UI.Tests")]
 namespace Crash.UI
 {
 
@@ -81,10 +69,7 @@ namespace Crash.UI
 				HubConnection hub = new HubConnectionBuilder()
 					   .WithUrl($"{this.ModelAddress}/Crash").AddJsonProtocol()
 					   .AddJsonProtocol((opts) => CrashClient.JsonOptions())
-					   .WithAutomaticReconnect(new[] { TimeSpan.FromMilliseconds(10),
-											   TimeSpan.FromMilliseconds(100),
-											   TimeSpan.FromSeconds(1),
-											   TimeSpan.FromSeconds(2) })
+					   .WithAutomaticReconnect(new SharedModelRetryPolicy())
 					   .Build();
 				hub.On<Change[]>("Initialize", (Changes) => OnInitialize?.Invoke(Changes));
 				OnInitialize += (changes) =>
@@ -116,6 +101,13 @@ namespace Crash.UI
 					;
 				}
 			}
+
+			private class SharedModelRetryPolicy : IRetryPolicy
+			{
+				public TimeSpan? NextRetryDelay(RetryContext retryContext)
+					=> TimeSpan.FromMilliseconds(100);
+			}
+
 		}
 
 
@@ -161,7 +153,7 @@ namespace Crash.UI
 				var deserial = JsonSerializer.Deserialize<List<SharedModel>>(json, opts);
 				if (deserial is null) return;
 
-				foreach(var sharedModel in deserial)
+				foreach (var sharedModel in deserial)
 				{
 					AddSharedModel(sharedModel);
 				}
@@ -177,7 +169,7 @@ namespace Crash.UI
 			if (!alreadyExists)
 			{
 				model.ViewModel = this;
-				 
+
 				SharedModels.Add(model);
 				await model.LoadModel();
 			}

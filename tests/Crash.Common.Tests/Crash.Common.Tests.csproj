@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Crash.Common\Crash.Common.csproj" />
+    <ProjectReference Include="..\Crash.Handlers.Tests\Crash.Handlers.Tests.csproj" />
   </ItemGroup>
 
 </Project>
