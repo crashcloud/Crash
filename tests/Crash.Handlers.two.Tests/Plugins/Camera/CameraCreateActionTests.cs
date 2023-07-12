@@ -5,8 +5,12 @@ using System.Linq;
 using Crash.Changes;
 using Crash.Common.Changes;
 using Crash.Common.Document;
+using Crash.Geometry;
+using Crash.Handlers.InternalEvents;
 using Crash.Handlers.Plugins;
 using Crash.Handlers.Plugins.Camera.Create;
+
+using NUnit.Framework;
 
 using Rhino;
 using Rhino.Display;
@@ -47,25 +51,22 @@ namespace Crash.Handlers.Tests.Plugins
 		{
 			//  Use the existing open docs
 			_doc = RhinoDoc.CreateHeadless(null);
-			_cdoc = new CrashDoc();
-
-			RhinoView.Modified += RhinoView_Modified;
-
-			for (int i = 0; i < 100; i++)
-			{
-				RhinoDoc.ActiveDoc.Views.ActiveView.ActiveViewport.SetCameraLocation(RandomPoint(), true);
-			}
-
-			RhinoView.Modified -= RhinoView_Modified;
+			_cdoc = CrashDocRegistry.CreateAndRegisterDocument(_doc);
 		}
 
-		private void RhinoView_Modified(object sender, ViewEventArgs e)
+		public static IEnumerable ViewArgs
 		{
-			ViewEventArgs.Add((sender, e));
-		}
+			get
+			{
+				for (int i = 0; i < 100; i++)
+				{
+					CPoint location = RandomPoint().ToCrash();
+					CPoint target = RandomPoint().ToCrash();
 
-		private static List<(object, ViewEventArgs)> ViewEventArgs = new List<(object, ViewEventArgs)>();
-		public static IEnumerable ViewArgs => ViewEventArgs.Select(ea => new TestCaseData(ea.Item1, ea.Item2));
+					yield return new ValueTuple<object, CrashViewArgs>(new object(), new CrashViewArgs(location, target));
+				}
+			}
+		}
 
 		private static Point3d RandomPoint()
 		{

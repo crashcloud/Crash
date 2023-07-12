@@ -3,11 +3,11 @@
 namespace Crash.Tests.Collections
 {
 
-	[TestFixture]
 	public sealed class FixedSizedQueueTests
 	{
 
 		[Test]
+		[Parallelizable]
 		public void Enqueue_WhenQueueIsNotFull_AddsItemToQueue()
 		{
 			// Arrange
@@ -23,6 +23,7 @@ namespace Crash.Tests.Collections
 		}
 
 		[Test]
+		[Parallelizable]
 		public void Enqueue_WhenQueueIsFull_DiscardsOldestItem()
 		{
 			// Arrange

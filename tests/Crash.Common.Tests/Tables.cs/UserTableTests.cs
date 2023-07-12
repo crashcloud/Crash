@@ -3,10 +3,11 @@ using Crash.Common.Tables;
 
 namespace Crash.Common.Tests.Tables
 {
-	[TestFixture]
+
 	public class UserTableTests
 	{
 		[Test]
+		[Parallelizable(ParallelScope.Self)]
 		public void Add_User_Successfully()
 		{
 			// Arrange
@@ -22,6 +23,7 @@ namespace Crash.Common.Tests.Tables
 		}
 
 		[Test]
+		[Parallelizable(ParallelScope.Self)]
 		public void Add_Duplicate_User_Failure()
 		{
 			// Arrange
@@ -40,6 +42,7 @@ namespace Crash.Common.Tests.Tables
 		}
 
 		[Test]
+		[Parallelizable(ParallelScope.Self)]
 		public void Add_Current_User_Failure()
 		{
 			// Arrange
@@ -56,6 +59,7 @@ namespace Crash.Common.Tests.Tables
 		}
 
 		[Test]
+		[Parallelizable(ParallelScope.Self)]
 		public void Add_User_Invokes_OnUserAdded()
 		{
 			// Arrange
@@ -73,6 +77,7 @@ namespace Crash.Common.Tests.Tables
 		}
 
 		[Test]
+		[Parallelizable(ParallelScope.Self)]
 		public void Remove_User_Successfully()
 		{
 			// Arrange
@@ -89,6 +94,7 @@ namespace Crash.Common.Tests.Tables
 		}
 
 		[Test]
+		[Parallelizable(ParallelScope.Self)]
 		public void Remove_User_Invokes_OnUserRemoved()
 		{
 			// Arrange
@@ -107,6 +113,7 @@ namespace Crash.Common.Tests.Tables
 		}
 
 		[Test]
+		[Parallelizable(ParallelScope.Self)]
 		public void Get_User_Successfully()
 		{
 			// Arrange
@@ -123,6 +130,7 @@ namespace Crash.Common.Tests.Tables
 		}
 
 		[Test]
+		[Parallelizable(ParallelScope.Self)]
 		public void Get_Nonexistent_User_Returns_Default()
 		{
 			// Arrange

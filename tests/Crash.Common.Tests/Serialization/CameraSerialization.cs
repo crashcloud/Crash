@@ -30,6 +30,7 @@ namespace Crash.Changes.Tests.Serialization
 		[TestCase(1)]
 		[TestCase(10)]
 		[TestCase(100)]
+		[Parallelizable]
 		public void TestCameraSerializationRandom(int count)
 		{
 			for (var i = 0; i < count; i++)

@@ -33,6 +33,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crash.Handlers.Tests", "tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crash.UI.Tests", "tests\Crash.UI.Tests\Crash.UI.Tests.csproj", "{9729E577-EB0A-49E7-A600-DF6FE8ED336A}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crash.Handlers.two.Tests", "tests\Crash.Handlers.two.Tests\Crash.Handlers.two.Tests.csproj", "{8E57D885-6AB3-4867-BD39-594DFAA33D4F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +73,10 @@ Global
 		{9729E577-EB0A-49E7-A600-DF6FE8ED336A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9729E577-EB0A-49E7-A600-DF6FE8ED336A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9729E577-EB0A-49E7-A600-DF6FE8ED336A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E57D885-6AB3-4867-BD39-594DFAA33D4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E57D885-6AB3-4867-BD39-594DFAA33D4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E57D885-6AB3-4867-BD39-594DFAA33D4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E57D885-6AB3-4867-BD39-594DFAA33D4F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -81,6 +87,7 @@ Global
 		{BAB96982-1FB2-4EDF-88A5-DFA0A0EC9A36} = {F8397E91-1EEA-4960-9685-7F76B23F642D}
 		{054BCE61-C86B-4C0B-B4FC-9B11B9D6D78F} = {F8397E91-1EEA-4960-9685-7F76B23F642D}
 		{9729E577-EB0A-49E7-A600-DF6FE8ED336A} = {F8397E91-1EEA-4960-9685-7F76B23F642D}
+		{8E57D885-6AB3-4867-BD39-594DFAA33D4F} = {F8397E91-1EEA-4960-9685-7F76B23F642D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8D9F64F3-0D9F-4D7F-9445-5215BF29D663}
