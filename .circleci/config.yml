@@ -5,7 +5,7 @@ version: 2.1
 # The Windows orb gives you everything you
 # need to start using the Windows executor.
 orbs:
-  rhino: crashcloud/rhino@0.3.4
+  rhino: crashcloud/rhino@0.4.0
 
 
 # Define a job to be invoked later in a workflow.
