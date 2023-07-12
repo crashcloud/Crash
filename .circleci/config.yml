@@ -26,11 +26,11 @@ jobs:
 
       - run:
           name: Restore NuGet Packages
-          command: nuget restore RhinoTestEnvironment.sln
+          command: nuget restore Crash.sln
 
       - run:
           name: Build
-          command: dotnet build RhinoTestEnvironment.sln /p:Configuration=Release
+          command: dotnet build Crash.sln /p:Configuration=Release
 
       - run:
           name: Run Tests
