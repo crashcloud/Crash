@@ -2,25 +2,46 @@
 # See: https://circleci.com/docs/configuration-reference
 version: 2.1
 
+# The Windows orb gives you everything you
+# need to start using the Windows executor.
+orbs:
+  rhino: crashcloud/rhino@0.3.4
+
+
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/configuration-reference/#jobs
-jobs:
-  say-hello:
-    # Specify the execution environment. You can specify an image from Docker Hub or use one of our convenience images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/configuration-reference/#executor-job
-    docker:
-      - image: cimg/base:stable
-    # Add steps to the job
-    # See: https://circleci.com/docs/configuration-reference/#steps
+jobs:    
+  setup-env:
+    machine:
+      image: 'windows-server-2022-gui:current'
+      resource_class: windows.medium
+      shell: powershell.exe -ExecutionPolicy Bypass
+
     steps:
+
       - checkout
+    
+      - rhino/setup_rhino:
+          version: '7'
+
       - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
+          name: Restore NuGet Packages
+          command: nuget restore RhinoTestEnvironment.sln
+
+      - run:
+          name: Build
+          command: dotnet build RhinoTestEnvironment.sln /p:Configuration=Release
+
+      - run:
+          name: Run Tests
+          command: |
+            # Change the path and command according to your test project
+            dotnet test
+
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
 workflows:
-  say-hello-workflow:
+  unit-test:
     jobs:
-      - say-hello
+      - setup-env
