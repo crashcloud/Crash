@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 using Crash.Changes;
 using Crash.Common.Changes;
@@ -9,8 +8,6 @@ using Crash.Geometry;
 using Crash.Handlers.InternalEvents;
 using Crash.Handlers.Plugins;
 using Crash.Handlers.Plugins.Camera.Create;
-
-using NUnit.Framework;
 
 using Rhino;
 using Rhino.Display;
@@ -33,6 +30,7 @@ namespace Crash.Handlers.Tests.Plugins
 		}
 
 		[TestCaseSource(nameof(ViewArgs))]
+#
 		public void GeometryCreateAction_TryConvert(object sender, ViewEventArgs createRecieveArgs)
 		{
 			var createArgs = new CreateRecieveArgs(ChangeAction.Add, createRecieveArgs, _cdoc);

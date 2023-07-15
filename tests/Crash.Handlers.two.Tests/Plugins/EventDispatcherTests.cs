@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,8 +8,6 @@ using Crash.Changes;
 using Crash.Common.Document;
 using Crash.Handlers.Plugins;
 
-using NUnit.Framework;
-
 using Rhino;
 using Rhino.Display;
 using Rhino.Geometry;
@@ -18,6 +15,7 @@ using Rhino.Geometry;
 namespace Crash.Handlers.Tests.Plugins
 {
 
+	[RhinoFixture]
 	public sealed class EventDispatcherTests
 	{
 		readonly RhinoDoc _doc;
@@ -239,7 +237,7 @@ namespace Crash.Handlers.Tests.Plugins
 
 			// Assert
 			Assert.That(recieved, Is.False);
-			Dispatcher.NotifyDispatcherAsync(crashDoc, serverChange);
+			Dispatcher?.NotifyDispatcherAsync(crashDoc, serverChange);
 			Assert.That(recieved, Is.True);
 
 			Assert.That(serverChange.Id, Is.EqualTo(recievedChange.Id));

@@ -56,7 +56,10 @@ namespace Crash.UI
 			public string ModelAddress { get; set; }
 			public string[] Users { get; set; } = Array.Empty<string>();
 
-			public SharedModel() { }
+			public SharedModel()
+			{
+				;
+			}
 
 			public SharedModel(SharedModelViewModel sharedModel)
 			{
