@@ -36,10 +36,10 @@ jobs:
           name: Run Tests
           command: |
             # Change the path and command according to your test project
-            dotnet test --no-restore
+            dotnet test --no-restore --results-directory TestResults --logger trx
 
       - store_test_results:
-          path: /tests/**/bin/**/net48/
+          path: TestResults/
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
