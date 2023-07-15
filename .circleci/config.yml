@@ -36,10 +36,18 @@ jobs:
           name: Run Tests
           command: |
             # Change the path and command according to your test project
-            dotnet test --no-restore --results-directory TestResults --logger trx
+            dotnet test --no-restore --results-directory test-results --logger trx
+
+      - run:
+        name: Install trx2junit
+        commmand: dotnet tool install trx2junit -g
+
+      - run:
+        name: Convert Unit Test Results
+        command: trx2junit .\test-results\*.trx
 
       - store_test_results:
-          path: TestResults/
+          path: .\test-results\
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
