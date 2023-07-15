@@ -1,18 +1,14 @@
-﻿using System;
-
-using Crash.Changes;
+﻿using Crash.Changes;
 using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Handlers.Plugins;
-
-using NUnit.Framework;
 
 using Rhino;
 
 namespace Crash.Handlers.Tests.Plugins
 {
 
-	[TestFixture]
+	[RhinoFixture]
 	public sealed class CreateRecieveArgTests
 	{
 

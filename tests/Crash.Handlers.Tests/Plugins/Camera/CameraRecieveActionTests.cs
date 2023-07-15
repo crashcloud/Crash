@@ -12,7 +12,7 @@ using Crash.Handlers.Plugins.Camera.Recieve;
 namespace Crash.Handlers.Tests.Plugins.Camera
 {
 
-	[TestFixture]
+	[RhinoFixture]
 	public sealed class CameraRecieveActionTests
 	{
 

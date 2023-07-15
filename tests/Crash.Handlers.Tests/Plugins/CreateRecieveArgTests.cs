@@ -8,7 +8,7 @@ using Rhino;
 namespace Crash.Handlers.Tests.Plugins
 {
 
-	[TestFixture]
+	[RhinoFixture]
 	public sealed class CreateRecieveArgTests
 	{
 

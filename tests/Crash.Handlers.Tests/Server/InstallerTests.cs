@@ -8,6 +8,9 @@ namespace Crash.Handlers.Tests.Server
 	public sealed class InstallerTests
 	{
 
+		// TODO : Make this an Integration test. It's slow!
+		// TODO : Does this test need running EVERY Run?
+		// TODO : Can this test be mocked? It should take maximum 1 second.
 		[Test]
 		public async Task DownloadTests()
 		{

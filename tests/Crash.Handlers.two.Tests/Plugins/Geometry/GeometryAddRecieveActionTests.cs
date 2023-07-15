@@ -7,14 +7,13 @@ using Crash.Common.Changes;
 using Crash.Common.Document;
 using Crash.Handlers.Plugins.Geometry.Recieve;
 
-using NUnit.Framework;
-
 using Rhino;
 using Rhino.Geometry;
 
 namespace Crash.Handlers.Tests.Plugins.Geometry
 {
 
+	[RhinoFixture]
 	public sealed class GeometryAddRecieveActionTests
 	{
 
@@ -42,8 +41,6 @@ namespace Crash.Handlers.Tests.Plugins.Geometry
 		{
 			get
 			{
-				var fix = TestFixture.Fixture;
-
 				for (int i = 0; i < 100; i++)
 				{
 					string owner = Path.GetRandomFileName().Replace(".", "");
