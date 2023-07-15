@@ -30,14 +30,16 @@ jobs:
 
       - run:
           name: Build
-          command: dotnet build Crash.sln /p:Configuration=Release
+          command: dotnet build Crash.sln /p:Configuration=Release --no-restore
 
       - run:
           name: Run Tests
           command: |
             # Change the path and command according to your test project
-            dotnet test
+            dotnet test --no-restore
 
+      - store_test_results:
+          path: /tests/**/bin/**/net48/
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
