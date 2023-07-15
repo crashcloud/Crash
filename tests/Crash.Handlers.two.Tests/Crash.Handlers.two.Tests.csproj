@@ -22,4 +22,8 @@
     <ProjectReference Include="..\..\src\Crash\Crash.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Plugins\" />
+  </ItemGroup>
+
 </Project>

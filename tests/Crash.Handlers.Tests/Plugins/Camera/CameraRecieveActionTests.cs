@@ -17,7 +17,7 @@ namespace Crash.Handlers.Tests.Plugins.Camera
 	{
 
 		[TestCaseSource(nameof(CameraChanges))]
-		public async Task GeometryCreateAction_CanConvert(Crash.Common.View.Camera camera)
+		public async Task CameraRecieveAction_CanConvert(Crash.Common.View.Camera camera)
 		{
 			string username = Path.GetRandomFileName().Replace(".", "");
 			IChange change = CameraChange.CreateNew(camera, username);
@@ -42,19 +42,13 @@ namespace Crash.Handlers.Tests.Plugins.Camera
 			{
 				for (int i = 0; i < 100; i++)
 				{
-					yield return new Crash.Common.View.Camera(RandomPoint(), RandomPoint());
+					CPoint location = NRhino.Random.Geometry.NPoint3d.Any().ToCrash();
+					CPoint target = NRhino.Random.Geometry.NPoint3d.Any().ToCrash();
+					yield return new Crash.Common.View.Camera(location, target);
 				}
 			}
 		}
 
-		private static CPoint RandomPoint()
-		{
-			double x = TestContext.CurrentContext.Random.NextDouble(short.MinValue, short.MaxValue);
-			double y = TestContext.CurrentContext.Random.NextDouble(short.MinValue, short.MaxValue);
-			double z = TestContext.CurrentContext.Random.NextDouble(short.MinValue, short.MaxValue);
-
-			return new CPoint(x, y, z);
-		}
 
 	}
 

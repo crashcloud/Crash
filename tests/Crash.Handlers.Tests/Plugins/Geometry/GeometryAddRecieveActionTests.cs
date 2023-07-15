@@ -13,7 +13,7 @@ using Rhino.Geometry;
 namespace Crash.Handlers.Tests.Plugins.Geometry
 {
 
-	[TestFixture]
+	[RhinoFixture]
 	public sealed class GeometryAddRecieveActionTests
 	{
 
@@ -50,15 +50,6 @@ namespace Crash.Handlers.Tests.Plugins.Geometry
 					yield return new Change(change);
 				}
 			}
-		}
-
-		private static Point3d RandomPoint()
-		{
-			double x = TestContext.CurrentContext.Random.NextDouble(short.MinValue, short.MaxValue);
-			double y = TestContext.CurrentContext.Random.NextDouble(short.MinValue, short.MaxValue);
-			double z = TestContext.CurrentContext.Random.NextDouble(short.MinValue, short.MaxValue);
-
-			return new Point3d(x, y, z);
 		}
 
 	}

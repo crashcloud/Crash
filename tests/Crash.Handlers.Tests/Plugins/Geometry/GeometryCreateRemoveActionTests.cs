@@ -13,7 +13,7 @@ using Rhino.Geometry;
 namespace Crash.Handlers.Tests.Plugins
 {
 
-	[TestFixture]
+	[RhinoFixture]
 	public sealed class GeometryCreateRemoveActionTests
 	{
 

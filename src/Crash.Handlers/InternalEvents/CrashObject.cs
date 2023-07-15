@@ -30,6 +30,12 @@ namespace Crash.Handlers.InternalEvents
 			rhinoObject.TryGetChangeId(out ChangeId);
 		}
 
+		internal CrashObject(Guid changeId, Guid rhinoId, GeometryBase geometry)
+		{
+			ChangeId = changeId;
+			RhinoId = rhinoId;
+			Geometry = geometry;
+		}
 	}
 
 }
