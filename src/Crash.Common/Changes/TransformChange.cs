@@ -27,7 +27,7 @@ namespace Crash.Common.Changes
 		public string Type => $"{nameof(Crash)}.{nameof(TransformChange)}";
 
 		/// <inheritdoc/>
-		public ChangeAction Action { get; set; }
+		public ChangeAction Action { get; set; } = ChangeAction.Transform;
 
 		/// <summary>Empty Constructor</summary>
 		public TransformChange() { }
@@ -46,6 +46,7 @@ namespace Crash.Common.Changes
 			Owner = change.Owner;
 			Stamp = change.Stamp;
 			Id = change.Id;
+			Action = ChangeAction.Transform;
 		}
 
 		/// <summary>Creates a Transform Cahnge</summary>
@@ -58,6 +59,7 @@ namespace Crash.Common.Changes
 				Owner = userName,
 				Payload = json,
 				Stamp = DateTime.UtcNow,
+				Action = ChangeAction.Transform
 			};
 		}
 

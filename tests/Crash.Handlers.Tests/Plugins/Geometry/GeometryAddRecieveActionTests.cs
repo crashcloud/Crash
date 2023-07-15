@@ -16,25 +16,30 @@ namespace Crash.Handlers.Tests.Plugins.Geometry
 	[RhinoFixture]
 	public sealed class GeometryAddRecieveActionTests
 	{
+		private readonly CrashDoc _cdoc;
+		private readonly RhinoDoc _rdoc;
+
+		public GeometryAddRecieveActionTests()
+		{
+			RhinoDoc.ActiveDoc = _rdoc = RhinoDoc.CreateHeadless(null);
+			_cdoc = CrashDocRegistry.CreateAndRegisterDocument(_rdoc);
+		}
 
 		[TestCaseSource(nameof(AddChanges))]
 		public async Task TestGeometryAddRecieveAction(Change change)
 		{
-			CrashDoc crashDoc = new CrashDoc();
-			RhinoDoc rhinoDoc = RhinoDoc.CreateHeadless(null);
-
 			var addAction = new GeometryAddRecieveAction();
-			await addAction.OnRecieveAsync(crashDoc, change);
-			while (crashDoc.Queue.Count > 0)
+			await addAction.OnRecieveAsync(_cdoc, change);
+			while (_cdoc.Queue.Count > 0)
 			{
-				crashDoc.Queue.RunNextAction();
+				_cdoc.Queue.RunNextAction();
 			}
 
 			// ChangeUtils.TryGetChangeId() ?
 
 			// Assert that RhinoDoc had something added 
-			Assert.That(rhinoDoc.Objects, Is.Not.Empty);
-			Assert.That(crashDoc.CacheTable, Is.Empty);
+			Assert.That(_rdoc.Objects, Is.Not.Empty);
+			Assert.That(_cdoc.CacheTable, Is.Empty);
 		}
 
 		public static IEnumerable AddChanges

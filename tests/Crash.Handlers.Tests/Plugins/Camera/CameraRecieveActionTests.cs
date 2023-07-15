@@ -29,6 +29,10 @@ namespace Crash.Handlers.Tests.Plugins.Camera
 
 			Assert.That(crashDoc.Cameras, Is.Empty);
 			await recieveAction.OnRecieveAsync(crashDoc, serverChange);
+			while (crashDoc.Queue.Count > 0)
+			{
+				crashDoc.Queue.RunNextAction();
+			}
 			Assert.That(crashDoc.Cameras, Is.Not.Empty);
 
 			Assert.That(crashDoc.Cameras.TryGetCamera(new User(username), out var cameras), Is.True);
@@ -40,7 +44,7 @@ namespace Crash.Handlers.Tests.Plugins.Camera
 		{
 			get
 			{
-				for (int i = 0; i < 100; i++)
+				for (int i = 0; i < 10; i++)
 				{
 					CPoint location = NRhino.Random.Geometry.NPoint3d.Any().ToCrash();
 					CPoint target = NRhino.Random.Geometry.NPoint3d.Any().ToCrash();

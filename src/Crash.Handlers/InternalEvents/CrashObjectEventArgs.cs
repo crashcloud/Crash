@@ -16,7 +16,7 @@ namespace Crash.Handlers.InternalEvents
 		public readonly GeometryBase Geometry;
 
 		/// <summary>Constructor mainly for tests</summary>
-		public CrashObjectEventArgs(GeometryBase geometry, Guid rhinoId, Guid changeId = default)
+		internal CrashObjectEventArgs(GeometryBase geometry, Guid rhinoId, Guid changeId = default)
 		{
 			ChangeId = changeId;
 			RhinoId = rhinoId;

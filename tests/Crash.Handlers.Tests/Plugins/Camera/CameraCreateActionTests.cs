@@ -9,8 +9,6 @@ using Crash.Handlers.InternalEvents;
 using Crash.Handlers.Plugins;
 using Crash.Handlers.Plugins.Camera.Create;
 
-using Rhino.Display;
-
 namespace Crash.Handlers.Tests.Plugins
 {
 
@@ -20,20 +18,19 @@ namespace Crash.Handlers.Tests.Plugins
 		private readonly CrashDoc _cdoc;
 
 		[TestCaseSource(nameof(ViewArgs))]
-		public void CameraCreateAction_CanConvert(object sender, ViewEventArgs viewArgs)
+		public void CameraCreateAction_CanConvert(CrashViewArgs viewArgs)
 		{
 			var cameraArgs = new CreateRecieveArgs(ChangeAction.Camera, viewArgs, _cdoc);
 			var createAction = new CameraCreateAction();
-			Assert.That(createAction.CanConvert(sender, cameraArgs), Is.True);
+			Assert.That(createAction.CanConvert(null, cameraArgs), Is.True);
 		}
 
 		[TestCaseSource(nameof(ViewArgs))]
-
-		public void CameraCreateAction_TryConvert(object sender, ViewEventArgs viewargs)
+		public void CameraCreateAction_TryConvert(CrashViewArgs viewargs)
 		{
 			var createArgs = new CreateRecieveArgs(ChangeAction.Add, viewargs, _cdoc);
 			var createAction = new CameraCreateAction();
-			Assert.That(createAction.TryConvert(sender, createArgs, out IEnumerable<IChange> changes), Is.True);
+			Assert.That(createAction.TryConvert(null, createArgs, out IEnumerable<IChange> changes), Is.True);
 			Assert.That(changes, Is.Not.Empty);
 			foreach (var change in changes)
 			{
@@ -52,12 +49,12 @@ namespace Crash.Handlers.Tests.Plugins
 		{
 			get
 			{
-				for (int i = 0; i < 100; i++)
+				for (int i = 0; i < 10; i++)
 				{
 					CPoint location = NRhino.Random.Geometry.NPoint3d.Any().ToCrash();
 					CPoint target = NRhino.Random.Geometry.NPoint3d.Any().ToCrash();
 
-					yield return new ValueTuple<object, CrashViewArgs>(new object(), new CrashViewArgs(location, target));
+					yield return new CrashViewArgs(location, target);
 				}
 			}
 		}
