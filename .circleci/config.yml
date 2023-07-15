@@ -39,10 +39,12 @@ jobs:
       - run:
           name: Install trx2junit
           command: dotnet tool install trx2junit -g
+          when: always
 
       - run:
           name: Convert Unit Test Results
           command: trx2junit .\test-results\*.trx
+          when: always
 
       - store_test_results:
           path: .\test-results\
