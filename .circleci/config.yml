@@ -55,6 +55,7 @@ jobs:
           key: nuget-{{ checksum "Directory.Packages.props" }}-{{ .Environment.CACHE_VERSION }}
           paths:
             - "~/.nuget"
+          when: always
 
       - run:
           name: Build
