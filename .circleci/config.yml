@@ -43,7 +43,7 @@ jobs:
 
       - run:
           name: Convert Unit Test Results
-          command: trx2junit .\test-results\*.trx
+          command: ~\.dotnet\tools\trx2junit.exe .\test-results\*.trx
           when: always
 
       - store_test_results:
