@@ -1,13 +1,19 @@
 <Project>
 	<PropertyGroup>
-		<Version>1.1.1</Version>
+		<Version>1.3.1</Version>
 		<Nullable>enable</Nullable>
 		<LangVersion>11</LangVersion>
 		<Company>Crash Cloud</Company>
         <IsPackable>false</IsPackable>
+		<Copyright>Crash Cloud</Copyright>
         <FileVersion>$(Version)</FileVersion>
+		<AnalysisLevel>latest</AnalysisLevel>
         <ImplicitUsings>enable</ImplicitUsings>
-        <VersionAssembly>$(Version)</VersionAssembly>
+        <AssemblyVersion>$(Version)</AssemblyVersion>
+		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<RepositoryUrl>https://github.com/crashcloud/crash</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/crashcloud/crash</PackageProjectUrl>
 		<GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
 	</PropertyGroup>

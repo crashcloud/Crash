@@ -55,6 +55,14 @@
 		</EmbeddedResource>
 	</ItemGroup>
 
+	<Target Name="Replace" AfterTargets="CoreCompile">
+	  <PropertyGroup>
+          <InputFile>Manifest.yml</InputFile>
+          <OutputFile>$(OutputPath)Manifest.yml</OutputFile>
+      </PropertyGroup>
+      <WriteLinesToFile File="$(OutputFile)" Lines="$([System.IO.File]::ReadAllText($(InputFile)).Replace('$version$','$(Version)'))" Overwrite="true" Encoding="Unicode" />
+  	</Target>
+
 	<ItemGroup>
 		<None Update="Crash.rui">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
