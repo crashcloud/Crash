@@ -24,9 +24,23 @@ jobs:
       - rhino/setup_rhino:
           version: '7'
 
+      - restore_cache:
+          name: Restore Nuget pacakges for << parameters.project >>
+          key: nuget-'**/packages.lock.json,!**/bin/**,!**/obj/**'
+          paths:
+            - "~/.nuget"
+
       - run:
           name: Restore NuGet Packages
           command: nuget restore Crash.sln
+          when: on_fail
+
+      - save_cache:
+          name: Cache nuget pacakges for << parameters.project >>
+          key: nuget-'**/packages.lock.json,!**/bin/**,!**/obj/**'
+          paths:
+            - "~/.nuget"
+          when: on_success
 
       - run:
           name: Build
