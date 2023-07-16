@@ -21,6 +21,16 @@ jobs:
 
       - checkout
     
+      - run:
+          name: Simple Test
+          command: |
+            $env:THIS_STEP = 2000
+
+      - run:
+          name: Simple Test 2
+          command: |
+            Write-Host $env:THIS_STEP
+
       - rhino/setup_rhino:
           version: '7'
 
