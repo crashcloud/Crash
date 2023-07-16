@@ -26,7 +26,7 @@ jobs:
 
       # https://support.circleci.com/hc/en-us/articles/115015426888-Clear-project-dependency-cache
       - restore_cache:
-          name: Restore Nuget pacakges
+          name: Restore Nuget Package Cache
           key: nuget-{{ checksum "Directory.Packages.props" }}-{{ .Environment.CACHE_VERSION }}
           paths:
             - "~/.nuget"
@@ -36,7 +36,9 @@ jobs:
           command: |
             try
             {
-              exit (ls ~\.nuget\packages).Length -eq 0 ? 1 : 0
+              $no_nuget = (ls ~\.nuget\packages).Length -eq 0
+              $exit_code = if ($no_nuget) { 1 } else { 0 }
+              exit $exit_code
             }
             catch
             {
@@ -49,11 +51,10 @@ jobs:
           when: on_fail
 
       - save_cache:
-          name: Cached nuget pacakges
+          name: Cache Nuget Packages
           key: nuget-{{ checksum "Directory.Packages.props" }}-{{ .Environment.CACHE_VERSION }}
           paths:
             - "~/.nuget"
-          when: on_success
 
       - run:
           name: Build
@@ -63,7 +64,7 @@ jobs:
       - run:
           name: Run Tests
           command: dotnet test --no-restore --results-directory test-results --logger trx
-          when: on_success
+          when: always
 
       - run:
           name: Install trx2junit
