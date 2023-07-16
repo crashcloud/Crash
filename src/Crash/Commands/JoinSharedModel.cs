@@ -1,13 +1,10 @@
-﻿using System.Drawing;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 using Crash.Client;
 using Crash.Common.Document;
 using Crash.Communications;
 using Crash.Handlers;
 using Crash.Properties;
-
-using Eto.Drawing;
 
 using Rhino.Commands;
 using Rhino.UI;
@@ -19,7 +16,7 @@ namespace Crash.Commands
 
 	/// <summary>Command to Open a Shared Model</summary>
 	[CommandStyle(Style.ScriptRunner)]
-	public sealed class OpenSharedModel : Command
+	public sealed class JoinSharedModel : Command
 	{
 
 		private RhinoDoc rhinoDoc;
@@ -29,16 +26,16 @@ namespace Crash.Commands
 
 
 		/// <summary>Default Constructor</summary>
-		public OpenSharedModel()
+		public JoinSharedModel()
 		{
 			Instance = this;
 		}
 
 		/// <inheritdoc />
-		public static OpenSharedModel Instance { get; private set; }
+		public static JoinSharedModel Instance { get; private set; }
 
 		/// <inheritdoc />
-		public override string EnglishName => "OpenSharedModel";
+		public override string EnglishName => "JoinSharedModel";
 
 		SharedModelViewModel viewModel;
 
@@ -50,10 +47,7 @@ namespace Crash.Commands
 
 			CommandUtils.CheckAlreadyConnected(crashDoc);
 
-			if (!CommandUtils.GetUserName(out string name))
-			{
-				return Result.Cancel;
-			}
+			string name = Environment.UserName;
 
 			if (mode == RunMode.Interactive)
 			{
@@ -75,6 +69,13 @@ namespace Crash.Commands
 			}
 			else
 			{
+
+				if (!CommandUtils.GetUserName(out name))
+				{
+					RhinoApp.WriteLine("Invalid Name Input");
+					return Result.Cancel;
+				}
+
 				if (!_GetServerURL(ref LastURL))
 				{
 					RhinoApp.WriteLine("Invalid URL Input");

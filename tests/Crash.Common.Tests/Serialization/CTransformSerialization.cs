@@ -34,6 +34,7 @@ namespace Crash.Common.Tests.Serialization
 		[TestCase(1)]
 		[TestCase(10)]
 		[TestCase(100)]
+		[Parallelizable]
 		public void TestCTransformSerializationRandom(int count)
 		{
 			for (var i = 0; i < count; i++)

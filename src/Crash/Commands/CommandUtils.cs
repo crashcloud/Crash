@@ -4,7 +4,6 @@ using Crash.Client;
 using Crash.Common.Document;
 
 using Rhino.Commands;
-using Rhino.DocObjects.Custom;
 
 namespace Crash.Commands
 {
@@ -21,8 +20,8 @@ namespace Crash.Commands
 				if (_NewModelOrExit(false) != true)
 					return Result.Cancel;
 
-				if (RhinoApp.RunScript(CloseSharedModel.Instance.EnglishName, true))
-					RhinoApp.RunScript(OpenSharedModel.Instance.EnglishName, true);
+				if (RhinoApp.RunScript(LeaveSharedModel.Instance.EnglishName, true))
+					RhinoApp.RunScript(JoinSharedModel.Instance.EnglishName, true);
 			}
 
 			return Result.Success;
@@ -71,7 +70,7 @@ namespace Crash.Commands
 		{
 			if (crashDoc?.LocalServer is object && crashDoc.LocalServer.IsRunning)
 			{
-				string closeCommand = CloseSharedModel.Instance.EnglishName;
+				string closeCommand = LeaveSharedModel.Instance.EnglishName;
 				RhinoApp.WriteLine("You are currently part of a Shared Model Session. " +
 					$"Please use the {closeCommand} command.");
 

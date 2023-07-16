@@ -1,0 +1,57 @@
+# Use the latest 2.1 version of CircleCI pipeline process engine.
+# See: https://circleci.com/docs/configuration-reference
+version: 2.1
+
+# The Windows orb gives you everything you
+# need to start using the Windows executor.
+orbs:
+  rhino: crashcloud/rhino@0.4.0
+
+
+# Define a job to be invoked later in a workflow.
+# See: https://circleci.com/docs/configuration-reference/#jobs
+jobs:    
+  setup-env:
+    machine:
+      image: 'windows-server-2022-gui:current'
+      resource_class: windows.medium
+      shell: powershell.exe -ExecutionPolicy Bypass
+
+    steps:
+
+      - checkout
+    
+      - rhino/setup_rhino:
+          version: '7'
+
+      - run:
+          name: Restore NuGet Packages
+          command: nuget restore Crash.sln
+
+      - run:
+          name: Build
+          command: dotnet build Crash.sln /p:Configuration=Release --no-restore
+
+      - run:
+          name: Run Tests
+          command: dotnet test --no-restore --results-directory test-results --logger trx
+
+      - run:
+          name: Install trx2junit
+          command: dotnet tool install trx2junit -g
+          when: always
+
+      - run:
+          name: Convert Unit Test Results
+          command: ~\.dotnet\tools\trx2junit.exe .\test-results\*.trx
+          when: always
+
+      - store_test_results:
+          path: .\test-results\
+
+# Orchestrate jobs using workflows
+# See: https://circleci.com/docs/configuration-reference/#workflows
+workflows:
+  unit-test:
+    jobs:
+      - setup-env

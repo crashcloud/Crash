@@ -1,21 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
-
-using Crash.Properties;
+﻿using System.Runtime.InteropServices;
 
 using Eto.Drawing;
 using Eto.Forms;
-
-using Microsoft.Extensions.Logging.Abstractions;
-
-using Rhino.UI;
 
 using static Crash.UI.SharedModelViewModel;
 
@@ -73,8 +59,9 @@ namespace Crash.UI
 					Text = "Remove Model",
 					Command = new Command((sender, args) =>
 					{
-						;
-
+						var sharedModel = gridView.SelectedItem as SharedModel;
+						this.viewModel.SharedModels.Remove(sharedModel);
+						gridView.ReloadData(gridView.SelectedRow);
 					}),
 					ToolTip = "Removes a model from the list (Does not actually delete it from the server)"
 				},
@@ -83,8 +70,9 @@ namespace Crash.UI
 					Text = "Refresh Model",
 					Command = new Command((sender, args) =>
 					{
-						;
-
+						var sharedModel = gridView.SelectedItem as SharedModel;
+						sharedModel.LoadModel();
+						gridView.Invalidate(true);
 					}),
 					ToolTip = "Tests the connection to the model again"
 				},
@@ -99,7 +87,7 @@ namespace Crash.UI
 		{
 			gridView.Height = sharedModelHeight;
 			Dialog.Size = new Size(Dialog.Width, sharedModelHeight + 70);
-			
+
 			// Dialog.Invalidate(true);
 			// gridView.Invalidate(true);
 		}
@@ -210,7 +198,7 @@ namespace Crash.UI
 				});
 
 				viewModel.AddModels.Clear();
-				viewModel.AddModels.Add(new SharedModel() { Loaded = true, ModelAddress = "" } );
+				viewModel.AddModels.Add(new SharedModel() { Loaded = true, ModelAddress = "" });
 
 				ResizeView(sharedModelsView);
 				// Dialog.Invalidate(true);
@@ -225,18 +213,18 @@ namespace Crash.UI
 		}
 
 		private GridView CreateGridView() => new GridView()
-			{
-				ShowHeader = false,
-				RowHeight = 25,
-				AllowColumnReordering = false,
-				AllowMultipleSelection = false,
-				Border = BorderType.None,
-				GridLines = GridLines.Horizontal,
-				// ToolTip = "Open a Shared Model"
-				AllowDrop = false,
-				AllowEmptySelection = false,
-				// Size = new Size(-1, -1),
-				Height = sharedModelHeight
+		{
+			ShowHeader = false,
+			RowHeight = 25,
+			AllowColumnReordering = false,
+			AllowMultipleSelection = false,
+			Border = BorderType.None,
+			GridLines = GridLines.Horizontal,
+			// ToolTip = "Open a Shared Model"
+			AllowDrop = false,
+			AllowEmptySelection = false,
+			// Size = new Size(-1, -1),
+			Height = sharedModelHeight
 		};
 
 		private void CreateColumns(GridView gridView, Func<CellEventArgs, Control> createCell, bool editable)

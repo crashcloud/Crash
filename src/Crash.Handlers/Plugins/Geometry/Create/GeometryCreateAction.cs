@@ -38,7 +38,13 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			var change = GeometryChange.CreateNew(_user, geometry);
 
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
+			if (rhinoDoc is null)
+				throw new NullReferenceException("Rhino Document cannot be found!");
+
 			var rhinoObject = rhinoDoc.Objects.FindId(rhinoId);
+			if (rhinoObject is null)
+				yield break;
+
 			ChangeUtils.SyncHost(rhinoObject, change);
 
 			change.Action = Action;

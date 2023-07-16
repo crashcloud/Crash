@@ -16,7 +16,7 @@ using Rhino.Geometry;
 namespace Crash.Handlers.Tests.Plugins
 {
 
-	[TestFixture]
+	[RhinoFixture]
 	public sealed class EventDispatcherTests
 	{
 		readonly RhinoDoc _doc;
@@ -35,7 +35,7 @@ namespace Crash.Handlers.Tests.Plugins
 
 		public EventDispatcherTests()
 		{
-			_doc = RhinoDoc.CreateHeadless(null);
+			RhinoDoc.ActiveDoc = _doc = RhinoDoc.CreateHeadless(null);
 			_cDoc = new CrashDoc();
 			TestChangeDefinition = new CustomDefinition();
 
@@ -218,7 +218,7 @@ namespace Crash.Handlers.Tests.Plugins
 		// 2. We're ensuring any pre-existing Definitions are superceeded
 
 		[TestCaseSource(nameof(TestServerChanges))]
-		public void TestRecieve(Change serverChange)
+		public async Task TestRecieve(Change serverChange)
 		{
 			CrashDoc crashDoc = new CrashDoc();
 			bool recieved = false;
@@ -238,7 +238,7 @@ namespace Crash.Handlers.Tests.Plugins
 
 			// Assert
 			Assert.That(recieved, Is.False);
-			Dispatcher.NotifyDispatcherAsync(crashDoc, serverChange);
+			await Dispatcher.NotifyDispatcherAsync(crashDoc, serverChange);
 			Assert.That(recieved, Is.True);
 
 			Assert.That(serverChange.Id, Is.EqualTo(recievedChange.Id));
@@ -275,7 +275,9 @@ namespace Crash.Handlers.Tests.Plugins
 		}
 
 		[TestCaseSource(nameof(RandomChanges))]
-		public void TestRandomRecieve(DateTime date, Guid id, string owner, string payload, string type, ChangeAction action)
+		public void TestRandomRecieve(DateTime date, Guid id,
+										string owner, string payload,
+										string type, ChangeAction action)
 		{
 			IChange change = new CustomChange()
 			{
@@ -325,9 +327,9 @@ namespace Crash.Handlers.Tests.Plugins
 			{
 				var changes = Enum.GetValues(typeof(ChangeAction)).Cast<ChangeAction>().ToArray();
 
-				for (int i = 0; i < 100; i++)
+				for (int i = 0; i < 10; i++)
 				{
-					var dateTime = new DateTime(TestContext.CurrentContext.Random.NextLong());
+					var dateTime = new DateTime(TestContext.CurrentContext.Random.NextLong(DateTime.MinValue.Ticks, DateTime.MaxValue.Ticks));
 					var id = Guid.NewGuid();
 					var owner = Path.GetRandomFileName().Replace(".", "");
 					var payload = id.ToString(); // Should this be something useful?

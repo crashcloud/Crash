@@ -13,28 +13,33 @@ using Rhino.Geometry;
 namespace Crash.Handlers.Tests.Plugins.Geometry
 {
 
-	[TestFixture]
+	[RhinoFixture]
 	public sealed class GeometryAddRecieveActionTests
 	{
+		private readonly CrashDoc _cdoc;
+		private readonly RhinoDoc _rdoc;
+
+		public GeometryAddRecieveActionTests()
+		{
+			RhinoDoc.ActiveDoc = _rdoc = RhinoDoc.CreateHeadless(null);
+			_cdoc = CrashDocRegistry.CreateAndRegisterDocument(_rdoc);
+		}
 
 		[TestCaseSource(nameof(AddChanges))]
 		public async Task TestGeometryAddRecieveAction(Change change)
 		{
-			CrashDoc crashDoc = new CrashDoc();
-			RhinoDoc rhinoDoc = RhinoDoc.CreateHeadless(null);
-
 			var addAction = new GeometryAddRecieveAction();
-			await addAction.OnRecieveAsync(crashDoc, change);
-			while (crashDoc.Queue.Count > 0)
+			await addAction.OnRecieveAsync(_cdoc, change);
+			while (_cdoc.Queue.Count > 0)
 			{
-				crashDoc.Queue.RunNextAction();
+				_cdoc.Queue.RunNextAction();
 			}
 
 			// ChangeUtils.TryGetChangeId() ?
 
 			// Assert that RhinoDoc had something added 
-			Assert.That(rhinoDoc.Objects, Is.Not.Empty);
-			Assert.That(crashDoc.CacheTable, Is.Empty);
+			Assert.That(_rdoc.Objects, Is.Not.Empty);
+			Assert.That(_cdoc.CacheTable, Is.Empty);
 		}
 
 		public static IEnumerable AddChanges
@@ -50,15 +55,6 @@ namespace Crash.Handlers.Tests.Plugins.Geometry
 					yield return new Change(change);
 				}
 			}
-		}
-
-		private static Point3d RandomPoint()
-		{
-			double x = TestContext.CurrentContext.Random.NextDouble(short.MinValue, short.MaxValue);
-			double y = TestContext.CurrentContext.Random.NextDouble(short.MinValue, short.MaxValue);
-			double z = TestContext.CurrentContext.Random.NextDouble(short.MinValue, short.MaxValue);
-
-			return new Point3d(x, y, z);
 		}
 
 	}

@@ -8,3 +8,4 @@ global using Crash.Changes;
 using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Crash.Integration.Tests")]
 [assembly: InternalsVisibleTo("Crash.Handlers.Tests")]
+[assembly: InternalsVisibleTo("Crash.Handlers.two.Tests")]

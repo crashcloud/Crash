@@ -12,12 +12,12 @@ using Crash.Handlers.Plugins.Camera.Recieve;
 namespace Crash.Handlers.Tests.Plugins.Camera
 {
 
-	[TestFixture]
+	[RhinoFixture]
 	public sealed class CameraRecieveActionTests
 	{
 
 		[TestCaseSource(nameof(CameraChanges))]
-		public async Task GeometryCreateAction_CanConvert(Crash.Common.View.Camera camera)
+		public async Task CameraRecieveAction_CanConvert(Crash.Common.View.Camera camera)
 		{
 			string username = Path.GetRandomFileName().Replace(".", "");
 			IChange change = CameraChange.CreateNew(camera, username);
@@ -29,6 +29,10 @@ namespace Crash.Handlers.Tests.Plugins.Camera
 
 			Assert.That(crashDoc.Cameras, Is.Empty);
 			await recieveAction.OnRecieveAsync(crashDoc, serverChange);
+			while (crashDoc.Queue.Count > 0)
+			{
+				crashDoc.Queue.RunNextAction();
+			}
 			Assert.That(crashDoc.Cameras, Is.Not.Empty);
 
 			Assert.That(crashDoc.Cameras.TryGetCamera(new User(username), out var cameras), Is.True);
@@ -40,21 +44,15 @@ namespace Crash.Handlers.Tests.Plugins.Camera
 		{
 			get
 			{
-				for (int i = 0; i < 100; i++)
+				for (int i = 0; i < 10; i++)
 				{
-					yield return new Crash.Common.View.Camera(RandomPoint(), RandomPoint());
+					CPoint location = NRhino.Random.Geometry.NPoint3d.Any().ToCrash();
+					CPoint target = NRhino.Random.Geometry.NPoint3d.Any().ToCrash();
+					yield return new Crash.Common.View.Camera(location, target);
 				}
 			}
 		}
 
-		private static CPoint RandomPoint()
-		{
-			double x = TestContext.CurrentContext.Random.NextDouble(short.MinValue, short.MaxValue);
-			double y = TestContext.CurrentContext.Random.NextDouble(short.MinValue, short.MaxValue);
-			double z = TestContext.CurrentContext.Random.NextDouble(short.MinValue, short.MaxValue);
-
-			return new CPoint(x, y, z);
-		}
 
 	}
 

@@ -8,7 +8,7 @@ using Rhino.Geometry;
 namespace Crash.Handlers.Tests.Geometry
 {
 
-	[TestFixture]
+	[RhinoFixture]
 	public sealed class ConversionTests
 	{
 
@@ -77,7 +77,7 @@ namespace Crash.Handlers.Tests.Geometry
 				for (int i = 0; i < 100; i++)
 				{
 					Point3d point = NRhino.Random.Geometry.NPoint3d.Any();
-					CVector cPoint = new CVector(point.X, point.Y, point.Z);
+					CPoint cPoint = new CPoint(point.X, point.Y, point.Z);
 					yield return new TestCaseData(cPoint, point);
 				}
 			}

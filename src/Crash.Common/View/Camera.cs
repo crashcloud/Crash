@@ -44,17 +44,15 @@ namespace Crash.Common.View
 
 		/// <summary>Equality Comparison</summary>
 		public override bool Equals(object? obj)
-		{
-			if (obj is not Camera camera) return false;
-			return Equals(camera);
-		}
+			=> obj is Camera camera && camera == this;
 
 		/// <summary>Equality Comparison</summary>
 		public bool Equals(Camera other) => this == other;
 
 		/// <summary>Equality Comparison</summary>
 		public static bool operator ==(Camera c1, Camera c2)
-			=> c1.Location == c2.Location && c1.Target == c2.Target;
+			=> c1.Location.Round(3).Equals(c2.Location.Round(3)) &&
+				c1.Target.Round(3).Equals(c2.Target.Round(3));
 
 		/// <summary>Inqquality Comparison</summary>
 		public static bool operator !=(Camera c1, Camera c2) => !(c1 == c2);

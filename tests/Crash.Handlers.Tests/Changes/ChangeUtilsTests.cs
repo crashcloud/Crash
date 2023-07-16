@@ -8,7 +8,7 @@ using Rhino.Geometry;
 namespace Crash.Handlers.Tests.Changes
 {
 
-	[TestFixture]
+	[RhinoFixture]
 	public sealed class ChangeUtils_Tests
 	{
 
