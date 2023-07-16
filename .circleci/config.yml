@@ -25,7 +25,7 @@ jobs:
           version: '7'
 
       - restore_cache:
-          name: Restore Nuget pacakges for << parameters.project >>
+          name: Restore Nuget pacakges
           key: nuget-'**/packages.lock.json,!**/bin/**,!**/obj/**'
           paths:
             - "~/.nuget"
@@ -36,7 +36,7 @@ jobs:
           when: on_fail
 
       - save_cache:
-          name: Cache nuget pacakges for << parameters.project >>
+          name: Cached nuget pacakges
           key: nuget-'**/packages.lock.json,!**/bin/**,!**/obj/**'
           paths:
             - "~/.nuget"
