@@ -31,6 +31,18 @@ jobs:
             - "~/.nuget"
 
       - run:
+          name: Check for Cache
+          command: |
+            try
+            {
+              exit (ls ~\.nuget\packages).Length -gt 0
+            }
+            catch
+            {
+              exit 1
+            }
+
+      - run:
           name: Restore NuGet Packages
           command: nuget restore Crash.sln
           when: on_fail
@@ -45,10 +57,12 @@ jobs:
       - run:
           name: Build
           command: dotnet build Crash.sln /p:Configuration=Release --no-restore
+          when: always
 
       - run:
           name: Run Tests
           command: dotnet test --no-restore --results-directory test-results --logger trx
+          when: on_success
 
       - run:
           name: Install trx2junit
