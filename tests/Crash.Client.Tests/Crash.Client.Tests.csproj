@@ -26,8 +26,11 @@
     <PackageReference Include="System.Text.Json" Version="7.0.2" />
     <PackageReference Include="Crash.Changes" Version="1.0.2" />
   </ItemGroup>
+	<PropertyGroup>
+		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+	</PropertyGroup>
 
-  <ItemGroup>
+	<ItemGroup>
     <ProjectReference Include="..\..\src\Crash.Common\Crash.Common.csproj" />
   </ItemGroup>
 

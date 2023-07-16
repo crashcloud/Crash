@@ -19,8 +19,11 @@
 	  <PackageReference Include="RhinoCommon" Version="8.0.23094.11475-wip" IncludeAssets="compile;build" Condition="'$(TargetFramework)' == 'net7.0'" />
 	  <PackageReference Include="RhinoTestEnvironment" Version="1.1.0" />
   </ItemGroup>
+	<PropertyGroup>
+		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+	</PropertyGroup>
 
-  <ItemGroup>
+	<ItemGroup>
     <ProjectReference Include="..\..\src\Crash.Handlers\Crash.Handlers.csproj" />
   </ItemGroup>
 
