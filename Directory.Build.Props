@@ -1,0 +1,17 @@
+<Project>
+	<PropertyGroup>
+		<Version>1.1.1</Version>
+		<Nullable>enable</Nullable>
+		<LangVersion>11</LangVersion>
+		<Company>Crash Cloud</Company>
+        <IsPackable>false</IsPackable>
+        <FileVersion>$(Version)</FileVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <VersionAssembly>$(Version)</VersionAssembly>
+		<GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
+		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+	</PropertyGroup>
+	<PropertyGroup>
+		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+	</PropertyGroup>
+</Project>

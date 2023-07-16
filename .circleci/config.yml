@@ -20,23 +20,14 @@ jobs:
     steps:
 
       - checkout
-    
-      - run:
-          name: Simple Test
-          command: |
-            $env:THIS_STEP = 2000
-
-      - run:
-          name: Simple Test 2
-          command: |
-            Write-Host $env:THIS_STEP
 
       - rhino/setup_rhino:
           version: '7'
 
+      # https://support.circleci.com/hc/en-us/articles/115015426888-Clear-project-dependency-cache
       - restore_cache:
           name: Restore Nuget pacakges
-          key: nuget-'**/packages.lock.json,!**/bin/**,!**/obj/**'-{{ .Environment.NUGET_CACHE_VERS }}
+          key: nuget-{{ checksum "Directory.Packages.props" }}-{{ .Environment.CACHE_VERSION }}
           paths:
             - "~/.nuget"
 
@@ -54,12 +45,12 @@ jobs:
 
       - run:
           name: Restore NuGet Packages
-          command: nuget restore Crash.sln
+          command: dotnet restore Crash.sln --use-lock-file
           when: on_fail
 
       - save_cache:
           name: Cached nuget pacakges
-          key: nuget-'**/packages.lock.json,!**/bin/**,!**/obj/**'-{{ .Environment.NUGET_CACHE_VERS }}
+          key: nuget-{{ checksum "Directory.Packages.props" }}-{{ .Environment.CACHE_VERSION }}
           paths:
             - "~/.nuget"
           when: on_success
