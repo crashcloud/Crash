@@ -26,7 +26,7 @@ jobs:
 
       - restore_cache:
           name: Restore Nuget pacakges
-          key: nuget-'**/packages.lock.json,!**/bin/**,!**/obj/**'
+          key: nuget-'**/packages.lock.json,!**/bin/**,!**/obj/**'-{{ .Environment.NUGET_CACHE_VERS }}
           paths:
             - "~/.nuget"
 
@@ -35,7 +35,7 @@ jobs:
           command: |
             try
             {
-              exit (ls ~\.nuget\packages).Length -gt 0
+              exit (ls ~\.nuget\packages).Length -eq 0 ? 1 : 0
             }
             catch
             {
@@ -49,7 +49,7 @@ jobs:
 
       - save_cache:
           name: Cached nuget pacakges
-          key: nuget-'**/packages.lock.json,!**/bin/**,!**/obj/**'
+          key: nuget-'**/packages.lock.json,!**/bin/**,!**/obj/**'-{{ .Environment.NUGET_CACHE_VERS }}
           paths:
             - "~/.nuget"
           when: on_success
