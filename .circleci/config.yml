@@ -24,38 +24,9 @@ jobs:
       - rhino/setup_rhino:
           version: '7'
 
-      # https://support.circleci.com/hc/en-us/articles/115015426888-Clear-project-dependency-cache
-      - restore_cache:
-          name: Restore Nuget Package Cache
-          key: nuget-{{ checksum "Directory.Packages.props" }}-{{ .Environment.CACHE_VERSION }}
-          paths:
-            - "~/.nuget"
-
-      - run:
-          name: Check for Cache
-          command: |
-            try
-            {
-              $no_nuget = (ls ~\.nuget\packages).Length -eq 0
-              $exit_code = if ($no_nuget) { 1 } else { 0 }
-              exit $exit_code
-            }
-            catch
-            {
-              exit 1
-            }
-
       - run:
           name: Restore NuGet Packages
           command: dotnet restore Crash.sln --use-lock-file
-          when: on_fail
-
-      - save_cache:
-          name: Cache Nuget Packages
-          key: nuget-{{ checksum "Directory.Packages.props" }}-{{ .Environment.CACHE_VERSION }}
-          paths:
-            - "~/.nuget"
-          when: always
 
       - run:
           name: Build
