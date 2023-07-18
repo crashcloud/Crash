@@ -2,7 +2,7 @@
 using Crash.Communications;
 using Crash.Handlers.Server;
 
-namespace Crash.Common.Tests.Communications
+namespace Crash.Handlers.Tests.Communications
 {
 
 	public sealed class CrashServer_Tests : IDisposable
