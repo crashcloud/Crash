@@ -8,8 +8,8 @@
     <PackageReference Include="Crash.Changes" />
     <PackageReference Include="NRhinoGenerator" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-		<PackageReference Include="RhinoCommon" IncludeAssets="compile;build" />
-	  <PackageReference Include="RhinoTestEnvironment" />
+	<PackageReference Include="RhinoCommon" IncludeAssets="compile;build" NoWarn="NU1603;NU1608;NU1701" />
+	<PackageReference Include="RhinoTestEnvironment" />
     <PackageReference Include="NUnit" />
     <PackageReference Include="NUnit3TestAdapter" />
     <PackageReference Include="NUnit.Analyzers">

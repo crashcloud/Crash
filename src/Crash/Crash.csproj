@@ -23,7 +23,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.VisualStudio.Threading" />
-		<PackageReference Include="RhinoCommon" IncludeAssets="compile;build" />
+		<PackageReference Include="RhinoCommon" IncludeAssets="compile;build" NoWarn="NU1603;NU1608;NU1701" />
 		<PackageReference Include="System.Text.Json" />
 		<PackageReference Include="Crash.Changes" />
 		<PackageReference Include="System.Resources.Extensions" />

@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
@@ -14,7 +14,7 @@
     <PackageReference Include="NRhinoGenerator" />
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="Crash.Changes" />
-		<PackageReference Include="RhinoCommon" IncludeAssets="compile;build" />
+	<PackageReference Include="RhinoCommon" IncludeAssets="compile;build" NoWarn="NU1603;NU1608;NU1701" />
     <PackageReference Include="RhinoTestEnvironment" />
     <PackageReference Include="NUnit" />
     <PackageReference Include="NUnit3TestAdapter" />
