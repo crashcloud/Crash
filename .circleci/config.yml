@@ -30,13 +30,11 @@ jobs:
 
       - run:
           name: Build
-          command: dotnet build Crash.sln /p:Configuration=Release --no-restore --verbosity minimal
-          when: always
+          command: dotnet build Crash.sln --configuration release --no-restore --verbosity minimal
 
       - run:
           name: Run Tests
-          command: dotnet test --no-restore --results-directory test-results --logger trx
-          when: always
+          command: dotnet test Crash.sln --no-build --results-directory test-results --logger trx --verbosity minimal --configuration release
 
       - run:
           name: Install trx2junit
