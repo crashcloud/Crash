@@ -30,7 +30,7 @@ jobs:
 
       - run:
           name: Build
-          command: dotnet build Crash.sln /p:Configuration=Release --no-restore
+          command: dotnet build Crash.sln /p:Configuration=Release --no-restore --verbosity minimal
           when: always
 
       - run:
