@@ -8,6 +8,7 @@ using Crash.Communications;
 namespace Crash.Integration.Tests
 {
 
+	[RhinoFixture]
 	public sealed class ClientServerTests
 	{
 		string clientUrl => $"{CrashClient.DefaultURL}:{CrashServer.DefaultPort}";

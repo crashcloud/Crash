@@ -1,10 +1,9 @@
-﻿using System.Threading.Tasks;
-
-using Crash.Handlers.Server;
+﻿using Crash.Handlers.Server;
 
 namespace Crash.Handlers.Tests.Server
 {
 
+	[RhinoFixture]
 	public sealed class InstallerTests
 	{
 		[SetUp]

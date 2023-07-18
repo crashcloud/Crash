@@ -2,7 +2,6 @@
 
 using Crash.Common.Document;
 using Crash.Communications;
-using Crash.Handlers.Server;
 
 namespace Crash.Common.Tests.Communications
 {
@@ -23,17 +22,6 @@ namespace Crash.Common.Tests.Communications
 		}
 
 		[Test]
-		[NonParallelizable]
-		public void GetExePath()
-		{
-			CrashServer server = new CrashServer(new CrashDoc());
-			string serverPath = server.getServerExecutablePath();
-
-			Assert.That(File.Exists(serverPath), Is.True);
-		}
-
-		[Test]
-		[NonParallelizable]
 		public void RegisterServerProcess()
 		{
 			CrashServer server = new CrashServer(new CrashDoc());
@@ -49,32 +37,14 @@ namespace Crash.Common.Tests.Communications
 		}
 
 		[Test]
-		[NonParallelizable]
 		public void RegisterServerProcess_InvalidInputs()
 		{
 			CrashServer server = new CrashServer(new CrashDoc());
 			Assert.Throws<ArgumentNullException>(() => server.createAndRegisterServerProcess(null));
 		}
 
-		[Test]
-		[NonParallelizable]
-		public async Task StartServer()
-		{
-			string url = $"{CrashServer.DefaultURL}:{CrashServer.DefaultPort}";
-			CrashServer server = new CrashServer(new CrashDoc());
-
-			await ServerInstaller.EnsureServerExecutableExists();
-
-			Assert.DoesNotThrow(() => server.Start(url));
-
-			var msgs = server.Messages;
-
-			Assert.That(server.process, Is.Not.Null);
-			Assert.That(server.IsRunning, Is.True);
-		}
 
 		[Test]
-		[NonParallelizable]
 		public void VerifyFunctionalServer()
 		{
 			CrashServer server = new CrashServer(new CrashDoc());

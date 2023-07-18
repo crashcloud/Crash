@@ -1,12 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-
-using Docker.DotNet;
+﻿using Docker.DotNet;
 using Docker.DotNet.Models;
 
 namespace Crash.Handlers.Tests.Server
 {
 
+	[RhinoFixture]
 	public sealed class ServerUtils
 	{
 
