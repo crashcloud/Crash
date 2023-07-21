@@ -31,6 +31,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crash.Integration.Tests", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crash.Handlers.Tests", "tests\Crash.Handlers.Tests\Crash.Handlers.Tests.csproj", "{054BCE61-C86B-4C0B-B4FC-9B11B9D6D78F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{3765485A-BCDD-4764-9A17-678638CFF8E3}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\YakCompiler.ps1 = scripts\YakCompiler.ps1
+		scripts\YakUploader.ps1 = scripts\YakUploader.ps1
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -74,6 +80,7 @@ Global
 		{9CAFF6D2-E619-44BB-8BEC-75BCC9B45E40} = {F8397E91-1EEA-4960-9685-7F76B23F642D}
 		{BAB96982-1FB2-4EDF-88A5-DFA0A0EC9A36} = {F8397E91-1EEA-4960-9685-7F76B23F642D}
 		{054BCE61-C86B-4C0B-B4FC-9B11B9D6D78F} = {F8397E91-1EEA-4960-9685-7F76B23F642D}
+		{3765485A-BCDD-4764-9A17-678638CFF8E3} = {086123CF-2868-41BB-8F42-C0D636F36DA5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8D9F64F3-0D9F-4D7F-9445-5215BF29D663}
