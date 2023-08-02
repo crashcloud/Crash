@@ -9,6 +9,7 @@
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+		<RhinoMacLauncher>8</RhinoMacLauncher>
 	</PropertyGroup>
 
 	<ItemGroup>
