@@ -1,5 +1,9 @@
-﻿using Crash.Common.Document;
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+using Crash.Common.Document;
 using Crash.Handlers;
+using Crash.Handlers.Authentication;
 
 using Rhino.Commands;
 
@@ -27,13 +31,28 @@ namespace Crash.Commands
 		/// <inheritdoc />
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
+			GetOpenIdToken();
+
 			// TODO : Wait for response for data integrity check
-			CrashDoc? crashDoc = CrashDocRegistry.GetRelatedDocument(doc);
-			crashDoc?.LocalClient?.DoneAsync();
+			//CrashDoc? crashDoc = CrashDocRegistry.GetRelatedDocument(doc);
+			//crashDoc?.LocalClient?.DoneAsync();
 
 			return Result.Success;
 		}
 
+		private async Task<string> GetOpenIdToken()
+		{
+			string secret = "/*Put Secret Here*/";
+			string id = "crash";
+			
+			var cancelToken = new CancellationTokenSource(5000).Token;
+			var token = await ClientAuthentication.GetRhinoToken(id, secret, cancelToken);
+
+			var openId = token.Item1;
+			var oauth2 = token.Item2;
+
+			return openId.RawToken;
+		}
 	}
 
 }
