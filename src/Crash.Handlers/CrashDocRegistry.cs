@@ -2,13 +2,15 @@
 
 using Rhino;
 
+using BidirectionalMap;
+
 namespace Crash.Handlers
 {
 
 	// TODO : Is this needed?
 	public sealed partial class CrashDocRegistry
 	{
-		static BidirectionalMap.BiMap<RhinoDoc, CrashDocumentState> DocumentRelationship;
+		static BiMap<RhinoDoc, CrashDocumentState> DocumentRelationship;
 
 
 		/// <summary>The Active Crash Document.</summary>
@@ -18,7 +20,7 @@ namespace Crash.Handlers
 
 		static CrashDocRegistry()
 		{
-			DocumentRelationship = new BidirectionalMap.BiMap<RhinoDoc, CrashDocumentState>();
+			DocumentRelationship = new BiMap<RhinoDoc, CrashDocumentState>();
 			RhinoDoc.ActiveDocumentChanged += RhinoDoc_ActiveDocumentChanged;
 		}
 
