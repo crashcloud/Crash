@@ -2,14 +2,9 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net48;net7.0</TargetFrameworks>
-		<Version>1.1.1</Version>
 		<Title>Crash</Title>
 		<Description> A multi-user collaborative environment for Rhino </Description>
 		<TargetExt>.rhp</TargetExt>
-		<LangVersion>latest</LangVersion>
-		<Nullable>enable</Nullable>
-		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
-		<RhinoMacLauncher>8</RhinoMacLauncher>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -21,10 +16,6 @@
 	<ItemGroup>
 		<EmbeddedResource Include="EmbeddedResources\**\*" />
 	</ItemGroup>
-
-  <PropertyGroup>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-  </PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.5.22" />

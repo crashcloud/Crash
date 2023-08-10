@@ -2,14 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net48;net7.0</TargetFrameworks>
-    <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
     <RootNamespace>Crash.Handlers</RootNamespace>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
