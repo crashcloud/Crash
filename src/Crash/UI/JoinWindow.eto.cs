@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Eto.Forms;
 using Eto.Drawing;
 using System.Runtime.InteropServices;
+using static Crash.UI.SharedModelViewModel;
 
 namespace Crash.UI
 {
@@ -80,6 +81,7 @@ namespace Crash.UI
 			{
 				Width = 60,
 				Resizable = false,
+				DataCell = CreateOpenButton()
 			};
 		}
 
@@ -91,6 +93,10 @@ namespace Crash.UI
 				Resizable = false,
 				// Editable = editable,
 				HeaderTextAlignment = TextAlignment.Left,
+				DataCell = new TextBoxCell
+				{
+					Binding = Binding.Property<SharedModel, string>(s => s.ModelAddress)
+				}
 			};
 		}
 
@@ -116,6 +122,10 @@ namespace Crash.UI
 			{
 				Width = 30,
 				Resizable = false,
+				DataCell = new ImageViewCell
+				{
+					Binding = Binding.Property<SharedModel, Image>(s => s.UserIcon)
+				}
 			};
 		}
 
@@ -125,6 +135,10 @@ namespace Crash.UI
 			{
 				Width = 30,
 				Resizable = false,
+				DataCell = new TextBoxCell
+				{
+					Binding = Binding.Property<SharedModel, string>(s => s.UserCount)
+				}
 			};
 		}
 
@@ -134,6 +148,10 @@ namespace Crash.UI
 			{
 				Width = 30,
 				Resizable = false,
+				DataCell = new ImageViewCell
+				{
+					Binding = Binding.Property<SharedModel, Image>(s => s.Signal)
+				}
 			};
 		}
 

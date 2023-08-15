@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 using Eto.Forms;
 using Eto.Drawing;
@@ -28,70 +28,49 @@ namespace Crash.UI
 
 			Users = GetUsers();
 			InitializeComponent();
-			CreateBindings();
 
 			// ActiveForm = this;
 		}
 
 		private IEnumerable<object> GetUsers()
 		{
-			yield break;
-
 			yield return new SharedModel()
 			{
 				ModelAddress = "http://localhost:8080",
-				Loaded = true
-			};
-		}
-
-		private void CreateBindings()
-		{
-			OpenCell.DataCell = CreateOpenButton();
-			TextCell.DataCell = new TextBoxCell
-			{
-				Binding = Binding.Property<SharedModel, string>(s => s.ModelAddress)
-			};
-
-			UserIconCell.DataCell = new ImageViewCell
-			{
-				Binding = Binding.Property<SharedModel, Image>(s => s.UserIcon)
-			};
-
-			UserCountCell.DataCell = new TextBoxCell
-			{
-				Binding = Binding.Property<SharedModel, string>(s => s.UserCount)
-			};
-
-			SignalCell.DataCell = new ImageViewCell
-			{
-				Binding = Binding.Property<SharedModel, Image>(s => s.Signal)
+				Users = new string[] { "Callum" }
 			};
 		}
 
 		private Cell CreateOpenButton()
 		{
-			Func<CellEventArgs, Control> addNewSharedFunc = (args) =>
-			{
-				int row = args.Row;
-				var val = (args.Grid as GridView).DataStore.ToArray()[row];
-				// var model = val as SharedModel;
-
-				var button = new Button()
-				{
-
-					Text = "+",
-					ToolTip = "Add a new Shared Model",
-					// Command = new Command(AddNewModel) { DataContext = model },
-					Enabled = true // model.Loaded == true,
-				};
-
-				return button;
-			};
-
 			var openCell = new CustomCell();
-			openCell.CreateCell = addNewSharedFunc;
+			openCell.CreateCell = CreateOpenButtonContents;
+			openCell.Paint += OpenCell_Paint;
 
 			return openCell;
+		}
+
+		private void OpenCell_Paint(object sender, CellPaintEventArgs e)
+		{
+			;
+
+		}
+
+		private Control CreateOpenButtonContents(CellEventArgs args)
+		{
+			int row = args.Row;
+			var val = (args.Grid as GridView).DataStore.ToArray()[row];
+			var model = val as SharedModel;
+
+			var button = new Button()
+			{
+				Text = "+",
+				ToolTip = "Add a new Shared Model",
+				// Command = new Command(AddNewModel) { DataContext = model },
+				Enabled = true // model.Loaded == true,
+			};
+
+			return button;
 		}
 
 		private void Window_Closed(object sender, EventArgs e)
