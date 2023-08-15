@@ -37,8 +37,6 @@ namespace Crash.Commands
 		/// <inheritdoc />
 		public override string EnglishName => "JoinSharedModel";
 
-		SharedModelViewModel viewModel;
-
 		/// <inheritdoc />
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
@@ -51,21 +49,10 @@ namespace Crash.Commands
 
 			if (mode == RunMode.Interactive)
 			{
-				viewModel = new SharedModelViewModel();
+				var window = new JoinWindow();
+				window.Show(doc);
 
-				var dialog = new Eto.Forms.Dialog<SharedModel>();
-				var window = new SharedModelWindow(viewModel, dialog);
-
-				dialog.Title = "Available Models";
-				dialog.Content = window;
-				dialog.Icon = Icons.crashlogo.ToEto();
-				dialog.Size = new Eto.Drawing.Size(440, -1);
-				dialog.BackgroundColor = System.Drawing.Color.White.ToEto();
-
-				var model = dialog.ShowModal(Rhino.UI.RhinoEtoApp.MainWindowForDocument(doc));
-
-				if (model is null) return Result.Failure;
-				LastURL = model.ModelAddress;
+				return Result.Cancel;
 			}
 			else
 			{

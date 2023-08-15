@@ -9,7 +9,7 @@ namespace Crash.UI
 {
 
 	[Guid("37943c4b-5c30-471c-a5b0-c1bdaafa628d")]
-	public partial class SharedModelWindow : Panel
+	public partial class SharedModelWindow : Form
 	{
 
 		internal SharedModelViewModel viewModel;
@@ -86,7 +86,7 @@ namespace Crash.UI
 		private void ResizeView(GridView gridView)
 		{
 			gridView.Height = sharedModelHeight;
-			Dialog.Size = new Size(Dialog.Width, sharedModelHeight + 70);
+			// Dialog.Size = new Size(Dialog.Width, sharedModelHeight + 70);
 
 			// Dialog.Invalidate(true);
 			// gridView.Invalidate(true);
@@ -178,7 +178,7 @@ namespace Crash.UI
 		internal SharedModelWindow(SharedModelViewModel viewModel, Eto.Forms.Dialog<SharedModel> dialog)
 		{
 			this.viewModel = viewModel;
-			this.Dialog = dialog;
+			// this.Dialog = dialog;
 
 			InitializeComponent();
 			Clicked += (sender, args) =>
