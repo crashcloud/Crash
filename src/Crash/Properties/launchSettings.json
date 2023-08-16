@@ -4,6 +4,11 @@
       "commandName": "Executable",
       "executablePath": "C:\\Program Files\\Rhino 7\\System\\Rhino.exe",
       "commandLineArgs": "/nosplash"
-    }
+    },
+		"Crash Mac" : {
+			"commandName": "Executable",
+			"executablePath": "/Applications/RhinoWIP.app/Contents/MacOS/Rhinoceros",
+			"hotReloadEnabled": true
+		}
   }
 }
