@@ -1,19 +1,13 @@
-﻿using System;
-using System.Linq;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Runtime.InteropServices;
 
-using Eto.Forms;
 using Eto.Drawing;
-using System.Runtime.InteropServices;
-using static Crash.UI.SharedModelViewModel;
-using System.Collections.ObjectModel;
+using Eto.Forms;
 
-namespace Crash.UI
+namespace Crash.UI.JoinModel
 {
 
 	[Guid("37943c4b-5c30-471c-a5b0-c1bdaafa628d")]
-	public partial class JoinWindow : Form
+	public partial class JoinWindow
 	{
 
 		private static int WindowWidth = 400;
@@ -21,7 +15,7 @@ namespace Crash.UI
 		private static int ActiveModelsHeight => WindowHeight -
 			(RowHeight +
 			DividerHeight);
-													
+
 		private static int RowHeight = 25;
 		private static int DividerHeight = 5;
 
@@ -46,7 +40,7 @@ namespace Crash.UI
 			{
 				Padding = 0,
 				Spacing = 0,
-				Size = new Size(WindowWidth, WindowHeight + (IsOSX ? OSX_Padd : 0) ),
+				Size = new Size(WindowWidth, WindowHeight + (IsOSX ? OSX_Padd : 0)),
 				MinimumSize = new Size(WindowWidth, WindowHeight),
 				HorizontalContentAlignment = HorizontalAlignment.Stretch,
 				VerticalContentAlignment = VerticalAlignment.Stretch,
@@ -70,7 +64,7 @@ namespace Crash.UI
 			};
 			drawable.Paint += (sender, e) =>
 			{
-				var half = (float)DividerHeight/ 2;
+				var half = (float)DividerHeight / 2;
 				var start = new PointF(DividerHeight, half);
 				var end = new PointF(WindowWidth - DividerHeight, half);
 				e.Graphics.DrawLine(Palette.SubtleGrey, start, end);
@@ -113,7 +107,7 @@ namespace Crash.UI
 			return gridView;
 		}
 
-		private ContextMenu CreateContextMenu(bool isEditable = false)
+		private ContextMenu? CreateContextMenu(bool isEditable = false)
 		{
 			if (isEditable)
 				return null;
@@ -144,7 +138,7 @@ namespace Crash.UI
 		private GridView CreateAddGrid()
 		{
 			GridView addView = CreateDefaultGrid(true);
-			
+
 			if (IsOSX)
 				addView.Size = new Size(WindowWidth, RowHeight + OSX_Padd);
 			else
@@ -182,7 +176,7 @@ namespace Crash.UI
 			return new GridColumn()
 			{
 				Width = OpenCellWidth,
-				Resizable = false, 
+				Resizable = false,
 				DataCell = new CustomCell
 				{
 					CreateCell = CreateOpenButtonContents,
@@ -217,8 +211,8 @@ namespace Crash.UI
 			dividerCell.Paint += (sender, args) =>
 			{
 				args.Graphics.DrawLine(Palette.SubtleGrey,
-										new PointF(DividerCellWidth/2, 5),
-										new PointF(DividerCellWidth/2, RowHeight - 5));
+										new PointF(DividerCellWidth / 2, 5),
+										new PointF(DividerCellWidth / 2, RowHeight - 5));
 			};
 
 			return new GridColumn()

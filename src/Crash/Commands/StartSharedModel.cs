@@ -5,6 +5,7 @@ using Crash.Communications;
 using Crash.Handlers;
 using Crash.Handlers.InternalEvents;
 using Crash.Handlers.Plugins;
+using Crash.UI.UsersView;
 
 using Rhino.Commands;
 using Rhino.DocObjects;

@@ -4,11 +4,11 @@ using Crash.Client;
 using Crash.Common.Document;
 using Crash.Communications;
 using Crash.Handlers;
-using Crash.Properties;
+using Crash.UI.JoinModel;
+using Crash.UI.UsersView;
 
 using Rhino.Commands;
 using Rhino.UI;
-
 
 namespace Crash.Commands
 {
@@ -47,16 +47,19 @@ namespace Crash.Commands
 
 			if (mode == RunMode.Interactive)
 			{
-				var window = new JoinWindow();
-				window.Show();
+				var dialog = new JoinWindow();
+				var chosenModel = dialog.ShowModal(RhinoEtoApp.MainWindow);
 
-				LastURL = window.ChosenAddress;
+				if (string.IsNullOrEmpty(chosenModel?.ModelAddress))
+				{
+					RhinoApp.WriteLine("Invalid URL Input");
+					return Result.Cancel;
+				}
 
-				return Result.Cancel;
+				LastURL = chosenModel.ModelAddress;
 			}
 			else
 			{
-
 				if (!CommandUtils.GetUserName(out name))
 				{
 					RhinoApp.WriteLine("Invalid Name Input");
@@ -70,7 +73,9 @@ namespace Crash.Commands
 				}
 			}
 
-			crashDoc = CrashDocRegistry.CreateAndRegisterDocument(doc);
+			if (crashDoc is null)
+				crashDoc = CrashDocRegistry.CreateAndRegisterDocument(doc);
+
 			_CreateCurrentUser(crashDoc, name);
 
 			StartServer();

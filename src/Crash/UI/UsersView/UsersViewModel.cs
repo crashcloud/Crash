@@ -6,13 +6,14 @@ using Crash.Common.Document;
 using Crash.Common.Tables;
 using Crash.Handlers;
 using Crash.Properties;
+using Crash.UI.UsersView;
 
 using Eto.Drawing;
 using Eto.Forms;
 
 using Rhino.UI;
 
-namespace Crash.UI
+namespace Crash.UI.UsersView
 {
 	internal sealed class UsersViewModel : INotifyPropertyChanged
 	{

@@ -5,18 +5,16 @@ using Eto.Drawing;
 
 using Rhino.UI;
 using Crash.Properties;
-using static Crash.UI.SharedModelViewModel;
 using System.Net;
 using System.Runtime.InteropServices;
 
-namespace Crash.UI
+namespace Crash.UI.JoinModel
 {
-	public partial class JoinWindow : Form, IDisposable
+	public partial class JoinWindow : Dialog<SharedModel>, IDisposable
 	{
 
 		internal string ChosenAddress { get; set; }
 
-		private event EventHandler<EventArgs> Clicked;
 		private event EventHandler<EventArgs> AddNewModel;
 		private event EventHandler<EventArgs> RemoveModel;
 		private event EventHandler<EventArgs> RefreshModels;
@@ -26,7 +24,7 @@ namespace Crash.UI
 
 		internal static JoinWindow ActiveForm;
 
-		private SharedModelViewModel Model { get; set; }
+		private JoinViewModel Model { get; set; }
 		protected static bool IsOSX => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 
 		internal JoinWindow()
@@ -38,13 +36,18 @@ namespace Crash.UI
 			Icon = Icons.crashlogo.ToEto();
 			Topmost = true;
 			WindowState = WindowState.Normal;
-			ShowActivated = true;
 			Maximizable = false;
 
 			SubscribeToEvents();
-			Model = new SharedModelViewModel();
+			Model = new JoinViewModel();
 			InitializeComponent();
 			ActiveForm = this;
+			Closed += JoinWindow_Closed;
+		}
+
+		private void JoinWindow_Closed(object? sender, EventArgs e)
+		{
+			// SAVE THE SETTINSG
 		}
 
 		private void SubscribeToEvents()
@@ -60,7 +63,7 @@ namespace Crash.UI
 				if (ActiveModels.SelectedItem is not SharedModel model)
 					return;
 
-				ChosenAddress = model.ModelAddress;
+				this.Close(model);
 			};
 
 			RemoveModel += (sender, args) =>
