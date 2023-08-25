@@ -7,6 +7,7 @@ using Eto.Forms;
 using Eto.Drawing;
 using System.Runtime.InteropServices;
 using static Crash.UI.SharedModelViewModel;
+using System.Collections.ObjectModel;
 
 namespace Crash.UI
 {
@@ -15,63 +16,164 @@ namespace Crash.UI
 	public partial class JoinWindow : Form
 	{
 
-		private int Width = 400;
-		private int Height = 200;
-		private int Padding = 4;
+		private static int WindowWidth = 400;
+		private static int WindowHeight = 200;
+		private static int ActiveModelsHeight => WindowHeight -
+			(RowHeight +
+			DividerHeight);
+													
+		private static int RowHeight = 25;
+		private static int DividerHeight = 5;
 
-		internal IEnumerable<object> Users { get; set; } = Array.Empty<object>();
+		private static int OpenCellWidth = 60;
+		private static int DividerCellWidth = 10;
+		private static int UserIconCellWidth = 30;
+		private static int CountCellWidth = 30;
+		private static int SignalCellWidth = 30;
+		private static int TextCellWidth = 180;
 
-		GridColumn OpenCell { get; set; }
-		GridColumn TextCell { get; set; }
-		GridColumn DividerCell { get; set; }
-		GridColumn UserIconCell { get; set; }
-		GridColumn UserCountCell { get; set; }
-		GridColumn SignalCell { get; set; }
+		private static int OSX_Padd = 10;
+
+		protected GridView ActiveModels;
+		protected GridView NewModel;
 
 		public void InitializeComponent()
 		{
-			OpenCell = CreateOpenCell();
-			TextCell = CreateTextCell();
-			DividerCell = CreateDividerCell();
-			UserIconCell = CreateUserIconCell();
-			UserCountCell = CreateCountCell();
-			SignalCell = CreateSignalCell();
-
-			GridView gridView = new GridView()
-			{
-				Size = new Size(Width, Height),
-				// CanDeleteItem = true, // TODO
-				DataStore = Users,
-				ShowHeader = false,
-				RowHeight = 25,
-				AllowColumnReordering = false,
-				AllowMultipleSelection = false,
-				Border = BorderType.None,
-				GridLines = GridLines.Horizontal,
-				AllowDrop = false,
-				AllowEmptySelection = false,
-			};
-
-			gridView.Columns.Add(OpenCell);
-			gridView.Columns.Add(TextCell);
-			gridView.Columns.Add(DividerCell);
-			gridView.Columns.Add(UserIconCell);
-			gridView.Columns.Add(UserCountCell);
-			gridView.Columns.Add(SignalCell);
+			ActiveModels = CreateExistingGrid();
+			NewModel = CreateAddGrid();
 
 			Content = new StackLayout
 			{
 				Padding = 0,
 				Spacing = 0,
-				Size = new Size(Width, Height),
+				Size = new Size(WindowWidth, WindowHeight + (IsOSX ? OSX_Padd : 0) ),
+				MinimumSize = new Size(WindowWidth, WindowHeight),
 				HorizontalContentAlignment = HorizontalAlignment.Stretch,
 				VerticalContentAlignment = VerticalAlignment.Stretch,
-				BackgroundColor = new Color(1,1,1),
+				BackgroundColor = Palette.White,
 				Enabled = true,
 				Items =
 				{
-					gridView
+					ActiveModels,
+					DrawHorizonalCell(),
+					NewModel
 				},
+			};
+		}
+
+		private Drawable DrawHorizonalCell()
+		{
+			var drawable = new Drawable()
+			{
+				Height = DividerHeight,
+				Width = WindowWidth,
+			};
+			drawable.Paint += (sender, e) =>
+			{
+				var half = (float)DividerHeight/ 2;
+				var start = new PointF(DividerHeight, half);
+				var end = new PointF(WindowWidth - DividerHeight, half);
+				e.Graphics.DrawLine(Palette.SubtleGrey, start, end);
+			};
+
+			return drawable;
+		}
+
+		private GridView CreateDefaultGrid(bool isEditable = false)
+		{
+			GridView gridView = new GridView()
+			{
+				// Allows
+				AllowDrop = false,
+				AllowEmptySelection = false,
+				AllowColumnReordering = false,
+				AllowMultipleSelection = false,
+
+				ShowHeader = false,
+
+				RowHeight = RowHeight,
+
+				// Styling
+				Border = BorderType.None,
+				GridLines = GridLines.None,
+				BackgroundColor = Palette.White,
+				ContextMenu = CreateContextMenu(isEditable),
+
+				// Help
+				ToolTip = "Choose a Model to Join",
+			};
+
+			gridView.Columns.Add(isEditable ? CreateAddCell() : CreateOpenCell());
+			gridView.Columns.Add(CreateTextCell(isEditable));
+			gridView.Columns.Add(CreateDividerCell());
+			gridView.Columns.Add(CreateUserIconCell());
+			gridView.Columns.Add(CreateCountCell(isEditable));
+			gridView.Columns.Add(CreateSignalCell());
+
+			return gridView;
+		}
+
+		private ContextMenu CreateContextMenu(bool isEditable = false)
+		{
+			if (isEditable)
+				return null;
+
+			ContextMenu menu = new ContextMenu();
+			menu.Items.AddRange(new MenuItem[]
+			{
+				MenuCommand("Remove", RemoveModel),
+				MenuCommand("Refresh", RefreshModels),
+				MenuCommand("Join", JoinModel),
+			});
+
+			return menu;
+		}
+
+		private MenuItem MenuCommand(string label, EventHandler<EventArgs> eventHandler)
+		{
+			ButtonMenuItem button = new ButtonMenuItem()
+			{
+				Text = label,
+				ToolTip = $"{label} Item",
+				Command = new Command(eventHandler),
+			};
+
+			return button;
+		}
+
+		private GridView CreateAddGrid()
+		{
+			GridView addView = CreateDefaultGrid(true);
+			
+			if (IsOSX)
+				addView.Size = new Size(WindowWidth, RowHeight + OSX_Padd);
+			else
+				addView.Size = new Size(WindowWidth, -1);
+
+			addView.DataStore = Model.AddModels;
+
+			return addView;
+		}
+
+		private GridView CreateExistingGrid()
+		{
+			GridView existingView = CreateDefaultGrid();
+			existingView.Size = new Size(WindowWidth, ActiveModelsHeight);
+			existingView.DataStore = Model.SharedModels;
+
+			return existingView;
+		}
+
+		private GridColumn CreateAddCell()
+		{
+			return new GridColumn()
+			{
+				Width = OpenCellWidth,
+				Resizable = false,
+				DataCell = new CustomCell
+				{
+					CreateCell = CreateAddButtonContents,
+				}
 			};
 		}
 
@@ -79,24 +181,33 @@ namespace Crash.UI
 		{
 			return new GridColumn()
 			{
-				Width = 60,
-				Resizable = false,
-				DataCell = CreateOpenButton()
+				Width = OpenCellWidth,
+				Resizable = false, 
+				DataCell = new CustomCell
+				{
+					CreateCell = CreateOpenButtonContents,
+				}
 			};
 		}
 
-		private GridColumn CreateTextCell()
+		private GridColumn CreateTextCell(bool isEditable = false)
 		{
+			var addressCell = new TextBoxCell
+			{
+				Binding = Binding.Property<SharedModel, string>(s => s.ModelAddress),
+				AutoSelectMode = isEditable ? AutoSelectMode.Always : AutoSelectMode.OnFocus,
+				TextAlignment = TextAlignment.Center,
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+
 			return new GridColumn()
 			{
-				Width = 200,
+				Width = TextCellWidth,
 				Resizable = false,
-				// Editable = editable,
+				AutoSize = false,
+				Editable = isEditable,
 				HeaderTextAlignment = TextAlignment.Left,
-				DataCell = new TextBoxCell
-				{
-					Binding = Binding.Property<SharedModel, string>(s => s.ModelAddress)
-				}
+				DataCell = addressCell
 			};
 		}
 
@@ -105,12 +216,14 @@ namespace Crash.UI
 			var dividerCell = new DrawableCell();
 			dividerCell.Paint += (sender, args) =>
 			{
-				args.Graphics.DrawLine(new Color(125, 125, 125), new PointF(5, 4), new PointF(5, 16));
+				args.Graphics.DrawLine(Palette.SubtleGrey,
+										new PointF(DividerCellWidth/2, 5),
+										new PointF(DividerCellWidth/2, RowHeight - 5));
 			};
 
 			return new GridColumn()
 			{
-				Width = 10,
+				Width = DividerCellWidth,
 				Resizable = false,
 				DataCell = dividerCell,
 			};
@@ -120,7 +233,7 @@ namespace Crash.UI
 		{
 			return new GridColumn()
 			{
-				Width = 30,
+				Width = UserIconCellWidth,
 				Resizable = false,
 				DataCell = new ImageViewCell
 				{
@@ -129,15 +242,15 @@ namespace Crash.UI
 			};
 		}
 
-		private GridColumn CreateCountCell()
+		private GridColumn CreateCountCell(bool isEditable = false)
 		{
 			return new GridColumn()
 			{
-				Width = 30,
+				Width = CountCellWidth,
 				Resizable = false,
 				DataCell = new TextBoxCell
 				{
-					Binding = Binding.Property<SharedModel, string>(s => s.UserCount)
+					Binding = Binding.Property<SharedModel, string>(s => isEditable ? "" : s.UserCount)
 				}
 			};
 		}
@@ -146,7 +259,7 @@ namespace Crash.UI
 		{
 			return new GridColumn()
 			{
-				Width = 30,
+				Width = SignalCellWidth,
 				Resizable = false,
 				DataCell = new ImageViewCell
 				{

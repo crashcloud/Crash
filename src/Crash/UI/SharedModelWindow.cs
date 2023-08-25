@@ -7,7 +7,7 @@ using static Crash.UI.SharedModelViewModel;
 
 namespace Crash.UI
 {
-
+	/*
 	[Guid("37943c4b-5c30-471c-a5b0-c1bdaafa628d")]
 	public partial class SharedModelWindow : Form
 	{
@@ -122,7 +122,7 @@ namespace Crash.UI
 
 
 			newModelView = CreateGridView();
-			newModelView.DataStore = viewModel.AddModels;
+			newModelView.DataStore = new viewModel.AddModels;
 			newModelView.Height = sharedModelsView.RowHeight;
 			newModelView.KeyDown += (sender, args) =>
 			{
@@ -300,5 +300,5 @@ namespace Crash.UI
 		}
 
 	}
-
+	*/
 }

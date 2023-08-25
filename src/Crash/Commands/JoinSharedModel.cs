@@ -9,7 +9,6 @@ using Crash.Properties;
 using Rhino.Commands;
 using Rhino.UI;
 
-using static Crash.UI.SharedModelViewModel;
 
 namespace Crash.Commands
 {
@@ -23,7 +22,6 @@ namespace Crash.Commands
 		private CrashDoc? crashDoc;
 
 		private string LastURL = $"{CrashClient.DefaultURL}:{CrashServer.DefaultPort}";
-
 
 		/// <summary>Default Constructor</summary>
 		public JoinSharedModel()
@@ -50,7 +48,9 @@ namespace Crash.Commands
 			if (mode == RunMode.Interactive)
 			{
 				var window = new JoinWindow();
-				window.Show(doc);
+				window.Show();
+
+				LastURL = window.ChosenAddress;
 
 				return Result.Cancel;
 			}
