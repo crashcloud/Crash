@@ -77,10 +77,10 @@ namespace Crash.UI.JoinModel
 
 			RefreshModels += (sender, args) =>
 			{
-				foreach(var model in this.Model.SharedModels)
-				{
-					model.Connect();
-				}
+				if (ActiveModels.SelectedItem is not SharedModel model)
+					return;
+
+				model.Connect();
 
 				ActiveModels.Invalidate(true);
 			};

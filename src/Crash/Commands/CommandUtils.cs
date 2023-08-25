@@ -61,7 +61,7 @@ namespace Crash.Commands
 				await crashClient.StartLocalClientAsync();
 				return true;
 			}
-			catch
+			catch(Exception ex)
 			{
 				return false;
 			}
