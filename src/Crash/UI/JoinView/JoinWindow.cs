@@ -47,7 +47,7 @@ namespace Crash.UI.JoinModel
 
 		private void JoinWindow_Closed(object? sender, EventArgs e)
 		{
-			// SAVE THE SETTINSG
+			Model.SaveSharedModels(null, null);
 		}
 
 		private void SubscribeToEvents()

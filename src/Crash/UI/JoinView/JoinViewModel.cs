@@ -35,8 +35,6 @@ namespace Crash.UI.JoinModel
 
 			SetAddModel();
 			LoadSharedModels();
-			SharedModels.Add(new SharedModel() { ModelAddress = "address" });
-			SharedModels.Add(new SharedModel() { ModelAddress = "1.2.3.4" });
 
 			RhinoDoc.BeginSaveDocument += SaveSharedModels;
 		}

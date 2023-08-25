@@ -93,7 +93,10 @@ namespace Crash.Commands
 			}
 			else
 			{
-				await crashDoc.LocalClient.StopAsync();
+				if (crashDoc?.LocalClient is not null)
+				{
+					await crashDoc.LocalClient.StopAsync();
+				}
 				RhinoApp.WriteLine($"Failed to load URL {LastURL}");
 			}
 		}

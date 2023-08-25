@@ -61,7 +61,7 @@ namespace Crash.Client
 		/// Stop async task
 		/// </summary>
 		/// <returns></returns>
-		public Task StopAsync() => _connection.StopAsync();
+		public Task StopAsync() => _connection?.StopAsync();
 
 		/// <summary>
 		/// Crash client constructor

@@ -52,11 +52,12 @@ namespace Crash.Commands
 		{
 			// TODO : Ensure Requested Server is available, and notify if not
 			string userName = crashDoc.Users.CurrentUser.Name;
-			var crashClient = new CrashClient(crashDoc, userName, new Uri($"{url}/Crash"));
-			crashDoc.LocalClient = crashClient;
 
 			try
 			{
+				var crashClient = new CrashClient(crashDoc, userName, new Uri($"{url}/Crash"));
+				crashDoc.LocalClient = crashClient;
+
 				await crashClient.StartLocalClientAsync();
 				return true;
 			}
