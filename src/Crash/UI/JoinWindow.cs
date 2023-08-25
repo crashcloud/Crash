@@ -41,10 +41,10 @@ namespace Crash.UI
 			ShowActivated = true;
 			Maximizable = false;
 
+			SubscribeToEvents();
 			Model = new SharedModelViewModel();
 			InitializeComponent();
 			ActiveForm = this;
-			SubscribeToEvents();
 		}
 
 		private void SubscribeToEvents()
@@ -57,7 +57,7 @@ namespace Crash.UI
 
 			JoinModel += (sender, args) =>
 			{
-				if (sender is not SharedModel model)
+				if (ActiveModels.SelectedItem is not SharedModel model)
 					return;
 
 				ChosenAddress = model.ModelAddress;
@@ -65,7 +65,7 @@ namespace Crash.UI
 
 			RemoveModel += (sender, args) =>
 			{
-				if (sender is not SharedModel model)
+				if (ActiveModels.SelectedItem is not SharedModel model)
 					return;
 
 				Model.SharedModels.Remove(model);
