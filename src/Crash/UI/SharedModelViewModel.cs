@@ -23,16 +23,14 @@ namespace Crash.UI
 		private const string PREVIOUS_MODELS_KEY = "PREVIOUS_SHARED_MODELS";
 
 		internal ObservableCollection<SharedModel> SharedModels { get; private set; }
-		internal ObservableCollection<SharedModel> AddModels { get; private set; }
+		internal SharedModel AddModel { get; private set; }
+		internal ObservableCollection<SharedModel> AddModels => new ObservableCollection<SharedModel>(new List<SharedModel> { AddModel });
 
 		public event EventHandler OnLoaded;
 
 		[Serializable]
 		public sealed class SharedModel
 		{
-			[JsonIgnore]
-			internal SharedModelViewModel ViewModel;
-
 			// Conditionals
 			[JsonIgnore]
 			internal bool? Loaded { get; set; } = false;
@@ -53,55 +51,45 @@ namespace Crash.UI
 			// Serialized Proeprties
 			// [JsonConverter]
 			public Bitmap Thumbnail { get; set; }
-			public string ModelAddress { get; set; }
+
+			private string modelAddress { get; set; }
+			public string ModelAddress
+			{
+				get => modelAddress;
+				set
+				{
+					modelAddress = value;
+					OnAddressChanged?.Invoke(this, EventArgs.Empty);
+				}
+			}
 			public string[] Users { get; set; } = Array.Empty<string>();
 
-			public SharedModel()
-			{
-				;
-			}
+			public SharedModel() { }
 
-			public SharedModel(SharedModelViewModel sharedModel)
+			internal SharedModel(SharedModel sharedModel)
 			{
-				ViewModel = sharedModel;
+				this.Loaded = sharedModel.Loaded;
+				this.modelAddress = sharedModel.ModelAddress;
+				this.Users = sharedModel.Users;
 			}
 
 			public event Action<Change[]> OnInitialize;
-			public async Task LoadModel()
+			public async Task<bool> Connect()
 			{
 				HubConnection hub = new HubConnectionBuilder()
 					   .WithUrl($"{this.ModelAddress}/Crash").AddJsonProtocol()
 					   .AddJsonProtocol((opts) => CrashClient.JsonOptions())
 					   .WithAutomaticReconnect(new SharedModelRetryPolicy())
 					   .Build();
-				hub.On<Change[]>("Initialize", (Changes) => OnInitialize?.Invoke(Changes));
-				OnInitialize += (changes) =>
-				{
-					var uniqueUsers = changes.Select(c => c.Owner).ToHashSet().ToArray();
-					this.Users = uniqueUsers;
-					this.Loaded = true;
-				};
-				hub.Closed += async (args) =>
-				{
-					this.Loaded = false;
-					ViewModel.OnLoaded?.Invoke(this, null);
-					await Task.CompletedTask;
-				};
-				hub.Reconnecting += async (args) =>
-				{
-					this.Loaded = null;
-					ViewModel.OnLoaded?.Invoke(this, null);
-					await Task.CompletedTask;
-				};
 
 				try
 				{
 					await hub.StartAsync();
-					ViewModel?.OnLoaded?.Invoke(this, null);
+					return true;
 				}
 				catch (Exception ex)
 				{
-					;
+					return false;
 				}
 			}
 
@@ -111,15 +99,19 @@ namespace Crash.UI
 					=> TimeSpan.FromMilliseconds(100);
 			}
 
+			internal event EventHandler OnAddressChanged;
+
 		}
 
 
 		internal SharedModelViewModel()
 		{
 			SharedModels = new();
-			AddModels = new();
-			AddModels.Add(new SharedModel() { Loaded = true, ModelAddress = "" });
+
+			SetAddModel();
 			LoadSharedModels();
+			SharedModels.Add(new SharedModel() { ModelAddress = "address" });
+			SharedModels.Add(new SharedModel() { ModelAddress = "1.2.3.4" });
 
 			RhinoDoc.BeginSaveDocument += SaveSharedModels;
 		}
@@ -163,21 +155,34 @@ namespace Crash.UI
 			}
 		}
 
+		internal bool ModelIsNew(SharedModel model)
+		{
+			bool alreadyExists = SharedModels.Select(sm => sm.ModelAddress.ToUpperInvariant())
+										.Contains(model.ModelAddress.ToUpperInvariant());
+			if (alreadyExists)
+				return false;
+
+			if (string.IsNullOrEmpty(model.ModelAddress))
+				return false;
+
+			return true;
+		}
+
 		internal async Task AddSharedModel(SharedModel model)
 		{
-			if (string.IsNullOrEmpty(model?.ModelAddress)) return;
-
-			var models = SharedModels.ToArray();
-			bool alreadyExists = models.Select(sm => sm.ModelAddress.ToLowerInvariant()).Contains(model.ModelAddress.ToLowerInvariant());
-			if (!alreadyExists)
+			if (ModelIsNew(model))
 			{
-				model.ViewModel = this;
+				SharedModels.Add(new SharedModel(model));
+				SetAddModel();
 
-				SharedModels.Add(model);
-				await model.LoadModel();
+				await model.Connect();
 			}
 		}
 
+		internal void SetAddModel()
+		{
+			AddModel = new SharedModel() { Loaded = true, ModelAddress = "" };
+		}
 	}
 
 }

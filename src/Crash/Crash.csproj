@@ -2,13 +2,9 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net48;net7.0</TargetFrameworks>
-		<Version>1.1.1</Version>
 		<Title>Crash</Title>
 		<Description> A multi-user collaborative environment for Rhino </Description>
 		<TargetExt>.rhp</TargetExt>
-		<LangVersion>latest</LangVersion>
-		<Nullable>enable</Nullable>
-		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
 		<RhinoMacLauncher>8</RhinoMacLauncher>
 	</PropertyGroup>
 
@@ -23,15 +19,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 		<PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.5.22" />
 		<PackageReference Include="RhinoCommon" Version="7.21.22208.13001" IncludeAssets="compile;build" Condition="'$(TargetFramework)' == 'net48'" />
 		<PackageReference Include="RhinoCommon" Version="8.0.23094.11475-wip" IncludeAssets="compile;build" Condition="'$(TargetFramework)' == 'net7.0'" />
 		<PackageReference Include="System.Text.Json" Version="7.0.2" />
-		<PackageReference Include="Crash.Changes" Version="1.0.2" />
+		<PackageReference Include="Crash.Changes" Version="1.0.2">
+			<IncludeAssets>all</IncludeAssets>
+	  </PackageReference>
 		<PackageReference Include="System.Resources.Extensions" Version="7.0.0" />
 		<PackageReference Include="System.Drawing.Common" Version="7.0.0" />
 	</ItemGroup>
