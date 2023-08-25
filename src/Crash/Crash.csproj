@@ -5,6 +5,7 @@
 		<Title>Crash</Title>
 		<Description> A multi-user collaborative environment for Rhino </Description>
 		<TargetExt>.rhp</TargetExt>
+		<RhinoMacLauncher>8</RhinoMacLauncher>
 	</PropertyGroup>
 
 	<ItemGroup>
