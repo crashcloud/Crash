@@ -9,7 +9,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 	{
 
 		/// <inheritdoc/>
-		public ChangeAction Action => ChangeAction.Lock;
+		public ChangeAction Action => ChangeAction.Locked;
 
 		/// <inheritdoc/>
 		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
@@ -38,9 +38,11 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			{
 				if (crashObject.ChangeId == Guid.Empty) continue;
 
-				IChange change = new Change(crashObject.ChangeId, userName, null)
+				IChange change = new Change
 				{
-					Action = ChangeAction.Lock,
+					Id = crashObject.ChangeId,
+					Owner = userName,
+					Action = ChangeAction.Locked,
 					Type = GeometryChange.ChangeType
 				};
 

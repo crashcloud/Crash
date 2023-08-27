@@ -11,7 +11,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 	{
 
 		/// <inheritdoc/>
-		public ChangeAction Action => ChangeAction.Lock;
+		public ChangeAction Action => ChangeAction.Locked;
 
 		/// <inheritdoc/>
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)

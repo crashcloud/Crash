@@ -127,17 +127,12 @@ namespace Crash.Handlers.Plugins
 						CrashLogger.Logger.LogDebug(message);
 						break;
 
-					case ChangeAction.Lock:
+					case ChangeAction.Locked:
 						tasks.Add(Doc.LocalClient.SelectAsync(change.Id));
 						CrashLogger.Logger.LogDebug(message);
 						break;
-					case ChangeAction.Unlock:
+					case ChangeAction.Unlocked:
 						tasks.Add(Doc.LocalClient.UnselectAsync(change.Id));
-						CrashLogger.Logger.LogDebug(message);
-						break;
-
-					case ChangeAction.Camera:
-						tasks.Add(Doc.LocalClient.CameraChangeAsync(change));
 						CrashLogger.Logger.LogDebug(message);
 						break;
 
@@ -248,7 +243,7 @@ namespace Crash.Handlers.Plugins
 				}
 
 				var crashArgs = new CrashSelectionEventArgs(args.Selected, args.RhinoObjects.Select(o => new CrashObject(o)));
-				NotifyDispatcher(ChangeAction.Unlock, sender, crashArgs, args.Document);
+				NotifyDispatcher(ChangeAction.Unlocked, sender, crashArgs, args.Document);
 			};
 
 			RhinoDoc.DeselectAllObjects += (sender, args) =>
@@ -261,7 +256,7 @@ namespace Crash.Handlers.Plugins
 				}
 
 				var crashArgs = new CrashSelectionEventArgs(false);
-				NotifyDispatcher(ChangeAction.Unlock, sender, crashArgs, args.Document);
+				NotifyDispatcher(ChangeAction.Unlocked, sender, crashArgs, args.Document);
 			};
 			RhinoDoc.SelectObjects += (sender, args) =>
 			{
@@ -273,7 +268,7 @@ namespace Crash.Handlers.Plugins
 				}
 
 				var crashArgs = new CrashSelectionEventArgs(args.Selected, args.RhinoObjects.Select(o => new CrashObject(o)));
-				NotifyDispatcher(ChangeAction.Lock, sender, crashArgs, args.Document);
+				NotifyDispatcher(ChangeAction.Locked, sender, crashArgs, args.Document);
 			};
 
 			RhinoDoc.ModifyObjectAttributes += (sender, args) =>
@@ -295,7 +290,7 @@ namespace Crash.Handlers.Plugins
 			RhinoView.Modified += (sender, args) =>
 			{
 				var crashArgs = new CrashViewArgs(args.View);
-				NotifyDispatcher(ChangeAction.Camera, sender, crashArgs, args.View.Document);
+				NotifyDispatcher(ChangeAction.Add, sender, crashArgs, args.View.Document);
 			};
 		}
 
@@ -362,7 +357,7 @@ namespace Crash.Handlers.Plugins
 				Id = id,
 				Owner = name,
 				Type = GeometryChange.ChangeType,
-				Action = ChangeAction.Lock,
+				Action = ChangeAction.Locked,
 				Stamp = DateTime.Now,
 				Payload = null,
 			};
@@ -373,7 +368,7 @@ namespace Crash.Handlers.Plugins
 				Id = id,
 				Owner = name,
 				Type = GeometryChange.ChangeType,
-				Action = ChangeAction.Unlock,
+				Action = ChangeAction.Unlocked,
 				Stamp = DateTime.Now,
 				Payload = null,
 			};

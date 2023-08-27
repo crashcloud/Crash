@@ -301,8 +301,10 @@ namespace Crash.Handlers.Tests.Plugins
 
 				foreach (var changeAction in Enum.GetValues(typeof(ChangeAction)).Cast<ChangeAction>())
 				{
-					yield return new Change(Guid.NewGuid(), owner, payload)
+					yield return new Change
 					{
+						Owner = owner,
+						Payload = payload,
 						Type = CustomChange.TYPE,
 						Action = changeAction,
 					};

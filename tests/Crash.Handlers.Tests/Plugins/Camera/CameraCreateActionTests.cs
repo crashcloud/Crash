@@ -20,7 +20,7 @@ namespace Crash.Handlers.Tests.Plugins
 		[TestCaseSource(nameof(ViewArgs))]
 		public void CameraCreateAction_CanConvert(CrashViewArgs viewArgs)
 		{
-			var cameraArgs = new CreateRecieveArgs(ChangeAction.Camera, viewArgs, _cdoc);
+			var cameraArgs = new CreateRecieveArgs(ChangeAction.Add, viewArgs, _cdoc);
 			var createAction = new CameraCreateAction();
 			Assert.That(createAction.CanConvert(null, cameraArgs), Is.True);
 		}
@@ -34,7 +34,7 @@ namespace Crash.Handlers.Tests.Plugins
 			Assert.That(changes, Is.Not.Empty);
 			foreach (var change in changes)
 			{
-				Assert.That(change.Action, Is.EqualTo(ChangeAction.Camera));
+				Assert.That(change.Action, Is.EqualTo(ChangeAction.Add));
 				Assert.That(change is CameraChange, Is.True);
 			}
 		}

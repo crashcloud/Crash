@@ -14,7 +14,7 @@ namespace Crash.Handlers.Plugins.Camera.Recieve
 	{
 
 		/// <inheritdoc/>
-		public ChangeAction Action => ChangeAction.Camera;
+		public ChangeAction Action => ChangeAction.Add;
 
 		/// <inheritdoc/>
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)

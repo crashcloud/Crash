@@ -19,7 +19,7 @@ namespace Crash.Handlers.Tests.Plugins
 		[TestCaseSource(nameof(SelectArgs))]
 		public void GeometrySelectAction_CanConvert(CrashSelectionEventArgs selectEventArgs)
 		{
-			var selectArgs = new CreateRecieveArgs(ChangeAction.Lock, selectEventArgs, _cdoc);
+			var selectArgs = new CreateRecieveArgs(ChangeAction.Locked, selectEventArgs, _cdoc);
 			var createAction = new GeometrySelectAction();
 			Assert.That(createAction.CanConvert(null, selectArgs), Is.True);
 		}
@@ -27,7 +27,7 @@ namespace Crash.Handlers.Tests.Plugins
 		[TestCaseSource(nameof(SelectArgs))]
 		public void GeometrySelectAction_TryConvert(CrashSelectionEventArgs selectEventArgs)
 		{
-			var selectArgs = new CreateRecieveArgs(ChangeAction.Lock, selectEventArgs, _cdoc);
+			var selectArgs = new CreateRecieveArgs(ChangeAction.Locked, selectEventArgs, _cdoc);
 			var createAction = new GeometrySelectAction();
 			Assert.That(createAction.TryConvert(null, selectArgs, out IEnumerable<IChange> changes), Is.True);
 			Assert.That(changes, Is.Not.Empty);
@@ -40,7 +40,7 @@ namespace Crash.Handlers.Tests.Plugins
 		[TestCaseSource(nameof(UnSelectArgs))]
 		public void GeometryUnSelectAction_CanConvert(CrashSelectionEventArgs selectEventArgs)
 		{
-			var selectArgs = new CreateRecieveArgs(ChangeAction.Unlock, selectEventArgs, _cdoc);
+			var selectArgs = new CreateRecieveArgs(ChangeAction.Unlocked, selectEventArgs, _cdoc);
 			var createAction = new GeometryUnSelectAction();
 			Assert.That(createAction.CanConvert(null, selectArgs), Is.True);
 		}
@@ -48,7 +48,7 @@ namespace Crash.Handlers.Tests.Plugins
 		[TestCaseSource(nameof(UnSelectArgs))]
 		public void GeometryUnSelectAction_TryConvert(CrashSelectionEventArgs selectEventArgs)
 		{
-			var selectArgs = new CreateRecieveArgs(ChangeAction.Unlock, selectEventArgs, _cdoc);
+			var selectArgs = new CreateRecieveArgs(ChangeAction.Unlocked, selectEventArgs, _cdoc);
 			var createAction = new GeometryUnSelectAction();
 			Assert.That(createAction.TryConvert(null, selectArgs, out IEnumerable<IChange> changes), Is.True);
 			Assert.That(changes, Is.Not.Empty);

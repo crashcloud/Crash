@@ -9,7 +9,7 @@ namespace Crash.Handlers.Plugins.Camera.Create
 	internal sealed class CameraCreateAction : IChangeCreateAction
 	{
 		/// <inheritdoc/>
-		public ChangeAction Action => ChangeAction.Camera;
+		public ChangeAction Action => ChangeAction.Add;
 
 		DateTime lastSentTime;
 		CPoint lastLocation;

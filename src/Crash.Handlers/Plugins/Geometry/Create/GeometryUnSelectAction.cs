@@ -9,7 +9,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 	internal sealed class GeometryUnSelectAction : IChangeCreateAction
 	{
 		/// <inheritdoc/>
-		public ChangeAction Action => ChangeAction.Unlock;
+		public ChangeAction Action => ChangeAction.Unlocked;
 
 		/// <inheritdoc/>
 		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
@@ -55,9 +55,11 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 
 		private Change CreateChange(Guid changeId, string userName)
 		{
-			var change = new Change(changeId, userName, null)
+			var change = new Change()
 			{
-				Action = ChangeAction.Unlock,
+				Id = changeId,
+				Owner = userName,
+				Action = ChangeAction.Unlocked,
 				Type = GeometryChange.ChangeType,
 			};
 

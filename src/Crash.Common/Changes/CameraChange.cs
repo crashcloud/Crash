@@ -49,7 +49,7 @@ namespace Crash.Common.Changes
 		public CameraChange(IChange change)
 		{
 			Change = change;
-			Change.Action = ChangeAction.Camera;
+			Change.Action = ChangeAction.Add;
 
 			if (string.IsNullOrEmpty(Change.Payload))
 			{
@@ -70,7 +70,7 @@ namespace Crash.Common.Changes
 		public static CameraChange CreateNew(Camera camera, string userName)
 		{
 			string json = JsonSerializer.Serialize(camera, Serialization.Options.Default);
-			IChange cameraChange = new Change(Guid.NewGuid(), userName, json);
+			IChange cameraChange = new Change() {Owner = userName, Payload = json};
 			return new CameraChange(cameraChange);
 		}
 
