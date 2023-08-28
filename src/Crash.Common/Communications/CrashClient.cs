@@ -26,6 +26,7 @@ namespace Crash.Client
 		const string SELECT = "Select";
 		const string UNSELECT = "Unselect";
 		const string INITIALIZE = "Initialize";
+		const string INITIALIZEUSERS = "InitializeUsers";
 		const string CAMERACHANGE = "CameraChange";
 
 		// TODO : Move to https
@@ -55,6 +56,7 @@ namespace Crash.Client
 		public event Action<string, Guid> OnSelect;
 		public event Action<string, Guid> OnUnselect;
 		public event Action<Change[]> OnInitialize;
+		public event Action<string[]> OnInitializeUsers;
 		public event Action<string, Change> OnCameraChange;
 
 		/// <summary>
@@ -126,6 +128,7 @@ namespace Crash.Client
 			_connection.On<string, Guid>(SELECT, (user, id) => OnSelect?.Invoke(user, id));
 			_connection.On<string, Guid>(UNSELECT, (user, id) => OnUnselect?.Invoke(user, id));
 			_connection.On<Change[]>(INITIALIZE, (Changes) => OnInitialize?.Invoke(Changes));
+			_connection.On<string[]>(INITIALIZEUSERS, (users) => OnInitializeUsers?.Invoke(users));
 			_connection.On<string, Change>(CAMERACHANGE, (user, Change) => OnCameraChange?.Invoke(user, Change));
 
 			_connection.Reconnected += ConnectionReconnectedAsync;
@@ -147,6 +150,7 @@ namespace Crash.Client
 			}
 
 			this.OnInitialize += Init;
+			this.OnInitializeUsers += InitUsers;
 
 			// TODO : Check for successful connection
 			await this.StartAsync();
@@ -156,6 +160,12 @@ namespace Crash.Client
 		private void Init(IEnumerable<Change> changes)
 		{
 			OnInit?.Invoke(this, new CrashInitArgs(_crashDoc, changes));
+		}
+
+		private void InitUsers(IEnumerable<string> users)
+		{
+			// User Init
+			// OnInitUsers?.Invoke(this, new CrashUserInitArgs())
 		}
 
 		public static void CloseLocalServer(CrashDoc crashDoc)
@@ -203,7 +213,7 @@ namespace Crash.Client
 			await _connection.InvokeAsync(DELETE, _user, id);
 		}
 
-		/// <summary>Adds a change to database </summary>
+		/// <summary>Adds a change to databiase </summary>
 		public async Task AddAsync(Change Change)
 		{
 			int changeLength = Change.Payload.Length;
