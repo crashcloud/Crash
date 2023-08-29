@@ -43,7 +43,7 @@ namespace Crash.Utils
 			id = Guid.Empty;
 			if (rObj == null) return false;
 
-			return rObj.UserDictionary.TryGetGuid(ChangeIdKey, out id);
+			return rObj.Geometry.UserDictionary.TryGetGuid(ChangeIdKey, out id);
 		}
 
 		/// <summary>Acquires the Rhino Object given the RhinoId from an IRhinoChange</summary>
@@ -60,13 +60,13 @@ namespace Crash.Utils
 		{
 			if (null == Change || rObj == null) return;
 
-			if (rObj.UserDictionary.TryGetGuid(ChangeIdKey, out Guid changeId))
+			if (rObj.Geometry.UserDictionary.TryGetGuid(ChangeIdKey, out Guid changeId))
 			{
-				rObj.UserDictionary.Remove(ChangeIdKey);
+				rObj.Geometry.UserDictionary.Remove(ChangeIdKey);
 				RhinoChangeKeys.Remove(changeId);
 			}
 
-			rObj.UserDictionary.Set(ChangeIdKey, Change.Id);
+			rObj.Geometry.UserDictionary.Set(ChangeIdKey, Change.Id);
 
 			RhinoChangeKeys.Remove(Change.Id);
 			RhinoChangeKeys.Add(Change.Id, rObj);
