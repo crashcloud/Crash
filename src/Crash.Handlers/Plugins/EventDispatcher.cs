@@ -123,7 +123,7 @@ namespace Crash.Handlers.Plugins
 						break;
 
 					case ChangeAction.Update:
-						tasks.Add(Doc.LocalClient.UpdateAsync(change.Id, change));
+						tasks.Add(Doc.LocalClient.UpdateAsync(change));
 						CrashLogger.Logger.LogDebug(message);
 						break;
 
@@ -302,15 +302,15 @@ namespace Crash.Handlers.Plugins
 		/// </summary>
 		public void RegisterDefaultServerCalls(CrashDoc Doc)
 		{
-			Doc.LocalClient.OnAdd += async (name, change) => await NotifyDispatcherAsync(Doc, change);
-			Doc.LocalClient.OnDelete += async (name, changeGuid) => await NotifyDispatcherAsync(Doc, DeleteChange(changeGuid, name));
+			Doc.LocalClient.OnAdd += async (change) => await NotifyDispatcherAsync(Doc, change);
+			Doc.LocalClient.OnDelete += async (changeGuid) => await NotifyDispatcherAsync(Doc, DeleteChange(changeGuid));
 
 			Doc.LocalClient.OnSelect += async (name, changeGuid) => await NotifyDispatcherAsync(Doc, SelectChange(changeGuid, name));
 			Doc.LocalClient.OnUnselect += async (name, changeGuid) => await NotifyDispatcherAsync(Doc, UnSelectChange(changeGuid, name));
 
 			Doc.LocalClient.OnDone += async (name) => await NotifyDispatcherAsync(Doc, EventDispatcher.DoneChange(name));
 
-			Doc.LocalClient.OnCameraChange += async (user, change) => await NotifyDispatcherAsync(Doc, change);
+			Doc.LocalClient.OnCameraChange += async (change) => await NotifyDispatcherAsync(Doc, change);
 
 			bool initialInit = false;
 
@@ -340,11 +340,10 @@ namespace Crash.Handlers.Plugins
 				Stamp = DateTime.UtcNow,
 			};
 
-		private static Change DeleteChange(Guid id, string name)
+		private static Change DeleteChange(Guid id)
 			=> new Change()
 			{
 				Id = id,
-				Owner = name,
 				Type = GeometryChange.ChangeType,
 				Action = ChangeAction.Remove,
 				Stamp = DateTime.Now,
