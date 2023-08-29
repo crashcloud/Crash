@@ -23,8 +23,8 @@ namespace Crash.Client
 		const string DELETE = "Delete";
 		const string DONE = "Done";
 		const string UPDATE = "Update";
-		const string SELECT = "Select";
-		const string UNSELECT = "Unselect";
+		const string LOCK = "Lock";
+		const string UNLOCK = "Unlock";
 		const string INITIALIZE = "Initialize";
 		const string INITIALIZEUSERS = "InitializeUsers";
 		const string CAMERACHANGE = "CameraChange";
@@ -53,8 +53,8 @@ namespace Crash.Client
 		public event Action<string, Guid> OnDelete;
 		public event Action<string, Guid, Change> OnUpdate;
 		public event Action<string> OnDone;
-		public event Action<string, Guid> OnSelect;
-		public event Action<string, Guid> OnUnselect;
+		public event Action<string, Guid> OnLock;
+		public event Action<string, Guid> OnUnlock;
 		public event Action<IEnumerable<Change>> OnInitialize;
 		public event Action<string[]> OnInitializeUsers;
 		public event Action<string, Change> OnCameraChange;
@@ -125,8 +125,8 @@ namespace Crash.Client
 			_connection.On<string, Guid>(DELETE, (user, id) => OnDelete?.Invoke(user, id));
 			_connection.On<string, Guid, Change>(UPDATE, (user, id, Change) => OnUpdate?.Invoke(user, id, Change));
 			_connection.On<string>(DONE, (user) => OnDone?.Invoke(user));
-			_connection.On<string, Guid>(SELECT, (user, id) => OnSelect?.Invoke(user, id));
-			_connection.On<string, Guid>(UNSELECT, (user, id) => OnUnselect?.Invoke(user, id));
+			_connection.On<string, Guid>(LOCK, (user, id) => OnLock?.Invoke(user, id));
+			_connection.On<string, Guid>(UNLOCK, (user, id) => OnUnlock?.Invoke(user, id));
 			_connection.On<IEnumerable<Change>>(INITIALIZE, (changes) => OnInitialize?.Invoke(changes));
 			// _connection.On<IEnumerable<string>>(INITIALIZEUSERS, (users) => OnInitializeUsers?.Invoke(users));
 			_connection.On<string, Change>(CAMERACHANGE, (user, Change) => OnCameraChange?.Invoke(user, Change));
@@ -241,20 +241,16 @@ namespace Crash.Client
 			await _connection.InvokeAsync(DONE, changeIds);
 		}
 
-		/// <summary>Select event</summary>
-		public async Task SelectAsync(Guid id)
+		/// <summary>Lock event</summary>
+		public async Task LockAsync(Guid id)
 		{
-			await _connection.InvokeAsync(SELECT, id);
+			await _connection.InvokeAsync(LOCK, _user, id);
 		}
 
-		/// <summary>
-		/// Unselect event
-		/// </summary>
-		/// <param name="id"></param>
-		/// <returns></returns>
-		public async Task UnselectAsync(Guid id)
+		/// <summary>Unlock event</summary>
+		public async Task UnlockAsync(Guid id)
 		{
-			await _connection.InvokeAsync(UNSELECT, id);
+			await _connection.InvokeAsync(UNLOCK, _user, id);
 		}
 
 		/// <summary>

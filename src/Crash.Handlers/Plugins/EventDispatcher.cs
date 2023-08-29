@@ -137,11 +137,11 @@ namespace Crash.Handlers.Plugins
 						break;
 
 					case ChangeAction.Locked:
-						tasks.Add(Doc.LocalClient.SelectAsync(change.Id));
+						tasks.Add(Doc.LocalClient.LockAsync(change.Id));
 						CrashLogger.Logger.LogDebug(message);
 						break;
 					case ChangeAction.Unlocked:
-						tasks.Add(Doc.LocalClient.UnselectAsync(change.Id));
+						tasks.Add(Doc.LocalClient.UnlockAsync(change.Id));
 						CrashLogger.Logger.LogDebug(message);
 						break;
 
@@ -314,8 +314,8 @@ namespace Crash.Handlers.Plugins
 			Doc.LocalClient.OnAdd += async (name, change) => await NotifyDispatcherAsync(Doc, change);
 			Doc.LocalClient.OnDelete += async (name, changeGuid) => await NotifyDispatcherAsync(Doc, DeleteChange(changeGuid, name));
 
-			Doc.LocalClient.OnSelect += async (name, changeGuid) => await NotifyDispatcherAsync(Doc, SelectChange(changeGuid, name));
-			Doc.LocalClient.OnUnselect += async (name, changeGuid) => await NotifyDispatcherAsync(Doc, UnSelectChange(changeGuid, name));
+			Doc.LocalClient.OnLock += async (name, changeGuid) => await NotifyDispatcherAsync(Doc, SelectChange(changeGuid, name));
+			Doc.LocalClient.OnUnlock += async (name, changeGuid) => await NotifyDispatcherAsync(Doc, UnSelectChange(changeGuid, name));
 
 			Doc.LocalClient.OnDone += async (name) => await NotifyDispatcherAsync(Doc, EventDispatcher.DoneChange(name));
 
