@@ -23,8 +23,8 @@ namespace Crash.Client
 		const string DELETE = "Delete";
 		const string DONE = "Done";
 		const string UPDATE = "Update";
-		const string LOCK = "Lock";
-		const string UNLOCK = "Unlock";
+		const string SELECT = "Select";
+		const string UNSELECT = "Unselect";
 		const string INITIALIZE = "Initialize";
 		const string INITIALIZEUSERS = "InitializeUsers";
 		const string CAMERACHANGE = "CameraChange";
@@ -49,21 +49,21 @@ namespace Crash.Client
 			remove => _connection.Closed -= value;
 		}
 
-		public event Action<string, Change> OnAdd;
-		public event Action<string, Guid> OnDelete;
-		public event Action<string, Guid, Change> OnUpdate;
+		public event Action<Change> OnAdd;
+		public event Action<Guid> OnDelete;
+		public event Action<Change> OnUpdate;
 		public event Action<string> OnDone;
-		public event Action<string, Guid> OnLock;
-		public event Action<string, Guid> OnUnlock;
+		public event Action<string, Guid> OnSelect;
+		public event Action<string, Guid> OnUnselect;
 		public event Action<IEnumerable<Change>> OnInitialize;
-		public event Action<string[]> OnInitializeUsers;
-		public event Action<string, Change> OnCameraChange;
+		public event Action<IEnumerable<string>> OnInitializeUsers;
+		public event Action<Change> OnCameraChange;
 
 		/// <summary>
 		/// Stop async task
 		/// </summary>
 		/// <returns></returns>
-		public async Task StopAsync() => await _connection?.StopAsync();
+		public Task StopAsync() => _connection?.StopAsync();
 
 		/// <summary>
 		/// Crash client constructor
@@ -121,15 +121,15 @@ namespace Crash.Client
 
 		internal void RegisterConnections()
 		{
-			_connection.On<string, Change>(ADD, (user, change) => OnAdd?.Invoke(user, change));
-			_connection.On<string, Guid>(DELETE, (user, id) => OnDelete?.Invoke(user, id));
-			_connection.On<string, Guid, Change>(UPDATE, (user, id, Change) => OnUpdate?.Invoke(user, id, Change));
+			_connection.On<Change>(ADD, (change) => OnAdd?.Invoke(change));
+			_connection.On<Guid>(DELETE, (id) => OnDelete?.Invoke(id));
+			_connection.On<Change>(UPDATE, (change) => OnUpdate?.Invoke(change));
 			_connection.On<string>(DONE, (user) => OnDone?.Invoke(user));
-			_connection.On<string, Guid>(LOCK, (user, id) => OnLock?.Invoke(user, id));
-			_connection.On<string, Guid>(UNLOCK, (user, id) => OnUnlock?.Invoke(user, id));
+			_connection.On<string, Guid>(SELECT, (user, id) => OnSelect?.Invoke(user, id));
+			_connection.On<string, Guid>(UNSELECT, (user, id) => OnUnselect?.Invoke(user, id));
 			_connection.On<IEnumerable<Change>>(INITIALIZE, (changes) => OnInitialize?.Invoke(changes));
-			// _connection.On<IEnumerable<string>>(INITIALIZEUSERS, (users) => OnInitializeUsers?.Invoke(users));
-			_connection.On<string, Change>(CAMERACHANGE, (user, Change) => OnCameraChange?.Invoke(user, Change));
+			_connection.On<IEnumerable<string>>(INITIALIZEUSERS, (users) => OnInitializeUsers?.Invoke(users));
+			_connection.On<Change>(CAMERACHANGE, (change) => OnCameraChange?.Invoke(change));
 
 			_connection.Reconnected += ConnectionReconnectedAsync;
 			_connection.Closed += ConnectionClosedAsync;
@@ -150,7 +150,7 @@ namespace Crash.Client
 			}
 
 			this.OnInitialize += Init;
-			this.OnInitializeUsers += InitUsers;
+			// this.OnInitializeUsers += InitUsers;
 
 			// TODO : Check for successful connection
 			await this.StartAsync();
@@ -159,13 +159,11 @@ namespace Crash.Client
 		// This isn't calling, and needs to call the Event Dispatcher
 		private void Init(IEnumerable<Change> changes)
 		{
-			this.OnInitialize -= Init;
 			OnInit?.Invoke(this, new CrashInitArgs(_crashDoc, changes));
 		}
 
 		private void InitUsers(IEnumerable<string> users)
 		{
-			this.OnInitializeUsers -= InitUsers;
 			// User Init
 			// OnInitUsers?.Invoke(this, new CrashUserInitArgs())
 		}
@@ -200,9 +198,9 @@ namespace Crash.Client
 		/// <param name="id">id</param>
 		/// <param name="Change">Change</param>
 		/// <returns></returns>
-		public async Task UpdateAsync(Guid id, Change Change)
+		public async Task UpdateAsync(Change Change)
 		{
-			await _connection.InvokeAsync(UPDATE, _user, id, Change);
+			await _connection.InvokeAsync(UPDATE, Change);
 		}
 
 		/// <summary>
@@ -212,21 +210,24 @@ namespace Crash.Client
 		/// <returns>returns task</returns>
 		public async Task DeleteAsync(Guid id)
 		{
-			await _connection.InvokeAsync(DELETE, _user, id);
+			await _connection.InvokeAsync(DELETE, id);
 		}
 
 		/// <summary>Adds a change to databiase </summary>
-		public async Task AddAsync(Change Change)
+		public async Task AddAsync(Change change)
 		{
-			int changeLength = Change.Payload.Length;
+			if (change?.Payload is null)
+				return;
+
+			int changeLength = change.Payload.Length;
 			if (changeLength >= ushort.MaxValue)
 			{
 				throw new OversizedChangeException($"Change is over maximum size. {changeLength}/{ushort.MaxValue}");
 			}
 
-			CrashLogger.Logger.LogInformation($"Change {Change.Id} size is {changeLength}");
+			CrashLogger.Logger.LogInformation($"Change {change.Id} size is {changeLength}");
 
-			await _connection.InvokeAsync(ADD, Change);
+			await _connection.InvokeAsync(ADD, change);
 		}
 
 		/// <summary>Done</summary>
@@ -241,16 +242,20 @@ namespace Crash.Client
 			await _connection.InvokeAsync(DONE, changeIds);
 		}
 
-		/// <summary>Lock event</summary>
-		public async Task LockAsync(Guid id)
+		/// <summary>Select event</summary>
+		public async Task SelectAsync(Guid id)
 		{
-			await _connection.InvokeAsync(LOCK, _user, id);
+			await _connection.InvokeAsync(SELECT, id);
 		}
 
-		/// <summary>Unlock event</summary>
-		public async Task UnlockAsync(Guid id)
+		/// <summary>
+		/// Unselect event
+		/// </summary>
+		/// <param name="id"></param>
+		/// <returns></returns>
+		public async Task UnselectAsync(Guid id)
 		{
-			await _connection.InvokeAsync(UNLOCK, _user, id);
+			await _connection.InvokeAsync(UNSELECT, id);
 		}
 
 		/// <summary>
