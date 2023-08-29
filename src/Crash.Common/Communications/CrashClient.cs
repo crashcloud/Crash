@@ -63,7 +63,7 @@ namespace Crash.Client
 		/// Stop async task
 		/// </summary>
 		/// <returns></returns>
-		public Task StopAsync() => _connection?.StopAsync();
+		public async Task StopAsync() => await _connection?.StopAsync();
 
 		/// <summary>
 		/// Crash client constructor
@@ -226,7 +226,7 @@ namespace Crash.Client
 
 			CrashLogger.Logger.LogInformation($"Change {Change.Id} size is {changeLength}");
 
-			await _connection.InvokeAsync(ADD, _user, Change);
+			await _connection.InvokeAsync(ADD, Change);
 		}
 
 		/// <summary>Done</summary>
@@ -238,13 +238,13 @@ namespace Crash.Client
 		/// <summary>Releases a collection of changes</summary>
 		public async Task DoneAsync(IEnumerable<Guid> changeIds)
 		{
-			await _connection.InvokeAsync(DONE, _user, changeIds);
+			await _connection.InvokeAsync(DONE, changeIds);
 		}
 
 		/// <summary>Select event</summary>
 		public async Task SelectAsync(Guid id)
 		{
-			await _connection.InvokeAsync(SELECT, _user, id);
+			await _connection.InvokeAsync(SELECT, id);
 		}
 
 		/// <summary>
@@ -254,7 +254,7 @@ namespace Crash.Client
 		/// <returns></returns>
 		public async Task UnselectAsync(Guid id)
 		{
-			await _connection.InvokeAsync(UNSELECT, _user, id);
+			await _connection.InvokeAsync(UNSELECT, id);
 		}
 
 		/// <summary>
@@ -264,7 +264,7 @@ namespace Crash.Client
 		/// <returns></returns>
 		public async Task CameraChangeAsync(Change Change)
 		{
-			await _connection.InvokeAsync(CAMERACHANGE, _user, Change);
+			await _connection.InvokeAsync(CAMERACHANGE, Change);
 		}
 
 		/// <summary>
