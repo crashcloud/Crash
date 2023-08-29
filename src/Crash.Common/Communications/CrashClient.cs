@@ -55,7 +55,7 @@ namespace Crash.Client
 		public event Action<string> OnDone;
 		public event Action<string, Guid> OnSelect;
 		public event Action<string, Guid> OnUnselect;
-		public event Action<Change[]> OnInitialize;
+		public event Action<IEnumerable<Change>> OnInitialize;
 		public event Action<string[]> OnInitializeUsers;
 		public event Action<string, Change> OnCameraChange;
 
@@ -127,8 +127,8 @@ namespace Crash.Client
 			_connection.On<string>(DONE, (user) => OnDone?.Invoke(user));
 			_connection.On<string, Guid>(SELECT, (user, id) => OnSelect?.Invoke(user, id));
 			_connection.On<string, Guid>(UNSELECT, (user, id) => OnUnselect?.Invoke(user, id));
-			_connection.On<Change[]>(INITIALIZE, (Changes) => OnInitialize?.Invoke(Changes));
-			_connection.On<string[]>(INITIALIZEUSERS, (users) => OnInitializeUsers?.Invoke(users));
+			_connection.On<IEnumerable<Change>>(INITIALIZE, (changes) => OnInitialize?.Invoke(changes));
+			// _connection.On<IEnumerable<string>>(INITIALIZEUSERS, (users) => OnInitializeUsers?.Invoke(users));
 			_connection.On<string, Change>(CAMERACHANGE, (user, Change) => OnCameraChange?.Invoke(user, Change));
 
 			_connection.Reconnected += ConnectionReconnectedAsync;
