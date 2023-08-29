@@ -96,7 +96,7 @@ namespace Crash.Handlers.Plugins
 			foreach (var iChange in changes)
 			{
 				Change change = iChange is Change castChange ? castChange : new Change(iChange);
-				string message = $"Added Change {change.Action}, {change.Id}";
+				string message = $"Could not add Change {change.Action}, {change.Id}";
 
 				switch (change.Action)
 				{
