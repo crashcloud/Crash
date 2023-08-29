@@ -96,14 +96,23 @@ namespace Crash.Handlers.Plugins
 			foreach (var iChange in changes)
 			{
 				Change change = iChange is Change castChange ? castChange : new Change(iChange);
-				string message = $"Could not add Change {change.Action}, {change.Id}";
+				string message = $"Added Change {change.Action}, {change.Id}";
 
 				switch (change.Action)
 				{
+					case ChangeAction.Add:
 					case ChangeAction.Add | ChangeAction.Temporary:
 						try
 						{
-							tasks.Add(Doc.LocalClient.AddAsync(change));
+							if (change.Type == CameraChange.ChangeName)
+							{
+								tasks.Add(Doc.LocalClient.CameraChangeAsync(change));
+							}
+							else
+							{
+								tasks.Add(Doc.LocalClient.AddAsync(change));
+							}
+							
 							CrashLogger.Logger.LogDebug(message);
 						}
 						catch (OversizedChangeException oversized)
@@ -137,7 +146,7 @@ namespace Crash.Handlers.Plugins
 						break;
 
 					default:
-						CrashLogger.Logger.LogDebug(message);
+						CrashLogger.Logger.LogDebug("ACTION NOT SUPPORTED");
 						break;
 				}
 			}
