@@ -12,7 +12,7 @@ namespace Crash.Communications
 	/// </summary>
 	public sealed class CrashServer : IDisposable
 	{
-		public const int DefaultPort = 5000;
+		public const int DefaultPort = 8080;
 		public const string DefaultURL = "http://0.0.0.0";
 
 		private CrashDoc _crashDoc;
