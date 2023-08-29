@@ -159,11 +159,13 @@ namespace Crash.Client
 		// This isn't calling, and needs to call the Event Dispatcher
 		private void Init(IEnumerable<Change> changes)
 		{
+			this.OnInitialize -= Init;
 			OnInit?.Invoke(this, new CrashInitArgs(_crashDoc, changes));
 		}
 
 		private void InitUsers(IEnumerable<string> users)
 		{
+			this.OnInitializeUsers -= InitUsers;
 			// User Init
 			// OnInitUsers?.Invoke(this, new CrashUserInitArgs())
 		}
