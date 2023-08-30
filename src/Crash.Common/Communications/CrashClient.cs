@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Threading.Channels;
 
 using Crash.Common.Document;
 using Crash.Common.Events;
@@ -22,6 +23,7 @@ namespace Crash.Client
 		const string ADD = "Add";
 		const string DELETE = "Delete";
 		const string DONE = "Done";
+		const string DONERANGE = "DoneRange";
 		const string UPDATE = "Update";
 		const string LOCK = "Lock";
 		const string UNLOCK = "Unlock";
@@ -53,6 +55,7 @@ namespace Crash.Client
 		public event Action<Guid> OnDelete;
 		public event Action<Change> OnUpdate;
 		public event Action<string> OnDone;
+		public event Action<IEnumerable<Guid>> OnDoneRange;
 		public event Action<string, Guid> OnLock;
 		public event Action<string, Guid> OnUnlock;
 		public event Action<IEnumerable<Change>> OnInitialize;
@@ -125,6 +128,7 @@ namespace Crash.Client
 			_connection.On<Guid>(DELETE, (id) => OnDelete?.Invoke(id));
 			_connection.On<Change>(UPDATE, (change) => OnUpdate?.Invoke(change));
 			_connection.On<string>(DONE, (user) => OnDone?.Invoke(user));
+			_connection.On<IEnumerable<Guid>>(DONERANGE, (ids) => OnDoneRange(ids));
 			_connection.On<string, Guid>(LOCK, (user, id) => OnLock?.Invoke(user, id));
 			_connection.On<string, Guid>(UNLOCK, (user, id) => OnUnlock?.Invoke(user, id));
 			_connection.On<IEnumerable<Change>>(INITIALIZE, (changes) => OnInitialize?.Invoke(changes));
@@ -241,7 +245,7 @@ namespace Crash.Client
 		/// <summary>Releases a collection of changes</summary>
 		public async Task DoneAsync(IEnumerable<Guid> changeIds)
 		{
-			await _connection.InvokeAsync(DONE, changeIds);
+			await _connection.InvokeAsync(DONERANGE, changeIds);
 		}
 
 		/// <summary>Lock event</summary>

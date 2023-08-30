@@ -9,7 +9,7 @@ namespace Crash.Commands
 {
 
 	/// <summary>Command to Release Changes</summary>
-	[CommandStyle(Style.DoNotRepeat | Style.NotUndoable | Style.Hidden)]
+	[CommandStyle(Style.DoNotRepeat | Style.NotUndoable)]
 	public sealed class ReleaseSelected : Command
 	{
 

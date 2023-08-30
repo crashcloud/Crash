@@ -44,6 +44,8 @@ namespace Crash
 
 				e.CrashDoc.CacheTable.IsInit = false;
 			}
+
+			RhinoDoc.ActiveDoc.Views.Redraw();
 		}
 
 		protected virtual void RegisterChangeSchema(IChangeDefinition changeDefinition)

@@ -162,7 +162,7 @@ namespace Crash.Handlers.Plugins
 		public async Task NotifyDispatcherAsync(CrashDoc Doc, Change change)
 		{
 			if (!_recieveActions.TryGetValue(change.Type, out List<IChangeRecieveAction>? recievers) ||
-				null == recievers)
+				recievers is null)
 			{
 				CrashLogger.Logger.LogDebug($"Could not find a Recieve Action for {change.Type}, {change.Id}");
 				return;
