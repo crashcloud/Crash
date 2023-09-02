@@ -2,19 +2,15 @@
 
 namespace Crash.Events
 {
-
 	/// <summary>
-	/// Idle Actions are called in a FIFO order by the IdleQueue.
-	/// Inheriting from this is fine.
-	/// Do not override Invoke however.
+	///     Idle Actions are called in a FIFO order by the IdleQueue.
+	///     Inheriting from this is fine.
+	///     Do not override Invoke however.
 	/// </summary>
 	public class IdleAction : IDisposable
 	{
-		readonly Action<IdleArgs> _action;
-		readonly IdleArgs _args;
-
-		/// <summary>True if successfully invoked</summary>
-		public bool Invoked { get; private set; }
+		private readonly Action<IdleArgs> _action;
+		private readonly IdleArgs _args;
 
 		/// <summary>Constructs an Idle Action</summary>
 		/// <param name="action">The Action to be called on Idle</param>
@@ -26,20 +22,24 @@ namespace Crash.Events
 			_args = args ?? throw new ArgumentNullException($"{nameof(args)} is null");
 		}
 
+		/// <summary>True if successfully invoked</summary>
+		public bool Invoked { get; private set; }
+
+		
+		public void Dispose()
+		{
+		}
+
 		/// <summary>Invokes the Action (If it hasn't already been invoked)</summary>
 		public void Invoke()
 		{
-			if (Invoked) return;
+			if (Invoked)
+			{
+				return;
+			}
+
 			_action(_args);
 			Invoked = true;
 		}
-
-		/// <inheritdoc/>
-		public void Dispose()
-		{
-
-		}
-
 	}
-
 }

@@ -1,27 +1,29 @@
-﻿using Crash.Common.Changes;
-using Crash.Common.Document;
+﻿using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
+using Crash.Handlers.Changes;
 using Crash.Utils;
 
 namespace Crash.Handlers.Plugins.Geometry.Recieve
 {
-
 	/// <summary>Handles recieving of Geometry</summary>
 	internal sealed class GeometryAddRecieveAction : IChangeRecieveAction
 	{
-
-		/// <inheritdoc/>
 		public ChangeAction Action => ChangeAction.Add;
 
-		/// <inheritdoc/>
+
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
-			=> await OnRecieveAsync(crashDoc, new GeometryChange(recievedChange));
+		{
+			await OnRecieveAsync(crashDoc, GeometryChange.CreateFrom(recievedChange));
+		}
 
 		/// <summary>Handles recieved Geometry Changes</summary>
 		public async Task OnRecieveAsync(CrashDoc crashDoc, GeometryChange geomChange)
 		{
-			if (GeometryAddRecieveAction.IsDuplicate(crashDoc, geomChange)) return;
+			if (IsDuplicate(crashDoc, geomChange))
+			{
+				return;
+			}
 
 			var changeArgs = new IdleArgs(crashDoc, geomChange);
 			var bakeAction = new IdleAction(AddToDocument, changeArgs);
@@ -31,29 +33,30 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 		// Prevents issues with the same user logged in twice
 		private static bool IsDuplicate(CrashDoc crashDoc, IChange change)
 		{
-			bool isNotInit = !crashDoc.CacheTable.IsInit;
-			bool isByCurrentUser = change.Owner.Equals(crashDoc.Users.CurrentUser.Name, StringComparison.Ordinal);
+			var isNotInit = !crashDoc.CacheTable.IsInit;
+			var isByCurrentUser = change.Owner.Equals(crashDoc.Users.CurrentUser.Name, StringComparison.Ordinal);
 			return isNotInit && isByCurrentUser;
 		}
 
 		private void AddToDocument(IdleArgs args)
 		{
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
-			if (args.Change is not GeometryChange geomChange) return;
+			if (args.Change is not GeometryChange geomChange)
+			{
+				return;
+			}
 
 			args.Doc.CacheTable.IsInit = true;
 			try
 			{
-				Guid rhinoId = rhinoDoc.Objects.Add(geomChange.Geometry);
-				Rhino.DocObjects.RhinoObject rhinoObject = rhinoDoc.Objects.FindId(rhinoId);
-				ChangeUtils.SyncHost(rhinoObject, geomChange);
+				var rhinoId = rhinoDoc.Objects.Add(geomChange.Geometry);
+				var rhinoObject = rhinoDoc.Objects.FindId(rhinoId);
+				rhinoObject.SyncHost(geomChange);
 			}
 			finally
 			{
 				args.Doc.CacheTable.IsInit = false;
 			}
 		}
-
 	}
-
 }

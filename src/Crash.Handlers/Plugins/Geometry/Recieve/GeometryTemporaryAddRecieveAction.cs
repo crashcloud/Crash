@@ -1,19 +1,16 @@
-﻿using Crash.Common.Changes;
-using Crash.Common.Document;
+﻿using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
+using Crash.Handlers.Changes;
 
 namespace Crash.Handlers.Plugins.Geometry.Recieve
 {
-
 	/// <summary>Handles temporary objects from the server</summary>
 	internal sealed class GeometryTemporaryAddRecieveAction : IChangeRecieveAction
 	{
-
-		/// <inheritdoc/>
 		public ChangeAction Action => ChangeAction.Add | ChangeAction.Temporary;
 
-		/// <inheritdoc/>
+
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
 		{
 			if (recievedChange.Owner.Equals(crashDoc.Users.CurrentUser.Name))
@@ -23,7 +20,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			}
 			else
 			{
-				var geomChange = new GeometryChange(recievedChange);
+				var geomChange = GeometryChange.CreateFrom(recievedChange);
 				var changeArgs = new IdleArgs(crashDoc, geomChange);
 				var displayAction = new IdleAction(AddToDocument, changeArgs);
 				await crashDoc.Queue.AddActionAsync(displayAction);
@@ -32,11 +29,12 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 
 		private void AddToDocument(IdleArgs args)
 		{
-			if (args.Change is not GeometryChange geomChange) return;
+			if (args.Change is not GeometryChange geomChange)
+			{
+				return;
+			}
 
 			args.Doc.CacheTable.UpdateChangeAsync(geomChange);
 		}
-
 	}
-
 }

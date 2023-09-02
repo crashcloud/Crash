@@ -11,8 +11,8 @@ namespace Crash.UI.UsersView
 {
 	internal sealed class UsersForm : Form
 	{
-		private GridView m_grid;
 		private readonly UsersViewModel ViewModel;
+		private GridView m_grid;
 
 		internal UsersForm()
 		{

@@ -1,8 +1,6 @@
-﻿using System.Threading.Tasks;
-
-using Crash.Client;
+﻿
 using Crash.Common.Document;
-using Crash.Communications;
+using Crash.Common.Communications;
 using Crash.Handlers;
 using Crash.UI.JoinModel;
 using Crash.UI.UsersView;
@@ -12,16 +10,15 @@ using Rhino.UI;
 
 namespace Crash.Commands
 {
-
 	/// <summary>Command to Open a Shared Model</summary>
 	[CommandStyle(Style.ScriptRunner)]
 	public sealed class JoinSharedModel : Command
 	{
-
-		private RhinoDoc rhinoDoc;
 		private CrashDoc? crashDoc;
 
 		private string LastURL = $"{CrashClient.DefaultURL}:{CrashServer.DefaultPort}";
+
+		private RhinoDoc rhinoDoc;
 
 		/// <summary>Default Constructor</summary>
 		public JoinSharedModel()
@@ -29,13 +26,13 @@ namespace Crash.Commands
 			Instance = this;
 		}
 
-		/// <inheritdoc />
+		
 		public static JoinSharedModel Instance { get; private set; }
 
-		/// <inheritdoc />
+		
 		public override string EnglishName => "JoinSharedModel";
 
-		/// <inheritdoc />
+		
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
 			rhinoDoc = doc;
@@ -43,7 +40,7 @@ namespace Crash.Commands
 
 			CommandUtils.CheckAlreadyConnected(crashDoc);
 
-			string name = Environment.UserName;
+			var name = Environment.UserName;
 
 			if (mode == RunMode.Interactive)
 			{
@@ -56,7 +53,7 @@ namespace Crash.Commands
 					return Result.Cancel;
 				}
 
-				LastURL = chosenModel.ModelAddress;
+				LastURL = chosenModel?.ModelAddress;
 			}
 			else
 			{
@@ -74,7 +71,9 @@ namespace Crash.Commands
 			}
 
 			if (crashDoc is null)
+			{
 				crashDoc = CrashDocRegistry.CreateAndRegisterDocument(doc);
+			}
 
 			_CreateCurrentUser(crashDoc, name);
 
@@ -85,8 +84,7 @@ namespace Crash.Commands
 
 		private async Task StartServer()
 		{
-			bool success = await CommandUtils.StartLocalClient(crashDoc, LastURL);
-			if (success)
+			if (await CommandUtils.StartLocalClient(crashDoc, LastURL))
 			{
 				InteractivePipe.Active.Enabled = true;
 				UsersForm.ShowForm();
@@ -97,20 +95,21 @@ namespace Crash.Commands
 				{
 					await crashDoc.LocalClient.StopAsync();
 				}
+
 				RhinoApp.WriteLine($"Failed to load URL {LastURL}");
 			}
 		}
 
 
-		private bool _GetServerURL(ref string url)
-			=> SelectionUtils.GetValidString("Server URL", ref url);
-
-		private void _CreateCurrentUser(CrashDoc crashDoc, string name)
+		private static bool _GetServerURL(ref string url)
 		{
-			User user = new User(name);
-			crashDoc.Users.CurrentUser = user;
+			return SelectionUtils.GetValidString("Server URL", ref url);
 		}
 
+		private static void _CreateCurrentUser(CrashDoc crashDoc, string name)
+		{
+			var user = new User(name);
+			crashDoc.Users.CurrentUser = user;
+		}
 	}
-
 }

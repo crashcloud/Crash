@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
-using System.Threading.Channels;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Crash.Common.Document;
 using Crash.Common.Events;
@@ -11,78 +12,35 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Crash.Client
+namespace Crash.Common.Communications
 {
-
 	/// <summary>
-	/// Crash client class
+	///     Crash client class
 	/// </summary>
 	public sealed class CrashClient
 	{
-		#region consts
-		const string ADD = "Add";
-		const string DELETE = "Delete";
-		const string DONE = "Done";
-		const string DONERANGE = "DoneRange";
-		const string UPDATE = "Update";
-		const string LOCK = "Lock";
-		const string UNLOCK = "Unlock";
-		const string INITIALIZE = "Initialize";
-		const string INITIALIZEUSERS = "InitializeUsers";
-		const string CAMERACHANGE = "CameraChange";
-
-		// TODO : Move to https
-		public const string DefaultURL = "http://localhost";
-		#endregion
-
-		readonly HubConnection _connection;
-		readonly string _user;
-		readonly CrashDoc _crashDoc;
-
-		public bool IsConnected => _connection.State != HubConnectionState.Disconnected;
-		public HubConnectionState State => _connection.State;
+		private readonly HubConnection _connection;
+		private readonly CrashDoc _crashDoc;
+		private readonly string _user;
 
 		/// <summary>
-		/// Closed event
+		///     Crash client constructor
 		/// </summary>
-		public event Func<Exception, Task> Closed
-		{
-			add => _connection.Closed += value;
-			remove => _connection.Closed -= value;
-		}
-
-		public event Action<Change> OnAdd;
-		public event Action<Guid> OnDelete;
-		public event Action<Change> OnUpdate;
-		public event Action<string> OnDone;
-		public event Action<IEnumerable<Guid>> OnDoneRange;
-		public event Action<string, Guid> OnLock;
-		public event Action<string, Guid> OnUnlock;
-		public event Action<IEnumerable<Change>> OnInitialize;
-		public event Action<IEnumerable<string>> OnInitializeUsers;
-		public event Action<Change> OnCameraChange;
-
-		/// <summary>
-		/// Stop async task
-		/// </summary>
-		/// <returns></returns>
-		public async Task StopAsync() => await _connection?.StopAsync();
-
-		/// <summary>
-		/// Crash client constructor
-		/// </summary>
-		/// <param name="userName">user name</param>
-		/// <param name="url">url</param>
+		/// <param name="crashDoc">The Document to associate this Client to</param>
+		/// <param name="userName">The User of the Client</param>
+		/// <param name="url">url of the server the client will talk to</param>
 		public CrashClient(CrashDoc crashDoc, string userName, Uri url)
 		{
 			if (string.IsNullOrEmpty(userName))
 			{
 				throw new ArgumentException("Username cannot be empty or null");
 			}
-			if (null == url)
+
+			if (url is null)
 			{
 				throw new UriFormatException("URL Cannot be null");
 			}
+
 			if (!url.AbsoluteUri.Contains("/Crash"))
 			{
 				throw new UriFormatException("URL must end in /Crash to connect!");
@@ -94,82 +52,143 @@ namespace Crash.Client
 			RegisterConnections();
 		}
 
-		internal static HubConnection GetHubConnection(Uri url) => new HubConnectionBuilder()
-			   .WithUrl(url).AddJsonProtocol()
-			   .AddJsonProtocol((opts) => JsonOptions())
-			   // .ConfigureLogging(LoggingConfigurer)
-			   .WithAutomaticReconnect(new[] { TimeSpan.FromMilliseconds(10),
-											   TimeSpan.FromMilliseconds(100),
-											   TimeSpan.FromSeconds(1),
-											   TimeSpan.FromSeconds(10) })
-			   .Build();
+		public bool IsConnected => _connection.State != HubConnectionState.Disconnected;
+		public HubConnectionState State => _connection.State;
 
-		public static JsonHubProtocolOptions JsonOptions() => new JsonHubProtocolOptions()
+		/// <summary>
+		///     Closed event
+		/// </summary>
+		public event Func<Exception, Task> Closed
 		{
-			PayloadSerializerOptions = new System.Text.Json.JsonSerializerOptions()
-			{
-				IgnoreReadOnlyFields = true,
-				IgnoreReadOnlyProperties = true,
-				NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals,
-			}
-		};
+			add => _connection.Closed += value;
+			remove => _connection.Closed -= value;
+		}
+
+		/// <summary>Local Event corresponding to a Server call for Add</summary>
+		public event Action<Change> OnAdd;
+
+		/// <summary>Local Event corresponding to a Server call for Delete</summary>
+		public event Action<Guid> OnDelete;
+
+		/// <summary>Local Event corresponding to a Server call for Update</summary>
+		public event Action<Change> OnUpdate;
+
+		/// <summary>Local Event corresponding to a Server call for Done</summary>
+		public event Action<string> OnDone;
+
+		/// <summary>Local Event corresponding to a Server call for Done Range</summary>
+		public event Action<IEnumerable<Guid>> OnDoneRange;
+
+		/// <summary>Local Event corresponding to a Server call for Lock</summary>
+		public event Action<string, Guid> OnLock;
+
+		/// <summary>Local Event corresponding to a Server call for Unlock</summary>
+		public event Action<string, Guid> OnUnlock;
+
+		/// <summary>Local Event corresponding to a Server call for Initialize</summary>
+		public event Action<IEnumerable<Change>> OnInitialize;
+
+		/// <summary>Local Event corresponding to a Server call for Initialize Users</summary>
+		public event Action<IEnumerable<string>> OnInitializeUsers;
+
+		/// <summary>Local Event corresponding to a Server call for Camera Change</summary>
+		public event Action<Change> OnCameraChange;
+
+		/// <summary>Stops the Connection</summary>
+		public async Task StopAsync()
+		{
+			await _connection?.StopAsync();
+		}
+
+		/// <summary>Creates a connection to the Crash Server</summary>
+		internal static HubConnection GetHubConnection(Uri url)
+		{
+			return new HubConnectionBuilder()
+			       .WithUrl(url).AddJsonProtocol()
+			       .AddJsonProtocol(opts => JsonOptions())
+			       // .ConfigureLogging(LoggingConfigurer)
+			       .WithAutomaticReconnect(new[]
+			                               {
+				                               TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100),
+				                               TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(10)
+			                               })
+			       .Build();
+		}
+
+		public static JsonHubProtocolOptions JsonOptions()
+		{
+			return new JsonHubProtocolOptions
+			       {
+				       PayloadSerializerOptions = new JsonSerializerOptions
+				                                  {
+					                                  IgnoreReadOnlyFields = true,
+					                                  IgnoreReadOnlyProperties = true,
+					                                  NumberHandling = JsonNumberHandling
+						                                  .AllowNamedFloatingPointLiterals
+				                                  }
+			       };
+		}
 
 		private static void LoggingConfigurer(ILoggingBuilder loggingBuilder)
 		{
-			LogLevel logLevel = Debugger.IsAttached ? LogLevel.Trace : LogLevel.Information;
+			var logLevel = Debugger.IsAttached ? LogLevel.Trace : LogLevel.Information;
 			loggingBuilder.SetMinimumLevel(logLevel);
 			var loggingProvider = new CrashLoggerProvider();
 			loggingBuilder.AddProvider(loggingProvider);
 		}
 
+		/// <summary>Registers Local Events responding to Server calls</summary>
 		internal void RegisterConnections()
 		{
-			_connection.On<Change>(ADD, (change) => OnAdd?.Invoke(change));
-			_connection.On<Guid>(DELETE, (id) => OnDelete?.Invoke(id));
-			_connection.On<Change>(UPDATE, (change) => OnUpdate?.Invoke(change));
-			_connection.On<string>(DONE, (user) => OnDone?.Invoke(user));
-			_connection.On<IEnumerable<Guid>>(DONERANGE, (ids) => OnDoneRange(ids));
+			_connection.On<Change>(ADD, change => OnAdd?.Invoke(change));
+			_connection.On<Guid>(DELETE, id => OnDelete?.Invoke(id));
+			_connection.On<Change>(UPDATE, change => OnUpdate?.Invoke(change));
+			_connection.On<string>(DONE, user => OnDone?.Invoke(user));
+			_connection.On<IEnumerable<Guid>>(DONERANGE, ids => OnDoneRange(ids));
 			_connection.On<string, Guid>(LOCK, (user, id) => OnLock?.Invoke(user, id));
 			_connection.On<string, Guid>(UNLOCK, (user, id) => OnUnlock?.Invoke(user, id));
-			_connection.On<IEnumerable<Change>>(INITIALIZE, (changes) => OnInitialize?.Invoke(changes));
-			_connection.On<IEnumerable<string>>(INITIALIZEUSERS, (users) => OnInitializeUsers?.Invoke(users));
-			_connection.On<Change>(CAMERACHANGE, (change) => OnCameraChange?.Invoke(change));
+			_connection.On<IEnumerable<Change>>(INITIALIZE, changes => OnInitialize?.Invoke(changes));
+			_connection.On<IEnumerable<string>>(INITIALIZEUSERS, users => OnInitializeUsers?.Invoke(users));
+			_connection.On<Change>(CAMERACHANGE, change => OnCameraChange?.Invoke(change));
 
 			_connection.Reconnected += ConnectionReconnectedAsync;
 			_connection.Closed += ConnectionClosedAsync;
 			_connection.Reconnecting += ConnectionReconnectingAsync;
 		}
 
+		/// <summary>Starts the Client</summary>
+		/// <exception cref="NullReferenceException">If CrashDoc is null</exception>
+		/// <exception cref="Exception">If UserName is empty</exception>
 		public async Task StartLocalClientAsync()
 		{
-			if (null == _crashDoc)
+			if (_crashDoc is null)
 			{
 				throw new NullReferenceException("CrashDoc cannot be null!");
 			}
 
-			string? userName = _crashDoc?.Users?.CurrentUser.Name;
+			var userName = _crashDoc?.Users?.CurrentUser.Name;
 			if (string.IsNullOrEmpty(userName))
 			{
 				throw new Exception("A User has not been assigned!");
 			}
 
-			this.OnInitialize += Init;
+			OnInitialize += Init;
 			// this.OnInitializeUsers += InitUsers;
 
 			// TODO : Check for successful connection
-			await this.StartAsync();
+			await StartAsync();
 		}
 
 		// This isn't calling, and needs to call the Event Dispatcher
 		private void Init(IEnumerable<Change> changes)
 		{
-			this.OnInitialize -= Init;
+			OnInitialize -= Init;
 			OnInit?.Invoke(this, new CrashInitArgs(_crashDoc, changes));
 		}
 
 		private void InitUsers(IEnumerable<string> users)
 		{
-			this.OnInitializeUsers -= InitUsers;
+			OnInitializeUsers -= InitUsers;
 			// User Init
 			// OnInitUsers?.Invoke(this, new CrashUserInitArgs())
 		}
@@ -199,7 +218,7 @@ namespace Crash.Client
 		}
 
 		/// <summary>
-		/// Update task
+		///     Update task
 		/// </summary>
 		/// <param name="id">id</param>
 		/// <param name="Change">Change</param>
@@ -210,7 +229,7 @@ namespace Crash.Client
 		}
 
 		/// <summary>
-		/// Delete task
+		///     Delete task
 		/// </summary>
 		/// <param name="id">id</param>
 		/// <returns>returns task</returns>
@@ -223,9 +242,11 @@ namespace Crash.Client
 		public async Task AddAsync(Change change)
 		{
 			if (change?.Payload is null)
+			{
 				return;
+			}
 
-			int changeLength = change.Payload.Length;
+			var changeLength = change.Payload.Length;
 			if (changeLength >= ushort.MaxValue)
 			{
 				throw new OversizedChangeException($"Change is over maximum size. {changeLength}/{ushort.MaxValue}");
@@ -260,21 +281,17 @@ namespace Crash.Client
 			await _connection.InvokeAsync(UNLOCK, _user, id);
 		}
 
-		/// <summary>
-		/// CameraChange event
-		/// </summary>
-		/// <param name="id"></param>
-		/// <returns></returns>
-		public async Task CameraChangeAsync(Change Change)
+		/// <summary>CameraChange event</summary>
+		public async Task CameraChangeAsync(Change change)
 		{
-			await _connection.InvokeAsync(CAMERACHANGE, Change);
+			await _connection.InvokeAsync(CAMERACHANGE, change);
 		}
 
-		/// <summary>
-		/// Start the async connection
-		/// </summary>
-		/// <returns></returns>
-		private Task StartAsync() => _connection.StartAsync();
+		/// <summary>Start the async connection</summary>
+		private Task StartAsync()
+		{
+			return _connection.StartAsync();
+		}
 
 		public static event EventHandler<CrashInitArgs> OnInit;
 
@@ -289,6 +306,22 @@ namespace Crash.Client
 			}
 		}
 
-	}
+		#region consts
 
+		private const string ADD = "Add";
+		private const string DELETE = "Delete";
+		private const string DONE = "Done";
+		private const string DONERANGE = "DoneRange";
+		private const string UPDATE = "Update";
+		private const string LOCK = "Lock";
+		private const string UNLOCK = "Unlock";
+		private const string INITIALIZE = "Initialize";
+		private const string INITIALIZEUSERS = "InitializeUsers";
+		private const string CAMERACHANGE = "CameraChange";
+
+		// TODO : Move to https
+		public const string DefaultURL = "http://localhost";
+
+		#endregion
+	}
 }

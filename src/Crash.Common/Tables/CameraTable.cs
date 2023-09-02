@@ -8,12 +8,9 @@ using Crash.Common.View;
 
 namespace Crash.Common.Tables
 {
-
 	public sealed class CameraTable : IEnumerable<Camera>
 	{
 		public const int MAX_CAMERAS_IN_QUEUE = 3;
-
-		public bool CameraIsInvalid { get; set; } = false;
 
 		private readonly CrashDoc _crashDoc;
 
@@ -26,16 +23,37 @@ namespace Crash.Common.Tables
 			_crashDoc = hostDoc;
 		}
 
+		public bool CameraIsInvalid { get; set; }
+
+		public IEnumerator<Camera> GetEnumerator()
+		{
+			return cameraLocations.Values.SelectMany(c => c).GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
 
 		public void OnCameraChange(string userName, Change cameraChange)
 		{
-			if (string.IsNullOrEmpty(userName)) return;
+			if (string.IsNullOrEmpty(userName))
+			{
+				return;
+			}
 
 			var user = _crashDoc.Users.Get(userName);
-			if (!user.IsValid()) return;
+			if (!user.IsValid())
+			{
+				return;
+			}
 
 			var newCamera = JsonSerializer.Deserialize<Camera>(cameraChange.Payload);
-			if (!newCamera.IsValid()) return;
+			if (!newCamera.IsValid())
+			{
+				return;
+			}
 
 			CameraIsInvalid = true;
 
@@ -54,10 +72,10 @@ namespace Crash.Common.Tables
 
 		public Dictionary<User, Camera> GetActiveCameras()
 		{
-			Dictionary<User, Camera> cameras = new Dictionary<User, Camera>(cameraLocations.Count);
-			foreach(var cameraLocation in cameraLocations)
+			var cameras = new Dictionary<User, Camera>(cameraLocations.Count);
+			foreach (var cameraLocation in cameraLocations)
 			{
-				User user = _crashDoc.Users.Get(cameraLocation.Key);
+				var user = _crashDoc.Users.Get(cameraLocation.Key);
 				cameras.Add(user, cameraLocation.Value.FirstOrDefault());
 			}
 
@@ -77,7 +95,11 @@ namespace Crash.Common.Tables
 			}
 			else
 			{
-				if (!cameraLocations.TryGetValue(user.Name, out queue)) return false;
+				if (!cameraLocations.TryGetValue(user.Name, out queue))
+				{
+					return false;
+				}
+
 				queue.Enqueue(cameraChange.Camera);
 			}
 
@@ -93,12 +115,8 @@ namespace Crash.Common.Tables
 		}
 
 		public bool TryGetCamera(User user, out FixedSizedQueue<Camera> cameras)
-			=> cameraLocations.TryGetValue(user.Name, out cameras);
-
-		public IEnumerator<Camera> GetEnumerator() => cameraLocations.Values.SelectMany(c => c).GetEnumerator();
-
-		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
+		{
+			return cameraLocations.TryGetValue(user.Name, out cameras);
+		}
 	}
-
 }

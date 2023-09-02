@@ -1,37 +1,27 @@
 ﻿using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-
-using Crash.Client;
-using Crash.Properties;
-
-using Eto.Drawing;
-
-using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.DependencyInjection;
-
-using Rhino.UI;
 
 [assembly: InternalsVisibleTo("Crash.UI.Tests")]
+
 namespace Crash.UI.JoinModel
 {
-
 	/// <summary>The Join View Model</summary>
 	internal sealed class JoinViewModel : BaseViewModel, IDisposable
 	{
 		private const string PREVIOUS_MODELS_KEY = "PREVIOUS_SHARED_MODELS";
 
-		internal ObservableCollection<SharedModel> SharedModels { get; private set; }
-		internal SharedModel AddModel { get; private set; }
-		internal ObservableCollection<SharedModel> AddModels => new ObservableCollection<SharedModel>(new List<SharedModel> { AddModel });
 
-		public event EventHandler OnLoaded;
+		private readonly JsonSerializerOptions opts = new()
+		                                              {
+			                                              IgnoreReadOnlyFields = true,
+			                                              IgnoreReadOnlyProperties = true,
+			                                              IncludeFields = false
+		                                              };
 
 		internal JoinViewModel()
 		{
-			SharedModels = new();
+			SharedModels = new ObservableCollection<SharedModel>();
 
 			SetAddModel();
 			LoadSharedModels();
@@ -39,20 +29,25 @@ namespace Crash.UI.JoinModel
 			RhinoDoc.BeginSaveDocument += SaveSharedModels;
 		}
 
+		internal ObservableCollection<SharedModel> SharedModels { get; }
+		internal SharedModel AddModel { get; private set; }
+		internal ObservableCollection<SharedModel> AddModels => new(new List<SharedModel> { AddModel });
 
-		JsonSerializerOptions opts = new JsonSerializerOptions()
+		public void Dispose()
 		{
-			IgnoreReadOnlyFields = true,
-			IgnoreReadOnlyProperties = true,
-			IncludeFields = false
-		};
+			RhinoDoc.BeginSaveDocument -= SaveSharedModels;
+		}
+
+		public event EventHandler OnLoaded;
 
 		internal void SaveSharedModels(object sender, DocumentSaveEventArgs args)
 		{
 			var json = JsonSerializer.Serialize(SharedModels, opts);
 
 			if (string.IsNullOrEmpty(json))
+			{
 				return;
+			}
 
 			CrashPlugin.Instance.Settings.SetString(PREVIOUS_MODELS_KEY, json);
 		}
@@ -60,12 +55,18 @@ namespace Crash.UI.JoinModel
 		private void LoadSharedModels()
 		{
 			var inst = CrashPlugin.Instance;
-			if (inst is null) return;
+			if (inst is null)
+			{
+				return;
+			}
 
 			if (inst.Settings.TryGetString(PREVIOUS_MODELS_KEY, out var json))
 			{
 				var deserial = JsonSerializer.Deserialize<List<SharedModel>>(json, opts);
-				if (deserial is null) return;
+				if (deserial is null)
+				{
+					return;
+				}
 
 				foreach (var sharedModel in deserial)
 				{
@@ -77,12 +78,16 @@ namespace Crash.UI.JoinModel
 		internal bool ModelIsNew(SharedModel model)
 		{
 			var alreadyExists = SharedModels.Select(sm => sm.ModelAddress.ToUpperInvariant())
-										.Contains(model.ModelAddress.ToUpperInvariant());
+			                                .Contains(model.ModelAddress.ToUpperInvariant());
 			if (alreadyExists)
+			{
 				return false;
+			}
 
 			if (string.IsNullOrEmpty(model.ModelAddress))
+			{
 				return false;
+			}
 
 			return true;
 		}
@@ -100,14 +105,7 @@ namespace Crash.UI.JoinModel
 
 		internal void SetAddModel()
 		{
-			AddModel = new SharedModel() { Loaded = true, ModelAddress = "" };
+			AddModel = new SharedModel { Loaded = true, ModelAddress = "" };
 		}
-
-		public void Dispose()
-		{
-			RhinoDoc.BeginSaveDocument -= SaveSharedModels;
-		}
-
 	}
-
 }

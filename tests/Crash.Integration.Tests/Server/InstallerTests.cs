@@ -1,10 +1,7 @@
-﻿using System.Threading.Tasks;
-
-using Crash.Handlers.Server;
+﻿using Crash.Handlers.Server;
 
 namespace Crash.Handlers.Tests.Server
 {
-
 	public sealed class InstallerTests
 	{
 		[SetUp]
@@ -30,7 +27,5 @@ namespace Crash.Handlers.Tests.Server
 			ServerInstaller.RemoveOldServer();
 			Assert.That(ServerInstaller.ServerExecutableExists, Is.False);
 		}
-
 	}
-
 }

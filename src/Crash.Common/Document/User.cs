@@ -2,19 +2,17 @@
 using System.Security.Cryptography;
 using System.Text;
 
-
 namespace Crash.Common.Document
 {
-
 	/// <summary>The state of the Camera for this user</summary>
 	public enum CameraState
 	{
 		None = 0,
 		Visible = 1,
-		Follow = 2,
+		Follow = 2
 	}
 
-	/// <summary>User class</summary>
+	/// <summary>An external collaborator</summary>
 	public struct User : IEquatable<User>
 	{
 		private string _name;
@@ -26,17 +24,18 @@ namespace Crash.Common.Document
 		public string Name
 		{
 			get => _name;
-			set => _name = CleanedUserName(value);
+			private set => _name = CleanedUserName(value);
 		}
 
 		/// <summary>Color of the user</summary>
 		public Color Color { get; set; }
 
+		/// <summary>The current state of the Users Camera</summary>
 		public CameraState Camera { get; set; } = CameraState.Visible;
 
 
 		/// <summary>
-		/// User Constructor 
+		///     User Constructor
 		/// </summary>
 		/// <param name="inputName">the name of the user</param>
 		public User(string inputName)
@@ -56,22 +55,41 @@ namespace Crash.Common.Document
 		}
 
 		/// <summary>Checks user for being valid</summary>
-		public bool IsValid() => !string.IsNullOrEmpty(Name);
-
-		/// <inheritdoc/>
-		public override int GetHashCode() => string.IsNullOrEmpty(Name) ? -1 : Name.GetHashCode();
-		/// <inheritdoc/>
-		public override bool Equals(object? obj)
+		public bool IsValid()
 		{
-			if (obj is not User user) return false;
-			return Equals(user);
+			return !string.IsNullOrEmpty(Name);
 		}
-		/// <inheritdoc/>
-		public bool Equals(User other) => this.GetHashCode() == other.GetHashCode();
 
 		// TODO : Add cleaning methods
-		public static string CleanedUserName(string username) => username.ToLower();
+		public static string CleanedUserName(string username)
+		{
+			return username.ToLowerInvariant();
+		}
 
+		public override int GetHashCode()
+		{
+			return Name?.GetHashCode() ?? -1;
+		}
+
+		public override bool Equals(object? obj)
+		{
+			return obj is User user && Equals(user);
+		}
+
+
+		public bool Equals(User other)
+		{
+			return GetHashCode() == other.GetHashCode();
+		}
+
+		public static bool operator ==(User left, User right)
+		{
+			return left.Equals(right);
+		}
+
+		public static bool operator !=(User left, User right)
+		{
+			return !(left == right);
+		}
 	}
-
 }

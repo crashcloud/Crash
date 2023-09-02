@@ -5,12 +5,11 @@ using Rhino.Commands;
 
 namespace Crash.Commands
 {
-
 	/// <summary>Command to Close a Shared Model</summary>
 	[CommandStyle(Style.ScriptRunner)]
 	public sealed class LeaveSharedModel : Command
 	{
-		private bool defaultValue = false;
+		private bool defaultValue;
 
 		/// <summary>Default Constructor</summary>
 		public LeaveSharedModel()
@@ -18,28 +17,31 @@ namespace Crash.Commands
 			Instance = this;
 		}
 
-		/// <inheritdoc />
+		
 		public static LeaveSharedModel Instance { get; private set; }
 
-		/// <inheritdoc />
+		
 		public override string EnglishName => "LeaveSharedModel";
 
-		/// <inheritdoc />
+		
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			Client.CrashClient? client = CrashDocRegistry.ActiveDoc?.LocalClient;
-			if (null == client)
+			var client = CrashDocRegistry.ActiveDoc?.LocalClient;
+			if (client is null)
 			{
 				RhinoApp.WriteLine("You aren't in a shared model.");
 				return Result.Success;
 			}
 
-			bool? choice = _GetReleaseChoice();
-			if (null == choice)
-				return Result.Cancel;
-
-			if (choice.Value == true)
-				client.DoneAsync();
+			var choice = _GetReleaseChoice();
+			switch (choice)
+			{
+				case null:
+					return Result.Cancel;
+				case true:
+					client.DoneAsync();
+					break;
+			}
 
 			CrashDocRegistry.ActiveDoc?.Dispose();
 			InteractivePipe.Active.Enabled = false;
@@ -55,16 +57,16 @@ namespace Crash.Commands
 		}
 
 		private bool? _GetReleaseChoice()
-			=> SelectionUtils.GetBoolean(ref defaultValue,
-				"Would you like to Release before exiting?",
-				"JustExit",
-				"ReleaseThenExit");
+		{
+			return SelectionUtils.GetBoolean(ref defaultValue,
+			                                 "Would you like to Release before exiting?",
+			                                 "JustExit",
+			                                 "ReleaseThenExit");
+		}
 
-		private void _EmptyModel(Rhino.RhinoDoc doc)
+		private static void _EmptyModel(RhinoDoc doc)
 		{
 			doc.Objects.Clear();
 		}
-
 	}
-
 }

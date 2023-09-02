@@ -1,38 +1,42 @@
 ﻿using System.Diagnostics;
-using System.IO;
 
 using Microsoft.Extensions.Logging;
 
 namespace Crash.Common.Logging
 {
-
 	/// <summary>Enables logging for Crash</summary>
 	public sealed class CrashLogger : ILogger, IDisposable
 	{
-		LogLevel _currentLevel;
-
-		public static CrashLogger Logger { get; private set; }
-
-		internal CrashLogger()
-		{
-			_currentLevel = Debugger.IsAttached ? LogLevel.Trace : LogLevel.Information;
-		}
+		private readonly LogLevel _currentLevel;
 
 		static CrashLogger()
 		{
 			Logger = new CrashLogger();
 		}
 
-		public IDisposable BeginScope<TState>(TState state) => this;
+		internal CrashLogger()
+		{
+			_currentLevel = Debugger.IsAttached ? LogLevel.Trace : LogLevel.Information;
+		}
+
+		public static CrashLogger Logger { get; private set; }
 
 		public void Dispose()
 		{
-
 		}
 
-		public bool IsEnabled(LogLevel logLevel) => logLevel >= _currentLevel;
+		public IDisposable BeginScope<TState>(TState state)
+		{
+			return this;
+		}
 
-		public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+		public bool IsEnabled(LogLevel logLevel)
+		{
+			return logLevel >= _currentLevel;
+		}
+
+		public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
+			Func<TState, Exception?, string> formatter)
 		{
 			var _eventId = eventId.Name;
 			var formattedMessage = formatter.Invoke(state, exception);
@@ -43,16 +47,11 @@ namespace Crash.Common.Logging
 
 		internal sealed class LogFiles
 		{
-			private static string _logDirectory;
-			private static string _logFileName;
-			private static string _logFilePath;
+			private static readonly string _logDirectory;
+			private static readonly string _logFileName;
+			private static readonly string _logFilePath;
 
 			private static CrashLogger _logger;
-
-			internal LogFiles(CrashLogger logger)
-			{
-				_logger = logger;
-			}
 
 			static LogFiles()
 			{
@@ -62,6 +61,11 @@ namespace Crash.Common.Logging
 				_logFilePath = Path.Combine(_logDirectory, _logFileName);
 
 				createLogFile();
+			}
+
+			internal LogFiles(CrashLogger logger)
+			{
+				_logger = logger;
 			}
 
 			private static void createLogFile()
@@ -81,16 +85,12 @@ namespace Crash.Common.Logging
 			{
 				try
 				{
-					File.AppendAllLines(_logFilePath, new string[] { message });
+					File.AppendAllLines(_logFilePath, new[] { message });
 				}
 				catch (Exception)
 				{
-
 				}
 			}
-
 		}
-
 	}
-
 }

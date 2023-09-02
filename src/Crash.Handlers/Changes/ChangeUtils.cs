@@ -3,45 +3,63 @@ using Rhino.DocObjects;
 
 namespace Crash.Utils
 {
-
 	/// <summary>Utilities for Change Objects.</summary>
 	public static class ChangeUtils
 	{
-		private static string ChangeIdKey = "ChangeID";
+		private static readonly string ChangeIdKey = "ChangeID";
 
 		// TODO : Not multi-doc compatible!!!
-		private static Dictionary<Guid, RhinoObject> RhinoChangeKeys;
-		private static HashSet<Guid> SelectedObjects;
-		internal static void ClearSelected() => SelectedObjects.Clear();
-		internal static HashSet<Guid> GetSelected() => SelectedObjects;
+		private static readonly Dictionary<Guid, RhinoObject> RhinoChangeKeys;
+		private static readonly HashSet<Guid> SelectedObjects;
 
 		static ChangeUtils()
 		{
-			RhinoChangeKeys = new();
-			SelectedObjects = new();
+			RhinoChangeKeys = new Dictionary<Guid, RhinoObject>();
+			SelectedObjects = new HashSet<Guid>();
 			RhinoDoc.SelectObjects += (sender, args) =>
-			{
-				foreach (var obj in args.RhinoObjects)
-				{
-					if (!TryGetChangeId(obj, out Guid ChangeId)) continue;
-					SelectedObjects.Add(ChangeId);
-				}
-			};
+			                          {
+				                          foreach (var obj in args.RhinoObjects)
+				                          {
+					                          if (!TryGetChangeId(obj, out var ChangeId))
+					                          {
+						                          continue;
+					                          }
+
+					                          SelectedObjects.Add(ChangeId);
+				                          }
+			                          };
 			RhinoDoc.DeselectObjects += (sender, args) =>
-			{
-				foreach (var obj in args.RhinoObjects)
-				{
-					if (!TryGetChangeId(obj, out Guid ChangeId)) continue;
-					SelectedObjects.Remove(ChangeId);
-				}
-			};
+			                            {
+				                            foreach (var obj in args.RhinoObjects)
+				                            {
+					                            if (!TryGetChangeId(obj, out var ChangeId))
+					                            {
+						                            continue;
+					                            }
+
+					                            SelectedObjects.Remove(ChangeId);
+				                            }
+			                            };
+		}
+
+		internal static void ClearSelected()
+		{
+			SelectedObjects.Clear();
+		}
+
+		internal static HashSet<Guid> GetSelected()
+		{
+			return SelectedObjects;
 		}
 
 		/// <summary>Acquires the ChangeId from the Rhino Object</summary>
 		public static bool TryGetChangeId(this RhinoObject rObj, out Guid id)
 		{
 			id = Guid.Empty;
-			if (rObj == null) return false;
+			if (rObj is null)
+			{
+				return false;
+			}
 
 			return rObj.Geometry.UserDictionary.TryGetGuid(ChangeIdKey, out id);
 		}
@@ -50,7 +68,10 @@ namespace Crash.Utils
 		public static bool TryGetRhinoObject(this IChange change, out RhinoObject rhinoObject)
 		{
 			rhinoObject = default;
-			if (change == null) return false;
+			if (change is null)
+			{
+				return false;
+			}
 
 			return RhinoChangeKeys.TryGetValue(change.Id, out rhinoObject);
 		}
@@ -58,9 +79,12 @@ namespace Crash.Utils
 		/// <summary>Adds the ChangeId to the Rhino Object and vice Verse.</summary>
 		public static void SyncHost(this RhinoObject rObj, IChange Change)
 		{
-			if (null == Change || rObj == null) return;
+			if (null is Change || rObj is null)
+			{
+				return;
+			}
 
-			if (rObj.Geometry.UserDictionary.TryGetGuid(ChangeIdKey, out Guid changeId))
+			if (rObj.Geometry.UserDictionary.TryGetGuid(ChangeIdKey, out var changeId))
 			{
 				rObj.Geometry.UserDictionary.Remove(ChangeIdKey);
 				RhinoChangeKeys.Remove(changeId);
@@ -74,8 +98,8 @@ namespace Crash.Utils
 
 		/// <summary>Check for Oversied Payload</summary>
 		public static bool IsOversized(this IChange change)
-			=> change.Payload?.Length > ushort.MaxValue;
-
+		{
+			return change.Payload?.Length > ushort.MaxValue;
+		}
 	}
-
 }

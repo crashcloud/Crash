@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-using Crash.Common.Changes;
+using Crash.Handlers.Changes;
 using Crash.Handlers.Plugins.Geometry.Create;
 using Crash.Handlers.Plugins.Geometry.Recieve;
 
@@ -11,53 +11,49 @@ using Point = Rhino.Geometry.Point;
 
 namespace Crash.Handlers.Plugins.Geometry
 {
-
 	/// <summary>Defines the Geometry Change Type to handle default Rhino Geometry</summary>
 	public sealed class GeometryChangeDefinition : IChangeDefinition
 	{
-		/// <inheritdoc/>
-		public Type ChangeType => typeof(GeometryChange);
-
-		/// <inheritdoc/>
-		public string ChangeName => GeometryChange.ChangeType;
-
-		/// <inheritdoc/>
-		public IEnumerable<IChangeCreateAction> CreateActions { get; }
-
-		/// <inheritdoc/>
-		public IEnumerable<IChangeRecieveAction> RecieveActions { get; }
-
 		/// <summary>Default Constructor</summary>
 		public GeometryChangeDefinition()
 		{
 			CreateActions = new List<IChangeCreateAction>
-			{
-				new GeometryCreateAction(),
-				new GeometryRemoveAction(),
-
-				// new GeometryTransformAction(),
-
-				new GeometrySelectAction(),
-				new GeometryUnSelectAction(),
-			};
+			                {
+				                new GeometryCreateAction(),
+				                new GeometryRemoveAction(),
+				                new GeometryTransformAction(),
+				                new GeometrySelectAction(),
+				                new GeometryUnSelectAction()
+			                };
 			RecieveActions = new List<IChangeRecieveAction>
-			{
-				new GeometryAddRecieveAction(),
-				new GeometryTemporaryAddRecieveAction(),
-				new GeometryRemoveRecieveAction(),
-
-				// new GeometryTransformRecieveAction(),
-
-				new GeometryLockRecieveAction(),
-				new GeometryUnlockRecieveAction(),
-			};
+			                 {
+				                 new GeometryAddRecieveAction(),
+				                 new GeometryTemporaryAddRecieveAction(),
+				                 new GeometryRemoveRecieveAction(),
+				                 new GeometryTransformRecieveAction(),
+				                 new GeometryLockRecieveAction(),
+				                 new GeometryUnlockRecieveAction()
+			                 };
 		}
 
-		/// <inheritdoc/>
+
+		public string ChangeName => GeometryChange.ChangeType;
+
+
+		public IEnumerable<IChangeCreateAction> CreateActions { get; }
+
+
+		public IEnumerable<IChangeRecieveAction> RecieveActions { get; }
+
+
 		public void Draw(DrawEventArgs drawArgs, DisplayMaterial material, IChange change)
 		{
-			if (change is not GeometryChange geomChange) return;
+			if (change is not GeometryChange geomChange)
+			{
+				return;
+			}
 
+			var drawWireframe = drawArgs.Display.DisplayPipelineAttributes.ShadingEnabled;
 			var geom = geomChange.Geometry;
 			if (geom is Curve cv)
 			{
@@ -65,15 +61,37 @@ namespace Crash.Handlers.Plugins.Geometry
 			}
 			else if (geom is Brep brep)
 			{
-				drawArgs.Display.DrawBrepShaded(brep, material);
+				if (drawWireframe)
+				{
+					drawArgs.Display.DrawBrepWires(brep, material.Diffuse, -1);
+				}
+				else
+				{
+					drawArgs.Display.DrawBrepShaded(brep, material);
+				}
 			}
 			else if (geom is Mesh mesh)
 			{
-				drawArgs.Display.DrawMeshShaded(mesh, material);
+				if (drawWireframe)
+				{
+					drawArgs.Display.DrawMeshWires(mesh, material.Diffuse, 2);
+				}
+				else
+				{
+					drawArgs.Display.DrawMeshShaded(mesh, material);
+				}
 			}
 			else if (geom is Extrusion ext)
 			{
-				drawArgs.Display.DrawExtrusionWires(ext, material.Diffuse);
+				if (drawWireframe)
+				{
+					drawArgs.Display.DrawExtrusionWires(ext, material.Diffuse);
+				}
+				else
+				{
+					drawArgs.Display.DrawBrepShaded(Brep.TryConvertBrep(ext), material);
+				}
+				// TODO : Cache
 			}
 			else if (geom is TextEntity te)
 			{
@@ -85,7 +103,15 @@ namespace Crash.Handlers.Plugins.Geometry
 			}
 			else if (geom is Surface srf)
 			{
-				drawArgs.Display.DrawSurface(srf, material.Diffuse, 1);
+				if (drawWireframe)
+				{
+					drawArgs.Display.DrawSurface(srf, material.Diffuse, 1);
+				}
+				else
+				{
+					drawArgs.Display.DrawBrepShaded(Brep.TryConvertBrep(srf), material);
+				}
+				// TODO : Cache
 			}
 			else if (geom is Point pnt)
 			{
@@ -97,15 +123,15 @@ namespace Crash.Handlers.Plugins.Geometry
 			}
 		}
 
-		/// <inheritdoc/>
+
 		public BoundingBox GetBoundingBox(IChange change)
 		{
 			if (change is not GeometryChange geomChange)
+			{
 				return BoundingBox.Unset;
+			}
 
 			return geomChange.Geometry.GetBoundingBox(false);
 		}
-
 	}
-
 }

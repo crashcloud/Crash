@@ -1,75 +1,65 @@
-﻿using System.Text.Json;
-
-using Rhino.FileIO;
+﻿using Rhino.FileIO;
 using Rhino.Geometry;
 using Rhino.Runtime;
 
-namespace Crash.Common.Changes
+namespace Crash.Handlers.Changes
 {
-
-	/// <summary>A Change encapuslating Rhino Geometry</summary>
+	/// <summary>A Change encapsulating Rhino Geometry</summary>
 	public sealed class GeometryChange : IChange
 	{
-		/// <summary>The TYpe of this Change</summary>
-		public const string ChangeType = $"{nameof(Crash)}.{nameof(GeometryChange)}";
+		public const string ChangeType = "Crash.GeometryChange";
 
-		/// <summary>The Related Rhino Geometry</summary>
 		public GeometryBase Geometry { get; private set; }
 
-		/// <inheritdoc/>
-		public DateTime Stamp { get; private set; }
+		public DateTime Stamp { get; private set; } = DateTime.UtcNow;
 
-		/// <inheritdoc/>
 		public Guid Id { get; internal set; }
 
-		/// <inheritdoc/>
 		public string? Owner { get; private set; }
 
-		/// <inheritdoc/>
 		public string? Payload { get; private set; }
 
-		/// <inheritdoc/>
-		public string Type => ChangeType;
-		/// <inheritdoc/>
 		public ChangeAction Action { get; set; }
 
-		/// <summary>Deserialization Constructor</summary>
-		public GeometryChange() { }
+		public string Type => ChangeType;
 
 		/// <summary>Inheritance Constructor</summary>
-		public GeometryChange(IChange change) : this()
+		public static GeometryChange CreateFrom(IChange change)
 		{
-			var options = new SerializationOptions();
-			GeometryBase? geometry = CommonObject.FromJSON(change.Payload) as GeometryBase;
-			if (null == geometry)
-			{
-				throw new JsonException("Could not deserialize Geometry");
-			}
-
-			Geometry = geometry;
-			Stamp = change.Stamp;
-			Id = change.Id;
-			Owner = change.Owner;
-			Payload = change.Payload;
+			return new GeometryChange
+			       {
+				       Geometry = CommonObject.FromJSON(change.Payload) as GeometryBase,
+				       Stamp = change.Stamp,
+				       Id = change.Id,
+				       Owner = change.Owner,
+				       Payload = change.Payload,
+				       Action = change.Action
+			       };
 		}
 
-		public static GeometryChange CreateNew(string owner, GeometryBase geometry)
+		/// <summary>Creates a new Geometry Change</summary>
+		public static GeometryChange CreateNew(GeometryBase geometry, string userName)
 		{
-			var options = new SerializationOptions();
-			string? payload = geometry?.ToJSON(options);
-
-			var instance = new GeometryChange()
-			{
-				Geometry = geometry,
-				Stamp = DateTime.UtcNow,
-				Id = Guid.NewGuid(),
-				Owner = owner,
-				Payload = payload,
-			};
-			instance.Action = ChangeAction.Add;
-
-			return instance;
+			return new GeometryChange
+			       {
+				       Geometry = geometry,
+				       Stamp = DateTime.UtcNow,
+				       Id = Guid.NewGuid(),
+				       Owner = userName,
+				       Payload = geometry?.ToJSON(new SerializationOptions()),
+				       Action = ChangeAction.Add | ChangeAction.Temporary
+			       };
 		}
 
+		/// <summary>Creates a new Change for sending to the server</summary>
+		/// <param name="id">The id of the change to remove</param>
+		/// <param name="user">The user who deleted this change</param>
+		/// <param name="action">The action for the Change</param>
+		/// <param name="payload">The payload if an add, otherwise none.</param>
+		/// <returns>A change suitable for sending to the server</returns>
+		public static Change CreateChange(Guid id, string user, ChangeAction action, string? payload = null)
+		{
+			return new Change { Id = id, Owner = user, Action = action, Payload = payload };
+		}
 	}
 }

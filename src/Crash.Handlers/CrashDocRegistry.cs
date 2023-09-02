@@ -1,28 +1,26 @@
-﻿using Crash.Common.Document;
+﻿using BidirectionalMap;
+
+using Crash.Common.Document;
 
 using Rhino;
 
-using BidirectionalMap;
-
 namespace Crash.Handlers
 {
-
 	// TODO : Is this needed?
-	public sealed partial class CrashDocRegistry
+	public sealed class CrashDocRegistry
 	{
-		static BiMap<RhinoDoc, CrashDocumentState> DocumentRelationship;
-
-
-		/// <summary>The Active Crash Document.</summary>
-		public static CrashDoc? ActiveDoc => GetRelatedDocument(RhinoDoc.ActiveDoc);
-		// TODO : Make internal
-		public static CrashDocumentState ActiveState => DocumentRelationship.Forward[RhinoDoc.ActiveDoc];
+		private static readonly BiMap<RhinoDoc, CrashDoc> DocumentRelationship;
 
 		static CrashDocRegistry()
 		{
-			DocumentRelationship = new BiMap<RhinoDoc, CrashDocumentState>();
+			DocumentRelationship = new BiMap<RhinoDoc, CrashDoc>();
 			RhinoDoc.ActiveDocumentChanged += RhinoDoc_ActiveDocumentChanged;
 		}
+
+		/// <summary>The Active Crash Document.</summary>
+		public static CrashDoc? ActiveDoc => GetRelatedDocument(RhinoDoc.ActiveDoc);
+
+		internal static CrashDoc ActiveState => DocumentRelationship.Forward[RhinoDoc.ActiveDoc];
 
 		private static void RhinoDoc_ActiveDocumentChanged(object sender, DocumentEventArgs e)
 		{
@@ -32,7 +30,9 @@ namespace Crash.Handlers
 		public static CrashDoc? GetRelatedDocument(RhinoDoc doc)
 		{
 			if (DocumentRelationship.Forward.ContainsKey(doc))
-				return DocumentRelationship.Forward[doc].Document;
+			{
+				return DocumentRelationship.Forward[doc];
+			}
 
 			return null;
 		}
@@ -41,7 +41,7 @@ namespace Crash.Handlers
 		{
 			foreach (var kvp in DocumentRelationship.Reverse)
 			{
-				if (kvp.Key.Document.Equals(doc))
+				if (kvp.Key.Equals(doc))
 				{
 					return kvp.Value;
 				}
@@ -51,40 +51,32 @@ namespace Crash.Handlers
 		}
 
 		public static IEnumerable<CrashDoc> GetOpenDocuments()
-			=> DocumentRelationship.Forward.Values.Select(s => s.Document);
+		{
+			return DocumentRelationship.Forward.Values;
+		}
 
 		public static CrashDoc CreateAndRegisterDocument(RhinoDoc rhinoDoc)
 		{
 			if (DocumentRelationship.Forward.ContainsKey(rhinoDoc))
 			{
-				return DocumentRelationship.Forward[rhinoDoc].Document;
+				return DocumentRelationship.Forward[rhinoDoc];
 			}
 
-			CrashDocumentState state = Create();
-			Register(state, rhinoDoc);
-
-			state.Document.Queue.OnCompletedQueue += (s, e) =>
-			{
-				rhinoDoc.Views.Redraw();
-			};
-
-			return state.Document;
-		}
-
-		private static CrashDocumentState Create()
-		{
 			var crashDoc = new CrashDoc();
-			var state = new CrashDocumentState(crashDoc);
+			Register(crashDoc, rhinoDoc);
 
-			return state;
+			crashDoc.Queue.OnCompletedQueue += (s, e) =>
+			                                   {
+				                                   rhinoDoc.Views.Redraw();
+			                                   };
+
+			return crashDoc;
 		}
 
-		private static void Register(CrashDocumentState crashDocState,
-									RhinoDoc rhinoDoc)
+		private static void Register(CrashDoc crashDoc,
+			RhinoDoc rhinoDoc)
 		{
-			DocumentRelationship.Add(rhinoDoc, crashDocState);
+			DocumentRelationship.Add(rhinoDoc, crashDoc);
 		}
-
 	}
-
 }

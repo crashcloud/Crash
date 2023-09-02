@@ -4,22 +4,15 @@ using Crash.Common.Document;
 
 namespace Crash.Common.Tables
 {
-
 	/// <summary>Holds Temporary Changes only</summary>
 	public sealed class ChangeTable : IEnumerable<IChange>
 	{
-		private readonly CrashDoc _crashDoc;
-
 		// TODO : Should this be async? Or Concurrent?
 		private readonly ConcurrentDictionary<Guid, IChange> _cache;
-
-		// TODO : Move
-		public bool IsInit { get; set; } = false;
-		// TODO : Move
-		public bool SomeoneIsDone { get; set; } = false;
+		private readonly CrashDoc _crashDoc;
 
 		/// <summary>
-		/// Local cache constructor subscribing to RhinoApp_Idle
+		///     Local cache constructor subscribing to RhinoApp_Idle
 		/// </summary>
 		public ChangeTable(CrashDoc hostDoc)
 		{
@@ -27,21 +20,57 @@ namespace Crash.Common.Tables
 			_crashDoc = hostDoc;
 		}
 
+		// TODO : Move
+		public bool IsInit { get; set; } = false;
+
+		// TODO : Move
+		public bool SomeoneIsDone { get; set; } = false;
+
+		
+		public IEnumerator<IChange> GetEnumerator()
+		{
+			return _cache.Values.GetEnumerator();
+		}
+
+		
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return _cache.Values.GetEnumerator();
+		}
+
 		internal void Clear()
 		{
 			_cache?.Clear();
 		}
 
+		/// <summary>
+		///     Method to get Changes
+		/// </summary>
+		/// <returns>returns a list of the Changes</returns>
+		public IEnumerable<IChange> GetChanges()
+		{
+			return _cache.Values;
+		}
+
+		
+		public IEnumerator<T> GetEnumerator<T>()
+		{
+			return _cache.Values.Where(x => x is T).Cast<T>().GetEnumerator();
+		}
+
 		#region ConcurrentDictionary Methods
 
 		/// <summary>
-		/// Method to update a Change
+		///     Method to update a Change
 		/// </summary>
 		/// <param name="cache">the Changes</param>
 		/// <returns>returns the update task</returns>
 		public async Task UpdateChangeAsync(IChange cache)
 		{
-			if (cache == null) return;
+			if (cache == null)
+			{
+				return;
+			}
 
 			if (_cache.ContainsKey(cache.Id))
 			{
@@ -52,7 +81,7 @@ namespace Crash.Common.Tables
 		}
 
 		/// <summary>
-		/// Remove a Change for the cache
+		///     Remove a Change for the cache
 		/// </summary>
 		/// <param name="Change">the Change to remove</param>
 		public void RemoveChange(Guid ChangeId)
@@ -61,12 +90,15 @@ namespace Crash.Common.Tables
 		}
 
 		/// <summary>
-		/// Remove multiple Changes from the cache
+		///     Remove multiple Changes from the cache
 		/// </summary>
 		/// <param name="Changes">the Changes to remove</param>
 		public void RemoveChanges(IEnumerable<IChange> Changes)
 		{
-			if (null == Changes) return;
+			if (null == Changes)
+			{
+				return;
+			}
 
 			var enumer = Changes.GetEnumerator();
 			while (enumer.MoveNext())
@@ -79,10 +111,13 @@ namespace Crash.Common.Tables
 		{
 			change = default;
 
-			if (_cache.TryGetValue(id, out IChange? cachedChange) &&
-				cachedChange is T changeConverted)
+			if (_cache.TryGetValue(id, out var cachedChange) &&
+			    cachedChange is T changeConverted)
 			{
-				if (cachedChange == default) return false;
+				if (cachedChange == default)
+				{
+					return false;
+				}
 
 				change = changeConverted;
 				return true;
@@ -92,20 +127,5 @@ namespace Crash.Common.Tables
 		}
 
 		#endregion
-
-		/// <summary>
-		/// Method to get Changes
-		/// </summary>
-		/// <returns>returns a list of the Changes</returns>
-		public IEnumerable<IChange> GetChanges() => _cache.Values;
-
-		/// <inheritdoc/>
-		public IEnumerator<IChange> GetEnumerator() => _cache.Values.GetEnumerator();
-		/// <inheritdoc/>
-		public IEnumerator<T> GetEnumerator<T>() => _cache.Values.Where(x => x is T).Cast<T>().GetEnumerator();
-		/// <inheritdoc/>
-		IEnumerator IEnumerable.GetEnumerator() => _cache.Values.GetEnumerator();
-
 	}
 }
-

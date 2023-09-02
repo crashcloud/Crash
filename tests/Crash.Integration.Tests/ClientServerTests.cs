@@ -1,26 +1,23 @@
 ﻿using System.Diagnostics;
 using System.Net;
 
-using Crash.Client;
+using Crash.Common.Communications;
 using Crash.Common.Document;
-using Crash.Communications;
 
 namespace Crash.Integration.Tests
 {
-
 	public sealed class ClientServerTests
 	{
-		string clientUrl => $"{CrashClient.DefaultURL}:{CrashServer.DefaultPort}";
-		string clientEndpoint => $"{clientUrl}/Crash";
-		string serverUrl => $"{CrashServer.DefaultURL}:{CrashServer.DefaultPort}";
-		Uri clientUri => new Uri(clientEndpoint);
+		private const int timeout = 3000;
+		private const int pollTime = 100;
 
-		const int timeout = 3000;
-		const int pollTime = 100;
+		private CrashDoc _crashDoc;
+		private string clientUrl => $"{CrashClient.DefaultURL}:{CrashServer.DefaultPort}";
+		private string clientEndpoint => $"{clientUrl}/Crash";
+		private string serverUrl => $"{CrashServer.DefaultUrl}:{CrashServer.DefaultPort}";
+		private Uri clientUri => new(clientEndpoint);
 
-		static User user => new User("Marcio");
-
-		CrashDoc _crashDoc;
+		private static User user => new("Marcio");
 
 		[SetUp]
 		public void Setup()
@@ -32,8 +29,8 @@ namespace Crash.Integration.Tests
 			}
 
 			Assert.That(CrashServer.ForceCloselocalServers(1000),
-						"Not all server instances are closed",
-						Is.True);
+			            "Not all server instances are closed",
+			            Is.True);
 		}
 
 		[TearDown]
@@ -46,15 +43,15 @@ namespace Crash.Integration.Tests
 			}
 
 			Assert.That(CrashServer.ForceCloselocalServers(1000),
-						"Not all server instances are closed",
-						Is.True);
+			            "Not all server instances are closed",
+			            Is.True);
 		}
 
 		[Test]
 		public async Task ServerProcess()
 		{
-			bool onConnected = false;
-			bool onFailure = false;
+			var onConnected = false;
+			var onFailure = false;
 
 			_crashDoc = new CrashDoc();
 			_crashDoc.Users.CurrentUser = user;
@@ -63,7 +60,7 @@ namespace Crash.Integration.Tests
 			_crashDoc.LocalServer.OnConnected += (sender, args) => onConnected = true;
 			_crashDoc.LocalServer.OnFailure += (sender, args) => onFailure = true;
 
-			CrashServer crashServer = StartServer(_crashDoc);
+			var crashServer = StartServer(_crashDoc);
 
 			Assert.That(crashServer.Connected, Is.True);
 
@@ -76,7 +73,7 @@ namespace Crash.Integration.Tests
 
 			crashServer.Stop();
 
-			Assert.That(crashServer.process, Is.Null, "Process is not null");
+			Assert.That(crashServer.Process, Is.Null, "Process is not null");
 			Assert.That(crashServer.IsRunning, Is.False, "Server process is still running");
 			Assert.That(onConnected, Is.False, "Server Connection failed");
 			Assert.That(onFailure, Is.False, "Server failed!");
@@ -88,16 +85,15 @@ namespace Crash.Integration.Tests
 			_crashDoc = new CrashDoc();
 			_crashDoc.Users.CurrentUser = user;
 
-			CrashServer crashServer = StartServer(_crashDoc);
+			var crashServer = StartServer(_crashDoc);
 
 			await EnsureSiteIsUp();
 
-			CrashClient crashClient = await StartClientAsync(_crashDoc);
+			var crashClient = await StartClientAsync(_crashDoc);
 		}
 
 		private async Task EnsureSiteIsUp()
 		{
-
 			// Perform a URL ping
 			var httpClient = new HttpClient();
 			var response = await httpClient.GetAsync(clientUrl);
@@ -108,24 +104,24 @@ namespace Crash.Integration.Tests
 		{
 			crashDoc.Users.CurrentUser = user;
 
-			CrashServer crashServer = crashDoc.LocalServer ?? new CrashServer(crashDoc);
+			var crashServer = crashDoc.LocalServer ?? new CrashServer(crashDoc);
 
 			var processInfo = GetStartInfo(serverUrl);
 			Assert.DoesNotThrow(() => crashServer.Start(processInfo));
 
-			var messages = crashServer.Messages;
+			var messages = crashServer._messages;
 			Assert.That(crashServer.IsRunning, string.Join("\r\n", messages), Is.True);
-			Assert.That(crashServer.process, Is.Not.Null);
+			Assert.That(crashServer.Process, Is.Not.Null);
 
 			return crashServer;
 		}
 
 		private async Task<CrashClient> StartClientAsync(CrashDoc crashDoc)
 		{
-			bool initRan = false;
-			Action<IEnumerable<Change>> func = (changes) => initRan = true;
+			var initRan = false;
+			Action<IEnumerable<Change>> func = changes => initRan = true;
 
-			CrashClient crashClient = new CrashClient(crashDoc, user.Name, clientUri);
+			var crashClient = new CrashClient(crashDoc, user.Name, clientUri);
 			crashDoc.LocalClient = crashClient;
 
 			// TODO : FIX INIT CHECK
@@ -142,46 +138,47 @@ namespace Crash.Integration.Tests
 
 		private ProcessStartInfo GetStartInfo(string url)
 		{
-			string net60 = Path.GetDirectoryName(typeof(ClientServerTests).Assembly.Location);
-			string debug = Path.GetDirectoryName(net60);
-			string bin = Path.GetDirectoryName(debug);
-			string project = Path.GetDirectoryName(bin);
-			string tests = Path.GetDirectoryName(project);
-			string source = Path.GetDirectoryName(tests);
+			var net60 = Path.GetDirectoryName(typeof(ClientServerTests).Assembly.Location);
+			var debug = Path.GetDirectoryName(net60);
+			var bin = Path.GetDirectoryName(debug);
+			var project = Path.GetDirectoryName(bin);
+			var tests = Path.GetDirectoryName(project);
+			var source = Path.GetDirectoryName(tests);
 
-			string crashServerPath = Path.Combine(source, "src", "Crash.Server", "bin", "debug");
+			var crashServerPath = Path.Combine(source, "src", "Crash.Server", "bin", "debug");
 
 			// C:\Users\csykes\Documents\cloned_gits\Crash\src\Crash.Server\bin\Debug
 			// C:\Users\csykes\Documents\cloned_gits\Crash\tests\Crash.Integration.Tests\bin\Debug\net6.0
 
-			string[] exes = Directory.GetFiles(crashServerPath, "Crash.Server.exe");
-			string serverExecutable = exes.FirstOrDefault();
-			string serverExePath = Path.GetDirectoryName(serverExecutable);
-			string newDbName = "database.db";
-			string dbPath = Path.Combine(net60, newDbName);
+			var exes = Directory.GetFiles(crashServerPath, "Crash.Server.exe");
+			var serverExecutable = exes.FirstOrDefault();
+			var serverExePath = Path.GetDirectoryName(serverExecutable);
+			var newDbName = "database.db";
+			var dbPath = Path.Combine(net60, newDbName);
 
-			var startInfo = new ProcessStartInfo()
-			{
-				FileName = serverExecutable,
-				Arguments = $"--urls \"{url}\" --path \"{dbPath}\" --reset true",
-				CreateNoWindow = true, // !Debugger.IsAttached,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				UseShellExecute = false,
-			};
+			var startInfo = new ProcessStartInfo
+			                {
+				                FileName = serverExecutable,
+				                Arguments = $"--urls \"{url}\" --path \"{dbPath}\" --reset true",
+				                CreateNoWindow = true, // !Debugger.IsAttached,
+				                RedirectStandardOutput = true,
+				                RedirectStandardError = true,
+				                UseShellExecute = false
+			                };
 
 			return startInfo;
 		}
 
 		private void Wait(Func<bool> condition)
 		{
-			for (int i = 0; i < timeout; i += pollTime)
+			for (var i = 0; i < timeout; i += pollTime)
 			{
 				Thread.Sleep(pollTime);
-				if (condition.Invoke()) break;
+				if (condition.Invoke())
+				{
+					break;
+				}
 			}
 		}
-
 	}
-
 }

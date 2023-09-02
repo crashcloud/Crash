@@ -1,40 +1,17 @@
 ﻿using System.Runtime.CompilerServices;
 
-using Crash.Client;
+using Crash.Common.Communications;
 using Crash.Common.Tables;
-using Crash.Communications;
 using Crash.Events;
 
 [assembly: InternalsVisibleTo("Crash.Common.Tests")]
+
 namespace Crash.Common.Document
 {
-
 	/// <summary>The Crash Document</summary>
 	public sealed class CrashDoc : IEquatable<CrashDoc>, IDisposable
 	{
 		public readonly Guid Id;
-
-		#region Tables
-		/// <summary>The Users Table for the Crash Doc</summary>
-		public readonly UserTable Users;
-		/// <summary>The Changes Table for the Crash Doc</summary>
-		public readonly ChangeTable CacheTable;
-		/// <summary>The Camera Table for the crash Doc</summary>
-		public readonly CameraTable Cameras;
-		#endregion
-
-		#region Connectivity
-		/// <summary>The Local Client for the Crash Doc</summary>
-		public CrashClient? LocalClient { get; set; }
-		/// <summary>The Local Server for the Crash Doc</summary>
-		public CrashServer? LocalServer { get; set; }
-		#endregion
-
-		#region Queue
-		/// <summary>The Idle Queue for the Crash Document</summary>
-		public IdleQueue Queue { get; private set; }
-
-		#endregion
 
 		#region constructors
 
@@ -52,30 +29,62 @@ namespace Crash.Common.Document
 
 		#endregion
 
-		#region Methods
-		/// <inheritdoc/>
-		public bool Equals(CrashDoc? other)
-			=> other?.GetHashCode() == GetHashCode();
+		#region Queue
 
-		/// <inheritdoc/>
-		public override bool Equals(object? obj)
-		{
-			if (obj is not CrashDoc other) return false;
-			return Equals(other);
-		}
-
-		/// <inheritdoc/>
-		public override int GetHashCode() => Id.GetHashCode();
+		/// <summary>The Idle Queue for the Crash Document</summary>
+		public IdleQueue Queue { get; private set; }
 
 		#endregion
 
-		/// <inheritdoc/>
+
 		public void Dispose()
 		{
 			LocalClient?.StopAsync();
 			LocalServer?.Stop();
 		}
 
-	}
+		#region Tables
 
+		/// <summary>The Users Table for the Crash Doc</summary>
+		public readonly UserTable Users;
+
+		/// <summary>The Changes Table for the Crash Doc</summary>
+		public readonly ChangeTable CacheTable;
+
+		/// <summary>The Camera Table for the crash Doc</summary>
+		public readonly CameraTable Cameras;
+
+		#endregion
+
+		#region Connectivity
+
+		/// <summary>The Local Client for the Crash Doc</summary>
+		public CrashClient? LocalClient { get; set; }
+
+		/// <summary>The Local Server for the Crash Doc</summary>
+		public CrashServer? LocalServer { get; set; }
+
+		#endregion
+
+		#region Methods
+
+		public bool Equals(CrashDoc? other)
+		{
+			return other?.GetHashCode() == GetHashCode();
+		}
+
+
+		public override bool Equals(object? obj)
+		{
+			return obj is CrashDoc other && Equals(other);
+		}
+
+
+		public override int GetHashCode()
+		{
+			return Id.GetHashCode();
+		}
+
+		#endregion
+	}
 }

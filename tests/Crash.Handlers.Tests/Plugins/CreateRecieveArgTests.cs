@@ -7,11 +7,9 @@ using Rhino;
 
 namespace Crash.Handlers.Tests.Plugins
 {
-
 	[RhinoFixture]
 	public sealed class CreateRecieveArgTests
 	{
-
 		[Test]
 		public void ValidityTests()
 		{
@@ -26,7 +24,5 @@ namespace Crash.Handlers.Tests.Plugins
 			Assert.Throws<ArgumentNullException>(() => new CreateRecieveArgs((ChangeAction)(-1), null, (CrashDoc)null));
 			Assert.Throws<ArgumentNullException>(() => new CreateRecieveArgs((ChangeAction)(-1), null, (RhinoDoc)null));
 		}
-
 	}
-
 }

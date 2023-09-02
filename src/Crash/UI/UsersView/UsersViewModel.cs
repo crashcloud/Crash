@@ -6,49 +6,23 @@ using Crash.Common.Document;
 using Crash.Common.Tables;
 using Crash.Handlers;
 using Crash.Properties;
-using Crash.UI.UsersView;
 
 using Eto.Drawing;
 using Eto.Forms;
 
 using Rhino.UI;
 
+using Color = System.Drawing.Color;
+
 namespace Crash.UI.UsersView
 {
 	internal sealed class UsersViewModel : INotifyPropertyChanged
 	{
-		public sealed class UserObject
-		{
-			public string Name { get; private set; }
-			public System.Drawing.Color Colour { get; private set; }
-			public CameraState Camera { get; set; }
-			public bool Visible { get; set; }
-
-			internal User CUser => new User(Name)
-			{
-				Camera = Camera,
-				Visible = Visible,
-			};
-
-			internal UserObject(User user)
-			{
-				Name = user.Name;
-				Colour = user.Color;
-				Camera = user.Camera;
-				Visible = user.Visible;
-			}
-
-			public override string ToString() => Name;
-
-		}
-
-		internal ObservableCollection<UserObject> Users { get; set; }
-
 		internal readonly IndirectBinding<Image> ImageCellBinding;
 
-		internal readonly IndirectBinding<bool?> VisibleCellBinding;
-
 		internal readonly IndirectBinding<string> TextCellBinding;
+
+		internal readonly IndirectBinding<bool?> VisibleCellBinding;
 
 		internal GridView View;
 
@@ -57,11 +31,12 @@ namespace Crash.UI.UsersView
 			RhinoDoc.ActiveDocumentChanged += (sender, args) => UsersForm.ReDraw();
 			RhinoDoc.ActiveDocumentChanged += (sender, args) => UsersForm.ReDraw();
 
-			ImageCellBinding = Binding.Property<UserObject, Image>(u => UsersViewModel.UserUIExtensions.GetCameraImage(u));
+			ImageCellBinding = Binding.Property<UserObject, Image>(u => UserUIExtensions.GetCameraImage(u));
 			// ImageCellBinding.Changed += ImageCellBinding_Changed;
 
 			VisibleCellBinding = Binding.Property<UserObject, bool?>(u => u.Visible);
-			VisibleCellBinding.Changed += VisibleCellBinding_Changed; ;
+			VisibleCellBinding.Changed += VisibleCellBinding_Changed;
+			;
 
 			TextCellBinding = Binding.Property<UserObject, string>(u => u.Name);
 			// TextCellBinding.Changed += TextCellBinding_Changed;
@@ -72,6 +47,11 @@ namespace Crash.UI.UsersView
 			UserTable.OnUserRemoved += UserTable_OnUserChanged;
 			UserTable.OnUserAdded += UserTable_OnUserChanged;
 		}
+
+		internal ObservableCollection<UserObject> Users { get; set; }
+
+
+		public event PropertyChangedEventHandler PropertyChanged;
 
 		private void SetUsers()
 		{
@@ -97,19 +77,23 @@ namespace Crash.UI.UsersView
 
 		private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
-			if (e.PropertyName != nameof(Users)) return;
+			if (e.PropertyName != nameof(Users))
+			{
+				return;
+			}
+
 			UpdateCrashUserTable();
 		}
 
 		private void UpdateCrashUserTable()
 		{
-			UserTable userTable = CrashDocRegistry.ActiveDoc.Users;
-			foreach (UsersViewModel.UserObject user in Users)
+			var userTable = CrashDocRegistry.ActiveDoc.Users;
+			foreach (var user in Users)
 			{
 				userTable.Update(user.CUser);
 			}
 
-			Rhino.RhinoDoc.ActiveDoc.Views.Redraw();
+			RhinoDoc.ActiveDoc.Views.Redraw();
 			UsersForm.ReDraw();
 		}
 
@@ -119,25 +103,34 @@ namespace Crash.UI.UsersView
 		}
 
 		private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
-			=> PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+		{
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+		}
 
 		internal void CycleCameraSetting(object sender, GridCellMouseEventArgs e)
 		{
-			int row = e.Row;
-			int col = e.Column;
+			var row = e.Row;
+			var col = e.Column;
 
-			if (row < 0 || col != 0) return;
-			if (!e.Buttons.HasFlag(MouseButtons.Primary)) return;
+			if (row < 0 || col != 0)
+			{
+				return;
+			}
+
+			if (!e.Buttons.HasFlag(MouseButtons.Primary))
+			{
+				return;
+			}
 
 			if (e.Item is UserObject user)
 			{
-				CameraState state = CycleState(user.Camera);
+				var state = CycleState(user.Camera);
 
 				if (state == CameraState.Follow)
 				{
-					for (int i = 0; i < Users.Count; i++)
+					for (var i = 0; i < Users.Count; i++)
 					{
-						UserObject currUser = Users[i];
+						var currUser = Users[i];
 						if (CameraState.Follow == currUser.Camera)
 						{
 							currUser.Camera = CameraState.Visible;
@@ -158,7 +151,7 @@ namespace Crash.UI.UsersView
 
 		private CameraState CycleState(CameraState state)
 		{
-			int stateCount = (int)state;
+			var stateCount = (int)state;
 			stateCount++;
 
 			if (stateCount >= Enum.GetValues(typeof(CameraState)).Length)
@@ -169,32 +162,48 @@ namespace Crash.UI.UsersView
 			return (CameraState)stateCount;
 		}
 
+		public sealed class UserObject
+		{
+			internal UserObject(User user)
+			{
+				Name = user.Name;
+				Colour = user.Color;
+				Camera = user.Camera;
+				Visible = user.Visible;
+			}
 
-		public event PropertyChangedEventHandler PropertyChanged;
+			public string Name { get; }
+			public Color Colour { get; private set; }
+			public CameraState Camera { get; set; }
+			public bool Visible { get; set; }
+
+			internal User CUser => new(Name) { Camera = Camera, Visible = Visible };
+
+			public override string ToString()
+			{
+				return Name;
+			}
+		}
 
 
 		internal static class UserUIExtensions
 		{
-
-			private static Dictionary<CameraState, Image> cameras;
+			private static readonly Dictionary<CameraState, Image> cameras;
 
 			static UserUIExtensions()
 			{
 				cameras = new Dictionary<CameraState, Image>
-			{
-				{ CameraState.None, Icons.CameraNone.ToEto() },
-				{ CameraState.Visible, Icons.CameraVisible.ToEto() },
-				{ CameraState.Follow, Icons.CameraFollow.ToEto() },
-			};
+				          {
+					          { CameraState.None, Icons.CameraNone.ToEto() },
+					          { CameraState.Visible, Icons.CameraVisible.ToEto() },
+					          { CameraState.Follow, Icons.CameraFollow.ToEto() }
+				          };
 			}
 
 			internal static Image GetCameraImage(UserObject user)
 			{
 				return cameras[user.Camera];
 			}
-
 		}
 	}
-
-
 }

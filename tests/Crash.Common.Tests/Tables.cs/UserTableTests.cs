@@ -3,7 +3,6 @@ using Crash.Common.Tables;
 
 namespace Crash.Common.Tests.Tables
 {
-
 	public class UserTableTests
 	{
 		[Test]
@@ -16,7 +15,7 @@ namespace Crash.Common.Tests.Tables
 			var user = new User("user1");
 
 			// Act
-			bool result = userTable.Add(user);
+			var result = userTable.Add(user);
 
 			// Assert
 			Assert.IsTrue(result);
@@ -33,8 +32,8 @@ namespace Crash.Common.Tests.Tables
 			var user2 = new User("user1");
 
 			// Act
-			bool result1 = userTable.Add(user1);
-			bool result2 = userTable.Add(user2);
+			var result1 = userTable.Add(user1);
+			var result2 = userTable.Add(user2);
 
 			// Assert
 			Assert.IsTrue(result1);
@@ -52,7 +51,7 @@ namespace Crash.Common.Tests.Tables
 			userTable.CurrentUser = user;
 
 			// Act
-			bool result = userTable.Add(user);
+			var result = userTable.Add(user);
 
 			// Assert
 			Assert.IsFalse(result);
@@ -66,11 +65,11 @@ namespace Crash.Common.Tests.Tables
 			var crashDoc = new CrashDoc();
 			var userTable = new UserTable(crashDoc);
 			var user = new User("user1");
-			bool eventRaised = false;
+			var eventRaised = false;
 			UserTable.OnUserAdded += (sender, args) => eventRaised = true;
 
 			// Act
-			bool result = userTable.Add(user);
+			var result = userTable.Add(user);
 
 			// Assert
 			Assert.IsTrue(eventRaised);
@@ -102,7 +101,7 @@ namespace Crash.Common.Tests.Tables
 			var userTable = new UserTable(crashDoc);
 			var user = new User("user1");
 			userTable.Add(user);
-			bool eventRaised = false;
+			var eventRaised = false;
 			UserTable.OnUserRemoved += (sender, args) => eventRaised = true;
 
 			// Act
@@ -123,7 +122,7 @@ namespace Crash.Common.Tests.Tables
 			userTable.Add(user);
 
 			// Act
-			User result = userTable.Get("user1");
+			var result = userTable.Get("user1");
 
 			// Assert
 			Assert.That(result, Is.EqualTo(user));
@@ -138,7 +137,7 @@ namespace Crash.Common.Tests.Tables
 			var userTable = new UserTable(crashDoc);
 
 			// Act
-			User result = userTable.Get("user1");
+			var result = userTable.Get("user1");
 
 			// Assert
 			Assert.That(default(User), Is.EqualTo(result));

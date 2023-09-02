@@ -2,7 +2,6 @@
 
 namespace Crash.Common.Collections
 {
-
 	/// <summary>A Queue of a predetermined size</summary>
 	public sealed class FixedSizedQueue<T> : IReadOnlyCollection<T>
 	{
@@ -18,6 +17,21 @@ namespace Crash.Common.Collections
 			_idleQueue = new Queue<T>();
 		}
 
+		/// <summary>Current count of the Queue</summary>
+		public int Count => _idleQueue.Count;
+
+		/// <summary>GetEnumerator</summary>
+		public IEnumerator<T> GetEnumerator()
+		{
+			return _idleQueue.GetEnumerator();
+		}
+
+		/// <summary>GetEnumerator</summary>
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return _idleQueue.GetEnumerator();
+		}
+
 		/// <summary>Adds an item to the Queue, removing the first item if adding would put it oversize.</summary>
 		public void Enqueue(T item)
 		{
@@ -28,16 +42,5 @@ namespace Crash.Common.Collections
 
 			_idleQueue.Enqueue(item);
 		}
-
-		/// <summary>Current count of the Queue</summary>
-		public int Count => _idleQueue.Count;
-
-		/// <summary>GetEnumerator</summary>
-		public IEnumerator<T> GetEnumerator() => _idleQueue.GetEnumerator();
-
-		/// <summary>GetEnumerator</summary>
-		IEnumerator IEnumerable.GetEnumerator() => _idleQueue.GetEnumerator();
-
 	}
-
 }

@@ -1,25 +1,30 @@
-﻿using Crash.Client;
+﻿using Crash.Common.Communications;
 using Crash.Handlers.Plugins;
 
 using Rhino.PlugIns;
 
-
 namespace Crash
 {
-
 	/// <summary>
-	/// All CrashPlugins should inherit from this base
+	///     All CrashPlugins should inherit from this base
 	/// </summary>
 	public abstract class CrashPluginBase : PlugIn
 	{
-		internal EventDispatcher Dispatcher;
 		private readonly Stack<IChangeDefinition> _changes;
+		internal EventDispatcher Dispatcher;
 
 		protected CrashPluginBase()
 		{
 			_changes = new Stack<IChangeDefinition>();
 			CrashClient.OnInit += CrashClient_OnInit;
 		}
+
+		#region Rhino Plugin Overrides
+
+		public sealed override PlugInLoadTime LoadTime
+			=> this is CrashPlugin ? PlugInLoadTime.AtStartup : PlugInLoadTime.WhenNeeded;
+
+		#endregion
 
 		private void CrashClient_OnInit(object sender, CrashClient.CrashInitArgs e)
 		{
@@ -37,7 +42,7 @@ namespace Crash
 
 				e.CrashDoc.CacheTable.IsInit = true;
 
-				foreach (Change change in e.Changes)
+				foreach (var change in e.Changes)
 				{
 					Dispatcher.NotifyDispatcherAsync(e.CrashDoc, change);
 				}
@@ -62,17 +67,5 @@ namespace Crash
 				Dispatcher.RegisterDefinition(changeDefinition);
 			}
 		}
-
-		#region Rhino Plugin Overrides 
-
-		/// <inheritdoc />
-		public sealed override PlugInLoadTime LoadTime
-			=> this is CrashPlugin ?
-				PlugInLoadTime.AtStartup :
-				PlugInLoadTime.WhenNeeded;
-
-		#endregion
-
 	}
-
 }

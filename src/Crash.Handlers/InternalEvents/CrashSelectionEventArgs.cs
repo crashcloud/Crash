@@ -1,20 +1,20 @@
 ﻿namespace Crash.Handlers.InternalEvents
 {
-
-	/// <summary>Wrapss the RhinoSelection and Deselection Events</summary>
+	/// <summary>Wraps the RhinoSelection and Deselection Events</summary>
 	public sealed class CrashSelectionEventArgs : EventArgs
 	{
-
 		/// <summary>Related Event Objets</summary>
 		public readonly IEnumerable<CrashObject> CrashObjects;
-		/// <summary>Was this a Selection Event?</summary>
-		public readonly bool Selected;
+
 		/// <summary>Used only on Deselect All Event</summary>
 		public readonly bool DeselectAll;
 
+		/// <summary>Was this a Selection Event?</summary>
+		public readonly bool Selected;
+
 		/// <summary>Singular Selection/Deselection Event Constructor</summary>
-		public CrashSelectionEventArgs(bool selected,
-								IEnumerable<CrashObject> crashObjects)
+		internal CrashSelectionEventArgs(bool selected,
+			IEnumerable<CrashObject> crashObjects)
 		{
 			CrashObjects = crashObjects;
 			Selected = selected;
@@ -22,12 +22,10 @@
 		}
 
 		/// <summary>Deselect All Event Constructor</summary>
-		public CrashSelectionEventArgs(bool selected = false)
+		internal CrashSelectionEventArgs(bool selected = false)
 			: this(selected, Enumerable.Empty<CrashObject>())
 		{
 			DeselectAll = true;
 		}
-
 	}
-
 }

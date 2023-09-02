@@ -1,8 +1,7 @@
 ﻿namespace Crash.Common.Tables.Tests
 {
-
 	/*
-	 * 
+	 *
 	[TestFixture]
 	public class ChangeTableTests
 	{
@@ -117,5 +116,4 @@
 	}
 
 	*/
-
 }
