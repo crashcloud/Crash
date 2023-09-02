@@ -1,7 +1,7 @@
 ﻿using System.Collections;
+using System.Text.Json;
 
 using Crash.Changes;
-using Crash.Common.Changes;
 using Crash.Common.Document;
 using Crash.Handlers.InternalEvents;
 using Crash.Handlers.Plugins;
@@ -52,7 +52,9 @@ namespace Crash.Handlers.Tests.Plugins
 			foreach (var change in changes)
 			{
 				Assert.That(change.Action, Is.EqualTo(ChangeAction.Add));
-				Assert.That(change is CameraChange, Is.True);
+
+				// Check this succeeds
+				JsonSerializer.Deserialize<Common.View.Camera>(change.Payload);
 			}
 		}
 	}

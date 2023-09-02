@@ -1,4 +1,5 @@
-﻿using Crash.Geometry;
+﻿using Crash.Common.Changes;
+using Crash.Geometry;
 using Crash.Handlers.InternalEvents;
 
 namespace Crash.Handlers.Plugins.Camera.Create
@@ -63,7 +64,8 @@ namespace Crash.Handlers.Plugins.Camera.Create
 
 			var userName = crashArgs.Doc.Users.CurrentUser.Name;
 			var camera = new Common.View.Camera(viewArgs.Location, viewArgs.Target);
-			// changes = new List<Change> { CameraChange.CreateNew(camera, userName) }; // TODO : Fix
+			var change = CameraChange.CreateChange(camera, userName);
+			changes = new List<Change> { change };
 
 			return true;
 		}

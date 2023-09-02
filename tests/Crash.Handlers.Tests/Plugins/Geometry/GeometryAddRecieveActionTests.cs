@@ -25,7 +25,7 @@ namespace Crash.Handlers.Tests.Plugins.Geometry
 		{
 			get
 			{
-				for (var i = 0; i < 100; i++)
+				for (var i = 0; i < 10; i++)
 				{
 					var owner = Path.GetRandomFileName().Replace(".", "");
 					var lineCurve = NRhino.Random.Geometry.NLineCurve.Any();

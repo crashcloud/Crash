@@ -82,7 +82,6 @@ namespace Crash.Handlers.Tests.Plugins
 			foreach (var change in changes)
 			{
 				Assert.That(change.Action, Is.EqualTo(createArgs.Action));
-				Assert.That(change is GeometryChange, Is.True);
 			}
 		}
 

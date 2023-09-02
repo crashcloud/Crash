@@ -53,5 +53,19 @@ namespace Crash.Common.Changes
 				       Action = ChangeAction.Add
 			       };
 		}
+
+		/// <summary>Creates a new transmittable Change</summary>
+		public static Change CreateChange(Camera camera, string userName)
+		{
+			return new Change
+			       {
+				       Stamp = DateTime.UtcNow,
+				       Id = Guid.NewGuid(),
+				       Owner = userName,
+				       Payload = JsonSerializer.Serialize(camera, Options.Default),
+				       Action = ChangeAction.Add,
+				       Type = ChangeType
+			       };
+		}
 	}
 }

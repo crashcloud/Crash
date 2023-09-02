@@ -77,9 +77,9 @@ namespace Crash.Utils
 		}
 
 		/// <summary>Adds the ChangeId to the Rhino Object and vice Verse.</summary>
-		public static void SyncHost(this RhinoObject rObj, IChange Change)
+		public static void SyncHost(this RhinoObject rObj, IChange change)
 		{
-			if (null is Change || rObj is null)
+			if (change is null || rObj is null)
 			{
 				return;
 			}
@@ -90,10 +90,10 @@ namespace Crash.Utils
 				RhinoChangeKeys.Remove(changeId);
 			}
 
-			rObj.Geometry.UserDictionary.Set(ChangeIdKey, Change.Id);
+			rObj.Geometry.UserDictionary.Set(ChangeIdKey, change.Id);
 
-			RhinoChangeKeys.Remove(Change.Id);
-			RhinoChangeKeys.Add(Change.Id, rObj);
+			RhinoChangeKeys.Remove(change.Id);
+			RhinoChangeKeys.Add(change.Id, rObj);
 		}
 
 		/// <summary>Check for Oversied Payload</summary>
