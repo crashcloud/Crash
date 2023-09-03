@@ -1,12 +1,12 @@
-﻿namespace Crash.Common.Tables.Tests
+﻿using Crash.Changes;
+using Crash.Common.Document;
+using Crash.Common.Tables;
+
+namespace Crash.Common.Tests.Tables
 {
-	/*
-	 *
 	[TestFixture]
 	public class ChangeTableTests
 	{
-		private ChangeTable _changeTable;
-
 		[SetUp]
 		public void SetUp()
 		{
@@ -14,22 +14,44 @@
 			_changeTable = new ChangeTable(doc);
 		}
 
+		private ChangeTable _changeTable;
+
+		internal sealed class TextChange : IChange
+		{
+			public TextChange(Guid id, string owner, string newValue)
+			{
+				Id = id;
+				NewValue = newValue;
+				Owner = owner;
+			}
+
+			internal string NewValue { get; }
+
+			public DateTime Stamp { get; }
+			public Guid Id { get; }
+
+			public string Owner { get; }
+			public string? Payload { get; }
+			public string Type { get; }
+			public ChangeAction Action { get; set; }
+		}
+
 		[Test]
-		public void UpdateChangeAsync_UpdatesCache_WhenCacheContainsChange()
+		public async Task UpdateChangeAsync_UpdatesCache_WhenCacheContainsChange()
 		{
 			// Arrange
 			var id = Guid.NewGuid();
 			var initialChange = new TextChange(id, "Hello", "World");
-			_changeTable.UpdateChangeAsync(initialChange).Wait();
+			await _changeTable.UpdateChangeAsync(initialChange);
 
 			var updatedChange = new TextChange(id, "Hello", "Everyone");
 
 			// Act
-			_changeTable.UpdateChangeAsync(updatedChange).Wait();
+			await _changeTable.UpdateChangeAsync(updatedChange);
 			var result = _changeTable.TryGetValue<TextChange>(id, out var retrievedChange);
 
 			// Assert
-			Assert.IsTrue(result);
+			Assert.That(result, Is.True);
 			Assert.AreEqual("Everyone", retrievedChange.NewValue);
 		}
 
@@ -45,7 +67,7 @@
 			var result = _changeTable.TryGetValue<TextChange>(id, out var retrievedChange);
 
 			// Assert
-			Assert.IsTrue(result);
+			Assert.That(result, Is.True);
 			Assert.AreEqual("World", retrievedChange.NewValue);
 		}
 
@@ -88,32 +110,5 @@
 			Assert.IsFalse(result2);
 			Assert.IsNull(retrievedChange2);
 		}
-
-		[Test]
-		public void AddToDocument_InvokesEventHandler()
-		{
-			// Arrange
-			var id = Guid.NewGuid();
-			var change = new TextChange(id, "Hello", "World");
-			var eventHandlerInvoked = false;
-
-			change.AddToDocument = (args) => eventHandlerInvoked = true;
-
-			// Act
-			_changeTable.AddToDocument(change);
-
-			// Assert
-			Assert.IsTrue(eventHandlerInvoked);
-		}
-
-		[Test]
-		public void RemoveFromDocument_InvokesEventHandler()
-		{
-			// Arrange
-			var id = Guid.NewGuid();
-			var change = new TextChange(id, "Hello", "World");
-		}
 	}
-
-	*/
 }

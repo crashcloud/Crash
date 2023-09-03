@@ -17,7 +17,7 @@ namespace Crash.Common.Communications
 	/// <summary>
 	///     Crash client class
 	/// </summary>
-	public sealed class CrashClient
+	public sealed class CrashClient : ICrashClient
 	{
 		private readonly HubConnection _connection;
 		private readonly CrashDoc _crashDoc;
@@ -55,105 +55,10 @@ namespace Crash.Common.Communications
 		public bool IsConnected => _connection.State != HubConnectionState.Disconnected;
 		public HubConnectionState State => _connection.State;
 
-		/// <summary>
-		///     Closed event
-		/// </summary>
-		public event Func<Exception, Task> Closed
-		{
-			add => _connection.Closed += value;
-			remove => _connection.Closed -= value;
-		}
-
-		/// <summary>Local Event corresponding to a Server call for Add</summary>
-		public event Action<Change> OnAdd;
-
-		/// <summary>Local Event corresponding to a Server call for Delete</summary>
-		public event Action<Guid> OnDelete;
-
-		/// <summary>Local Event corresponding to a Server call for Update</summary>
-		public event Action<Change> OnUpdate;
-
-		/// <summary>Local Event corresponding to a Server call for Done</summary>
-		public event Action<string> OnDone;
-
-		/// <summary>Local Event corresponding to a Server call for Done Range</summary>
-		public event Action<IEnumerable<Guid>> OnDoneRange;
-
-		/// <summary>Local Event corresponding to a Server call for Lock</summary>
-		public event Action<string, Guid> OnLock;
-
-		/// <summary>Local Event corresponding to a Server call for Unlock</summary>
-		public event Action<string, Guid> OnUnlock;
-
-		/// <summary>Local Event corresponding to a Server call for Initialize</summary>
-		public event Action<IEnumerable<Change>> OnInitialize;
-
-		/// <summary>Local Event corresponding to a Server call for Initialize Users</summary>
-		public event Action<IEnumerable<string>> OnInitializeUsers;
-
-		/// <summary>Local Event corresponding to a Server call for Camera Change</summary>
-		public event Action<Change> OnCameraChange;
-
 		/// <summary>Stops the Connection</summary>
 		public async Task StopAsync()
 		{
 			await _connection?.StopAsync();
-		}
-
-		/// <summary>Creates a connection to the Crash Server</summary>
-		internal static HubConnection GetHubConnection(Uri url)
-		{
-			return new HubConnectionBuilder()
-			       .WithUrl(url).AddJsonProtocol()
-			       .AddJsonProtocol(opts => JsonOptions())
-			       // .ConfigureLogging(LoggingConfigurer)
-			       .WithAutomaticReconnect(new[]
-			                               {
-				                               TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100),
-				                               TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(10)
-			                               })
-			       .Build();
-		}
-
-		public static JsonHubProtocolOptions JsonOptions()
-		{
-			return new JsonHubProtocolOptions
-			       {
-				       PayloadSerializerOptions = new JsonSerializerOptions
-				                                  {
-					                                  IgnoreReadOnlyFields = true,
-					                                  IgnoreReadOnlyProperties = true,
-					                                  NumberHandling = JsonNumberHandling
-						                                  .AllowNamedFloatingPointLiterals
-				                                  }
-			       };
-		}
-
-		private static void LoggingConfigurer(ILoggingBuilder loggingBuilder)
-		{
-			var logLevel = Debugger.IsAttached ? LogLevel.Trace : LogLevel.Information;
-			loggingBuilder.SetMinimumLevel(logLevel);
-			var loggingProvider = new CrashLoggerProvider();
-			loggingBuilder.AddProvider(loggingProvider);
-		}
-
-		/// <summary>Registers Local Events responding to Server calls</summary>
-		internal void RegisterConnections()
-		{
-			_connection.On<Change>(ADD, change => OnAdd?.Invoke(change));
-			_connection.On<Guid>(DELETE, id => OnDelete?.Invoke(id));
-			_connection.On<Change>(UPDATE, change => OnUpdate?.Invoke(change));
-			_connection.On<string>(DONE, user => OnDone?.Invoke(user));
-			_connection.On<IEnumerable<Guid>>(DONERANGE, ids => OnDoneRange(ids));
-			_connection.On<string, Guid>(LOCK, (user, id) => OnLock?.Invoke(user, id));
-			_connection.On<string, Guid>(UNLOCK, (user, id) => OnUnlock?.Invoke(user, id));
-			_connection.On<IEnumerable<Change>>(INITIALIZE, changes => OnInitialize?.Invoke(changes));
-			_connection.On<IEnumerable<string>>(INITIALIZEUSERS, users => OnInitializeUsers?.Invoke(users));
-			_connection.On<Change>(CAMERACHANGE, change => OnCameraChange?.Invoke(change));
-
-			_connection.Reconnected += ConnectionReconnectedAsync;
-			_connection.Closed += ConnectionClosedAsync;
-			_connection.Reconnecting += ConnectionReconnectingAsync;
 		}
 
 		/// <summary>Starts the Client</summary>
@@ -177,44 +82,6 @@ namespace Crash.Common.Communications
 
 			// TODO : Check for successful connection
 			await StartAsync();
-		}
-
-		// This isn't calling, and needs to call the Event Dispatcher
-		private void Init(IEnumerable<Change> changes)
-		{
-			OnInitialize -= Init;
-			OnInit?.Invoke(this, new CrashInitArgs(_crashDoc, changes));
-		}
-
-		private void InitUsers(IEnumerable<string> users)
-		{
-			OnInitializeUsers -= InitUsers;
-			// User Init
-			// OnInitUsers?.Invoke(this, new CrashUserInitArgs())
-		}
-
-		public static void CloseLocalServer(CrashDoc crashDoc)
-		{
-			crashDoc?.LocalServer?.Stop();
-			crashDoc?.LocalServer?.Dispose();
-		}
-
-		private Task ConnectionReconnectingAsync(Exception? arg)
-		{
-			Console.WriteLine(arg);
-			return Task.CompletedTask;
-		}
-
-		private Task ConnectionClosedAsync(Exception? arg)
-		{
-			Console.WriteLine(arg);
-			return Task.CompletedTask;
-		}
-
-		private Task ConnectionReconnectedAsync(string? arg)
-		{
-			Console.WriteLine(arg);
-			return Task.CompletedTask;
 		}
 
 		/// <summary>
@@ -285,6 +152,139 @@ namespace Crash.Common.Communications
 		public async Task CameraChangeAsync(Change change)
 		{
 			await _connection.InvokeAsync(CAMERACHANGE, change);
+		}
+
+		/// <summary>
+		///     Closed event
+		/// </summary>
+		public event Func<Exception, Task> Closed
+		{
+			add => _connection.Closed += value;
+			remove => _connection.Closed -= value;
+		}
+
+		/// <summary>Local Event corresponding to a Server call for Add</summary>
+		public event Action<Change> OnAdd;
+
+		/// <summary>Local Event corresponding to a Server call for Delete</summary>
+		public event Action<Guid> OnDelete;
+
+		/// <summary>Local Event corresponding to a Server call for Update</summary>
+		public event Action<Change> OnUpdate;
+
+		/// <summary>Local Event corresponding to a Server call for Done</summary>
+		public event Action<string> OnDone;
+
+		/// <summary>Local Event corresponding to a Server call for Done Range</summary>
+		public event Action<IEnumerable<Guid>> OnDoneRange;
+
+		/// <summary>Local Event corresponding to a Server call for Lock</summary>
+		public event Action<string, Guid> OnLock;
+
+		/// <summary>Local Event corresponding to a Server call for Unlock</summary>
+		public event Action<string, Guid> OnUnlock;
+
+		/// <summary>Local Event corresponding to a Server call for Initialize</summary>
+		public event Action<IEnumerable<Change>> OnInitialize;
+
+		/// <summary>Local Event corresponding to a Server call for Initialize Users</summary>
+		public event Action<IEnumerable<string>> OnInitializeUsers;
+
+		/// <summary>Local Event corresponding to a Server call for Camera Change</summary>
+		public event Action<Change> OnCameraChange;
+
+		/// <summary>Creates a connection to the Crash Server</summary>
+		internal static HubConnection GetHubConnection(Uri url)
+		{
+			return new HubConnectionBuilder()
+			       .WithUrl(url).AddJsonProtocol()
+			       .AddJsonProtocol(opts => JsonOptions())
+			       // .ConfigureLogging(LoggingConfigurer)
+			       .WithAutomaticReconnect(new[]
+			                               {
+				                               TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100),
+				                               TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(10)
+			                               })
+			       .Build();
+		}
+
+		public static JsonHubProtocolOptions JsonOptions()
+		{
+			return new JsonHubProtocolOptions
+			       {
+				       PayloadSerializerOptions = new JsonSerializerOptions
+				                                  {
+					                                  IgnoreReadOnlyFields = true,
+					                                  IgnoreReadOnlyProperties = true,
+					                                  NumberHandling = JsonNumberHandling
+						                                  .AllowNamedFloatingPointLiterals
+				                                  }
+			       };
+		}
+
+		private static void LoggingConfigurer(ILoggingBuilder loggingBuilder)
+		{
+			var logLevel = Debugger.IsAttached ? LogLevel.Trace : LogLevel.Information;
+			loggingBuilder.SetMinimumLevel(logLevel);
+			var loggingProvider = new CrashLoggerProvider();
+			loggingBuilder.AddProvider(loggingProvider);
+		}
+
+		/// <summary>Registers Local Events responding to Server calls</summary>
+		internal void RegisterConnections()
+		{
+			_connection.On<Change>(ADD, change => OnAdd?.Invoke(change));
+			_connection.On<Guid>(DELETE, id => OnDelete?.Invoke(id));
+			_connection.On<Change>(UPDATE, change => OnUpdate?.Invoke(change));
+			_connection.On<string>(DONE, user => OnDone?.Invoke(user));
+			_connection.On<IEnumerable<Guid>>(DONERANGE, ids => OnDoneRange(ids));
+			_connection.On<string, Guid>(LOCK, (user, id) => OnLock?.Invoke(user, id));
+			_connection.On<string, Guid>(UNLOCK, (user, id) => OnUnlock?.Invoke(user, id));
+			_connection.On<IEnumerable<Change>>(INITIALIZE, changes => OnInitialize?.Invoke(changes));
+			_connection.On<IEnumerable<string>>(INITIALIZEUSERS, users => OnInitializeUsers?.Invoke(users));
+			_connection.On<Change>(CAMERACHANGE, change => OnCameraChange?.Invoke(change));
+
+			_connection.Reconnected += ConnectionReconnectedAsync;
+			_connection.Closed += ConnectionClosedAsync;
+			_connection.Reconnecting += ConnectionReconnectingAsync;
+		}
+
+		// This isn't calling, and needs to call the Event Dispatcher
+		private void Init(IEnumerable<Change> changes)
+		{
+			OnInitialize -= Init;
+			OnInit?.Invoke(this, new CrashInitArgs(_crashDoc, changes));
+		}
+
+		private void InitUsers(IEnumerable<string> users)
+		{
+			OnInitializeUsers -= InitUsers;
+			// User Init
+			// OnInitUsers?.Invoke(this, new CrashUserInitArgs())
+		}
+
+		public static void CloseLocalServer(CrashDoc crashDoc)
+		{
+			crashDoc?.LocalServer?.Stop();
+			crashDoc?.LocalServer?.Dispose();
+		}
+
+		private Task ConnectionReconnectingAsync(Exception? arg)
+		{
+			Console.WriteLine(arg);
+			return Task.CompletedTask;
+		}
+
+		private Task ConnectionClosedAsync(Exception? arg)
+		{
+			Console.WriteLine(arg);
+			return Task.CompletedTask;
+		}
+
+		private Task ConnectionReconnectedAsync(string? arg)
+		{
+			Console.WriteLine(arg);
+			return Task.CompletedTask;
 		}
 
 		/// <summary>Start the async connection</summary>

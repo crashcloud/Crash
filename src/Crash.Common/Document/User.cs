@@ -15,6 +15,8 @@ namespace Crash.Common.Document
 	/// <summary>An external collaborator</summary>
 	public struct User : IEquatable<User>
 	{
+		public static Color DefaultColour = Color.Gray;
+
 		private string _name;
 
 		/// <summary>Is this user Visible?</summary>
@@ -44,7 +46,7 @@ namespace Crash.Common.Document
 
 			if (string.IsNullOrEmpty(inputName))
 			{
-				Color = Color.Gray;
+				Color = DefaultColour;
 			}
 			else
 			{
