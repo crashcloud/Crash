@@ -128,7 +128,7 @@ namespace Crash.Commands
 			while (enumer.MoveNext())
 			{
 				var args = new CrashObjectEventArgs(enumer.Current);
-				EventDispatcher.Instance.NotifyDispatcher(ChangeAction.Add, this, args, rhinoDoc);
+				EventDispatcher.Instance.NotifyServerAsync(ChangeAction.Add, this, args, rhinoDoc);
 			}
 		}
 

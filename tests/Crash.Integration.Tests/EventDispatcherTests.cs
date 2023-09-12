@@ -101,7 +101,7 @@ namespace Crash.Handlers.Tests.Plugins
 		{
 			foreach (var changeAction in Enum.GetValues(typeof(ChangeAction)).Cast<ChangeAction>())
 			{
-				CustomEvent += (sender, args) => Dispatcher.NotifyDispatcher(changeAction, sender, args, _doc);
+				CustomEvent += (sender, args) => Dispatcher.NotifyServerAsync(changeAction, sender, args, _doc);
 			}
 		}
 
@@ -130,7 +130,7 @@ namespace Crash.Handlers.Tests.Plugins
 
 			// Assert
 			Assert.That(recieved, Is.False);
-			await Dispatcher.NotifyDispatcherAsync(crashDoc, serverChange);
+			await Dispatcher.NotifyClientAsync(crashDoc, serverChange);
 			Assert.That(recieved, Is.True);
 
 			Assert.That(serverChange.Id, Is.EqualTo(recievedChange.Id));

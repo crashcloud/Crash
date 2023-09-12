@@ -72,7 +72,7 @@ namespace Crash.Handlers.Plugins
 		///     The EventArgs
 		///     <-/param>
 		///         <param name="doc">The associated RhinoDoc</param>
-		public async Task NotifyDispatcher(ChangeAction changeAction, object sender, EventArgs args, RhinoDoc doc)
+		public async Task NotifyServerAsync(ChangeAction changeAction, object sender, EventArgs args, RhinoDoc doc)
 		{
 			if (!_createActions.TryGetValue(changeAction, out var actionChain))
 			{
@@ -112,7 +112,7 @@ namespace Crash.Handlers.Plugins
 		/// </summary>
 		/// <param name="doc">The related Crash Doc</param>
 		/// <param name="change">The Change from the Server</param>
-		public async Task NotifyDispatcherAsync(CrashDoc doc, Change change)
+		public async Task NotifyClientAsync(CrashDoc doc, Change change)
 		{
 			if (!_recieveActions.TryGetValue(change.Type, out var recievers) ||
 				recievers is null)
@@ -164,7 +164,7 @@ namespace Crash.Handlers.Plugins
 										   }
 
 										   var crashArgs = new CrashObjectEventArgs(args.TheObject);
-										   NotifyDispatcher(ChangeAction.Add | ChangeAction.Temporary, sender,
+										   NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary, sender,
 															crashArgs, args.TheObject.Document);
 									   };
 
@@ -187,7 +187,7 @@ namespace Crash.Handlers.Plugins
 												}
 
 												var crashArgs = new CrashObjectEventArgs(args.TheObject);
-												NotifyDispatcher(ChangeAction.Add | ChangeAction.Temporary, sender,
+												NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary, sender,
 																 crashArgs, args.TheObject.Document);
 											};
 
@@ -215,7 +215,7 @@ namespace Crash.Handlers.Plugins
 											  }
 
 											  var crashArgs = new CrashObjectEventArgs(args.TheObject, changeId);
-											  NotifyDispatcher(ChangeAction.Remove, sender, crashArgs,
+											  NotifyServerAsync(ChangeAction.Remove, sender, crashArgs,
 															   args.TheObject.Document);
 										  };
 
@@ -233,7 +233,7 @@ namespace Crash.Handlers.Plugins
 												   var rhinoDoc = args.Objects
 																	  .FirstOrDefault(o => o.Document is not null)
 																	  .Document;
-												   NotifyDispatcher(ChangeAction.Transform, sender, crashArgs,
+												   NotifyServerAsync(ChangeAction.Transform, sender, crashArgs,
 																	rhinoDoc);
 											   };
 
@@ -257,7 +257,7 @@ namespace Crash.Handlers.Plugins
 												new CrashSelectionEventArgs(args.Selected,
 																			args.RhinoObjects
 																				.Select(o => new CrashObject(o)));
-											NotifyDispatcher(ChangeAction.Unlocked, sender, crashArgs, args.Document);
+											NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs, args.Document);
 										};
 
 			RhinoDoc.DeselectAllObjects += (sender, args) =>
@@ -277,7 +277,7 @@ namespace Crash.Handlers.Plugins
 											   }
 
 											   var crashArgs = new CrashSelectionEventArgs();
-											   NotifyDispatcher(ChangeAction.Unlocked, sender, crashArgs,
+											   NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs,
 																args.Document);
 										   };
 			RhinoDoc.SelectObjects += (sender, args) =>
@@ -300,19 +300,19 @@ namespace Crash.Handlers.Plugins
 											  new CrashSelectionEventArgs(args.Selected,
 																		  args.RhinoObjects
 																			  .Select(o => new CrashObject(o)));
-										  NotifyDispatcher(ChangeAction.Locked, sender, crashArgs, args.Document);
+										  NotifyServerAsync(ChangeAction.Locked, sender, crashArgs, args.Document);
 									  };
 
 			RhinoDoc.ModifyObjectAttributes += (sender, args) =>
 											   {
 												   // TODO : Create Wrapper
-												   NotifyDispatcher(ChangeAction.Update, sender, args, args.Document);
+												   NotifyServerAsync(ChangeAction.Update, sender, args, args.Document);
 											   };
 
 			RhinoDoc.UserStringChanged += (sender, args) =>
 										  {
 											  // TODO : Create Wrapper
-											  NotifyDispatcher(ChangeAction.Update, sender, args, args.Document);
+											  NotifyServerAsync(ChangeAction.Update, sender, args, args.Document);
 										  };
 
 			// Doc Events
@@ -322,7 +322,7 @@ namespace Crash.Handlers.Plugins
 			RhinoView.Modified += (sender, args) =>
 								  {
 									  var crashArgs = new CrashViewArgs(args.View);
-									  NotifyDispatcher(ChangeAction.Add, sender, crashArgs, args.View.Document);
+									  NotifyServerAsync(ChangeAction.Add, sender, crashArgs, args.View.Document);
 								  };
 		}
 
@@ -334,15 +334,15 @@ namespace Crash.Handlers.Plugins
 		/// </summary>
 		public void RegisterDefaultServerCalls(CrashDoc doc)
 		{
-			doc.LocalClient.OnDone += async name => await NotifyDispatcherAsync(doc, DoneChange(name));
+			doc.LocalClient.OnDone += async name => await NotifyClientAsync(doc, DoneChange(name));
 			doc.LocalClient.OnDoneRange += async ids =>
 			{
 				// foreach(var id in ids)
 				// await NotifyDispatcherAsync(doc, DoneChanges(name));
 			};
 
-			doc.LocalClient.OnPushChange += async change => await NotifyDispatcherAsync(doc, change);
-			doc.LocalClient.OnPushChanges += async changes => await Task.WhenAll(changes.Select(c => NotifyDispatcherAsync(doc, c)));
+			doc.LocalClient.OnPushChange += async change => await NotifyClientAsync(doc, change);
+			doc.LocalClient.OnPushChanges += async changes => await Task.WhenAll(changes.Select(c => NotifyClientAsync(doc, c)));
 
 			var initialInit = false;
 
@@ -360,7 +360,7 @@ namespace Crash.Handlers.Plugins
 														   .LogDebug($"{nameof(doc.LocalClient.OnInitializeChanges)} - Initial : {initialInit}");
 												foreach (var change in changes)
 												{
-													await NotifyDispatcherAsync(doc, change);
+													await NotifyClientAsync(doc, change);
 												}
 											};
 			;

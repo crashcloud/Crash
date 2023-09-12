@@ -44,7 +44,7 @@ namespace Crash
 
 				foreach (var change in e.Changes)
 				{
-					Dispatcher.NotifyDispatcherAsync(e.CrashDoc, change);
+					Dispatcher.NotifyClientAsync(e.CrashDoc, change);
 				}
 
 				e.CrashDoc.CacheTable.IsInit = false;
