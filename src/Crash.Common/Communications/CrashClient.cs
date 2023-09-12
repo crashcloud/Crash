@@ -4,7 +4,6 @@ using System.Text.Json.Serialization;
 
 using Crash.Common.Document;
 using Crash.Common.Events;
-using Crash.Common.Exceptions;
 using Crash.Common.Logging;
 
 using Microsoft.AspNetCore.SignalR;
@@ -77,51 +76,11 @@ namespace Crash.Common.Communications
 				throw new Exception("A User has not been assigned!");
 			}
 
-			OnInitialize += Init;
-			// this.OnInitializeUsers += InitUsers;
+			OnInitializeChanges += Init;
+			OnInitializeUsers += InitUsers;
 
 			// TODO : Check for successful connection
 			await StartAsync();
-		}
-
-		/// <summary>
-		///     Update task
-		/// </summary>
-		/// <param name="id">id</param>
-		/// <param name="Change">Change</param>
-		/// <returns></returns>
-		public async Task UpdateAsync(Change Change)
-		{
-			await _connection.InvokeAsync(UPDATE, Change);
-		}
-
-		/// <summary>
-		///     Delete task
-		/// </summary>
-		/// <param name="id">id</param>
-		/// <returns>returns task</returns>
-		public async Task DeleteAsync(Guid id)
-		{
-			await _connection.InvokeAsync(DELETE, id);
-		}
-
-		/// <summary>Adds a change to databiase </summary>
-		public async Task AddAsync(Change change)
-		{
-			if (change?.Payload is null)
-			{
-				return;
-			}
-
-			var changeLength = change.Payload.Length;
-			if (changeLength >= ushort.MaxValue)
-			{
-				throw new OversizedChangeException($"Change is over maximum size. {changeLength}/{ushort.MaxValue}");
-			}
-
-			CrashLogger.Logger.LogInformation($"Change {change.Id} size is {changeLength}");
-
-			await _connection.InvokeAsync(ADD, change);
 		}
 
 		/// <summary>Done</summary>
@@ -131,27 +90,47 @@ namespace Crash.Common.Communications
 		}
 
 		/// <summary>Releases a collection of changes</summary>
-		public async Task DoneAsync(IEnumerable<Guid> changeIds)
+		public async Task DoneRangeAsync(IEnumerable<Guid> changeIds)
 		{
 			await _connection.InvokeAsync(DONERANGE, changeIds);
 		}
 
-		/// <summary>Lock event</summary>
-		public async Task LockAsync(Guid id)
+		/// <summary>
+		///     Pushes an Update/Transform/Payload which applies to many Changes
+		///     An example of this is arraying the same item or deleting many items at once
+		/// </summary>
+		/// <param name="ids">The records to update</param>
+		/// <param name="change">The newest changes</param>
+		public async Task PushIdenticalChangesAsync(IEnumerable<Guid> ids, Change change)
 		{
-			await _connection.InvokeAsync(LOCK, _user, id);
+			await _connection.InvokeAsync(PUSH_IDENTICAL, ids, change);
 		}
 
-		/// <summary>Unlock event</summary>
-		public async Task UnlockAsync(Guid id)
+		/// <summary>Pushes a single Change</summary>
+		public async Task PushChangeAsync(Change change)
 		{
-			await _connection.InvokeAsync(UNLOCK, _user, id);
+			await _connection.InvokeAsync(PUSH_SINGLE, change);
 		}
 
-		/// <summary>CameraChange event</summary>
-		public async Task CameraChangeAsync(Change change)
+		/// <summary>
+		///     Pushes many unique changes at once
+		///     An example of this may be copying 10 unique items
+		/// </summary>
+		public async Task PushChangesAsync(IEnumerable<Change> changes)
 		{
-			await _connection.InvokeAsync(CAMERACHANGE, change);
+			await _connection.InvokeAsync(PUSH_MANY, changes);
+		}
+
+		public async Task InitializeChangesAsync(IEnumerable<Change> changes)
+		{
+			;
+
+		}
+
+		public async Task InitializeUsersAsync(IEnumerable<string> users)
+		{
+			;
+
 		}
 
 		/// <summary>
@@ -163,63 +142,53 @@ namespace Crash.Common.Communications
 			remove => _connection.Closed -= value;
 		}
 
-		/// <summary>Local Event corresponding to a Server call for Add</summary>
-		public event Action<Change> OnAdd;
-
-		/// <summary>Local Event corresponding to a Server call for Delete</summary>
-		public event Action<Guid> OnDelete;
-
-		/// <summary>Local Event corresponding to a Server call for Update</summary>
-		public event Action<Change> OnUpdate;
-
 		/// <summary>Local Event corresponding to a Server call for Done</summary>
 		public event Action<string> OnDone;
 
 		/// <summary>Local Event corresponding to a Server call for Done Range</summary>
 		public event Action<IEnumerable<Guid>> OnDoneRange;
 
-		/// <summary>Local Event corresponding to a Server call for Lock</summary>
-		public event Action<string, Guid> OnLock;
-
-		/// <summary>Local Event corresponding to a Server call for Unlock</summary>
-		public event Action<string, Guid> OnUnlock;
 
 		/// <summary>Local Event corresponding to a Server call for Initialize</summary>
-		public event Action<IEnumerable<Change>> OnInitialize;
+		public event Action<IEnumerable<Change>> OnInitializeChanges;
 
 		/// <summary>Local Event corresponding to a Server call for Initialize Users</summary>
 		public event Action<IEnumerable<string>> OnInitializeUsers;
 
-		/// <summary>Local Event corresponding to a Server call for Camera Change</summary>
-		public event Action<Change> OnCameraChange;
+		public event Action<IEnumerable<Guid>, Change> OnPushIdentical;
+
+		public event Action<Change> OnPushChange;
+
+		public event Action<IEnumerable<Change>> OnPushChanges;
+
 
 		/// <summary>Creates a connection to the Crash Server</summary>
 		internal static HubConnection GetHubConnection(Uri url)
 		{
 			return new HubConnectionBuilder()
-			       .WithUrl(url).AddJsonProtocol()
-			       .AddJsonProtocol(opts => JsonOptions())
-			       // .ConfigureLogging(LoggingConfigurer)
-			       .WithAutomaticReconnect(new[]
-			                               {
-				                               TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100),
-				                               TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(10)
-			                               })
-			       .Build();
+				   .WithUrl(url).AddJsonProtocol()
+				   .AddJsonProtocol(opts => JsonOptions())
+				   // .ConfigureLogging(LoggingConfigurer)
+				   .WithAutomaticReconnect(new[]
+										   {
+											   TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100),
+											   TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(10)
+										   })
+				   .Build();
 		}
 
 		public static JsonHubProtocolOptions JsonOptions()
 		{
 			return new JsonHubProtocolOptions
-			       {
-				       PayloadSerializerOptions = new JsonSerializerOptions
-				                                  {
-					                                  IgnoreReadOnlyFields = true,
-					                                  IgnoreReadOnlyProperties = true,
-					                                  NumberHandling = JsonNumberHandling
-						                                  .AllowNamedFloatingPointLiterals
-				                                  }
-			       };
+			{
+				PayloadSerializerOptions = new JsonSerializerOptions
+				{
+					IgnoreReadOnlyFields = true,
+					IgnoreReadOnlyProperties = true,
+					NumberHandling = JsonNumberHandling
+														  .AllowNamedFloatingPointLiterals
+				}
+			};
 		}
 
 		private static void LoggingConfigurer(ILoggingBuilder loggingBuilder)
@@ -233,16 +202,15 @@ namespace Crash.Common.Communications
 		/// <summary>Registers Local Events responding to Server calls</summary>
 		internal void RegisterConnections()
 		{
-			_connection.On<Change>(ADD, change => OnAdd?.Invoke(change));
-			_connection.On<Guid>(DELETE, id => OnDelete?.Invoke(id));
-			_connection.On<Change>(UPDATE, change => OnUpdate?.Invoke(change));
 			_connection.On<string>(DONE, user => OnDone?.Invoke(user));
 			_connection.On<IEnumerable<Guid>>(DONERANGE, ids => OnDoneRange(ids));
-			_connection.On<string, Guid>(LOCK, (user, id) => OnLock?.Invoke(user, id));
-			_connection.On<string, Guid>(UNLOCK, (user, id) => OnUnlock?.Invoke(user, id));
-			_connection.On<IEnumerable<Change>>(INITIALIZE, changes => OnInitialize?.Invoke(changes));
+
+			_connection.On<IEnumerable<Change>>(INITIALIZE, changes => OnInitializeChanges?.Invoke(changes));
 			_connection.On<IEnumerable<string>>(INITIALIZEUSERS, users => OnInitializeUsers?.Invoke(users));
-			_connection.On<Change>(CAMERACHANGE, change => OnCameraChange?.Invoke(change));
+
+			_connection.On<IEnumerable<Guid>, Change>(PUSH_IDENTICAL, (ids, change) => OnPushIdentical?.Invoke(ids, change));
+			_connection.On<Change>(PUSH_SINGLE, change => OnPushChange?.Invoke(change));
+			_connection.On<IEnumerable<Change>>(PUSH_MANY, changes => OnPushChanges?.Invoke(changes));
 
 			_connection.Reconnected += ConnectionReconnectedAsync;
 			_connection.Closed += ConnectionClosedAsync;
@@ -252,7 +220,7 @@ namespace Crash.Common.Communications
 		// This isn't calling, and needs to call the Event Dispatcher
 		private void Init(IEnumerable<Change> changes)
 		{
-			OnInitialize -= Init;
+			OnInitializeChanges -= Init;
 			OnInit?.Invoke(this, new CrashInitArgs(_crashDoc, changes));
 		}
 
@@ -308,16 +276,13 @@ namespace Crash.Common.Communications
 
 		#region consts
 
-		private const string ADD = "Add";
-		private const string DELETE = "Delete";
 		private const string DONE = "Done";
 		private const string DONERANGE = "DoneRange";
-		private const string UPDATE = "Update";
-		private const string LOCK = "Lock";
-		private const string UNLOCK = "Unlock";
-		private const string INITIALIZE = "Initialize";
+		private const string PUSH_IDENTICAL = "PushIdenticalChanges";
+		private const string PUSH_SINGLE = "PushChange";
+		private const string PUSH_MANY = "PushChanges";
+		private const string INITIALIZE = "InitializeChanges";
 		private const string INITIALIZEUSERS = "InitializeUsers";
-		private const string CAMERACHANGE = "CameraChange";
 
 		// TODO : Move to https
 		public const string DefaultURL = "http://localhost";

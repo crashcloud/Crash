@@ -1,4 +1,4 @@
-namespace Crash.Common.Communications
+﻿namespace Crash.Common.Communications
 {
 	public interface ICrashClient
 	{
@@ -14,47 +14,35 @@ namespace Crash.Common.Communications
 		/// <exception cref="Exception">If UserName is empty</exception>
 		public Task StartLocalClientAsync();
 
-		/// <summary>
-		///     Update task
-		/// </summary>
-		/// <param name="id">id</param>
-		/// <param name="Change">Change</param>
-		/// <returns></returns>
-		public Task UpdateAsync(Change Change);
+		/// <summary>Unlock Item in SqLite DB and notify other clients</summary>
+		Task DoneAsync(); //  string user);
+
+		/// <summary>Unlock Item in SqLite DB and notify other clients</summary>
+		Task DoneRangeAsync(IEnumerable<Guid> ids);
 
 		/// <summary>
-		///     Delete task
+		///     Pushes an Update/Transform/Payload which applies to many Changes
+		///     An example of this is arraying the same item or deleting many items at once
 		/// </summary>
-		/// <param name="id">id</param>
-		/// <returns>returns task</returns>
-		public Task DeleteAsync(Guid id);
+		/// <param name="ids">The records to update</param>
+		/// <param name="change">The newest changes</param>
+		Task PushIdenticalChangesAsync(IEnumerable<Guid> ids, Change change);
 
-		/// <summary>Adds a change to databiase </summary>
-		public Task AddAsync(Change change);
+		/// <summary>Pushes a single Change</summary>
+		Task PushChangeAsync(Change change);
 
-		/// <summary>Done</summary>
-		public Task DoneAsync();
+		/// <summary>
+		///     Pushes many unique changes at once
+		///     An example of this may be copying 10 unique items
+		/// </summary>
+		Task PushChangesAsync(IEnumerable<Change> changes);
 
-		/// <summary>Releases a collection of changes</summary>
-		public Task DoneAsync(IEnumerable<Guid> changeIds);
+		/// <summary>Initialises the latest changes to a connecting client</summary>
+		Task InitializeChangesAsync(IEnumerable<Change> changes);
 
-		/// <summary>Lock event</summary>
-		public Task LockAsync(Guid id);
+		/// <summary>Initialises the latest changes to a connecting client</summary>
+		Task InitializeUsersAsync(IEnumerable<string> changes);
 
-		/// <summary>Unlock event</summary>
-		public Task UnlockAsync(Guid id);
-
-		/// <summary>CameraChange event</summary>
-		public Task CameraChangeAsync(Change change);
-
-		/// <summary>Local Event corresponding to a Server call for Add</summary>
-		public event Action<Change> OnAdd;
-
-		/// <summary>Local Event corresponding to a Server call for Delete</summary>
-		public event Action<Guid> OnDelete;
-
-		/// <summary>Local Event corresponding to a Server call for Update</summary>
-		public event Action<Change> OnUpdate;
 
 		/// <summary>Local Event corresponding to a Server call for Done</summary>
 		public event Action<string> OnDone;
@@ -62,20 +50,20 @@ namespace Crash.Common.Communications
 		/// <summary>Local Event corresponding to a Server call for Done Range</summary>
 		public event Action<IEnumerable<Guid>> OnDoneRange;
 
-		/// <summary>Local Event corresponding to a Server call for Lock</summary>
-		public event Action<string, Guid> OnLock;
+		/// <summary>Pushes a single Change</summary>
+		public event Action<IEnumerable<Guid>, Change> OnPushIdentical;
 
-		/// <summary>Local Event corresponding to a Server call for Unlock</summary>
-		public event Action<string, Guid> OnUnlock;
+		/// <summary>Pushes a single Change</summary>
+		public event Action<Change> OnPushChange;
+
+		/// <summary>Pushes a single Change</summary>
+		public event Action<IEnumerable<Change>> OnPushChanges;
 
 		/// <summary>Local Event corresponding to a Server call for Initialize</summary>
-		public event Action<IEnumerable<Change>> OnInitialize;
+		public event Action<IEnumerable<Change>> OnInitializeChanges;
 
 		/// <summary>Local Event corresponding to a Server call for Initialize Users</summary>
 		public event Action<IEnumerable<string>> OnInitializeUsers;
-
-		/// <summary>Local Event corresponding to a Server call for Camera Change</summary>
-		public event Action<Change> OnCameraChange;
 
 	}
 }

@@ -1,6 +1,5 @@
 ﻿using Crash.Common.Document;
 using Crash.Common.Logging;
-using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
 using Crash.Handlers.Plugins.Initializers;
 using Crash.Utils;
@@ -105,7 +104,7 @@ namespace Crash.Handlers.Plugins
 
 			// Here we are essentially streaming?
 			// We need to make sure this gets broken up better.
-			await crashDoc.LocalClient.PushManyAsync(changes);
+			await crashDoc.LocalClient.PushChangesAsync(changes);
 		}
 
 		/// <summary>
@@ -116,7 +115,7 @@ namespace Crash.Handlers.Plugins
 		public async Task NotifyDispatcherAsync(CrashDoc doc, Change change)
 		{
 			if (!_recieveActions.TryGetValue(change.Type, out var recievers) ||
-			    recievers is null)
+				recievers is null)
 			{
 				CrashLogger.Logger.LogDebug($"Could not find a Recieve Action for {change.Type}, {change.Id}");
 				return;
@@ -132,7 +131,7 @@ namespace Crash.Handlers.Plugins
 				}
 
 				CrashLogger.Logger
-				           .LogDebug($"Calling action {action.GetType().Name}, {change.Action}, {change.Type}, {change.Id}");
+						   .LogDebug($"Calling action {action.GetType().Name}, {change.Action}, {change.Type}, {change.Id}");
 
 				await action.OnRecieveAsync(doc, change);
 				return;
@@ -148,183 +147,183 @@ namespace Crash.Handlers.Plugins
 		{
 			// Object Events
 			RhinoDoc.AddRhinoObject += (sender, args) =>
-			                           {
-				                           //TODO: Is Init? Where is that checked for?
-				                           var crashDoc = CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
-				                           if (crashDoc is not null)
-				                           {
-					                           if (crashDoc.CacheTable.IsInit)
-					                           {
-						                           return;
-					                           }
+									   {
+										   //TODO: Is Init? Where is that checked for?
+										   var crashDoc = CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
+										   if (crashDoc is not null)
+										   {
+											   if (crashDoc.CacheTable.IsInit)
+											   {
+												   return;
+											   }
 
-					                           if (crashDoc.CacheTable.SomeoneIsDone)
-					                           {
-						                           return;
-					                           }
-				                           }
+											   if (crashDoc.CacheTable.SomeoneIsDone)
+											   {
+												   return;
+											   }
+										   }
 
-				                           var crashArgs = new CrashObjectEventArgs(args.TheObject);
-				                           NotifyDispatcher(ChangeAction.Add | ChangeAction.Temporary, sender,
-				                                            crashArgs, args.TheObject.Document);
-			                           };
+										   var crashArgs = new CrashObjectEventArgs(args.TheObject);
+										   NotifyDispatcher(ChangeAction.Add | ChangeAction.Temporary, sender,
+															crashArgs, args.TheObject.Document);
+									   };
 
 			RhinoDoc.UndeleteRhinoObject += (sender, args) =>
-			                                {
-				                                //TODO: Is Init? Where is that checked for?
-				                                var crashDoc =
-					                                CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
-				                                if (crashDoc is not null)
-				                                {
-					                                if (crashDoc.CacheTable.IsInit)
-					                                {
-						                                return;
-					                                }
+											{
+												//TODO: Is Init? Where is that checked for?
+												var crashDoc =
+													CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
+												if (crashDoc is not null)
+												{
+													if (crashDoc.CacheTable.IsInit)
+													{
+														return;
+													}
 
-					                                if (crashDoc.CacheTable.SomeoneIsDone)
-					                                {
-						                                return;
-					                                }
-				                                }
+													if (crashDoc.CacheTable.SomeoneIsDone)
+													{
+														return;
+													}
+												}
 
-				                                var crashArgs = new CrashObjectEventArgs(args.TheObject);
-				                                NotifyDispatcher(ChangeAction.Add | ChangeAction.Temporary, sender,
-				                                                 crashArgs, args.TheObject.Document);
-			                                };
+												var crashArgs = new CrashObjectEventArgs(args.TheObject);
+												NotifyDispatcher(ChangeAction.Add | ChangeAction.Temporary, sender,
+																 crashArgs, args.TheObject.Document);
+											};
 
 			RhinoDoc.DeleteRhinoObject += (sender, args) =>
-			                              {
-				                              var crashDoc =
-					                              CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
-				                              if (crashDoc is not null)
-				                              {
-					                              if (crashDoc.CacheTable.IsInit)
-					                              {
-						                              return;
-					                              }
+										  {
+											  var crashDoc =
+												  CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
+											  if (crashDoc is not null)
+											  {
+												  if (crashDoc.CacheTable.IsInit)
+												  {
+													  return;
+												  }
 
-					                              if (crashDoc.CacheTable.SomeoneIsDone)
-					                              {
-						                              return;
-					                              }
-				                              }
+												  if (crashDoc.CacheTable.SomeoneIsDone)
+												  {
+													  return;
+												  }
+											  }
 
-				                              args.TheObject.TryGetChangeId(out var changeId);
-				                              if (changeId == Guid.Empty)
-				                              {
-					                              return;
-				                              }
+											  args.TheObject.TryGetChangeId(out var changeId);
+											  if (changeId == Guid.Empty)
+											  {
+												  return;
+											  }
 
-				                              var crashArgs = new CrashObjectEventArgs(args.TheObject, changeId);
-				                              NotifyDispatcher(ChangeAction.Remove, sender, crashArgs,
-				                                               args.TheObject.Document);
-			                              };
+											  var crashArgs = new CrashObjectEventArgs(args.TheObject, changeId);
+											  NotifyDispatcher(ChangeAction.Remove, sender, crashArgs,
+															   args.TheObject.Document);
+										  };
 
 			RhinoDoc.BeforeTransformObjects += (sender, args) =>
-			                                   {
-				                                   if (args.GripCount > 0)
-				                                   {
-					                                   return;
-				                                   }
+											   {
+												   if (args.GripCount > 0)
+												   {
+													   return;
+												   }
 
-				                                   var crashArgs =
-					                                   new CrashTransformEventArgs(args.Transform.ToCrash(),
-						                                   args.Objects.Select(o => new CrashObject(o)),
-						                                   args.ObjectsWillBeCopied);
-				                                   var rhinoDoc = args.Objects
-				                                                      .FirstOrDefault(o => o.Document is not null)
-				                                                      .Document;
-				                                   NotifyDispatcher(ChangeAction.Transform, sender, crashArgs,
-				                                                    rhinoDoc);
-			                                   };
+												   var crashArgs =
+													   new CrashTransformEventArgs(args.Transform.ToCrash(),
+														   args.Objects.Select(o => new CrashObject(o)),
+														   args.ObjectsWillBeCopied);
+												   var rhinoDoc = args.Objects
+																	  .FirstOrDefault(o => o.Document is not null)
+																	  .Document;
+												   NotifyDispatcher(ChangeAction.Transform, sender, crashArgs,
+																	rhinoDoc);
+											   };
 
 			RhinoDoc.DeselectObjects += (sender, args) =>
-			                            {
-				                            var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-				                            if (crashDoc is not null)
-				                            {
-					                            if (crashDoc.CacheTable.IsInit)
-					                            {
-						                            return;
-					                            }
+										{
+											var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
+											if (crashDoc is not null)
+											{
+												if (crashDoc.CacheTable.IsInit)
+												{
+													return;
+												}
 
-					                            if (crashDoc.CacheTable.SomeoneIsDone)
-					                            {
-						                            return;
-					                            }
-				                            }
+												if (crashDoc.CacheTable.SomeoneIsDone)
+												{
+													return;
+												}
+											}
 
-				                            var crashArgs =
-					                            new CrashSelectionEventArgs(args.Selected,
-					                                                        args.RhinoObjects
-						                                                        .Select(o => new CrashObject(o)));
-				                            NotifyDispatcher(ChangeAction.Unlocked, sender, crashArgs, args.Document);
-			                            };
+											var crashArgs =
+												new CrashSelectionEventArgs(args.Selected,
+																			args.RhinoObjects
+																				.Select(o => new CrashObject(o)));
+											NotifyDispatcher(ChangeAction.Unlocked, sender, crashArgs, args.Document);
+										};
 
 			RhinoDoc.DeselectAllObjects += (sender, args) =>
-			                               {
-				                               var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-				                               if (crashDoc is not null)
-				                               {
-					                               if (crashDoc.CacheTable.IsInit)
-					                               {
-						                               return;
-					                               }
+										   {
+											   var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
+											   if (crashDoc is not null)
+											   {
+												   if (crashDoc.CacheTable.IsInit)
+												   {
+													   return;
+												   }
 
-					                               if (crashDoc.CacheTable.SomeoneIsDone)
-					                               {
-						                               return;
-					                               }
-				                               }
+												   if (crashDoc.CacheTable.SomeoneIsDone)
+												   {
+													   return;
+												   }
+											   }
 
-				                               var crashArgs = new CrashSelectionEventArgs();
-				                               NotifyDispatcher(ChangeAction.Unlocked, sender, crashArgs,
-				                                                args.Document);
-			                               };
+											   var crashArgs = new CrashSelectionEventArgs();
+											   NotifyDispatcher(ChangeAction.Unlocked, sender, crashArgs,
+																args.Document);
+										   };
 			RhinoDoc.SelectObjects += (sender, args) =>
-			                          {
-				                          var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-				                          if (crashDoc is not null)
-				                          {
-					                          if (crashDoc.CacheTable.IsInit)
-					                          {
-						                          return;
-					                          }
+									  {
+										  var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
+										  if (crashDoc is not null)
+										  {
+											  if (crashDoc.CacheTable.IsInit)
+											  {
+												  return;
+											  }
 
-					                          if (crashDoc.CacheTable.SomeoneIsDone)
-					                          {
-						                          return;
-					                          }
-				                          }
+											  if (crashDoc.CacheTable.SomeoneIsDone)
+											  {
+												  return;
+											  }
+										  }
 
-				                          var crashArgs =
-					                          new CrashSelectionEventArgs(args.Selected,
-					                                                      args.RhinoObjects
-					                                                          .Select(o => new CrashObject(o)));
-				                          NotifyDispatcher(ChangeAction.Locked, sender, crashArgs, args.Document);
-			                          };
+										  var crashArgs =
+											  new CrashSelectionEventArgs(args.Selected,
+																		  args.RhinoObjects
+																			  .Select(o => new CrashObject(o)));
+										  NotifyDispatcher(ChangeAction.Locked, sender, crashArgs, args.Document);
+									  };
 
 			RhinoDoc.ModifyObjectAttributes += (sender, args) =>
-			                                   {
-				                                   // TODO : Create Wrapper
-				                                   NotifyDispatcher(ChangeAction.Update, sender, args, args.Document);
-			                                   };
+											   {
+												   // TODO : Create Wrapper
+												   NotifyDispatcher(ChangeAction.Update, sender, args, args.Document);
+											   };
 
 			RhinoDoc.UserStringChanged += (sender, args) =>
-			                              {
-				                              // TODO : Create Wrapper
-				                              NotifyDispatcher(ChangeAction.Update, sender, args, args.Document);
-			                              };
+										  {
+											  // TODO : Create Wrapper
+											  NotifyDispatcher(ChangeAction.Update, sender, args, args.Document);
+										  };
 
 			// Doc Events
 			// RhinoDoc.UnitsChangedWithScaling += 
 
 			// View Events
 			RhinoView.Modified += (sender, args) =>
-			                      {
-				                      var crashArgs = new CrashViewArgs(args.View);
-				                      NotifyDispatcher(ChangeAction.Add, sender, crashArgs, args.View.Document);
-			                      };
+								  {
+									  var crashArgs = new CrashViewArgs(args.View);
+									  NotifyDispatcher(ChangeAction.Add, sender, crashArgs, args.View.Document);
+								  };
 		}
 
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates
@@ -335,37 +334,35 @@ namespace Crash.Handlers.Plugins
 		/// </summary>
 		public void RegisterDefaultServerCalls(CrashDoc doc)
 		{
-			doc.LocalClient.OnAdd += async change => await NotifyDispatcherAsync(doc, change);
-			doc.LocalClient.OnDelete += async changeGuid => await NotifyDispatcherAsync(doc, DeleteChange(changeGuid));
-
-			doc.LocalClient.OnLock += async (name, changeGuid) =>
-				                          await NotifyDispatcherAsync(doc, SelectChange(changeGuid, name));
-			doc.LocalClient.OnUnlock += async (name, changeGuid) =>
-				                            await NotifyDispatcherAsync(doc, UnSelectChange(changeGuid, name));
-
 			doc.LocalClient.OnDone += async name => await NotifyDispatcherAsync(doc, DoneChange(name));
+			doc.LocalClient.OnDoneRange += async ids =>
+			{
+				// foreach(var id in ids)
+				// await NotifyDispatcherAsync(doc, DoneChanges(name));
+			};
 
-			doc.LocalClient.OnCameraChange += async change => await NotifyDispatcherAsync(doc, change);
+			doc.LocalClient.OnPushChange += async change => await NotifyDispatcherAsync(doc, change);
+			doc.LocalClient.OnPushChanges += async changes => await Task.WhenAll(changes.Select(c => NotifyDispatcherAsync(doc, c)));
 
 			var initialInit = false;
 
 			// OnInit is called on reconnect as well?
-			doc.LocalClient.OnInitialize += async changes =>
-			                                {
-				                                if (initialInit)
-				                                {
-					                                return;
-				                                }
+			doc.LocalClient.OnInitializeChanges += async changes =>
+											{
+												if (initialInit)
+												{
+													return;
+												}
 
-				                                initialInit = true;
+												initialInit = true;
 
-				                                CrashLogger.Logger
-				                                           .LogDebug($"{nameof(doc.LocalClient.OnInitialize)} - Initial : {initialInit}");
-				                                foreach (var change in changes)
-				                                {
-					                                await NotifyDispatcherAsync(doc, change);
-				                                }
-			                                };
+												CrashLogger.Logger
+														   .LogDebug($"{nameof(doc.LocalClient.OnInitializeChanges)} - Initial : {initialInit}");
+												foreach (var change in changes)
+												{
+													await NotifyDispatcherAsync(doc, change);
+												}
+											};
 			;
 		}
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
@@ -373,51 +370,14 @@ namespace Crash.Handlers.Plugins
 		private static Change DoneChange(string name)
 		{
 			return new Change
-			       {
-				       Owner = name,
-				       Action = ChangeAction.None,
-				       Type = new DoneDefinition().ChangeName,
-				       Id = Guid.NewGuid(),
-				       Stamp = DateTime.UtcNow
-			       };
+			{
+				Owner = name,
+				Action = ChangeAction.None,
+				Type = new DoneDefinition().ChangeName,
+				Id = Guid.NewGuid(),
+				Stamp = DateTime.UtcNow
+			};
 		}
 
-		private static Change DeleteChange(Guid id)
-		{
-			return new Change
-			       {
-				       Id = id,
-				       Type = GeometryChange.ChangeType,
-				       Action = ChangeAction.Remove,
-				       Stamp = DateTime.Now,
-				       Payload = null
-			       };
-		}
-
-		private static Change SelectChange(Guid id, string name)
-		{
-			return new Change
-			       {
-				       Id = id,
-				       Owner = name,
-				       Type = GeometryChange.ChangeType,
-				       Action = ChangeAction.Locked,
-				       Stamp = DateTime.Now,
-				       Payload = null
-			       };
-		}
-
-		private static Change UnSelectChange(Guid id, string name)
-		{
-			return new Change
-			       {
-				       Id = id,
-				       Owner = name,
-				       Type = GeometryChange.ChangeType,
-				       Action = ChangeAction.Unlocked,
-				       Stamp = DateTime.Now,
-				       Payload = null
-			       };
-		}
 	}
 }

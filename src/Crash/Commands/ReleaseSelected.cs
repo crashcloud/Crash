@@ -15,13 +15,13 @@ namespace Crash.Commands
 			Instance = this;
 		}
 
-		
+
 		public static ReleaseSelected Instance { get; private set; }
 
-		
+
 		public override string EnglishName => "ReleaseSelected";
 
-		
+
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
 			var selectedChanges = GetSelectedChanges(doc);
@@ -32,7 +32,7 @@ namespace Crash.Commands
 
 			// TODO : Wait for response for data integrity check
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(doc);
-			crashDoc?.LocalClient?.DoneAsync(selectedChanges);
+			crashDoc?.LocalClient?.DoneRangeAsync(selectedChanges);
 
 			return Result.Success;
 		}
