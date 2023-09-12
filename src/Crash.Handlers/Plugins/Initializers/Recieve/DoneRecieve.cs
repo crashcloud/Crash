@@ -11,6 +11,7 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 		public ChangeAction Action => ChangeAction.None;
 
 
+		// What about Transform? Update?
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
 		{
 			var changes = crashDoc.CacheTable.GetChanges().Where(c => c.Owner == recievedChange.Owner);
@@ -27,6 +28,7 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 						continue;
 					}
 
+					// TODO : This should ONLY be if the change owner is the same as  
 					geomChange.RemoveAction(ChangeAction.Temporary);
 					geomChange.AddAction(ChangeAction.Add);
 

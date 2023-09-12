@@ -1,6 +1,4 @@
-﻿using Crash.Common.Changes;
-using Crash.Common.Document;
-using Crash.Common.Exceptions;
+﻿using Crash.Common.Document;
 using Crash.Common.Logging;
 using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
@@ -34,9 +32,10 @@ namespace Crash.Handlers.Plugins
 			RegisterDefaultEvents();
 		}
 
-		/// <summary>Registeres a Definition and all of the Create and recieve actions within</summary>
+		/// <summary>Registers a Definition and all of the Create and recieve actions within</summary>
 		public void RegisterDefinition(IChangeDefinition definition)
 		{
+			// TODO : Test this! Are we sure this stack stuff is working?
 			foreach (var create in definition.CreateActions)
 			{
 				if (_createActions.TryGetValue(create.Action, out var actions))
@@ -70,8 +69,10 @@ namespace Crash.Handlers.Plugins
 		/// </summary>
 		/// <param name="changeAction">The ChangeAction</param>
 		/// <param name="sender">The sender of the Event</param>
-		/// <param name="args">The EventArgs</param>
-		/// <param name="doc">The associated RhinoDoc</param>
+		/// <param name="args">
+		///     The EventArgs
+		///     <-/param>
+		///         <param name="doc">The associated RhinoDoc</param>
 		public async Task NotifyDispatcher(ChangeAction changeAction, object sender, EventArgs args, RhinoDoc doc)
 		{
 			if (!_createActions.TryGetValue(changeAction, out var actionChain))
@@ -96,80 +97,23 @@ namespace Crash.Handlers.Plugins
 					continue;
 				}
 
-				if (!action.TryConvert(sender, crashArgs, out changes))
+				if (action.TryConvert(sender, crashArgs, out changes))
 				{
+					break;
 				}
 			}
 
-			var tasks = new List<Task>(changes.Count());
-			foreach (var change in changes)
-			{
-				var message = $"Added Change {change.Action}, {change.Id}";
-
-				switch (change.Action)
-				{
-					case ChangeAction.Add:
-					case ChangeAction.Add | ChangeAction.Temporary:
-						try
-						{
-							// TODO : This is not a good paradigm
-							if (change.Type == new CameraChange().Type)
-							{
-								tasks.Add(crashDoc.LocalClient.CameraChangeAsync(change));
-							}
-							else
-							{
-								tasks.Add(crashDoc.LocalClient.AddAsync(change));
-							}
-
-							CrashLogger.Logger.LogDebug(message);
-						}
-						catch (OversizedChangeException oversized)
-						{
-							RhinoApp.WriteLine(oversized.Message);
-							CrashLogger.Logger.LogDebug($"Failed to Add Change {change.Id}");
-						}
-
-						break;
-					case ChangeAction.Remove:
-						tasks.Add(crashDoc.LocalClient.DeleteAsync(change.Id));
-						CrashLogger.Logger.LogDebug(message);
-						break;
-
-					case ChangeAction.Transform:
-						// tasks.Add(Doc.LocalClient.TransformAsync(change));
-						CrashLogger.Logger.LogDebug(message);
-						break;
-
-					case ChangeAction.Update:
-						tasks.Add(crashDoc.LocalClient.UpdateAsync(change));
-						CrashLogger.Logger.LogDebug(message);
-						break;
-
-					case ChangeAction.Locked:
-						tasks.Add(crashDoc.LocalClient.LockAsync(change.Id));
-						CrashLogger.Logger.LogDebug(message);
-						break;
-					case ChangeAction.Unlocked:
-						tasks.Add(crashDoc.LocalClient.UnlockAsync(change.Id));
-						CrashLogger.Logger.LogDebug(message);
-						break;
-
-					default:
-						CrashLogger.Logger.LogDebug("ACTION NOT SUPPORTED");
-						break;
-				}
-			}
-
-			await Task.WhenAll(tasks);
+			// Here we are essentially streaming?
+			// We need to make sure this gets broken up better.
+			await crashDoc.LocalClient.PushManyAsync(changes);
 		}
 
 		/// <summary>
 		///     Captures Calls from the Server
 		/// </summary>
-		/// <param name="Doc">The related Crash Doc</param>
+		/// <param name="doc">The related Crash Doc</param>
 		/// <param name="change">The Change from the Server</param>
-		public async Task NotifyDispatcherAsync(CrashDoc Doc, Change change)
+		public async Task NotifyDispatcherAsync(CrashDoc doc, Change change)
 		{
 			if (!_recieveActions.TryGetValue(change.Type, out var recievers) ||
 			    recievers is null)
@@ -178,7 +122,7 @@ namespace Crash.Handlers.Plugins
 				return;
 			}
 
-			await RegisterUserAsync(Doc, change);
+			await RegisterUserAsync(doc, change);
 
 			foreach (var action in recievers)
 			{
@@ -190,7 +134,7 @@ namespace Crash.Handlers.Plugins
 				CrashLogger.Logger
 				           .LogDebug($"Calling action {action.GetType().Name}, {change.Action}, {change.Type}, {change.Id}");
 
-				await action.OnRecieveAsync(Doc, change);
+				await action.OnRecieveAsync(doc, change);
 				return;
 			}
 		}
@@ -389,24 +333,24 @@ namespace Crash.Handlers.Plugins
 		///     If you need to create custom calls do this elsewhere.
 		///     These calls cannot currently be overriden or switched off
 		/// </summary>
-		public void RegisterDefaultServerCalls(CrashDoc Doc)
+		public void RegisterDefaultServerCalls(CrashDoc doc)
 		{
-			Doc.LocalClient.OnAdd += async change => await NotifyDispatcherAsync(Doc, change);
-			Doc.LocalClient.OnDelete += async changeGuid => await NotifyDispatcherAsync(Doc, DeleteChange(changeGuid));
+			doc.LocalClient.OnAdd += async change => await NotifyDispatcherAsync(doc, change);
+			doc.LocalClient.OnDelete += async changeGuid => await NotifyDispatcherAsync(doc, DeleteChange(changeGuid));
 
-			Doc.LocalClient.OnLock += async (name, changeGuid) =>
-				                          await NotifyDispatcherAsync(Doc, SelectChange(changeGuid, name));
-			Doc.LocalClient.OnUnlock += async (name, changeGuid) =>
-				                            await NotifyDispatcherAsync(Doc, UnSelectChange(changeGuid, name));
+			doc.LocalClient.OnLock += async (name, changeGuid) =>
+				                          await NotifyDispatcherAsync(doc, SelectChange(changeGuid, name));
+			doc.LocalClient.OnUnlock += async (name, changeGuid) =>
+				                            await NotifyDispatcherAsync(doc, UnSelectChange(changeGuid, name));
 
-			Doc.LocalClient.OnDone += async name => await NotifyDispatcherAsync(Doc, DoneChange(name));
+			doc.LocalClient.OnDone += async name => await NotifyDispatcherAsync(doc, DoneChange(name));
 
-			Doc.LocalClient.OnCameraChange += async change => await NotifyDispatcherAsync(Doc, change);
+			doc.LocalClient.OnCameraChange += async change => await NotifyDispatcherAsync(doc, change);
 
 			var initialInit = false;
 
 			// OnInit is called on reconnect as well?
-			Doc.LocalClient.OnInitialize += async changes =>
+			doc.LocalClient.OnInitialize += async changes =>
 			                                {
 				                                if (initialInit)
 				                                {
@@ -416,10 +360,10 @@ namespace Crash.Handlers.Plugins
 				                                initialInit = true;
 
 				                                CrashLogger.Logger
-				                                           .LogDebug($"{nameof(Doc.LocalClient.OnInitialize)} - Initial : {initialInit}");
+				                                           .LogDebug($"{nameof(doc.LocalClient.OnInitialize)} - Initial : {initialInit}");
 				                                foreach (var change in changes)
 				                                {
-					                                await NotifyDispatcherAsync(Doc, change);
+					                                await NotifyDispatcherAsync(doc, change);
 				                                }
 			                                };
 			;

@@ -28,7 +28,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			}
 
 			changes = CreateChangesFromArgs(crashArgs.Doc, cargs.RhinoId, cargs.Geometry);
-			return true;
+			return changes.Count() > 0;
 		}
 
 		private IEnumerable<Change> CreateChangesFromArgs(CrashDoc crashDoc, Guid rhinoId, GeometryBase geometry)

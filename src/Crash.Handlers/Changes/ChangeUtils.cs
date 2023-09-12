@@ -61,7 +61,7 @@ namespace Crash.Utils
 				return false;
 			}
 
-			return rObj.Geometry.UserDictionary.TryGetGuid(ChangeIdKey, out id);
+			return rObj?.Geometry.UserDictionary.TryGetGuid(ChangeIdKey, out id) ?? false;
 		}
 
 		/// <summary>Acquires the Rhino Object given the RhinoId from an IRhinoChange</summary>

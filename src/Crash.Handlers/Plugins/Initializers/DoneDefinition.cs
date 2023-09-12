@@ -15,7 +15,7 @@ namespace Crash.Handlers.Plugins.Initializers
 			RecieveActions = new List<IChangeRecieveAction> { new DoneRecieve() };
 		}
 
-		public string ChangeName => "Crash.Done";
+		public string ChangeName => "Crash.DoneChange";
 
 
 		public IEnumerable<IChangeCreateAction> CreateActions { get; }

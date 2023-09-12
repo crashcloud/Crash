@@ -10,28 +10,49 @@ using Crash.Handlers.Plugins.Geometry;
 using Crash.Handlers.Plugins.Initializers;
 
 using Rhino;
+using Rhino.Geometry;
 
 namespace Crash.Handlers.Tests.Plugins
 {
 	[RhinoFixture]
 	public sealed class EventDispatcherTests
 	{
+		private static readonly RhinoDoc rhinoDoc = RhinoDoc.CreateHeadless(null);
 		private CrashDoc crashDoc;
 		private EventDispatcher eventDispatcher;
-		private RhinoDoc rhinoDoc;
 
 		public static IEnumerable DispatchEvents
 		{
 			get
 			{
-				var addArgs = new CrashObjectEventArgs(null, Guid.NewGuid(), Guid.NewGuid());
-				yield return new object[] { nameof(ICrashClient.OnAdd), ChangeAction.Add, addArgs };
+				var point = new Point(Point3d.Origin);
+				var rhinoId = rhinoDoc.Objects.Add(point);
+
+				var addArgs = new CrashObjectEventArgs(point, rhinoId, Guid.NewGuid());
+				yield return new object[]
+				             {
+					             nameof(ICrashClient.AddAsync), ChangeAction.Add | ChangeAction.Temporary, addArgs
+				             };
 
 				var deleteArgs = new CrashObjectEventArgs(null, Guid.NewGuid(), Guid.NewGuid());
-				yield return new object[] { nameof(ICrashClient.OnDelete), ChangeAction.Remove, deleteArgs };
+				yield return new object[] { nameof(ICrashClient.DeleteAsync), ChangeAction.Remove, deleteArgs };
 
+				var crashObject = new CrashObject(Guid.NewGuid(), Guid.NewGuid(), null);
+				var selectArgs = new CrashSelectionEventArgs(true, new[] { crashObject });
+				yield return new object[] { nameof(ICrashClient.LockAsync), ChangeAction.Locked, selectArgs };
+
+
+				var deSelectArgs = new CrashSelectionEventArgs(false, new[] { crashObject });
+				yield return new object[] { nameof(ICrashClient.UnlockAsync), ChangeAction.Unlocked, deSelectArgs };
+
+				// Where do Transforms go?
+				// nameof(ICrashClient)
+
+				//
+				yield return new object[] { nameof(ICrashClient.UpdateAsync), ChangeAction.Update, null };
+
+				/*
 				var args = EventArgs.Empty;
-
 				yield return new object[] { nameof(ICrashClient.OnUpdate), ChangeAction.Update, args };
 				yield return new object[] { nameof(ICrashClient.OnDone), ChangeAction.None, args };
 				yield return new object[] { nameof(ICrashClient.OnDoneRange), ChangeAction.None, args };
@@ -40,13 +61,13 @@ namespace Crash.Handlers.Tests.Plugins
 				yield return new object[] { nameof(ICrashClient.OnInitialize), ChangeAction.None, args };
 				yield return new object[] { nameof(ICrashClient.OnInitializeUsers), ChangeAction.None, args };
 				yield return new object[] { nameof(ICrashClient.OnCameraChange), ChangeAction.Add, args };
+				*/
 			}
 		}
 
 		[OneTimeSetUp]
 		public void Setup()
 		{
-			rhinoDoc = RhinoDoc.CreateHeadless(null);
 			crashDoc = CrashDocRegistry.CreateAndRegisterDocument(rhinoDoc);
 			crashDoc.LocalClient = new DispatcherTestClient();
 
@@ -74,7 +95,6 @@ namespace Crash.Handlers.Tests.Plugins
 		}
 
 		[TestCaseSource(nameof(DispatchEvents))]
-		[Parallelizable(ParallelScope.All)]
 		public async Task TestAddDispatch(string callName, ChangeAction action, EventArgs args)
 		{
 			await eventDispatcher.NotifyDispatcher(action, this, args, rhinoDoc);
@@ -92,15 +112,15 @@ namespace Crash.Handlers.Tests.Plugins
 	{
 		public Dictionary<string, int> CallCount = new()
 		                                           {
-			                                           { nameof(ICrashClient.StopAsync), 1 },
-			                                           { nameof(ICrashClient.StartLocalClientAsync), 1 },
-			                                           { nameof(ICrashClient.UpdateAsync), 1 },
-			                                           { nameof(ICrashClient.DeleteAsync), 1 },
-			                                           { nameof(ICrashClient.AddAsync), 1 },
-			                                           { nameof(ICrashClient.DoneAsync), 1 },
-			                                           { nameof(ICrashClient.LockAsync), 1 },
-			                                           { nameof(ICrashClient.UnlockAsync), 1 },
-			                                           { nameof(ICrashClient.CameraChangeAsync), 1 },
+			                                           { nameof(ICrashClient.StopAsync), 0 },
+			                                           { nameof(ICrashClient.StartLocalClientAsync), 0 },
+			                                           { nameof(ICrashClient.UpdateAsync), 0 },
+			                                           { nameof(ICrashClient.DeleteAsync), 0 },
+			                                           { nameof(ICrashClient.AddAsync), 0 },
+			                                           { nameof(ICrashClient.DoneAsync), 0 },
+			                                           { nameof(ICrashClient.LockAsync), 0 },
+			                                           { nameof(ICrashClient.UnlockAsync), 0 },
+			                                           { nameof(ICrashClient.CameraChangeAsync), 0 },
 			                                           { nameof(ICrashClient.OnAdd), 0 },
 			                                           { nameof(ICrashClient.OnDelete), 0 },
 			                                           { nameof(ICrashClient.OnUpdate), 0 },
@@ -206,11 +226,6 @@ namespace Crash.Handlers.Tests.Plugins
 			count += 1;
 			CallCount[name] = count;
 			;
-		}
-
-		private void AssertAsyncCallCount(string callName, int callCount)
-		{
-			Assert.That(CallCount[callName], Is.EqualTo(callCount));
 		}
 	}
 }
