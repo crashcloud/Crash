@@ -18,22 +18,22 @@ namespace Crash.Handlers.Plugins.Geometry
 		public GeometryChangeDefinition()
 		{
 			CreateActions = new List<IChangeCreateAction>
-			                {
-				                new GeometryCreateAction(),
-				                new GeometryRemoveAction(),
-				                new GeometryTransformAction(),
-				                new GeometrySelectAction(),
-				                new GeometryUnSelectAction()
-			                };
+							{
+								new GeometryCreateAction(),
+								new GeometryRemoveAction(),
+								new GeometryTransformAction(),
+								new GeometrySelectAction(),
+								new GeometryUnSelectAction()
+							};
 			RecieveActions = new List<IChangeRecieveAction>
-			                 {
-				                 new GeometryAddRecieveAction(),
-				                 new GeometryTemporaryAddRecieveAction(),
-				                 new GeometryRemoveRecieveAction(),
-				                 new GeometryTransformRecieveAction(),
-				                 new GeometryLockRecieveAction(),
-				                 new GeometryUnlockRecieveAction()
-			                 };
+							 {
+								 new GeometryTemporaryAddRecieveAction(),
+								 new GeometryAddRecieveAction(),
+								 new GeometryRemoveRecieveAction(),
+								 new GeometryTransformRecieveAction(),
+								 new GeometryLockRecieveAction(),
+								 new GeometryUnlockRecieveAction()
+							 };
 		}
 
 

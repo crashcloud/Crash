@@ -10,10 +10,10 @@ namespace Crash.Handlers.Plugins.Camera.Recieve
 	/// <summary>Handles receiving a camera from the Server</summary>
 	internal sealed class CameraRecieveAction : IChangeRecieveAction
 	{
-		
-		public ChangeAction Action => ChangeAction.Add;
 
-		
+		public bool CanRecieve(ChangeAction action) => action.HasFlag(ChangeAction.Add);
+
+
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
 		{
 			var cameraArgs = new IdleArgs(crashDoc, recievedChange);

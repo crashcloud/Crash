@@ -8,10 +8,10 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 	/// <summary>Handles unselections from the server</summary>
 	internal sealed class GeometryUnlockRecieveAction : IChangeRecieveAction
 	{
-		
-		public ChangeAction Action => ChangeAction.Unlocked;
 
-		
+		public bool CanRecieve(ChangeAction action) => action.HasFlag(ChangeAction.Unlocked);
+
+
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
 		{
 			var changeArgs = new IdleArgs(crashDoc, recievedChange);

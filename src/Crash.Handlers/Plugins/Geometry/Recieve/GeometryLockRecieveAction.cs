@@ -8,10 +8,9 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 	/// <summary>Handles Selected objects from the server</summary>
 	internal sealed class GeometryLockRecieveAction : IChangeRecieveAction
 	{
-		
-		public ChangeAction Action => ChangeAction.Locked;
+		public bool CanRecieve(ChangeAction action) => action.HasFlag(ChangeAction.Locked);
 
-		
+
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
 		{
 			var changeArgs = new IdleArgs(crashDoc, recievedChange);

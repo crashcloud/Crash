@@ -6,7 +6,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 	/// <summary>Handles updates from the server</summary>
 	internal sealed class GeometryUpdateRecieveAction : IChangeRecieveAction
 	{
-		public ChangeAction Action => ChangeAction.Update;
+		public bool CanRecieve(ChangeAction action) => action.HasFlag(ChangeAction.Update);
 
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)

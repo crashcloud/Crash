@@ -8,7 +8,7 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 	/// <summary>Handles 'Done' calls from the Server</summary>
 	internal class DoneRecieve : IChangeRecieveAction
 	{
-		public ChangeAction Action => ChangeAction.None;
+		public bool CanRecieve(ChangeAction action) => action.HasFlag(ChangeAction.Release);
 
 
 		// What about Transform? Update?
@@ -23,7 +23,7 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 				foreach (var change in changes)
 				{
 					if (!crashDoc.CacheTable.TryGetValue(change.Id,
-					                                     out GeometryChange geomChange))
+														 out GeometryChange geomChange))
 					{
 						continue;
 					}
@@ -40,10 +40,10 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 			{
 				EventHandler? _event = null;
 				_event = (sender, args) =>
-				         {
-					         crashDoc.CacheTable.SomeoneIsDone = false;
-					         crashDoc.Queue.OnCompletedQueue -= _event;
-				         };
+						 {
+							 crashDoc.CacheTable.SomeoneIsDone = false;
+							 crashDoc.Queue.OnCompletedQueue -= _event;
+						 };
 
 				crashDoc.Queue.OnCompletedQueue += _event;
 			}

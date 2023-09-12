@@ -8,7 +8,8 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 	/// <summary>Handles temporary objects from the server</summary>
 	internal sealed class GeometryTemporaryAddRecieveAction : IChangeRecieveAction
 	{
-		public ChangeAction Action => ChangeAction.Add | ChangeAction.Temporary;
+
+		public bool CanRecieve(ChangeAction action) => action.HasFlag(ChangeAction.Add | ChangeAction.Temporary);
 
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)

@@ -123,17 +123,17 @@ namespace Crash.Handlers.Plugins
 
 			await RegisterUserAsync(doc, change);
 
-			foreach (var action in recievers)
+			foreach (var recieveAction in recievers)
 			{
-				if (action.Action != change.Action)
+				if (recieveAction.CanRecieve(change.Action))
 				{
 					continue;
 				}
 
 				CrashLogger.Logger
-						   .LogDebug($"Calling action {action.GetType().Name}, {change.Action}, {change.Type}, {change.Id}");
+						   .LogDebug($"Calling action {recieveAction.GetType().Name}, {change.Action}, {change.Type}, {change.Id}");
 
-				await action.OnRecieveAsync(doc, change);
+				await recieveAction.OnRecieveAsync(doc, change);
 				return;
 			}
 		}
