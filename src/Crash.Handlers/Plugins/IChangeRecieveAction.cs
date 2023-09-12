@@ -7,7 +7,7 @@ namespace Crash.Handlers.Plugins
 	public interface IChangeRecieveAction
 	{
 		/// <summary>The Action this ICreateAction responds to</summary>
-		bool CanRecieve(ChangeAction action);
+		bool CanRecieve(IChange change);
 
 		/// <summary>Deserializes a Server Sent Change</summary>
 		public Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange);

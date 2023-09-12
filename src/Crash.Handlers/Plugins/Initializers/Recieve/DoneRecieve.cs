@@ -8,7 +8,7 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 	/// <summary>Handles 'Done' calls from the Server</summary>
 	internal class DoneRecieve : IChangeRecieveAction
 	{
-		public bool CanRecieve(ChangeAction action) => action.HasFlag(ChangeAction.Release);
+		public bool CanRecieve(IChange change) => change.Action.HasFlag(ChangeAction.Release);
 
 
 		// What about Transform? Update?

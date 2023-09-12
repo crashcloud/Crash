@@ -16,7 +16,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			return crashArgs.Args is CrashTransformEventArgs;
 		}
 
-		
+
 		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
 		{
 			changes = Array.Empty<Change>();

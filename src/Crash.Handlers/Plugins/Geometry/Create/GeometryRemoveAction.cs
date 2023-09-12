@@ -13,10 +13,10 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
 		{
 			return crashArgs.Args is CrashObjectEventArgs rargs &&
-			       rargs.ChangeId != Guid.Empty;
+				   rargs.ChangeId != Guid.Empty;
 		}
 
-		
+
 		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
 		{
 			changes = Array.Empty<Change>();

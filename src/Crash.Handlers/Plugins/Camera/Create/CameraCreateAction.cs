@@ -40,7 +40,7 @@ namespace Crash.Handlers.Plugins.Camera.Create
 			}
 
 			if (DistanceBetween(viewArgs.Location, lastLocation) < 10 &&
-			    DistanceBetween(viewArgs.Target, lastTarget) < 10)
+				DistanceBetween(viewArgs.Target, lastTarget) < 10)
 			{
 				return false;
 			}
@@ -75,10 +75,10 @@ namespace Crash.Handlers.Plugins.Camera.Create
 		{
 			// https://www.mathsisfun.com/algebra/distance-2-points.html
 			var dist = Math.Sqrt(
-			                     Math.Pow(p1.X - p2.X, 2) +
-			                     Math.Pow(p1.Y - p2.Y, 2) +
-			                     Math.Pow(p1.Z - p2.Z, 2)
-			                    );
+								 Math.Pow(p1.X - p2.X, 2) +
+								 Math.Pow(p1.Y - p2.Y, 2) +
+								 Math.Pow(p1.Z - p2.Z, 2)
+								);
 
 			return dist;
 		}

@@ -9,7 +9,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 	/// <summary>Handles Deleted objects from the Server</summary>
 	internal sealed class GeometryRemoveRecieveAction : IChangeRecieveAction
 	{
-		public bool CanRecieve(ChangeAction action) => action.HasFlag(ChangeAction.Remove);
+		public bool CanRecieve(IChange change) => change.Action.HasFlag(ChangeAction.Remove);
 
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)

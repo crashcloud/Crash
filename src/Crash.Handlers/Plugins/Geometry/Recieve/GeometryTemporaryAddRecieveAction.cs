@@ -9,7 +9,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 	internal sealed class GeometryTemporaryAddRecieveAction : IChangeRecieveAction
 	{
 
-		public bool CanRecieve(ChangeAction action) => action.HasFlag(ChangeAction.Add | ChangeAction.Temporary);
+		public bool CanRecieve(IChange change) => change.Action.HasFlag(ChangeAction.Add | ChangeAction.Temporary);
 
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)

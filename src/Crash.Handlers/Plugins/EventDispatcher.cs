@@ -125,7 +125,7 @@ namespace Crash.Handlers.Plugins
 
 			foreach (var recieveAction in recievers)
 			{
-				if (!recieveAction.CanRecieve(change.Action))
+				if (!recieveAction.CanRecieve(change))
 				{
 					continue;
 				}

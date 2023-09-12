@@ -13,7 +13,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
 		{
 			return crashArgs.Args is CrashSelectionEventArgs cargs &&
-			       !cargs.Selected;
+				   !cargs.Selected;
 		}
 
 		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)

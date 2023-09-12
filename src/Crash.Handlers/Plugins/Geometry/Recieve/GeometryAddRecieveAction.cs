@@ -9,7 +9,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 	/// <summary>Handles recieving of Geometry</summary>
 	internal sealed class GeometryAddRecieveAction : IChangeRecieveAction
 	{
-		public bool CanRecieve(ChangeAction action) => action.HasFlag(ChangeAction.Add);
+		public bool CanRecieve(IChange change) => change.Action.HasFlag(ChangeAction.Add);
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
 		{

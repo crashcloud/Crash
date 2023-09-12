@@ -16,7 +16,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
 		{
 			return crashArgs.Args is CrashObjectEventArgs rargs &&
-			       rargs.Geometry is not null;
+				   rargs.Geometry is not null;
 		}
 
 		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)

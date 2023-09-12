@@ -39,7 +39,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 					continue;
 				}
 
-				var change = GeometryChange.CreateChange(crashObject.ChangeId, userName, Action);
+				var change = GeometryChange.CreateChange(crashObject.ChangeId, userName, ChangeAction.Locked);
 
 				yield return change;
 			}
