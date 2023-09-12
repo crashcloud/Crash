@@ -52,6 +52,10 @@ namespace Crash
 		{
 			CrashClient.OnInit -= CrashClient_OnInit;
 			InteractivePipe.Active.Enabled = true;
+			RhinoApp.Idle += (sender, args) =>
+			{
+				e.CrashDoc.Queue.RunNextAction();
+			};
 		}
 
 		private void RhinoApp_Idle(object sender, EventArgs e)

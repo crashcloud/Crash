@@ -1,6 +1,6 @@
 ﻿
-using Crash.Common.Document;
 using Crash.Common.Communications;
+using Crash.Common.Document;
 using Crash.Handlers;
 using Crash.UI.JoinModel;
 using Crash.UI.UsersView;
@@ -26,13 +26,13 @@ namespace Crash.Commands
 			Instance = this;
 		}
 
-		
+
 		public static JoinSharedModel Instance { get; private set; }
 
-		
+
 		public override string EnglishName => "JoinSharedModel";
 
-		
+
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
 			rhinoDoc = doc;
