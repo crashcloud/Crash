@@ -86,13 +86,19 @@ namespace Crash.Common.Communications
 		/// <summary>Done</summary>
 		public async Task DoneAsync()
 		{
-			await _connection.InvokeAsync(DONE, _user);
+			var doneChange = new Change
+			{
+				Owner = _user,
+				Action = ChangeAction.Release,
+				Type = "Crash.DoneChange",
+			};
+			await _connection.InvokeAsync(PUSH_SINGLE, doneChange);
 		}
 
 		/// <summary>Releases a collection of changes</summary>
 		public async Task DoneRangeAsync(IEnumerable<Guid> changeIds)
 		{
-			await _connection.InvokeAsync(DONERANGE, changeIds);
+			// await _connection.InvokeAsync("TODO : ", changeIds);
 		}
 
 		/// <summary>
@@ -148,7 +154,6 @@ namespace Crash.Common.Communications
 		/// <summary>Local Event corresponding to a Server call for Done Range</summary>
 		public event Action<IEnumerable<Guid>> OnDoneRange;
 
-
 		/// <summary>Local Event corresponding to a Server call for Initialize</summary>
 		public event Action<IEnumerable<Change>> OnInitializeChanges;
 
@@ -202,9 +207,6 @@ namespace Crash.Common.Communications
 		/// <summary>Registers Local Events responding to Server calls</summary>
 		internal void RegisterConnections()
 		{
-			_connection.On<string>(DONE, user => OnDone?.Invoke(user));
-			_connection.On<IEnumerable<Guid>>(DONERANGE, ids => OnDoneRange(ids));
-
 			_connection.On<IEnumerable<Change>>(INITIALIZE, changes => OnInitializeChanges?.Invoke(changes));
 			_connection.On<IEnumerable<string>>(INITIALIZEUSERS, users => OnInitializeUsers?.Invoke(users));
 
@@ -228,7 +230,8 @@ namespace Crash.Common.Communications
 		{
 			OnInitializeUsers -= InitUsers;
 			// User Init
-			// OnInitUsers?.Invoke(this, new CrashUserInitArgs())
+			foreach (var user in users)
+				_crashDoc.Users.Add(user);
 		}
 
 		public static void CloseLocalServer(CrashDoc crashDoc)
@@ -276,8 +279,6 @@ namespace Crash.Common.Communications
 
 		#region consts
 
-		private const string DONE = "Done";
-		private const string DONERANGE = "DoneRange";
 		private const string PUSH_IDENTICAL = "PushIdenticalChanges";
 		private const string PUSH_SINGLE = "PushChange";
 		private const string PUSH_MANY = "PushChanges";
