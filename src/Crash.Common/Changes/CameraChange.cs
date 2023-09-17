@@ -30,42 +30,42 @@ namespace Crash.Common.Changes
 		public static CameraChange CreateFrom(IChange change)
 		{
 			return new CameraChange
-			       {
-				       Camera = JsonSerializer.Deserialize<Camera>(change.Payload),
-				       Stamp = change.Stamp,
-				       Id = change.Id,
-				       Owner = change.Owner,
-				       Payload = change.Payload,
-				       Action = ChangeAction.Add
-			       };
+			{
+				Camera = JsonSerializer.Deserialize<Camera>(change.Payload),
+				Stamp = change.Stamp,
+				Id = change.Id,
+				Owner = change.Owner,
+				Payload = change.Payload,
+				Action = ChangeAction.Add
+			};
 		}
 
 		/// <summary>Creates a new Camera Change from the required parts</summary>
 		public static CameraChange CreateNew(Camera camera, string userName)
 		{
 			return new CameraChange
-			       {
-				       Camera = camera,
-				       Stamp = DateTime.UtcNow,
-				       Id = Guid.NewGuid(),
-				       Owner = userName,
-				       Payload = JsonSerializer.Serialize(camera, Options.Default),
-				       Action = ChangeAction.Add
-			       };
+			{
+				Camera = camera,
+				Stamp = DateTime.UtcNow,
+				Id = Guid.NewGuid(),
+				Owner = userName,
+				Payload = JsonSerializer.Serialize(camera, Options.Default),
+				Action = ChangeAction.Add
+			};
 		}
 
 		/// <summary>Creates a new transmittable Change</summary>
 		public static Change CreateChange(Camera camera, string userName)
 		{
 			return new Change
-			       {
-				       Stamp = DateTime.UtcNow,
-				       Id = Guid.NewGuid(),
-				       Owner = userName,
-				       Payload = JsonSerializer.Serialize(camera, Options.Default),
-				       Action = ChangeAction.Add,
-				       Type = ChangeType
-			       };
+			{
+				Stamp = DateTime.UtcNow,
+				Id = Guid.NewGuid(),
+				Owner = userName,
+				Payload = JsonSerializer.Serialize(camera, Options.Default),
+				Action = ChangeAction.Add,
+				Type = ChangeType
+			};
 		}
 	}
 }
