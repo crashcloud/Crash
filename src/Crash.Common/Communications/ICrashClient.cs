@@ -2,7 +2,6 @@
 {
 	public interface ICrashClient
 	{
-
 		/// <summary>Tests for an Active Connection</summary>
 		public bool IsConnected { get; }
 
@@ -13,12 +12,6 @@
 		/// <exception cref="NullReferenceException">If CrashDoc is null</exception>
 		/// <exception cref="Exception">If UserName is empty</exception>
 		public Task StartLocalClientAsync();
-
-		/// <summary>Unlock Item in SqLite DB and notify other clients</summary>
-		Task DoneAsync(); //  string user);
-
-		/// <summary>Unlock Item in SqLite DB and notify other clients</summary>
-		Task DoneRangeAsync(IEnumerable<Guid> ids);
 
 		/// <summary>
 		///     Pushes an Update/Transform/Payload which applies to many Changes
@@ -43,13 +36,6 @@
 		/// <summary>Initialises the latest changes to a connecting client</summary>
 		Task InitializeUsersAsync(IEnumerable<string> changes);
 
-
-		/// <summary>Local Event corresponding to a Server call for Done</summary>
-		public event Action<string> OnDone;
-
-		/// <summary>Local Event corresponding to a Server call for Done Range</summary>
-		public event Action<IEnumerable<Guid>> OnDoneRange;
-
 		/// <summary>Pushes a single Change</summary>
 		public event Action<IEnumerable<Guid>, Change> OnPushIdentical;
 
@@ -64,6 +50,5 @@
 
 		/// <summary>Local Event corresponding to a Server call for Initialize Users</summary>
 		public event Action<IEnumerable<string>> OnInitializeUsers;
-
 	}
 }

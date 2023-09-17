@@ -51,8 +51,9 @@ namespace Crash.Common.Communications
 			RegisterConnections();
 		}
 
-		public bool IsConnected => _connection.State != HubConnectionState.Disconnected;
 		public HubConnectionState State => _connection.State;
+
+		public bool IsConnected => _connection.State != HubConnectionState.Disconnected;
 
 		/// <summary>Stops the Connection</summary>
 		public async Task StopAsync()
@@ -81,24 +82,6 @@ namespace Crash.Common.Communications
 
 			// TODO : Check for successful connection
 			await StartAsync();
-		}
-
-		/// <summary>Done</summary>
-		public async Task DoneAsync()
-		{
-			var doneChange = new Change
-			{
-				Owner = _user,
-				Action = ChangeAction.Release,
-				Type = "Crash.DoneChange",
-			};
-			await _connection.InvokeAsync(PUSH_SINGLE, doneChange);
-		}
-
-		/// <summary>Releases a collection of changes</summary>
-		public async Task DoneRangeAsync(IEnumerable<Guid> changeIds)
-		{
-			// await _connection.InvokeAsync("TODO : ", changeIds);
 		}
 
 		/// <summary>
@@ -130,29 +113,12 @@ namespace Crash.Common.Communications
 		public async Task InitializeChangesAsync(IEnumerable<Change> changes)
 		{
 			;
-
 		}
 
 		public async Task InitializeUsersAsync(IEnumerable<string> users)
 		{
 			;
-
 		}
-
-		/// <summary>
-		///     Closed event
-		/// </summary>
-		public event Func<Exception, Task> Closed
-		{
-			add => _connection.Closed += value;
-			remove => _connection.Closed -= value;
-		}
-
-		/// <summary>Local Event corresponding to a Server call for Done</summary>
-		public event Action<string> OnDone;
-
-		/// <summary>Local Event corresponding to a Server call for Done Range</summary>
-		public event Action<IEnumerable<Guid>> OnDoneRange;
 
 		/// <summary>Local Event corresponding to a Server call for Initialize</summary>
 		public event Action<IEnumerable<Change>> OnInitializeChanges;
@@ -166,20 +132,52 @@ namespace Crash.Common.Communications
 
 		public event Action<IEnumerable<Change>> OnPushChanges;
 
+		/// <summary>Done</summary>
+		public async Task DoneAsync()
+		{
+			var doneChange = new Change { Owner = _user, Action = ChangeAction.Release, Type = "Crash.DoneChange" };
+			await PushChangeAsync(doneChange);
+		}
+
+		/// <summary>Releases a collection of changes</summary>
+		public async Task DoneRangeAsync(IEnumerable<Guid> changeIds)
+		{
+			var doneChange = new Change
+			{
+				Owner = string.Empty, Action = ChangeAction.Release, Type = "Crash.DoneChange"
+			};
+			await PushIdenticalChangesAsync(changeIds, doneChange);
+		}
+
+		/// <summary>Local Event corresponding to a Server call for Done</summary>
+		public event Action<string> OnDone;
+
+		/// <summary>Local Event corresponding to a Server call for Done Range</summary>
+		public event Action<IEnumerable<Guid>> OnDoneRange;
+
+		/// <summary>
+		///     Closed event
+		/// </summary>
+		public event Func<Exception, Task> Closed
+		{
+			add => _connection.Closed += value;
+			remove => _connection.Closed -= value;
+		}
+
 
 		/// <summary>Creates a connection to the Crash Server</summary>
 		internal static HubConnection GetHubConnection(Uri url)
 		{
 			return new HubConnectionBuilder()
-				   .WithUrl(url).AddJsonProtocol()
-				   .AddJsonProtocol(opts => JsonOptions())
-				   // .ConfigureLogging(LoggingConfigurer)
-				   .WithAutomaticReconnect(new[]
-										   {
-											   TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100),
-											   TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(10)
-										   })
-				   .Build();
+				.WithUrl(url).AddJsonProtocol()
+				.AddJsonProtocol(opts => JsonOptions())
+				// .ConfigureLogging(LoggingConfigurer)
+				.WithAutomaticReconnect(new[]
+				{
+					TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1),
+					TimeSpan.FromSeconds(10)
+				})
+				.Build();
 		}
 
 		public static JsonHubProtocolOptions JsonOptions()
@@ -191,7 +189,7 @@ namespace Crash.Common.Communications
 					IgnoreReadOnlyFields = true,
 					IgnoreReadOnlyProperties = true,
 					NumberHandling = JsonNumberHandling
-														  .AllowNamedFloatingPointLiterals
+						.AllowNamedFloatingPointLiterals
 				}
 			};
 		}
@@ -210,7 +208,8 @@ namespace Crash.Common.Communications
 			_connection.On<IEnumerable<Change>>(INITIALIZE, changes => OnInitializeChanges?.Invoke(changes));
 			_connection.On<IEnumerable<string>>(INITIALIZEUSERS, users => OnInitializeUsers?.Invoke(users));
 
-			_connection.On<IEnumerable<Guid>, Change>(PUSH_IDENTICAL, (ids, change) => OnPushIdentical?.Invoke(ids, change));
+			_connection.On<IEnumerable<Guid>, Change>(PUSH_IDENTICAL,
+				(ids, change) => OnPushIdentical?.Invoke(ids, change));
 			_connection.On<Change>(PUSH_SINGLE, change => OnPushChange?.Invoke(change));
 			_connection.On<IEnumerable<Change>>(PUSH_MANY, changes => OnPushChanges?.Invoke(changes));
 
@@ -231,7 +230,9 @@ namespace Crash.Common.Communications
 			OnInitializeUsers -= InitUsers;
 			// User Init
 			foreach (var user in users)
+			{
 				_crashDoc.Users.Add(user);
+			}
 		}
 
 		public static void CloseLocalServer(CrashDoc crashDoc)

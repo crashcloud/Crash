@@ -8,45 +8,69 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 	/// <summary>Handles 'Done' calls from the Server</summary>
 	internal class DoneRecieve : IChangeRecieveAction
 	{
-		public bool CanRecieve(IChange change) => change.Action.HasFlag(ChangeAction.Release);
+		public bool CanRecieve(IChange change)
+		{
+			return change.Action.HasFlag(ChangeAction.Release);
+		}
 
-
-		// What about Transform? Update?
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
 		{
-			var changes = crashDoc.CacheTable.GetChanges().Where(c => c.Owner == recievedChange.Owner);
-
 			crashDoc.CacheTable.SomeoneIsDone = true;
 			try
 			{
-				var add = new GeometryAddRecieveAction();
-				foreach (var change in changes)
+				// Done Range
+				if (string.IsNullOrEmpty(recievedChange.Owner))
 				{
-					if (!crashDoc.CacheTable.TryGetValue(change.Id,
-														 out GeometryChange geomChange))
+					if (!crashDoc.CacheTable.TryGetValue(recievedChange.Id, out Change doneChange))
 					{
-						continue;
+						return;
 					}
 
-					// TODO : This should ONLY be if the change owner is the same as  
-					geomChange.RemoveAction(ChangeAction.Temporary);
-					geomChange.AddAction(ChangeAction.Add);
-
-					await add.OnRecieveAsync(crashDoc, geomChange);
-					crashDoc.CacheTable.RemoveChange(change.Id);
+					ReleaseChange(crashDoc, doneChange);
 				}
+				// Done
+				else
+				{
+					foreach (var change in crashDoc.CacheTable.GetChanges())
+					{
+						ReleaseChange(crashDoc, change);
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e);
+				throw;
 			}
 			finally
 			{
+				// TODO: This seems like it is doomed to fail!
+				// We need to specify which packets dont need reporting to the server
 				EventHandler? _event = null;
 				_event = (sender, args) =>
-						 {
-							 crashDoc.CacheTable.SomeoneIsDone = false;
-							 crashDoc.Queue.OnCompletedQueue -= _event;
-						 };
+				{
+					crashDoc.CacheTable.SomeoneIsDone = false;
+					crashDoc.Queue.OnCompletedQueue -= _event;
+				};
 
+				// TODO : What about things in the existing queue etc?
 				crashDoc.Queue.OnCompletedQueue += _event;
 			}
+		}
+
+		private async Task ReleaseChange(CrashDoc crashDoc, IChange change)
+		{
+			if (!crashDoc.CacheTable.TryGetValue(change.Id,
+				    out GeometryChange geomChange))
+			{
+				return;
+			}
+
+			geomChange.RemoveAction(ChangeAction.Temporary);
+
+			var add = new GeometryAddRecieveAction();
+			await add.OnRecieveAsync(crashDoc, geomChange);
+			crashDoc.CacheTable.RemoveChange(change.Id);
 		}
 	}
 }

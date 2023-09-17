@@ -2,7 +2,6 @@
 
 namespace Crash.Handlers.Plugins
 {
-
 	/// <summary>Handles recieved changes from the Server</summary>
 	public interface IChangeRecieveAction
 	{
