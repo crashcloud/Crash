@@ -59,7 +59,7 @@ namespace Crash.Common.Document
 		#region Connectivity
 
 		/// <summary>The Local Client for the Crash Doc</summary>
-		public ICrashClient? LocalClient { get; set; }
+		public ICrashClient LocalClient { get; set; }
 
 		/// <summary>The Local Server for the Crash Doc</summary>
 		public CrashServer? LocalServer { get; set; }

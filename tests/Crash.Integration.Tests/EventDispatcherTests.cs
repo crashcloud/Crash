@@ -290,6 +290,11 @@ namespace Crash.Handlers.Tests.Plugins
 
 			public ChangeAction Action { get; }
 
+			public bool CanRecieve(IChange change)
+			{
+				return true;
+			}
+
 			public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
 			{
 				Assert.That(crashDoc, Is.Not.Null);

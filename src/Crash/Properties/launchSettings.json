@@ -12,7 +12,12 @@
 		},
 		"Crash (Mac Rhino 8)": {
 			"commandName": "Executable",
-			"executablePath": "/Applications/RhinoWIP.app/Contents/MacOS/Rhinoceros",
+			"executablePath": "/Applications/RhinoBETA.app/Contents/MacOS/Rhinoceros",
+			"hotReloadEnabled": true
+		},
+		"Crash (Mac Rhino 7)": {
+			"commandName": "Executable",
+			"executablePath": "/Applications/Rhino 7.app/Contents/MacOS/Rhinoceros",
 			"hotReloadEnabled": true
 		}
 	}

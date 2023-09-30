@@ -73,6 +73,7 @@ namespace Crash.Commands
 
 			_CreateCurrentUser(name);
 
+			// TODO : What does this do?
 #if DEBUG
 			if (_PreExistingGeometryCheck(doc))
 			{

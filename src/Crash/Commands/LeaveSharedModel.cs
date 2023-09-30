@@ -1,4 +1,6 @@
-﻿using Crash.Handlers;
+﻿using Crash.Common.Changes;
+using Crash.Common.Document;
+using Crash.Handlers;
 using Crash.UI.UsersView;
 
 using Rhino.Commands;
@@ -7,30 +9,29 @@ namespace Crash.Commands
 {
 	/// <summary>Command to Close a Shared Model</summary>
 	[CommandStyle(Style.ScriptRunner)]
-	public sealed class LeaveSharedModel : Command
+	public sealed class LeaveSharedModel : AsyncCommand
 	{
 		private bool defaultValue;
 
-		/// <summary>Default Constructor</summary>
 		public LeaveSharedModel()
 		{
 			Instance = this;
 		}
 
-		
+
 		public static LeaveSharedModel Instance { get; private set; }
 
-		
+
 		public override string EnglishName => "LeaveSharedModel";
 
-		
-		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+
+		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc CrashDoc, RunMode mode)
 		{
-			var client = CrashDocRegistry.ActiveDoc?.LocalClient;
+			var client = CrashDoc?.LocalClient;
 			if (client is null)
 			{
 				RhinoApp.WriteLine("You aren't in a shared model.");
-				return Result.Success;
+				return Result.Failure;
 			}
 
 			var choice = _GetReleaseChoice();
@@ -39,7 +40,8 @@ namespace Crash.Commands
 				case null:
 					return Result.Cancel;
 				case true:
-					client.DoneAsync();
+					var doneChange = DoneChange.GetDoneChange(CrashDoc.Users.CurrentUser.Name);
+					await client.PushChangeAsync(doneChange);
 					break;
 			}
 

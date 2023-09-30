@@ -1,5 +1,4 @@
-﻿
-using Crash.Common.Communications;
+﻿using Crash.Common.Communications;
 using Crash.Common.Document;
 using Crash.Handlers;
 using Crash.UI.JoinModel;
@@ -12,7 +11,7 @@ namespace Crash.Commands
 {
 	/// <summary>Command to Open a Shared Model</summary>
 	[CommandStyle(Style.ScriptRunner)]
-	public sealed class JoinSharedModel : Command
+	public sealed class JoinSharedModel : AsyncCommand
 	{
 		private CrashDoc? crashDoc;
 
@@ -33,12 +32,12 @@ namespace Crash.Commands
 		public override string EnglishName => "JoinSharedModel";
 
 
-		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc CrashDoc, RunMode mode)
 		{
 			rhinoDoc = doc;
-			crashDoc = CrashDocRegistry.GetRelatedDocument(doc);
+			CrashDoc = crashDoc;
 
-			CommandUtils.CheckAlreadyConnected(crashDoc);
+			CommandUtils.CheckAlreadyConnected(CrashDoc);
 
 			var name = Environment.UserName;
 
@@ -70,14 +69,14 @@ namespace Crash.Commands
 				}
 			}
 
-			if (crashDoc is null)
+			if (CrashDoc is null)
 			{
-				crashDoc = CrashDocRegistry.CreateAndRegisterDocument(doc);
+				CrashDoc = CrashDocRegistry.CreateAndRegisterDocument(doc);
 			}
 
-			_CreateCurrentUser(crashDoc, name);
+			_CreateCurrentUser(CrashDoc, name);
 
-			StartServer();
+			await StartServer();
 
 			return Result.Success;
 		}

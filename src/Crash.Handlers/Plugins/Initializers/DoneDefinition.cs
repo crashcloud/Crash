@@ -1,4 +1,5 @@
-﻿using Crash.Handlers.Plugins.Initializers.Recieve;
+﻿using Crash.Common.Changes;
+using Crash.Handlers.Plugins.Initializers.Recieve;
 
 using Rhino.Display;
 using Rhino.Geometry;
@@ -15,8 +16,7 @@ namespace Crash.Handlers.Plugins.Initializers
 			RecieveActions = new List<IChangeRecieveAction> { new DoneRecieve() };
 		}
 
-		public string ChangeName => "Crash.DoneChange";
-
+		public string ChangeName => DoneChange.ChangeType;
 
 		public IEnumerable<IChangeCreateAction> CreateActions { get; }
 

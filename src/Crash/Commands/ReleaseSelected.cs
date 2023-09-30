@@ -1,4 +1,5 @@
-﻿using Crash.Handlers;
+﻿using Crash.Common.Changes;
+using Crash.Common.Document;
 using Crash.Utils;
 
 using Rhino.Commands;
@@ -7,9 +8,8 @@ namespace Crash.Commands
 {
 	/// <summary>Command to Release Changes</summary>
 	[CommandStyle(Style.DoNotRepeat | Style.NotUndoable)]
-	public sealed class ReleaseSelected : Command
+	public sealed class ReleaseSelected : AsyncCommand
 	{
-		/// <summary>Default Constructor</summary>
 		public ReleaseSelected()
 		{
 			Instance = this;
@@ -21,18 +21,23 @@ namespace Crash.Commands
 
 		public override string EnglishName => "ReleaseSelected";
 
-
-		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc CrashDoc, RunMode mode)
 		{
 			var selectedChanges = GetSelectedChanges(doc);
-			if (selectedChanges.Count() <= 0)
+			if (!selectedChanges.Any())
 			{
 				return Result.Cancel;
 			}
 
+			if (CrashDoc?.LocalClient is null)
+			{
+				RhinoApp.WriteLine("You aren't in a shared model.");
+				return Result.Failure;
+			}
+
 			// TODO : Wait for response for data integrity check
-			var crashDoc = CrashDocRegistry.GetRelatedDocument(doc);
-			crashDoc?.LocalClient?.DoneRangeAsync(selectedChanges);
+			var user = CrashDoc.Users.CurrentUser.Name;
+			await CrashDoc.LocalClient.PushIdenticalChangesAsync(selectedChanges, DoneChange.GetDoneChange(user));
 
 			return Result.Success;
 		}

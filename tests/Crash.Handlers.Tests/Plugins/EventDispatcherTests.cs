@@ -31,25 +31,26 @@ namespace Crash.Handlers.Tests.Plugins
 				var addArgs = new CrashObjectEventArgs(point, rhinoId, Guid.NewGuid());
 				yield return new object[]
 				             {
-					             nameof(ICrashClient.AddAsync), ChangeAction.Add | ChangeAction.Temporary, addArgs
+					             nameof(ICrashClient.PushChangeAsync), ChangeAction.Add | ChangeAction.Temporary,
+					             addArgs
 				             };
 
 				var deleteArgs = new CrashObjectEventArgs(null, Guid.NewGuid(), Guid.NewGuid());
-				yield return new object[] { nameof(ICrashClient.DeleteAsync), ChangeAction.Remove, deleteArgs };
+				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Remove, deleteArgs };
 
-				var crashObject = new CrashObject(Guid.NewGuid(), Guid.NewGuid(), null);
+				var crashObject = new CrashObject(Guid.NewGuid(), Guid.NewGuid());
 				var selectArgs = new CrashSelectionEventArgs(true, new[] { crashObject });
-				yield return new object[] { nameof(ICrashClient.LockAsync), ChangeAction.Locked, selectArgs };
+				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Locked, selectArgs };
 
 
 				var deSelectArgs = new CrashSelectionEventArgs(false, new[] { crashObject });
-				yield return new object[] { nameof(ICrashClient.UnlockAsync), ChangeAction.Unlocked, deSelectArgs };
+				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Unlocked, deSelectArgs };
 
 				// Where do Transforms go?
 				// nameof(ICrashClient)
 
 				//
-				yield return new object[] { nameof(ICrashClient.UpdateAsync), ChangeAction.Update, null };
+				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Update, null };
 
 				/*
 				var args = EventArgs.Empty;
@@ -114,111 +115,89 @@ namespace Crash.Handlers.Tests.Plugins
 		                                           {
 			                                           { nameof(ICrashClient.StopAsync), 0 },
 			                                           { nameof(ICrashClient.StartLocalClientAsync), 0 },
-			                                           { nameof(ICrashClient.UpdateAsync), 0 },
-			                                           { nameof(ICrashClient.DeleteAsync), 0 },
-			                                           { nameof(ICrashClient.AddAsync), 0 },
-			                                           { nameof(ICrashClient.DoneAsync), 0 },
-			                                           { nameof(ICrashClient.LockAsync), 0 },
-			                                           { nameof(ICrashClient.UnlockAsync), 0 },
-			                                           { nameof(ICrashClient.CameraChangeAsync), 0 },
-			                                           { nameof(ICrashClient.OnAdd), 0 },
-			                                           { nameof(ICrashClient.OnDelete), 0 },
-			                                           { nameof(ICrashClient.OnUpdate), 0 },
-			                                           { nameof(ICrashClient.OnDone), 0 },
-			                                           { nameof(ICrashClient.OnDoneRange), 0 },
-			                                           { nameof(ICrashClient.OnLock), 0 },
-			                                           { nameof(ICrashClient.OnUnlock), 0 },
-			                                           { nameof(ICrashClient.OnInitialize), 0 },
-			                                           { nameof(ICrashClient.OnInitializeUsers), 0 },
-			                                           { nameof(ICrashClient.OnCameraChange), 0 }
+			                                           { nameof(ICrashClient.PushIdenticalChangesAsync), 0 },
+			                                           { nameof(ICrashClient.PushChangeAsync), 0 },
+			                                           { nameof(ICrashClient.PushChangesAsync), 0 },
+			                                           { nameof(ICrashClient.InitializeChangesAsync), 0 },
+			                                           { nameof(ICrashClient.InitializeUsersAsync), 0 },
+			                                           { nameof(ICrashClient.OnPushIdentical), 0 },
+			                                           { nameof(ICrashClient.OnPushChange), 0 },
+			                                           { nameof(ICrashClient.OnPushChanges), 0 },
+			                                           { nameof(ICrashClient.OnInitializeChanges), 0 },
+			                                           { nameof(ICrashClient.OnInitializeUsers), 0 }
 		                                           };
 
 		internal DispatcherTestClient()
 		{
-			OnAdd += args => { IncrementCallCount(nameof(ICrashClient.OnAdd)); };
-			OnDelete += args => { IncrementCallCount(nameof(ICrashClient.OnDelete)); };
-			OnUpdate += args => { IncrementCallCount(nameof(ICrashClient.OnUpdate)); };
-			OnDone += args => { IncrementCallCount(nameof(ICrashClient.OnDone)); };
-			OnDoneRange += args => { IncrementCallCount(nameof(ICrashClient.OnDoneRange)); };
-			OnLock += (args, id) => { IncrementCallCount(nameof(ICrashClient.OnLock)); };
-			OnUnlock += (args, id) => { IncrementCallCount(nameof(ICrashClient.OnUnlock)); };
-			OnInitialize += args => { IncrementCallCount(nameof(ICrashClient.OnInitialize)); };
+			// On InitialiseChanges
 			OnInitializeUsers += args => { IncrementCallCount(nameof(ICrashClient.OnInitializeUsers)); };
-			OnCameraChange += args => { IncrementCallCount(nameof(ICrashClient.OnCameraChange)); };
 		}
 
 		public bool IsConnected { get; } = true;
+		public event Action<IEnumerable<string>>? OnInitializeUsers;
+		public event Action<IEnumerable<Guid>, Change> OnPushIdentical;
+		public event Action<Change> OnPushChange;
+		public event Action<IEnumerable<Change>> OnPushChanges;
+		public event Action<IEnumerable<Change>> OnInitializeChanges;
+
+		public async Task InitializeChangesAsync(IEnumerable<Change> changes)
+		{
+			IncrementCallCount(nameof(ICrashClient.InitializeChangesAsync));
+			await Task.CompletedTask;
+		}
+
+		public async Task InitializeUsersAsync(IEnumerable<string> users)
+		{
+			IncrementCallCount(nameof(ICrashClient.InitializeUsersAsync));
+			await Task.CompletedTask;
+		}
+
+		public async Task StopAsync()
+		{
+			IncrementCallCount(nameof(ICrashClient.StopAsync));
+			await Task.CompletedTask;
+		}
+
+		public async Task StartLocalClientAsync()
+		{
+			IncrementCallCount(nameof(ICrashClient.StartLocalClientAsync));
+			await Task.CompletedTask;
+		}
+
+		public async Task PushIdenticalChangesAsync(IEnumerable<Guid> ids, Change change)
+		{
+			IncrementCallCount(nameof(ICrashClient.PushIdenticalChangesAsync));
+			await Task.CompletedTask;
+		}
+
+		public async Task PushChangeAsync(Change change)
+		{
+			IncrementCallCount(nameof(ICrashClient.PushChangeAsync));
+			await Task.CompletedTask;
+		}
+
+		public async Task PushChangesAsync(IEnumerable<Change> changes)
+		{
+			IncrementCallCount(nameof(ICrashClient.PushChangesAsync));
+			await Task.CompletedTask;
+		}
+
+		public event Action<string>? OnDone;
+		public event Action<IEnumerable<Guid>>? OnDoneRange;
+
+		public async Task InitializeUsersAsync(IEnumerable<Change> changes)
+		{
+			IncrementCallCount(nameof(ICrashClient.InitializeUsersAsync));
+			await Task.CompletedTask;
+		}
 
 		public event Action<Change>? OnAdd;
 		public event Action<Guid>? OnDelete;
 		public event Action<Change>? OnUpdate;
-		public event Action<string>? OnDone;
-		public event Action<IEnumerable<Guid>>? OnDoneRange;
 		public event Action<string, Guid>? OnLock;
 		public event Action<string, Guid>? OnUnlock;
 		public event Action<IEnumerable<Change>>? OnInitialize;
-		public event Action<IEnumerable<string>>? OnInitializeUsers;
 		public event Action<Change>? OnCameraChange;
-
-		public Task StopAsync()
-		{
-			IncrementCallCount(nameof(ICrashClient.StopAsync));
-			return Task.CompletedTask;
-		}
-
-		public Task StartLocalClientAsync()
-		{
-			IncrementCallCount(nameof(ICrashClient.StartLocalClientAsync));
-			return Task.CompletedTask;
-		}
-
-		public Task UpdateAsync(Change Change)
-		{
-			IncrementCallCount(nameof(ICrashClient.UpdateAsync));
-			return Task.CompletedTask;
-		}
-
-		public Task DeleteAsync(Guid id)
-		{
-			IncrementCallCount(nameof(ICrashClient.DeleteAsync));
-			return Task.CompletedTask;
-		}
-
-		public Task AddAsync(Change change)
-		{
-			IncrementCallCount(nameof(ICrashClient.AddAsync));
-			return Task.CompletedTask;
-		}
-
-		public Task DoneAsync()
-		{
-			IncrementCallCount(nameof(ICrashClient.DoneAsync));
-			return Task.CompletedTask;
-		}
-
-		public Task DoneAsync(IEnumerable<Guid> changeIds)
-		{
-			IncrementCallCount(nameof(ICrashClient.DoneAsync));
-			return Task.CompletedTask;
-		}
-
-		public Task LockAsync(Guid id)
-		{
-			IncrementCallCount(nameof(ICrashClient.LockAsync));
-			return Task.CompletedTask;
-		}
-
-		public Task UnlockAsync(Guid id)
-		{
-			IncrementCallCount(nameof(ICrashClient.UnlockAsync));
-			return Task.CompletedTask;
-		}
-
-		public Task CameraChangeAsync(Change change)
-		{
-			IncrementCallCount(nameof(ICrashClient.CameraChangeAsync));
-			return Task.CompletedTask;
-		}
 
 		private void IncrementCallCount(string name)
 		{
