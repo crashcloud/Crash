@@ -16,7 +16,15 @@ namespace Crash.Commands
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(doc);
 			var commandTask = RunCommandAsync(doc, crashDoc, mode);
 
-			return Task.Run(() => commandTask).GetAwaiter().GetResult();
+			try
+			{
+				return Task.Run(() => commandTask).GetAwaiter().GetResult();
+			}
+			catch (Exception ex)
+			{
+				RhinoApp.WriteLine(ex.Message);
+				return Result.Failure;
+			}
 		}
 
 		protected abstract Task<Result> RunCommandAsync(RhinoDoc rhinoDoc, CrashDoc CrashDoc, RunMode mode);
