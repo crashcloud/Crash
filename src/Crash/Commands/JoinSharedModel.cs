@@ -13,7 +13,7 @@ namespace Crash.Commands
 	[CommandStyle(Style.ScriptRunner)]
 	public sealed class JoinSharedModel : AsyncCommand
 	{
-		private CrashDoc? crashDoc;
+		private CrashDoc? CrashDoc;
 
 		private string LastURL = $"{CrashClient.DefaultURL}:{CrashServer.DefaultPort}";
 
@@ -32,7 +32,7 @@ namespace Crash.Commands
 		public override string EnglishName => "JoinSharedModel";
 
 
-		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc CrashDoc, RunMode mode)
+		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
 		{
 			rhinoDoc = doc;
 			CrashDoc = crashDoc;
@@ -83,16 +83,16 @@ namespace Crash.Commands
 
 		private async Task StartServer()
 		{
-			if (await CommandUtils.StartLocalClient(crashDoc, LastURL))
+			if (await CommandUtils.StartLocalClient(CrashDoc, LastURL))
 			{
 				InteractivePipe.Active.Enabled = true;
 				UsersForm.ShowForm();
 			}
 			else
 			{
-				if (crashDoc?.LocalClient is not null)
+				if (CrashDoc?.LocalClient is not null)
 				{
-					await crashDoc.LocalClient.StopAsync();
+					await CrashDoc.LocalClient.StopAsync();
 				}
 
 				RhinoApp.WriteLine($"Failed to load URL {LastURL}");
