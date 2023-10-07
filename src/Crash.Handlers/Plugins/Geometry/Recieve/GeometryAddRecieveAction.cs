@@ -51,6 +51,11 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				var rhinoId = rhinoDoc.Objects.Add(geomChange.Geometry);
 				var rhinoObject = rhinoDoc.Objects.FindId(rhinoId);
 				rhinoObject.SyncHost(geomChange);
+
+				if (args.Change.Action.HasFlag(ChangeAction.Locked))
+				{
+					rhinoDoc.Objects.Lock(rhinoId, true);
+				}
 			}
 			finally
 			{
