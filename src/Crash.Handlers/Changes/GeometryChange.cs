@@ -1,4 +1,6 @@
-﻿using Rhino.FileIO;
+﻿using System.Text.Json;
+
+using Rhino.FileIO;
 using Rhino.Geometry;
 using Rhino.Runtime;
 
@@ -26,29 +28,35 @@ namespace Crash.Handlers.Changes
 		/// <summary>Inheritance Constructor</summary>
 		public static GeometryChange CreateFrom(IChange change)
 		{
+			var packet = JsonSerializer.Deserialize<PayloadPacket>(change.Payload);
+			var geometry = CommonObject.FromJSON(packet.Data) as GeometryBase;
+			var transform = packet.Transform.ToRhino();
+
+			geometry.Transform(transform);
+
 			return new GeometryChange
-			{
-				Geometry = CommonObject.FromJSON(change.Payload) as GeometryBase,
-				Stamp = change.Stamp,
-				Id = change.Id,
-				Owner = change.Owner,
-				Payload = change.Payload,
-				Action = change.Action
-			};
+			       {
+				       Geometry = geometry,
+				       Stamp = change.Stamp,
+				       Id = change.Id,
+				       Owner = change.Owner,
+				       Payload = change.Payload,
+				       Action = change.Action
+			       };
 		}
 
 		/// <summary>Creates a new Geometry Change</summary>
 		public static GeometryChange CreateNew(GeometryBase geometry, string userName)
 		{
 			return new GeometryChange
-			{
-				Geometry = geometry,
-				Stamp = DateTime.UtcNow,
-				Id = Guid.NewGuid(),
-				Owner = userName,
-				Payload = geometry?.ToJSON(new SerializationOptions()),
-				Action = ChangeAction.Add | ChangeAction.Temporary
-			};
+			       {
+				       Geometry = geometry,
+				       Stamp = DateTime.UtcNow,
+				       Id = Guid.NewGuid(),
+				       Owner = userName,
+				       Payload = geometry?.ToJSON(new SerializationOptions()),
+				       Action = ChangeAction.Add | ChangeAction.Temporary
+			       };
 		}
 
 		/// <summary>Creates a new Change for sending to the server</summary>
@@ -59,7 +67,14 @@ namespace Crash.Handlers.Changes
 		/// <returns>A change suitable for sending to the server</returns>
 		public static Change CreateChange(Guid id, string user, ChangeAction action, string? payload = null)
 		{
-			return new Change { Id = id, Owner = user, Action = action, Payload = payload, Type = ChangeType };
+			return new Change
+			       {
+				       Id = id,
+				       Owner = user,
+				       Action = action,
+				       Payload = payload,
+				       Type = ChangeType
+			       };
 		}
 	}
 }
