@@ -1,7 +1,6 @@
 ﻿using Crash.Common.Document;
 using Crash.Common.Logging;
 using Crash.Handlers.InternalEvents;
-using Crash.Handlers.Plugins.Initializers;
 using Crash.Utils;
 
 using Microsoft.Extensions.Logging;
@@ -368,17 +367,5 @@ namespace Crash.Handlers.Plugins
 			;
 		}
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
-
-		private static Change DoneChange(string name)
-		{
-			return new Change
-			       {
-				       Owner = name,
-				       Action = ChangeAction.None,
-				       Type = new DoneDefinition().ChangeName,
-				       Id = Guid.NewGuid(),
-				       Stamp = DateTime.UtcNow
-			       };
-		}
 	}
 }
