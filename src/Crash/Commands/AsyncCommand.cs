@@ -14,11 +14,12 @@ namespace Crash.Commands
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(doc);
-			var commandTask = RunCommandAsync(doc, crashDoc, mode);
+			// var commandTask = RunCommandAsync(doc, crashDoc, mode);
 
 			try
 			{
-				return Task.Run(() => commandTask).GetAwaiter().GetResult();
+				RunCommandAsync(doc, crashDoc, mode);
+				return Result.Success;
 			}
 			catch (Exception ex)
 			{
