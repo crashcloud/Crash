@@ -1,5 +1,7 @@
-﻿using System.Text.Json;
+﻿using System.Runtime.Serialization;
+using System.Text.Json;
 
+using Rhino;
 using Rhino.FileIO;
 using Rhino.Geometry;
 using Rhino.Runtime;
@@ -28,21 +30,34 @@ namespace Crash.Handlers.Changes
 		/// <summary>Inheritance Constructor</summary>
 		public static GeometryChange CreateFrom(IChange change)
 		{
-			var packet = JsonSerializer.Deserialize<PayloadPacket>(change.Payload);
-			var geometry = CommonObject.FromJSON(packet.Data) as GeometryBase;
-			var transform = packet.Transform.ToRhino();
+			try
+			{
+				var packet = JsonSerializer.Deserialize<PayloadPacket>(change.Payload);
+				var geometry = CommonObject.FromJSON(packet.Data) as GeometryBase;
+				var transform = packet.Transform.ToRhino();
 
-			geometry.Transform(transform);
+				geometry.Transform(transform);
 
-			return new GeometryChange
-			       {
-				       Geometry = geometry,
-				       Stamp = change.Stamp,
-				       Id = change.Id,
-				       Owner = change.Owner,
-				       Payload = change.Payload,
-				       Action = change.Action
-			       };
+				return new GeometryChange
+				       {
+					       Geometry = geometry,
+					       Stamp = change.Stamp,
+					       Id = change.Id,
+					       Owner = change.Owner,
+					       Payload = change.Payload,
+					       Action = change.Action
+				       };
+			}
+			catch (SerializationException serialEx)
+			{
+				RhinoApp.WriteLine(serialEx.Message);
+			}
+			catch (Exception ex)
+			{
+				RhinoApp.WriteLine(ex.Message);
+			}
+
+			return null;
 		}
 
 		/// <summary>Creates a new Geometry Change</summary>

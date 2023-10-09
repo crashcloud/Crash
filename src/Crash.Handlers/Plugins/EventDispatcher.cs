@@ -173,17 +173,11 @@ namespace Crash.Handlers.Plugins
 				                                //TODO: Is Init? Where is that checked for?
 				                                var crashDoc =
 					                                CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
-				                                if (crashDoc is not null)
+				                                if (crashDoc is not null &&
+				                                    (crashDoc.CacheTable.IsInit ||
+				                                     crashDoc.CacheTable.SomeoneIsDone))
 				                                {
-					                                if (crashDoc.CacheTable.IsInit)
-					                                {
-						                                return;
-					                                }
-
-					                                if (crashDoc.CacheTable.SomeoneIsDone)
-					                                {
-						                                return;
-					                                }
+					                                return;
 				                                }
 
 				                                var crashArgs = new CrashObjectEventArgs(args.TheObject);
@@ -195,17 +189,11 @@ namespace Crash.Handlers.Plugins
 			                              {
 				                              var crashDoc =
 					                              CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
-				                              if (crashDoc is not null)
+				                              if (crashDoc is not null &&
+				                                  (crashDoc.CacheTable.IsInit ||
+				                                   crashDoc.CacheTable.SomeoneIsDone))
 				                              {
-					                              if (crashDoc.CacheTable.IsInit)
-					                              {
-						                              return;
-					                              }
-
-					                              if (crashDoc.CacheTable.SomeoneIsDone)
-					                              {
-						                              return;
-					                              }
+					                              return;
 				                              }
 
 				                              args.TheObject.TryGetChangeId(out var changeId);
