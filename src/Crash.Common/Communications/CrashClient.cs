@@ -62,13 +62,13 @@ namespace Crash.Common.Communications
 		}
 
 		/// <summary>Starts the Client</summary>
-		/// <exception cref="NullReferenceException">If CrashDoc is null</exception>
+		/// <exception cref="ArgumentNullException">If CrashDoc is null</exception>
 		/// <exception cref="Exception">If UserName is empty</exception>
 		public async Task StartLocalClientAsync()
 		{
 			if (_crashDoc is null)
 			{
-				throw new NullReferenceException("CrashDoc cannot be null!");
+				throw new ArgumentNullException("CrashDoc cannot be null!");
 			}
 
 			var userName = _crashDoc?.Users?.CurrentUser.Name;
@@ -80,7 +80,6 @@ namespace Crash.Common.Communications
 			OnInitializeChanges += Init;
 			OnInitializeUsers += InitUsers;
 
-			// TODO : Check for successful connection
 			await StartAsync();
 		}
 
@@ -144,7 +143,9 @@ namespace Crash.Common.Communications
 		{
 			var doneChange = new Change
 			{
-				Owner = string.Empty, Action = ChangeAction.Release, Type = "Crash.DoneChange"
+				Owner = string.Empty,
+				Action = ChangeAction.Release,
+				Type = "Crash.DoneChange"
 			};
 			await PushIdenticalChangesAsync(changeIds, doneChange);
 		}
@@ -285,9 +286,6 @@ namespace Crash.Common.Communications
 		private const string PUSH_MANY = "PushChanges";
 		private const string INITIALIZE = "InitializeChanges";
 		private const string INITIALIZEUSERS = "InitializeUsers";
-
-		// TODO : Move to https
-		public const string DefaultURL = "http://localhost";
 
 		#endregion
 	}

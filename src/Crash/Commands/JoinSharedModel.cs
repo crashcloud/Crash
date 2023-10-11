@@ -94,8 +94,6 @@ namespace Crash.Commands
 				{
 					await CrashDoc.LocalClient.StopAsync();
 				}
-
-				RhinoApp.WriteLine($"Failed to load URL {LastURL}");
 			}
 		}
 

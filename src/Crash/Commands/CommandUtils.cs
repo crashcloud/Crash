@@ -9,20 +9,20 @@ namespace Crash.Commands
 	internal static class CommandUtils
 	{
 		private static readonly Dictionary<Interval, string> PortValidation = new()
-		                                                                      {
-			                                                                      {
-				                                                                      new Interval(int.MinValue, 1000),
-				                                                                      "Port number is too small!"
-			                                                                      },
-			                                                                      {
-				                                                                      new Interval(10000, int.MaxValue),
-				                                                                      "Port number is too high!"
-			                                                                      },
-			                                                                      {
-				                                                                      new Interval(5000, 5001),
-				                                                                      "Port number is already in use on Macs"
-			                                                                      }
-		                                                                      };
+																			  {
+																				  {
+																					  new Interval(int.MinValue, 1000),
+																					  "Port number is too small!"
+																				  },
+																				  {
+																					  new Interval(10000, int.MaxValue),
+																					  "Port number is too high!"
+																				  },
+																				  {
+																					  new Interval(5000, 5001),
+																					  "Port number is already in use on Macs"
+																				  }
+																			  };
 
 		/// <summary>
 		///     Checks if already connected, and prompts user
@@ -53,9 +53,9 @@ namespace Crash.Commands
 		private static bool _NewModelOrExit(bool defaultValue)
 		{
 			return SelectionUtils.GetBoolean(ref defaultValue,
-			                                 "Would you like to close this model?",
-			                                 "ExitCommand",
-			                                 "CloseModel") == true;
+											 "Would you like to close this model?",
+											 "ExitCommand",
+											 "CloseModel") == true;
 		}
 
 		/// <summary>Gets the Users Name from a command line prompt</summary>
@@ -81,7 +81,6 @@ namespace Crash.Commands
 
 		internal static async Task<bool> StartLocalClient(CrashDoc crashDoc, string url)
 		{
-			// TODO : Ensure Requested Server is available, and notify if not
 			var userName = crashDoc.Users.CurrentUser.Name;
 
 			try
@@ -92,10 +91,25 @@ namespace Crash.Commands
 				await crashClient.StartLocalClientAsync();
 				return true;
 			}
+			catch (HttpRequestException)
+			{
+				RhinoApp.WriteLine("Server was not found! Try retyping the address.");
+			}
+			catch (UriFormatException)
+			{
+				RhinoApp.WriteLine("Address was invalid!");
+			}
+			catch (InvalidOperationException)
+			{
+				RhinoApp.WriteLine("There was an issue with the local client");
+			}
 			catch (Exception ex)
 			{
-				return false;
+				RhinoApp.WriteLine("An unexplained exception occured, try again.");
+				RhinoApp.WriteLine(ex.Message);
 			}
+
+			return false;
 		}
 
 		/// <summary>Checks if a local server is running</summary>
@@ -106,7 +120,7 @@ namespace Crash.Commands
 			{
 				var leaveModelCommandName = LeaveSharedModel.Instance.EnglishName;
 				RhinoApp.WriteLine("You are currently part of a Shared Model Session. " +
-				                   $"Please use the {leaveModelCommandName} command.");
+								   $"Please use the {leaveModelCommandName} command.");
 
 				return true;
 			}
