@@ -18,6 +18,9 @@ namespace Crash.Common.Communications
 	/// </summary>
 	public sealed class CrashClient : ICrashClient
 	{
+		// TODO : Move to https
+		public const string DefaultURL = "http://localhost";
+
 		private readonly HubConnection _connection;
 		private readonly CrashDoc _crashDoc;
 		private readonly string _user;
