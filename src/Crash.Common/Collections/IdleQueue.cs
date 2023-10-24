@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 
 using Crash.Common.Document;
+using Crash.Common.Events;
 
 namespace Crash.Events
 {
@@ -55,11 +56,11 @@ namespace Crash.Events
 
 			if (_idleQueue.IsEmpty)
 			{
-				OnCompletedQueue?.Invoke(this, null);
+				OnCompletedQueue?.Invoke(this, new CrashEventArgs(_hostDoc));
 			}
 		}
 
 		/// <summary>Fires when the queue has finished parsing more than 1 item.</summary>
-		public event EventHandler OnCompletedQueue;
+		public event EventHandler<CrashEventArgs> OnCompletedQueue;
 	}
 }

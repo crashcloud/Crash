@@ -1,5 +1,6 @@
 ﻿using Crash.Changes.Extensions;
 using Crash.Common.Document;
+using Crash.Common.Events;
 using Crash.Handlers.Changes;
 using Crash.Handlers.Plugins.Geometry.Recieve;
 
@@ -46,12 +47,12 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 			{
 				// TODO: This seems like it is doomed to fail!
 				// We need to specify which packets dont need reporting to the server
-				EventHandler? _event = null;
+				EventHandler<CrashEventArgs>? _event = null;
 				_event = (sender, args) =>
-				{
-					crashDoc.CacheTable.SomeoneIsDone = false;
-					crashDoc.Queue.OnCompletedQueue -= _event;
-				};
+				         {
+					         crashDoc.CacheTable.SomeoneIsDone = false;
+					         crashDoc.Queue.OnCompletedQueue -= _event;
+				         };
 
 				// TODO : What about things in the existing queue etc?
 				crashDoc.Queue.OnCompletedQueue += _event;
@@ -61,7 +62,7 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 		private async Task ReleaseChange(CrashDoc crashDoc, IChange change)
 		{
 			if (!crashDoc.CacheTable.TryGetValue(change.Id,
-				    out GeometryChange geomChange))
+			                                     out GeometryChange geomChange))
 			{
 				return;
 			}

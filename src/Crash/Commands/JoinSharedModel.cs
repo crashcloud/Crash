@@ -1,6 +1,6 @@
 ﻿using Crash.Common.Communications;
 using Crash.Common.Document;
-using Crash.Events;
+using Crash.Common.Events;
 using Crash.Handlers;
 using Crash.UI.JoinModel;
 using Crash.UI.UsersView;
@@ -87,7 +87,7 @@ namespace Crash.Commands
 			if (await CommandUtils.StartLocalClient(CrashDoc, LastURL))
 			{
 				InteractivePipe.Active.Enabled = true;
-				await CrashDoc.Queue.AddActionAsync(new IdleAction(args => UsersForm.ShowForm(), null));
+				CrashDoc.Queue.OnCompletedQueue += QueueOnOnCompleted;
 			}
 			else
 			{
@@ -96,6 +96,12 @@ namespace Crash.Commands
 					await CrashDoc.LocalClient.StopAsync();
 				}
 			}
+		}
+
+		private void QueueOnOnCompleted(object sender, CrashEventArgs e)
+		{
+			e.CrashDoc.Queue.OnCompletedQueue -= QueueOnOnCompleted;
+			UsersForm.ShowForm();
 		}
 
 
