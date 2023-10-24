@@ -29,14 +29,12 @@ namespace Crash.UI.UsersView
 		internal UsersViewModel()
 		{
 			RhinoDoc.ActiveDocumentChanged += (sender, args) => UsersForm.ReDraw();
-			RhinoDoc.ActiveDocumentChanged += (sender, args) => UsersForm.ReDraw();
 
 			ImageCellBinding = Binding.Property<UserObject, Image>(u => UserUIExtensions.GetCameraImage(u));
 			// ImageCellBinding.Changed += ImageCellBinding_Changed;
 
 			VisibleCellBinding = Binding.Property<UserObject, bool?>(u => u.Visible);
 			VisibleCellBinding.Changed += VisibleCellBinding_Changed;
-			;
 
 			TextCellBinding = Binding.Property<UserObject, string>(u => u.Name);
 			// TextCellBinding.Changed += TextCellBinding_Changed;

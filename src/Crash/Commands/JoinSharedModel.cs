@@ -1,5 +1,6 @@
 ﻿using Crash.Common.Communications;
 using Crash.Common.Document;
+using Crash.Events;
 using Crash.Handlers;
 using Crash.UI.JoinModel;
 using Crash.UI.UsersView;
@@ -86,7 +87,7 @@ namespace Crash.Commands
 			if (await CommandUtils.StartLocalClient(CrashDoc, LastURL))
 			{
 				InteractivePipe.Active.Enabled = true;
-				UsersForm.ShowForm();
+				await CrashDoc.Queue.AddActionAsync(new IdleAction(args => UsersForm.ShowForm(), null));
 			}
 			else
 			{
