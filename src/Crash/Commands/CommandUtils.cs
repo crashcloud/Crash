@@ -1,4 +1,6 @@
-﻿using Crash.Common.Communications;
+﻿using System.Net.Http;
+
+using Crash.Common.Communications;
 using Crash.Common.Document;
 
 using Rhino.Geometry;
