@@ -45,7 +45,7 @@ namespace Crash.Commands
 			if (mode == RunMode.Interactive)
 			{
 				var dialog = new JoinWindow();
-				var chosenModel = dialog.ShowModal(RhinoEtoApp.MainWindow);
+				var chosenModel = await dialog.ShowModalAsync(RhinoEtoApp.MainWindow);
 
 				if (string.IsNullOrEmpty(chosenModel?.ModelAddress))
 				{

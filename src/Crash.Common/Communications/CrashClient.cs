@@ -170,11 +170,10 @@ namespace Crash.Common.Communications
 
 
 		/// <summary>Creates a connection to the Crash Server</summary>
-		internal static HubConnection GetHubConnection(Uri url)
+		public static HubConnection GetHubConnection(Uri url)
 		{
 			return new HubConnectionBuilder()
-				.WithUrl(url).AddJsonProtocol()
-				.AddJsonProtocol(opts => JsonOptions())
+				.WithUrl(url)
 				// .ConfigureLogging(LoggingConfigurer)
 				.WithAutomaticReconnect(new[]
 				{

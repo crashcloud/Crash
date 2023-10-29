@@ -59,15 +59,11 @@ namespace Crash.UI
 
 		public async Task<bool> Connect()
 		{
-			var hub = new HubConnectionBuilder()
-			          .WithUrl($"{ModelAddress}/Crash").AddJsonProtocol()
-			          .AddJsonProtocol(opts => CrashClient.JsonOptions())
-			          .WithAutomaticReconnect(new SharedModelRetryPolicy())
-			          .Build();
+			var hubConnection = CrashClient.GetHubConnection(new Uri($"{ModelAddress}/Crash"));
 
 			try
 			{
-				await hub.StartAsync();
+				await hubConnection.StartAsync();
 				return true;
 			}
 			catch (Exception ex)
@@ -78,12 +74,5 @@ namespace Crash.UI
 
 		internal event EventHandler OnAddressChanged;
 
-		private class SharedModelRetryPolicy : IRetryPolicy
-		{
-			public TimeSpan? NextRetryDelay(RetryContext retryContext)
-			{
-				return TimeSpan.FromMilliseconds(100);
-			}
-		}
 	}
 }
