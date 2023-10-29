@@ -89,12 +89,9 @@ namespace Crash.Commands
 				InteractivePipe.Active.Enabled = true;
 				CrashDoc.Queue.OnCompletedQueue += QueueOnOnCompleted;
 			}
-			else
+			else if (CrashDoc?.LocalClient is not null)
 			{
-				if (CrashDoc?.LocalClient is not null)
-				{
-					await CrashDoc.LocalClient.StopAsync();
-				}
+				await CrashDoc.LocalClient.StopAsync();
 			}
 		}
 

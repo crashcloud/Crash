@@ -34,9 +34,15 @@ namespace Crash.Handlers.Changes
 			{
 				var packet = JsonSerializer.Deserialize<PayloadPacket>(change.Payload);
 				var geometry = CommonObject.FromJSON(packet.Data) as GeometryBase;
-				var transform = packet.Transform.ToRhino();
-
-				geometry.Transform(transform);
+				if (packet.Transform.IsValid() && false)
+				{
+					// TODO : Fix Transforms!
+					var transform = packet.Transform.ToRhino();
+					if (transform.IsValid && false)
+					{
+						geometry.Transform(transform);
+					}
+				}
 
 				return new GeometryChange
 				       {

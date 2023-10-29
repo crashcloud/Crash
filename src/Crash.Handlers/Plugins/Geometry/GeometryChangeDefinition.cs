@@ -18,22 +18,22 @@ namespace Crash.Handlers.Plugins.Geometry
 		public GeometryChangeDefinition()
 		{
 			CreateActions = new List<IChangeCreateAction>
-							{
-								new GeometryCreateAction(),
-								new GeometryRemoveAction(),
-								new GeometryTransformAction(),
-								new GeometrySelectAction(),
-								new GeometryUnSelectAction()
-							};
+			                {
+				                new GeometryCreateAction(),
+				                new GeometryRemoveAction(),
+				                new GeometryTransformAction(),
+				                new GeometrySelectAction(),
+				                new GeometryUnSelectAction()
+			                };
 			RecieveActions = new List<IChangeRecieveAction>
-							 {
-								 new GeometryTemporaryAddRecieveAction(),
-								 new GeometryAddRecieveAction(),
-								 new GeometryRemoveRecieveAction(),
-								 new GeometryTransformRecieveAction(),
-								 new GeometryLockRecieveAction(),
-								 new GeometryUnlockRecieveAction()
-							 };
+			                 {
+				                 new GeometryTemporaryAddRecieveAction(),
+				                 new GeometryAddRecieveAction(),
+				                 new GeometryRemoveRecieveAction(),
+				                 new GeometryTransformRecieveAction(),
+				                 new GeometryLockRecieveAction(),
+				                 new GeometryUnlockRecieveAction()
+			                 };
 		}
 
 
@@ -53,41 +53,32 @@ namespace Crash.Handlers.Plugins.Geometry
 				return;
 			}
 
-			var drawWireframe = drawArgs.Display.DisplayPipelineAttributes.ShadingEnabled;
+			var drawWireframe = !drawArgs.Display.DisplayPipelineAttributes.ShadingEnabled;
 			var geom = geomChange.Geometry;
 			if (geom is Curve cv)
 			{
-				drawArgs.Display.DrawCurve(cv, material.Diffuse, 2);
+				drawArgs.Display.DrawCurve(cv, material.Diffuse, 3);
 			}
 			else if (geom is Brep brep)
 			{
-				if (drawWireframe)
-				{
-					drawArgs.Display.DrawBrepWires(brep, material.Diffuse, -1);
-				}
-				else
+				drawArgs.Display.DrawBrepWires(brep, material.Diffuse, -1);
+				if (!drawWireframe)
 				{
 					drawArgs.Display.DrawBrepShaded(brep, material);
 				}
 			}
 			else if (geom is Mesh mesh)
 			{
-				if (drawWireframe)
-				{
-					drawArgs.Display.DrawMeshWires(mesh, material.Diffuse, 2);
-				}
-				else
+				drawArgs.Display.DrawMeshWires(mesh, material.Diffuse, 2);
+				if (!drawWireframe)
 				{
 					drawArgs.Display.DrawMeshShaded(mesh, material);
 				}
 			}
 			else if (geom is Extrusion ext)
 			{
-				if (drawWireframe)
-				{
-					drawArgs.Display.DrawExtrusionWires(ext, material.Diffuse);
-				}
-				else
+				drawArgs.Display.DrawExtrusionWires(ext, material.Diffuse);
+				if (!drawWireframe)
 				{
 					drawArgs.Display.DrawBrepShaded(Brep.TryConvertBrep(ext), material);
 				}
@@ -103,14 +94,25 @@ namespace Crash.Handlers.Plugins.Geometry
 			}
 			else if (geom is Surface srf)
 			{
-				if (drawWireframe)
-				{
-					drawArgs.Display.DrawSurface(srf, material.Diffuse, 1);
-				}
-				else
+				if (!drawWireframe)
 				{
 					drawArgs.Display.DrawBrepShaded(Brep.TryConvertBrep(srf), material);
 				}
+
+				if (srf.TryGetSphere(out var sphere, 0.1))
+				{
+					var latCircle = sphere.LatitudeDegrees(90);
+					var longCircle = sphere.LongitudeDegrees(0);
+					var longCircle2 = sphere.LongitudeDegrees(90);
+					drawArgs.Display.DrawCircle(latCircle, material.Diffuse, 3);
+					drawArgs.Display.DrawCircle(longCircle, material.Diffuse, 3);
+					drawArgs.Display.DrawCircle(longCircle2, material.Diffuse, 3);
+				}
+				else
+				{
+					drawArgs.Display.DrawSurface(srf, material.Diffuse, 1);
+				}
+
 				// TODO : Cache
 			}
 			else if (geom is Point pnt)

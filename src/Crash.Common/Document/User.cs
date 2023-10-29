@@ -15,7 +15,7 @@ namespace Crash.Common.Document
 	/// <summary>An external collaborator</summary>
 	public struct User : IEquatable<User>
 	{
-		public static Color DefaultColour = Color.Gray;
+		private static readonly Color DefaultColour = Color.Gray;
 
 		private string _name;
 
@@ -23,11 +23,7 @@ namespace Crash.Common.Document
 		public bool Visible { get; set; } = true;
 
 		/// <summary>Name of the user</summary>
-		public string Name
-		{
-			get => _name;
-			private set => _name = CleanedUserName(value);
-		}
+		public string Name { get; }
 
 		/// <summary>Color of the user</summary>
 		public Color Color { get; set; }
@@ -35,16 +31,13 @@ namespace Crash.Common.Document
 		/// <summary>The current state of the Users Camera</summary>
 		public CameraState Camera { get; set; } = CameraState.Visible;
 
-
-		/// <summary>
-		///     User Constructor
-		/// </summary>
+		/// <summary>User Constructor</summary>
 		/// <param name="inputName">the name of the user</param>
 		public User(string inputName)
 		{
-			Name = inputName;
+			Name = CleanedUserName(inputName);
 
-			if (string.IsNullOrEmpty(inputName))
+			if (string.IsNullOrEmpty(Name))
 			{
 				Color = DefaultColour;
 			}
@@ -62,15 +55,17 @@ namespace Crash.Common.Document
 			return !string.IsNullOrEmpty(Name);
 		}
 
-		// TODO : Add cleaning methods
+		/// <summary>Ensures a username is lowercase and not null</summary>
+		/// <param name="username">Any string</param>
+		/// <returns>A non-null lowercase name</returns>
 		public static string CleanedUserName(string username)
 		{
-			return username.ToLowerInvariant();
+			return username?.ToLowerInvariant() ?? string.Empty;
 		}
 
 		public override int GetHashCode()
 		{
-			return Name?.GetHashCode() ?? -1;
+			return CleanedUserName(Name).GetHashCode();
 		}
 
 		public override bool Equals(object? obj)
@@ -81,7 +76,7 @@ namespace Crash.Common.Document
 
 		public bool Equals(User other)
 		{
-			return GetHashCode() == other.GetHashCode();
+			return Name.Equals(other.Name, StringComparison.InvariantCultureIgnoreCase);
 		}
 
 		public static bool operator ==(User left, User right)

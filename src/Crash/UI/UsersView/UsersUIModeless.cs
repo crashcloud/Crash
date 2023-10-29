@@ -26,6 +26,11 @@ namespace Crash.UI.UsersView
 
 		internal static void ShowForm()
 		{
+			if (ActiveForm is not null)
+			{
+				return;
+			}
+
 			var form = new UsersForm();
 			form.Closed += OnFormClosed;
 			form.Show();
@@ -35,7 +40,7 @@ namespace Crash.UI.UsersView
 
 		internal static void ToggleFormVisibility()
 		{
-			if (null == ActiveForm)
+			if (ActiveForm is null)
 			{
 				ShowForm();
 			}
@@ -47,12 +52,13 @@ namespace Crash.UI.UsersView
 
 		internal static void CloseActiveForm()
 		{
-			ActiveForm?.Dispose();
+			ActiveForm?.Close();
+			ActiveForm = null;
 		}
 
 		internal static void ReDraw()
 		{
-			if (null == ActiveForm)
+			if (ActiveForm is null)
 			{
 				ActiveForm = new UsersForm();
 			}
@@ -88,7 +94,7 @@ namespace Crash.UI.UsersView
 			ShowInTaskbar = false;
 			Title = "Crash";
 			WindowStyle = WindowStyle.Default;
-			Width = 300;
+			MinimumSize = new Size(300, 80);
 
 			m_grid = new GridView
 			         {
@@ -151,8 +157,7 @@ namespace Crash.UI.UsersView
 			m_grid.Columns.Add(new GridColumn
 			                   {
 				                   DataCell = new TextBoxCell { Binding = ViewModel.TextCellBinding },
-				                   AutoSize = false,
-				                   Width = 30,
+				                   AutoSize = true,
 				                   Editable = false,
 				                   HeaderText = "Name",
 				                   Resizable = false,
