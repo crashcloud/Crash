@@ -27,8 +27,7 @@ namespace Crash.Commands
 
 		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc CrashDoc, RunMode mode)
 		{
-			var client = CrashDoc?.LocalClient;
-			if (client is null)
+			if (!CommandUtils.CheckAlreadyConnected(CrashDoc))
 			{
 				RhinoApp.WriteLine("You aren't in a shared model.");
 				return Result.Failure;
@@ -41,14 +40,12 @@ namespace Crash.Commands
 					return Result.Cancel;
 				case true:
 					var doneChange = DoneChange.GetDoneChange(CrashDoc.Users.CurrentUser.Name);
-					await client.PushChangeAsync(doneChange);
+					await CrashDoc.LocalClient.PushChangeAsync(doneChange);
 					break;
 			}
 
-			CrashDocRegistry.ActiveDoc?.Dispose();
+			CrashDocRegistry.DisposeOfDocument(CrashDoc);
 			InteractivePipe.Active.Enabled = false;
-
-			_EmptyModel(doc);
 
 			RhinoApp.WriteLine("Model closed and saved successfully");
 
@@ -64,11 +61,6 @@ namespace Crash.Commands
 			                                 "Would you like to Release before exiting?",
 			                                 "JustExit",
 			                                 "ReleaseThenExit");
-		}
-
-		private static void _EmptyModel(RhinoDoc doc)
-		{
-			doc.Objects.Clear();
 		}
 	}
 }

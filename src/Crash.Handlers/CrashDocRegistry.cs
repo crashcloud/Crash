@@ -7,7 +7,7 @@ using Rhino;
 namespace Crash.Handlers
 {
 	// TODO : Is this needed?
-	public sealed class CrashDocRegistry
+	public static class CrashDocRegistry
 	{
 		private static readonly BiMap<RhinoDoc, CrashDoc> DocumentRelationship;
 
@@ -19,8 +19,6 @@ namespace Crash.Handlers
 
 		/// <summary>The Active Crash Document.</summary>
 		public static CrashDoc? ActiveDoc => GetRelatedDocument(RhinoDoc.ActiveDoc);
-
-		internal static CrashDoc ActiveState => DocumentRelationship.Forward[RhinoDoc.ActiveDoc];
 
 		private static void RhinoDoc_ActiveDocumentChanged(object sender, DocumentEventArgs e)
 		{
@@ -77,6 +75,15 @@ namespace Crash.Handlers
 			RhinoDoc rhinoDoc)
 		{
 			DocumentRelationship.Add(rhinoDoc, crashDoc);
+		}
+
+		public static void DisposeOfDocument(CrashDoc crashDoc)
+		{
+			var rhinoDoc = GetRelatedDocument(crashDoc);
+			DocumentRelationship.Remove(rhinoDoc);
+			crashDoc?.LocalClient?.StopAsync();
+			crashDoc?.Dispose();
+			rhinoDoc.Objects.Clear();
 		}
 	}
 }

@@ -38,7 +38,7 @@ namespace Crash.Commands
 			rhinoDoc = doc;
 			CrashDoc = crashDoc;
 
-			CommandUtils.CheckAlreadyConnected(CrashDoc);
+			CommandUtils.CheckAlreadyConnected(crashDoc);
 
 			var name = Environment.UserName;
 
