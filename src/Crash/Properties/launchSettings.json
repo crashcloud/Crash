@@ -5,10 +5,15 @@
 			"executablePath": "C:\\Program Files\\Rhino 7\\System\\Rhino.exe",
 			"commandLineArgs": "/nosplash"
 		},
-		"Crash (Win Rhino 8)": {
+		"Crash (Win Rhino 8) net48": {
 			"commandName": "Executable",
 			"executablePath": "C:\\Program Files\\Rhino 8 WIP\\System\\Rhino.exe",
-			"commandLineArgs": "/nosplash"
+			"commandLineArgs": "/nosplash /netfx"
+		},
+		"Crash (Win Rhino 8) Net7.0": {
+			"commandName": "Executable",
+			"executablePath": "C:\\Program Files\\Rhino 8 WIP\\System\\Rhino.exe",
+			"commandLineArgs": "/nosplash /dotnet"
 		},
 		"Crash (Mac Rhino 8)": {
 			"commandName": "Executable",
