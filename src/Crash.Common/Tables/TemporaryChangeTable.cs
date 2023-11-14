@@ -1,18 +1,24 @@
 ﻿using System.Collections;
 
+using Crash.Changes.Utils;
 using Crash.Common.Document;
 
 namespace Crash.Common.Tables
 {
-	/// <summary>Holds Temporary Changes only</summary>
+	/// <summary>
+	///     This table holds onto temporary changes
+	///     Temporary changes are changes that another user has created
+	///     But not yet released
+	///     These temporary changes are, if necessary displayed
+	///     in the pipeline to show pending changes
+	/// </summary>
 	public sealed class TemporaryChangeTable : IEnumerable<IChange>
 	{
-		// TODO : Should this be async? Or Concurrent?
 		private readonly ConcurrentDictionary<Guid, IChange> _cache;
 		private readonly CrashDoc _crashDoc;
 
 		/// <summary>
-		///     Local cache constructor subscribing to RhinoApp_Idle
+		///     Local cache constructor
 		/// </summary>
 		public TemporaryChangeTable(CrashDoc hostDoc)
 		{
@@ -20,21 +26,10 @@ namespace Crash.Common.Tables
 			_crashDoc = hostDoc;
 		}
 
-		// TODO : Move
-		public bool IsInit { get; set; } = false;
-
-		// TODO : Move
-		public bool SomeoneIsDone { get; set; } = false;
-
-		// TODO : Move
-		public bool IsTransformActive { get; set; }
-
-
 		public IEnumerator<IChange> GetEnumerator()
 		{
 			return _cache.Values.GetEnumerator();
 		}
-
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
@@ -68,65 +63,71 @@ namespace Crash.Common.Tables
 		/// </summary>
 		/// <param name="cache">the Changes</param>
 		/// <returns>returns the update task</returns>
-		public async Task UpdateChangeAsync(IChange cache)
+		public void UpdateChange(IChange cache)
 		{
-			if (cache == null)
+			if (cache is null)
 			{
 				return;
 			}
 
-			if (_cache.ContainsKey(cache.Id))
+			var newChange = cache;
+			if (_cache.TryGetValue(cache.Id, out var cachedChange))
 			{
-				await Task.Run(() => _cache.TryRemove(cache.Id, out _));
+				newChange = ChangeUtils.CombineChanges(cachedChange, cache);
+				RemoveChange(cache.Id);
 			}
 
-			await Task.Run(() => _cache.TryAdd(cache.Id, cache));
+			_cache.TryAdd(newChange.Id, newChange);
 		}
 
 		/// <summary>
 		///     Remove a Change for the cache
 		/// </summary>
-		/// <param name="Change">the Change to remove</param>
-		public void RemoveChange(Guid ChangeId)
+		/// <param name="changeId">the Change to remove</param>
+		public void RemoveChange(Guid changeId)
 		{
-			_cache.TryRemove(ChangeId, out _);
+			_cache.TryRemove(changeId, out _);
 		}
 
 		/// <summary>
 		///     Remove multiple Changes from the cache
 		/// </summary>
-		/// <param name="Changes">the Changes to remove</param>
-		public void RemoveChanges(IEnumerable<IChange> Changes)
+		/// <param name="changes">the Changes to remove</param>
+		public void RemoveChanges(IEnumerable<IChange> changes)
 		{
-			if (null == Changes)
+			if (changes is null)
 			{
 				return;
 			}
 
-			var enumer = Changes.GetEnumerator();
-			while (enumer.MoveNext())
+			foreach (var change in changes)
 			{
-				RemoveChange(enumer.Current.Id);
+				RemoveChange(change.Id);
 			}
 		}
 
-		public bool TryGetValue<T>(Guid id, out T change) where T : IChange
+		/// <summary>Returns the matching change if it is of the correct type</summary>
+		/// <param name="id">The Id of the Change</param>
+		/// <param name="change">The change out</param>
+		/// <typeparam name="T">The type of the Change</typeparam>
+		/// <returns>True if the change is in the table and of the T type</returns>
+		public bool TryGetChangeOfType<T>(Guid id, out T change) where T : IChange
 		{
 			change = default;
 
-			if (_cache.TryGetValue(id, out var cachedChange) &&
-			    cachedChange is T changeConverted)
+			if (!_cache.TryGetValue(id, out var cachedChange))
 			{
-				if (cachedChange == default)
-				{
-					return false;
-				}
-
-				change = changeConverted;
-				return true;
+				return false;
 			}
 
-			return false;
+			if (cachedChange is not T castChange)
+			{
+				return false;
+			}
+
+			change = castChange;
+
+			return true;
 		}
 
 		#endregion

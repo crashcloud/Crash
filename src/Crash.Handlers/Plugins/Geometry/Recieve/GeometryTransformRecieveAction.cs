@@ -42,7 +42,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 
 				geometry = rhinoObject.Geometry;
 			}
-			else if (crashDoc.TemporaryChangeTable.TryGetValue(recievedChange.Id, out GeometryChange geomChange))
+			else if (crashDoc.TemporaryChangeTable.TryGetChangeOfType(recievedChange.Id, out GeometryChange geomChange))
 			{
 				geometry = geomChange.Geometry;
 			}

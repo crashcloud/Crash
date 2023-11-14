@@ -38,7 +38,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 		// Prevents issues with the same user logged in twice
 		private static bool IsDuplicate(CrashDoc crashDoc, IChange change)
 		{
-			var isNotInit = !crashDoc.TemporaryChangeTable.IsInit;
+			var isNotInit = !crashDoc.IsInit;
 			var isByCurrentUser = change.Owner.Equals(crashDoc.Users.CurrentUser.Name, StringComparison.Ordinal);
 			return isNotInit && isByCurrentUser;
 		}
@@ -51,7 +51,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				return;
 			}
 
-			args.Doc.TemporaryChangeTable.IsInit = true;
+			args.Doc.IsInit = true;
 			try
 			{
 				var rhinoId = rhinoDoc.Objects.Add(geomChange.Geometry);
@@ -70,7 +70,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			}
 			finally
 			{
-				args.Doc.TemporaryChangeTable.IsInit = false;
+				args.Doc.IsInit = false;
 			}
 		}
 	}

@@ -16,13 +16,13 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
 		{
-			crashDoc.TemporaryChangeTable.SomeoneIsDone = true;
+			crashDoc.SomeoneIsDone = true;
 			try
 			{
 				// Done Range
 				if (string.IsNullOrEmpty(recievedChange.Owner))
 				{
-					if (!crashDoc.TemporaryChangeTable.TryGetValue(recievedChange.Id, out Change doneChange))
+					if (!crashDoc.TemporaryChangeTable.TryGetChangeOfType(recievedChange.Id, out Change doneChange))
 					{
 						return;
 					}
@@ -50,7 +50,7 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 				EventHandler<CrashEventArgs>? _event = null;
 				_event = (sender, args) =>
 				         {
-					         crashDoc.TemporaryChangeTable.SomeoneIsDone = false;
+					         crashDoc.SomeoneIsDone = false;
 					         crashDoc.Queue.OnCompletedQueue -= _event;
 				         };
 
@@ -61,8 +61,8 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 
 		private async Task ReleaseChange(CrashDoc crashDoc, IChange change)
 		{
-			if (!crashDoc.TemporaryChangeTable.TryGetValue(change.Id,
-			                                               out GeometryChange geomChange))
+			if (!crashDoc.TemporaryChangeTable.TryGetChangeOfType(change.Id,
+			                                                      out GeometryChange geomChange))
 			{
 				return;
 			}

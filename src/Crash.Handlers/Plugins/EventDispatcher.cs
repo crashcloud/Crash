@@ -155,9 +155,9 @@ namespace Crash.Handlers.Plugins
 					                           return;
 				                           }
 
-				                           if (crashDoc.TemporaryChangeTable.IsInit ||
-				                               crashDoc.TemporaryChangeTable.SomeoneIsDone ||
-				                               crashDoc.TemporaryChangeTable.IsTransformActive)
+				                           if (crashDoc.IsInit ||
+				                               crashDoc.SomeoneIsDone ||
+				                               crashDoc.IsTransformActive)
 				                           {
 					                           return;
 				                           }
@@ -181,9 +181,9 @@ namespace Crash.Handlers.Plugins
 					                                return;
 				                                }
 
-				                                if (crashDoc.TemporaryChangeTable.IsInit ||
-				                                    crashDoc.TemporaryChangeTable.SomeoneIsDone ||
-				                                    crashDoc.TemporaryChangeTable.IsTransformActive)
+				                                if (crashDoc.IsInit ||
+				                                    crashDoc.SomeoneIsDone ||
+				                                    crashDoc.IsTransformActive)
 				                                {
 					                                return;
 				                                }
@@ -202,9 +202,9 @@ namespace Crash.Handlers.Plugins
 					                              return;
 				                              }
 
-				                              if (crashDoc.TemporaryChangeTable.IsInit ||
-				                                  crashDoc.TemporaryChangeTable.SomeoneIsDone ||
-				                                  crashDoc.TemporaryChangeTable.IsTransformActive)
+				                              if (crashDoc.IsInit ||
+				                                  crashDoc.SomeoneIsDone ||
+				                                  crashDoc.IsTransformActive)
 				                              {
 					                              return;
 				                              }
@@ -239,13 +239,13 @@ namespace Crash.Handlers.Plugins
 					                                   return;
 				                                   }
 
-				                                   if (crashDoc.TemporaryChangeTable.IsInit ||
-				                                       crashDoc.TemporaryChangeTable.SomeoneIsDone)
+				                                   if (crashDoc.IsInit ||
+				                                       crashDoc.SomeoneIsDone)
 				                                   {
 					                                   return;
 				                                   }
 
-				                                   crashDoc.TemporaryChangeTable.IsTransformActive = true;
+				                                   crashDoc.IsTransformActive = true;
 
 				                                   var crashArgs =
 					                                   new CrashTransformEventArgs(args.Transform.ToCrash(),
@@ -264,8 +264,8 @@ namespace Crash.Handlers.Plugins
 					                            return;
 				                            }
 
-				                            if (crashDoc.TemporaryChangeTable.IsInit ||
-				                                crashDoc.TemporaryChangeTable.SomeoneIsDone)
+				                            if (crashDoc.IsInit ||
+				                                crashDoc.SomeoneIsDone)
 				                            {
 					                            return;
 				                            }
@@ -282,8 +282,8 @@ namespace Crash.Handlers.Plugins
 				                               var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
 				                               if (crashDoc is not null)
 				                               {
-					                               if (crashDoc.TemporaryChangeTable.IsInit ||
-					                                   crashDoc.TemporaryChangeTable.SomeoneIsDone)
+					                               if (crashDoc.IsInit ||
+					                                   crashDoc.SomeoneIsDone)
 					                               {
 						                               return;
 					                               }
@@ -303,8 +303,8 @@ namespace Crash.Handlers.Plugins
 				                          var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
 				                          if (crashDoc is not null)
 				                          {
-					                          if (crashDoc.TemporaryChangeTable.IsInit ||
-					                              crashDoc.TemporaryChangeTable.SomeoneIsDone)
+					                          if (crashDoc.IsInit ||
+					                              crashDoc.SomeoneIsDone)
 					                          {
 						                          return;
 					                          }
@@ -343,7 +343,7 @@ namespace Crash.Handlers.Plugins
 			                        {
 				                        // TODO : Avoid
 				                        var crashDoc = CrashDocRegistry.GetRelatedDocument(RhinoDoc.ActiveDoc);
-				                        crashDoc.TemporaryChangeTable.IsTransformActive = false;
+				                        crashDoc.IsTransformActive = false;
 			                        };
 		}
 

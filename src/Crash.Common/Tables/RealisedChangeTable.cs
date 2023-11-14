@@ -8,9 +8,16 @@ using ChangeGuid = System.Guid;
 
 namespace Crash.Common.Tables
 {
-	
+	// TODO : What does this thing do?
+
+
 	/// <summary>
-	/// Performs change indexing
+	///     This table holds onto
+	///     This table holds onto temporary changes
+	///     Temporary changes are changes that are baked into the Rhino Document
+	///     When they're baked we don't also keep a copy of the Change that represents it
+	///     It is no longer needed as the fully realised object is the best source of truth
+	///     TODO : How do we solve this for Layers etc?
 	/// </summary>
 	public class RealisedChangeTable
 	{

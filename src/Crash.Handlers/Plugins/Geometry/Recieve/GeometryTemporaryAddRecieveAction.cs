@@ -37,7 +37,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				return;
 			}
 
-			args.Doc.TemporaryChangeTable.UpdateChangeAsync(geomChange);
+			args.Doc.TemporaryChangeTable.UpdateChange(geomChange);
 		}
 	}
 }

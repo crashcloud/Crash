@@ -14,7 +14,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
 		{
-			if (!crashDoc.TemporaryChangeTable.TryGetValue(recievedChange.Id, out GeometryChange geomChange))
+			if (!crashDoc.TemporaryChangeTable.TryGetChangeOfType(recievedChange.Id, out GeometryChange geomChange))
 			{
 			}
 			// geomChange.AddAction(recievedChange.Action);

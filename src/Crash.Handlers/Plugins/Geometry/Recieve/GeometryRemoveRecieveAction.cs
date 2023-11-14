@@ -23,7 +23,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
 			if (!recievedChange.TryGetRhinoObject(crashDoc, out var rhinoObject))
 			{
-				if (crashDoc.TemporaryChangeTable.TryGetValue(recievedChange.Id, out GeometryChange change))
+				if (crashDoc.TemporaryChangeTable.TryGetChangeOfType(recievedChange.Id, out GeometryChange change))
 				{
 					idleArgs = new IdleArgs(crashDoc, recievedChange);
 					idleAction = new IdleAction(RemoveTemporaryFromDocument, idleArgs);
