@@ -21,8 +21,9 @@ namespace Crash.Common.Document
 			Id = Guid.NewGuid();
 
 			Users = new UserTable(this);
-			CacheTable = new ChangeTable(this);
+			TemporaryChangeTable = new TemporaryChangeTable(this);
 			Cameras = new CameraTable(this);
+			RealisedChangeTable = new RealisedChangeTable(this);
 
 			Queue = new IdleQueue(this);
 		}
@@ -49,7 +50,9 @@ namespace Crash.Common.Document
 		public readonly UserTable Users;
 
 		/// <summary>The Changes Table for the Crash Doc</summary>
-		public readonly ChangeTable CacheTable;
+		public readonly TemporaryChangeTable TemporaryChangeTable;
+
+		public readonly RealisedChangeTable RealisedChangeTable;
 
 		/// <summary>The Camera Table for the crash Doc</summary>
 		public readonly CameraTable Cameras;

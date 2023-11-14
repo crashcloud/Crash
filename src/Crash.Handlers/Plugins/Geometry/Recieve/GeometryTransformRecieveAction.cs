@@ -35,14 +35,14 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			if (!recievedChange.HasFlag(ChangeAction.Temporary))
 			{
 				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
-				if (!recievedChange.TryGetRhinoObject(out var rhinoObject))
+				if (!recievedChange.TryGetRhinoObject(crashDoc, out var rhinoObject))
 				{
 					return;
 				}
 
 				geometry = rhinoObject.Geometry;
 			}
-			else if (crashDoc.CacheTable.TryGetValue(recievedChange.Id, out GeometryChange geomChange))
+			else if (crashDoc.TemporaryChangeTable.TryGetValue(recievedChange.Id, out GeometryChange geomChange))
 			{
 				geometry = geomChange.Geometry;
 			}

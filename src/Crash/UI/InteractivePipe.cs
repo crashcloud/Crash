@@ -44,7 +44,7 @@ namespace Crash.UI
 			Active = this;
 		}
 
-		private double scale => RhinoDoc.ActiveDoc is object
+		private double scale => RhinoDoc.ActiveDoc is not null
 			                        ? RhinoMath.UnitScale(UnitSystem.Meters, RhinoDoc.ActiveDoc.ModelUnitSystem)
 			                        : 0;
 
@@ -103,7 +103,7 @@ namespace Crash.UI
 		/// <param name="e"></param>
 		internal void PostDrawObjects(object sender, DrawEventArgs e)
 		{
-			if (null == CrashDocRegistry.ActiveDoc?.CacheTable)
+			if (null == CrashDocRegistry.ActiveDoc?.TemporaryChangeTable)
 			{
 				return;
 			}
@@ -118,8 +118,7 @@ namespace Crash.UI
 				return;
 			}
 
-			var caches = CrashDocRegistry.ActiveDoc.CacheTable.GetChanges().ToList();
-
+			var caches = CrashDocRegistry.ActiveDoc.TemporaryChangeTable.GetChanges().ToList();
 			foreach (var Change in caches)
 			{
 				if (e.Display.InterruptDrawing())

@@ -11,10 +11,10 @@ namespace Crash.Common.Tests.Tables
 		public void SetUp()
 		{
 			var doc = new CrashDoc();
-			_changeTable = new ChangeTable(doc);
+			_temporaryChangeTable = new TemporaryChangeTable(doc);
 		}
 
-		private ChangeTable _changeTable;
+		private TemporaryChangeTable _temporaryChangeTable;
 
 		internal sealed class TextChange : IChange
 		{
@@ -42,13 +42,13 @@ namespace Crash.Common.Tests.Tables
 			// Arrange
 			var id = Guid.NewGuid();
 			var initialChange = new TextChange(id, "Hello", "World");
-			await _changeTable.UpdateChangeAsync(initialChange);
+			await _temporaryChangeTable.UpdateChangeAsync(initialChange);
 
 			var updatedChange = new TextChange(id, "Hello", "Everyone");
 
 			// Act
-			await _changeTable.UpdateChangeAsync(updatedChange);
-			var result = _changeTable.TryGetValue<TextChange>(id, out var retrievedChange);
+			await _temporaryChangeTable.UpdateChangeAsync(updatedChange);
+			var result = _temporaryChangeTable.TryGetValue<TextChange>(id, out var retrievedChange);
 
 			// Assert
 			Assert.That(result, Is.True);
@@ -63,8 +63,8 @@ namespace Crash.Common.Tests.Tables
 			var change = new TextChange(id, "Hello", "World");
 
 			// Act
-			_changeTable.UpdateChangeAsync(change).Wait();
-			var result = _changeTable.TryGetValue<TextChange>(id, out var retrievedChange);
+			_temporaryChangeTable.UpdateChangeAsync(change).Wait();
+			var result = _temporaryChangeTable.TryGetValue<TextChange>(id, out var retrievedChange);
 
 			// Assert
 			Assert.That(result, Is.True);
@@ -77,11 +77,11 @@ namespace Crash.Common.Tests.Tables
 			// Arrange
 			var id = Guid.NewGuid();
 			var change = new TextChange(id, "Hello", "World");
-			_changeTable.UpdateChangeAsync(change).Wait();
+			_temporaryChangeTable.UpdateChangeAsync(change).Wait();
 
 			// Act
-			_changeTable.RemoveChange(id);
-			var result = _changeTable.TryGetValue<TextChange>(id, out var retrievedChange);
+			_temporaryChangeTable.RemoveChange(id);
+			var result = _temporaryChangeTable.TryGetValue<TextChange>(id, out var retrievedChange);
 
 			// Assert
 			Assert.IsFalse(result);
@@ -96,13 +96,13 @@ namespace Crash.Common.Tests.Tables
 			var id2 = Guid.NewGuid();
 			var change1 = new TextChange(id1, "Hello", "World");
 			var change2 = new TextChange(id2, "Goodbye", "World");
-			_changeTable.UpdateChangeAsync(change1).Wait();
-			_changeTable.UpdateChangeAsync(change2).Wait();
+			_temporaryChangeTable.UpdateChangeAsync(change1).Wait();
+			_temporaryChangeTable.UpdateChangeAsync(change2).Wait();
 
 			// Act
-			_changeTable.RemoveChanges(new[] { change1, change2 });
-			var result1 = _changeTable.TryGetValue<TextChange>(id1, out var retrievedChange1);
-			var result2 = _changeTable.TryGetValue<TextChange>(id2, out var retrievedChange2);
+			_temporaryChangeTable.RemoveChanges(new[] { change1, change2 });
+			var result1 = _temporaryChangeTable.TryGetValue<TextChange>(id1, out var retrievedChange1);
+			var result2 = _temporaryChangeTable.TryGetValue<TextChange>(id2, out var retrievedChange2);
 
 			// Assert
 			Assert.IsFalse(result1);

@@ -16,13 +16,13 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
 		{
-			crashDoc.CacheTable.SomeoneIsDone = true;
+			crashDoc.TemporaryChangeTable.SomeoneIsDone = true;
 			try
 			{
 				// Done Range
 				if (string.IsNullOrEmpty(recievedChange.Owner))
 				{
-					if (!crashDoc.CacheTable.TryGetValue(recievedChange.Id, out Change doneChange))
+					if (!crashDoc.TemporaryChangeTable.TryGetValue(recievedChange.Id, out Change doneChange))
 					{
 						return;
 					}
@@ -32,7 +32,7 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 				// Done
 				else
 				{
-					foreach (var change in crashDoc.CacheTable.GetChanges())
+					foreach (var change in crashDoc.TemporaryChangeTable.GetChanges())
 					{
 						ReleaseChange(crashDoc, change);
 					}
@@ -50,7 +50,7 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 				EventHandler<CrashEventArgs>? _event = null;
 				_event = (sender, args) =>
 				         {
-					         crashDoc.CacheTable.SomeoneIsDone = false;
+					         crashDoc.TemporaryChangeTable.SomeoneIsDone = false;
 					         crashDoc.Queue.OnCompletedQueue -= _event;
 				         };
 
@@ -61,8 +61,8 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 
 		private async Task ReleaseChange(CrashDoc crashDoc, IChange change)
 		{
-			if (!crashDoc.CacheTable.TryGetValue(change.Id,
-			                                     out GeometryChange geomChange))
+			if (!crashDoc.TemporaryChangeTable.TryGetValue(change.Id,
+			                                               out GeometryChange geomChange))
 			{
 				return;
 			}
@@ -71,7 +71,7 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 
 			var add = new GeometryAddRecieveAction();
 			await add.OnRecieveAsync(crashDoc, geomChange);
-			crashDoc.CacheTable.RemoveChange(change.Id);
+			crashDoc.TemporaryChangeTable.RemoveChange(change.Id);
 		}
 	}
 }

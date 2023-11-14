@@ -15,7 +15,7 @@ namespace Crash.Common.Document
 	/// <summary>An external collaborator</summary>
 	public struct User : IEquatable<User>
 	{
-		private static readonly Color DefaultColour = Color.Gray;
+		public static readonly Color DefaultColour = Color.Gray;
 
 		private string _name;
 

@@ -40,14 +40,14 @@ namespace Crash
 			{
 				RegisterDefinitions();
 
-				e.CrashDoc.CacheTable.IsInit = true;
+				e.CrashDoc.TemporaryChangeTable.IsInit = true;
 
 				foreach (var change in e.Changes)
 				{
 					Dispatcher.NotifyClientAsync(e.CrashDoc, change);
 				}
 
-				e.CrashDoc.CacheTable.IsInit = false;
+				e.CrashDoc.TemporaryChangeTable.IsInit = false;
 			}
 
 			RhinoDoc.ActiveDoc.Views.Redraw();

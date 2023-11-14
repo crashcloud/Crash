@@ -5,7 +5,7 @@ using Crash.Common.Document;
 namespace Crash.Common.Tables
 {
 	/// <summary>Holds Temporary Changes only</summary>
-	public sealed class ChangeTable : IEnumerable<IChange>
+	public sealed class TemporaryChangeTable : IEnumerable<IChange>
 	{
 		// TODO : Should this be async? Or Concurrent?
 		private readonly ConcurrentDictionary<Guid, IChange> _cache;
@@ -14,7 +14,7 @@ namespace Crash.Common.Tables
 		/// <summary>
 		///     Local cache constructor subscribing to RhinoApp_Idle
 		/// </summary>
-		public ChangeTable(CrashDoc hostDoc)
+		public TemporaryChangeTable(CrashDoc hostDoc)
 		{
 			_cache = new ConcurrentDictionary<Guid, IChange>();
 			_crashDoc = hostDoc;
@@ -26,13 +26,16 @@ namespace Crash.Common.Tables
 		// TODO : Move
 		public bool SomeoneIsDone { get; set; } = false;
 
-		
+		// TODO : Move
+		public bool IsTransformActive { get; set; }
+
+
 		public IEnumerator<IChange> GetEnumerator()
 		{
 			return _cache.Values.GetEnumerator();
 		}
 
-		
+
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return _cache.Values.GetEnumerator();
@@ -52,7 +55,7 @@ namespace Crash.Common.Tables
 			return _cache.Values;
 		}
 
-		
+
 		public IEnumerator<T> GetEnumerator<T>()
 		{
 			return _cache.Values.Where(x => x is T).Cast<T>().GetEnumerator();

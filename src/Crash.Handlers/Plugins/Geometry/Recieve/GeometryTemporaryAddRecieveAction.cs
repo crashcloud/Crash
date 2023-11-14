@@ -8,8 +8,10 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 	/// <summary>Handles temporary objects from the server</summary>
 	internal sealed class GeometryTemporaryAddRecieveAction : IChangeRecieveAction
 	{
-
-		public bool CanRecieve(IChange change) => change.Action.HasFlag(ChangeAction.Add | ChangeAction.Temporary);
+		public bool CanRecieve(IChange change)
+		{
+			return change.Action.HasFlag(ChangeAction.Add | ChangeAction.Temporary);
+		}
 
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
@@ -35,7 +37,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				return;
 			}
 
-			args.Doc.CacheTable.UpdateChangeAsync(geomChange);
+			args.Doc.TemporaryChangeTable.UpdateChangeAsync(geomChange);
 		}
 	}
 }

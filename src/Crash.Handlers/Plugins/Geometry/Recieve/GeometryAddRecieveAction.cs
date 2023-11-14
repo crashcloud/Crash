@@ -1,4 +1,5 @@
-﻿using Crash.Common.Document;
+﻿using Crash.Changes.Extensions;
+using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
 using Crash.Handlers.Changes;
@@ -37,7 +38,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 		// Prevents issues with the same user logged in twice
 		private static bool IsDuplicate(CrashDoc crashDoc, IChange change)
 		{
-			var isNotInit = !crashDoc.CacheTable.IsInit;
+			var isNotInit = !crashDoc.TemporaryChangeTable.IsInit;
 			var isByCurrentUser = change.Owner.Equals(crashDoc.Users.CurrentUser.Name, StringComparison.Ordinal);
 			return isNotInit && isByCurrentUser;
 		}
@@ -50,12 +51,17 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				return;
 			}
 
-			args.Doc.CacheTable.IsInit = true;
+			args.Doc.TemporaryChangeTable.IsInit = true;
 			try
 			{
 				var rhinoId = rhinoDoc.Objects.Add(geomChange.Geometry);
 				var rhinoObject = rhinoDoc.Objects.FindId(rhinoId);
-				rhinoObject.SyncHost(geomChange);
+				rhinoObject.SyncHost(geomChange, args.Doc);
+
+				if (args.Change.HasFlag(ChangeAction.Locked))
+				{
+					rhinoDoc.Objects.Select(rhinoId, true, true);
+				}
 
 				if (args.Change.Action.HasFlag(ChangeAction.Locked))
 				{
@@ -64,7 +70,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			}
 			finally
 			{
-				args.Doc.CacheTable.IsInit = false;
+				args.Doc.TemporaryChangeTable.IsInit = false;
 			}
 		}
 	}

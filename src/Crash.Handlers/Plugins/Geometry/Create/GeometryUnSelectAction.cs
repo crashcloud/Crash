@@ -1,6 +1,5 @@
 ﻿using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
-using Crash.Utils;
 
 namespace Crash.Handlers.Plugins.Geometry.Create
 {
@@ -9,11 +8,11 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 	{
 		public ChangeAction Action => ChangeAction.Unlocked;
 
-		
+
 		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
 		{
 			return crashArgs.Args is CrashSelectionEventArgs cargs &&
-				   !cargs.Selected;
+			       !cargs.Selected;
 		}
 
 		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
@@ -28,9 +27,11 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 
 			if (cargs.DeselectAll)
 			{
-				var guids = ChangeUtils.GetSelected().ToList();
+				/*
+				var guids = ChangeUtils.GetSelected();
 				ChangeUtils.ClearSelected();
 				changes = getChanges(guids, userName);
+				*/
 			}
 			else
 			{

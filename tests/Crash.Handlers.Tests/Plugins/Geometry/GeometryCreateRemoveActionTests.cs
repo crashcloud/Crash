@@ -104,7 +104,7 @@ namespace Crash.Handlers.Tests.Plugins
 			var cache = GeometryChange.CreateNew(createRecieveArgs.Geometry, "Test");
 			cache.Id = createRecieveArgs.ChangeId;
 
-			await _cdoc.CacheTable.UpdateChangeAsync(cache);
+			await _cdoc.TemporaryChangeTable.UpdateChangeAsync(cache);
 
 			Assert.That(createAction.TryConvert(null, createArgs, out var changes), Is.True);
 			Assert.That(changes, Is.Not.Empty);

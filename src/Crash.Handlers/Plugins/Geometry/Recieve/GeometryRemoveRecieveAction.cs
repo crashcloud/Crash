@@ -9,7 +9,10 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 	/// <summary>Handles Deleted objects from the Server</summary>
 	internal sealed class GeometryRemoveRecieveAction : IChangeRecieveAction
 	{
-		public bool CanRecieve(IChange change) => change.Action.HasFlag(ChangeAction.Remove);
+		public bool CanRecieve(IChange change)
+		{
+			return change.Action.HasFlag(ChangeAction.Remove);
+		}
 
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
@@ -18,9 +21,9 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			IdleAction idleAction;
 
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
-			if (!recievedChange.TryGetRhinoObject(out var rhinoObject))
+			if (!recievedChange.TryGetRhinoObject(crashDoc, out var rhinoObject))
 			{
-				if (crashDoc.CacheTable.TryGetValue(recievedChange.Id, out GeometryChange change))
+				if (crashDoc.TemporaryChangeTable.TryGetValue(recievedChange.Id, out GeometryChange change))
 				{
 					idleArgs = new IdleArgs(crashDoc, recievedChange);
 					idleAction = new IdleAction(RemoveTemporaryFromDocument, idleArgs);
@@ -37,7 +40,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 
 		private void RemoveFromDocument(IdleArgs args)
 		{
-			if (!args.Change.TryGetRhinoObject(out var rhinoObject))
+			if (!args.Change.TryGetRhinoObject(args.Doc, out var rhinoObject))
 			{
 				return;
 			}
@@ -45,12 +48,12 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
 
 			rhinoDoc.Objects.Delete(rhinoObject, true);
-			args.Doc.CacheTable.RemoveChange(args.Change.Id);
+			args.Doc.TemporaryChangeTable.RemoveChange(args.Change.Id);
 		}
 
 		private void RemoveTemporaryFromDocument(IdleArgs args)
 		{
-			args.Doc.CacheTable.RemoveChange(args.Change.Id);
+			args.Doc.TemporaryChangeTable.RemoveChange(args.Change.Id);
 		}
 	}
 }

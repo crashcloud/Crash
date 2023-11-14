@@ -34,16 +34,16 @@ namespace Crash.Handlers.Tests.Changes
 		[Test]
 		public void SyncHost_NullInputs()
 		{
-			ChangeUtils.SyncHost(null, null);
+			ChangeUtils.SyncHost(null, null, null);
 
-			ChangeUtils.SyncHost(null, new ExampleRhinoChange());
+			ChangeUtils.SyncHost(null, new ExampleRhinoChange(), null);
 
 
 			var doc = RhinoDoc.CreateHeadless(null);
 			var lineCurve = new LineCurve(Point3d.Origin, new Point3d(100, 0, 0));
 			var rhinoId = doc.Objects.Add(lineCurve);
 			var rhinoObject = doc.Objects.FindId(rhinoId);
-			rhinoObject.SyncHost(null);
+			rhinoObject.SyncHost(null, null);
 		}
 
 		private sealed class ExampleRhinoChange : IChange

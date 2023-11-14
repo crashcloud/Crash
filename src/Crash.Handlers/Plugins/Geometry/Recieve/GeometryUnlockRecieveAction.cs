@@ -8,8 +8,10 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 	/// <summary>Handles unselections from the server</summary>
 	internal sealed class GeometryUnlockRecieveAction : IChangeRecieveAction
 	{
-
-		public bool CanRecieve(IChange change) => change.Action.HasFlag(ChangeAction.Unlocked);
+		public bool CanRecieve(IChange change)
+		{
+			return change.Action.HasFlag(ChangeAction.Unlocked);
+		}
 
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
@@ -21,7 +23,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 
 		private void LockChange(IdleArgs args)
 		{
-			if (!args.Change.TryGetRhinoObject(out var rhinoObject))
+			if (!args.Change.TryGetRhinoObject(args.Doc, out var rhinoObject))
 			{
 				return;
 			}
