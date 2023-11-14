@@ -36,6 +36,7 @@ namespace Crash.Common.Tables
 			return _cache.Values.GetEnumerator();
 		}
 
+		/// <summary>Clears the Cache</summary>
 		internal void Clear()
 		{
 			_cache?.Clear();
@@ -55,8 +56,6 @@ namespace Crash.Common.Tables
 		{
 			return _cache.Values.Where(x => x is T).Cast<T>().GetEnumerator();
 		}
-
-		#region ConcurrentDictionary Methods
 
 		/// <summary>
 		///     Method to update a Change
@@ -129,7 +128,5 @@ namespace Crash.Common.Tables
 
 			return true;
 		}
-
-		#endregion
 	}
 }

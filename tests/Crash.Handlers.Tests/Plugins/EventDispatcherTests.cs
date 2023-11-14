@@ -39,11 +39,11 @@ namespace Crash.Handlers.Tests.Plugins
 				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Remove, deleteArgs };
 
 				var crashObject = new CrashObject(Guid.NewGuid(), Guid.NewGuid());
-				var selectArgs = new CrashSelectionEventArgs(true, new[] { crashObject });
+				var selectArgs = CrashSelectionEventArgs.CreateSelectionEvent(new[] { crashObject });
 				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Locked, selectArgs };
 
 
-				var deSelectArgs = new CrashSelectionEventArgs(false, new[] { crashObject });
+				var deSelectArgs = CrashSelectionEventArgs.CreateDeSelectionEvent(new[] { crashObject });
 				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Unlocked, deSelectArgs };
 
 				// Where do Transforms go?

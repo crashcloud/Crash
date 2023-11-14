@@ -53,7 +53,7 @@ namespace Crash.Utils
 
 			rhinoObject.Geometry.UserDictionary.Remove(RealisedChangeTable.ChangeIdKey);
 			rhinoObject.Geometry.UserDictionary.Set(RealisedChangeTable.ChangeIdKey, change.Id);
-			crashDoc.RealisedChangeTable.Add(change, rhinoObject.Id);
+			crashDoc.RealisedChangeTable.AddPair(change, rhinoObject.Id);
 
 			return true;
 		}

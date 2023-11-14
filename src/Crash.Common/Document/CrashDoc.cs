@@ -22,8 +22,8 @@ namespace Crash.Common.Document
 
 			Users = new UserTable(this);
 			TemporaryChangeTable = new TemporaryChangeTable(this);
-			Cameras = new CameraTable(this);
 			RealisedChangeTable = new RealisedChangeTable(this);
+			Cameras = new CameraTable(this);
 
 			Queue = new IdleQueue(this);
 		}

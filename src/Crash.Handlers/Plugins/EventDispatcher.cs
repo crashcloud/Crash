@@ -259,6 +259,7 @@ namespace Crash.Handlers.Plugins
 			RhinoDoc.DeselectObjects += (sender, args) =>
 			                            {
 				                            var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
+
 				                            if (crashDoc is null)
 				                            {
 					                            return;
@@ -270,50 +271,78 @@ namespace Crash.Handlers.Plugins
 					                            return;
 				                            }
 
+
+				                            foreach (var rhinoObject in args.RhinoObjects)
+				                            {
+					                            if (!rhinoObject.TryGetChangeId(out var changeId))
+					                            {
+						                            continue;
+					                            }
+
+					                            crashDoc.RealisedChangeTable.RemoveSelected(changeId);
+				                            }
+
 				                            var crashArgs =
-					                            new CrashSelectionEventArgs(args.Selected,
-					                                                        args.RhinoObjects
-						                                                        .Select(o => new CrashObject(o)));
+					                            CrashSelectionEventArgs.CreateDeSelectionEvent(args.RhinoObjects
+						                            .Select(o => new CrashObject(o)));
 				                            NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs, args.Document);
 			                            };
 
 			RhinoDoc.DeselectAllObjects += (sender, args) =>
 			                               {
 				                               var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-				                               if (crashDoc is not null)
+
+				                               if (crashDoc is null)
 				                               {
-					                               if (crashDoc.IsInit ||
-					                                   crashDoc.SomeoneIsDone)
-					                               {
-						                               return;
-					                               }
+					                               return;
 				                               }
+
+				                               if (crashDoc.IsInit ||
+				                                   crashDoc.SomeoneIsDone)
+				                               {
+					                               return;
+				                               }
+
+				                               crashDoc.RealisedChangeTable.ClearSelected();
 
 				                               // So everything was unselected
 				                               // We need to track Selections...
-				                               var crashArgs = new CrashSelectionEventArgs(false,
-					                               args.RhinoObjects
-					                                   .Select(o => new CrashObject(o)));
 
+				                               var currentlySelected = crashDoc.RealisedChangeTable.GetSelected();
+				                               var crashArgs = CrashSelectionEventArgs.CreateDeSelectionEvent(
+				                                currentlySelected.Select(cs => new CrashObject(cs, Guid.Empty)));
 				                               NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs,
 				                                                 args.Document);
+
+				                               crashDoc.RealisedChangeTable.ClearSelected();
 			                               };
 			RhinoDoc.SelectObjects += (sender, args) =>
 			                          {
 				                          var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-				                          if (crashDoc is not null)
+
+				                          if (crashDoc is null)
 				                          {
-					                          if (crashDoc.IsInit ||
-					                              crashDoc.SomeoneIsDone)
-					                          {
-						                          return;
-					                          }
+					                          return;
 				                          }
 
-				                          var crashArgs =
-					                          new CrashSelectionEventArgs(args.Selected,
-					                                                      args.RhinoObjects
-					                                                          .Select(o => new CrashObject(o)));
+				                          if (crashDoc.IsInit ||
+				                              crashDoc.SomeoneIsDone)
+				                          {
+					                          return;
+				                          }
+
+				                          foreach (var rhinoObject in args.RhinoObjects)
+				                          {
+					                          if (!rhinoObject.TryGetChangeId(out var changeId))
+					                          {
+						                          continue;
+					                          }
+
+					                          crashDoc.RealisedChangeTable.AddSelected(changeId);
+				                          }
+
+				                          var crashArgs = CrashSelectionEventArgs.CreateSelectionEvent(args.RhinoObjects
+					                          .Select(o => new CrashObject(o)));
 				                          NotifyServerAsync(ChangeAction.Locked, sender, crashArgs, args.Document);
 			                          };
 

@@ -26,7 +26,7 @@ namespace Crash.Handlers.Tests.Plugins
 			{
 				foreach (var crashObjeect in SharedUtils.SelectObjects)
 				{
-					yield return new CrashSelectionEventArgs(true, new List<CrashObject> { crashObjeect });
+					yield return CrashSelectionEventArgs.CreateSelectionEvent(new List<CrashObject> { crashObjeect });
 				}
 			}
 		}
@@ -37,7 +37,7 @@ namespace Crash.Handlers.Tests.Plugins
 			{
 				foreach (var crashObjeect in SharedUtils.SelectObjects)
 				{
-					yield return new CrashSelectionEventArgs(false, new List<CrashObject> { crashObjeect });
+					yield return CrashSelectionEventArgs.CreateDeSelectionEvent(new List<CrashObject> { crashObjeect });
 				}
 			}
 		}

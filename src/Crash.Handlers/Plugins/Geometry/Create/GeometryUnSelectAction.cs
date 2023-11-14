@@ -25,18 +25,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 
 			var userName = crashArgs.Doc.Users.CurrentUser.Name;
 
-			if (cargs.DeselectAll)
-			{
-				/*
-				var guids = ChangeUtils.GetSelected();
-				ChangeUtils.ClearSelected();
-				changes = getChanges(guids, userName);
-				*/
-			}
-			else
-			{
-				changes = getChanges(cargs.CrashObjects, userName);
-			}
+			changes = getChanges(cargs.CrashObjects, userName);
 
 			return true;
 		}

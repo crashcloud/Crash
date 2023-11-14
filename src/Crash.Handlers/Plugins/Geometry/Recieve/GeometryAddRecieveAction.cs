@@ -62,11 +62,6 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				{
 					rhinoDoc.Objects.Select(rhinoId, true, true);
 				}
-
-				if (args.Change.Action.HasFlag(ChangeAction.Locked))
-				{
-					rhinoDoc.Objects.Lock(rhinoId, true);
-				}
 			}
 			finally
 			{

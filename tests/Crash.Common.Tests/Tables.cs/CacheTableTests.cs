@@ -42,12 +42,12 @@ namespace Crash.Common.Tests.Tables
 			// Arrange
 			var id = Guid.NewGuid();
 			var initialChange = new TextChange(id, "Hello", "World");
-			await _temporaryChangeTable.UpdateChange(initialChange);
+			_temporaryChangeTable.UpdateChange(initialChange);
 
 			var updatedChange = new TextChange(id, "Hello", "Everyone");
 
 			// Act
-			await _temporaryChangeTable.UpdateChange(updatedChange);
+			_temporaryChangeTable.UpdateChange(updatedChange);
 			var result = _temporaryChangeTable.TryGetChangeOfType<TextChange>(id, out var retrievedChange);
 
 			// Assert
@@ -63,7 +63,7 @@ namespace Crash.Common.Tests.Tables
 			var change = new TextChange(id, "Hello", "World");
 
 			// Act
-			_temporaryChangeTable.UpdateChange(change).Wait();
+			_temporaryChangeTable.UpdateChange(change);
 			var result = _temporaryChangeTable.TryGetChangeOfType<TextChange>(id, out var retrievedChange);
 
 			// Assert
@@ -77,7 +77,7 @@ namespace Crash.Common.Tests.Tables
 			// Arrange
 			var id = Guid.NewGuid();
 			var change = new TextChange(id, "Hello", "World");
-			_temporaryChangeTable.UpdateChange(change).Wait();
+			_temporaryChangeTable.UpdateChange(change);
 
 			// Act
 			_temporaryChangeTable.RemoveChange(id);
@@ -96,8 +96,8 @@ namespace Crash.Common.Tests.Tables
 			var id2 = Guid.NewGuid();
 			var change1 = new TextChange(id1, "Hello", "World");
 			var change2 = new TextChange(id2, "Goodbye", "World");
-			_temporaryChangeTable.UpdateChange(change1).Wait();
-			_temporaryChangeTable.UpdateChange(change2).Wait();
+			_temporaryChangeTable.UpdateChange(change1);
+			_temporaryChangeTable.UpdateChange(change2);
 
 			// Act
 			_temporaryChangeTable.RemoveChanges(new[] { change1, change2 });
