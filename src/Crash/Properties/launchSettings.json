@@ -1,26 +1,26 @@
 {
 	"profiles": {
-		"Crash (Win Rhino 7)": {
+		"Win Rhino 7 net48": {
 			"commandName": "Executable",
 			"executablePath": "C:\\Program Files\\Rhino 7\\System\\Rhino.exe",
 			"commandLineArgs": "/nosplash"
 		},
-		"Crash (Win Rhino 8) net48": {
+		"Win Rhino 8 net48": {
 			"commandName": "Executable",
-			"executablePath": "C:\\Program Files\\Rhino 8 WIP\\System\\Rhino.exe",
+			"executablePath": "C:\\Program Files\\Rhino 8\\System\\Rhino.exe",
 			"commandLineArgs": "/nosplash /netfx"
 		},
-		"Crash (Win Rhino 8) Net7.0": {
+		"Win Rhino 8 Net7.0": {
 			"commandName": "Executable",
-			"executablePath": "C:\\Program Files\\Rhino 8 WIP\\System\\Rhino.exe",
+			"executablePath": "C:\\Program Files\\Rhino 8\\System\\Rhino.exe",
 			"commandLineArgs": "/nosplash /dotnet"
 		},
-		"Crash (Mac Rhino 8)": {
+		"Mac Rhino 8 Net7.0": {
 			"commandName": "Executable",
-			"executablePath": "/Applications/RhinoBETA.app/Contents/MacOS/Rhinoceros",
+			"executablePath": "/Applications/Rhino 8.app/Contents/MacOS/Rhinoceros",
 			"hotReloadEnabled": true
 		},
-		"Crash (Mac Rhino 7)": {
+		"Mac Rhino 7 net48": {
 			"commandName": "Executable",
 			"executablePath": "/Applications/Rhino 7.app/Contents/MacOS/Rhinoceros",
 			"hotReloadEnabled": true

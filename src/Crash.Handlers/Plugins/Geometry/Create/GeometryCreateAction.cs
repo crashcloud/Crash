@@ -28,16 +28,11 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			}
 
 			changes = CreateChangesFromArgs(crashArgs.Doc, cargs.RhinoId, cargs.Geometry);
-			return changes.Count() > 0;
+			return changes.Any();
 		}
 
 		private IEnumerable<Change> CreateChangesFromArgs(CrashDoc crashDoc, Guid rhinoId, GeometryBase geometry)
 		{
-			var user = crashDoc.Users.CurrentUser.Name;
-
-			var payload = geometry?.ToJSON(new SerializationOptions());
-			var change = GeometryChange.CreateChange(Guid.NewGuid(), user, Action, payload);
-
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
 			if (rhinoDoc is null)
 			{
@@ -49,6 +44,17 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			{
 				yield break;
 			}
+
+			var user = crashDoc.Users.CurrentUser.Name;
+
+			var currentOrNewId = Guid.NewGuid();
+			if (crashDoc.TemporaryChangeTable.TryGetChangeOfType(rhinoId, out IChange foundChange))
+			{
+				currentOrNewId = foundChange.Id;
+			}
+
+			var payload = geometry?.ToJSON(new SerializationOptions());
+			var change = GeometryChange.CreateChange(currentOrNewId, user, Action, payload);
 
 			rhinoObject.SyncHost(change, crashDoc);
 
