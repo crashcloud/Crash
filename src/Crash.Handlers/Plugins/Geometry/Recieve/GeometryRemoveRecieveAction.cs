@@ -27,7 +27,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				{
 					idleArgs = new IdleArgs(crashDoc, recievedChange);
 					idleAction = new IdleAction(RemoveTemporaryFromDocument, idleArgs);
-					await crashDoc.Queue.AddActionAsync(idleAction);
+					crashDoc.Queue.AddAction(idleAction);
 				}
 
 				return;
@@ -35,7 +35,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 
 			idleArgs = new IdleArgs(crashDoc, recievedChange);
 			idleAction = new IdleAction(RemoveFromDocument, idleArgs);
-			await crashDoc.Queue.AddActionAsync(idleAction);
+			crashDoc.Queue.AddAction(idleAction);
 		}
 
 		private void RemoveFromDocument(IdleArgs args)

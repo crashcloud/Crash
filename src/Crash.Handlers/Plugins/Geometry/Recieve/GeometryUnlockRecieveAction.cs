@@ -18,7 +18,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 		{
 			var changeArgs = new IdleArgs(crashDoc, recievedChange);
 			var lockAction = new IdleAction(LockChange, changeArgs);
-			await crashDoc.Queue.AddActionAsync(lockAction);
+			crashDoc.Queue.AddAction(lockAction);
 		}
 
 		private void LockChange(IdleArgs args)

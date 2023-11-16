@@ -154,5 +154,11 @@ namespace Crash.Common.Tables
 		{
 			return Selected;
 		}
+
+		/// <summary>Checks to see if a Change is Selected</summary>
+		public bool IsSelected(Guid changeId)
+		{
+			return Selected.Contains(changeId);
+		}
 	}
 }

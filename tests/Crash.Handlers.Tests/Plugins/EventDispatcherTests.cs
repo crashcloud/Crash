@@ -135,6 +135,7 @@ namespace Crash.Handlers.Tests.Plugins
 
 		public bool IsConnected { get; } = true;
 		public event Action<IEnumerable<string>>? OnInitializeUsers;
+		public event EventHandler<CrashClient.CrashInitArgs>? OnInit;
 		public event Action<IEnumerable<Guid>, Change> OnPushIdentical;
 		public event Action<Change> OnPushChange;
 		public event Action<IEnumerable<Change>> OnPushChanges;
@@ -150,6 +151,11 @@ namespace Crash.Handlers.Tests.Plugins
 		{
 			IncrementCallCount(nameof(ICrashClient.InitializeUsersAsync));
 			await Task.CompletedTask;
+		}
+
+		public void RegisterConnection(string userName, Uri url)
+		{
+			throw new NotImplementedException();
 		}
 
 		public async Task StopAsync()

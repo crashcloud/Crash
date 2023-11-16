@@ -18,7 +18,7 @@ namespace Crash.Handlers.Plugins.Camera.Recieve
 		{
 			var cameraArgs = new IdleArgs(crashDoc, recievedChange);
 			var cameraAction = new IdleAction(AddToDocument, cameraArgs);
-			await crashDoc.Queue.AddActionAsync(cameraAction);
+			crashDoc.Queue.AddAction(cameraAction);
 		}
 
 		private void AddToDocument(IdleArgs args)

@@ -8,7 +8,6 @@ using Crash.Common.Logging;
 
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Crash.Common.Communications
@@ -20,38 +19,18 @@ namespace Crash.Common.Communications
 	{
 		// TODO : Move to https
 		public const string DefaultURL = "http://localhost";
-
-		private readonly HubConnection _connection;
 		private readonly CrashDoc _crashDoc;
-		private readonly string _user;
+
+		private HubConnection _connection;
+		private string _user;
 
 		/// <summary>
 		///     Crash client constructor
 		/// </summary>
 		/// <param name="crashDoc">The Document to associate this Client to</param>
-		/// <param name="userName">The User of the Client</param>
-		/// <param name="url">url of the server the client will talk to</param>
-		public CrashClient(CrashDoc crashDoc, string userName, Uri url)
+		public CrashClient(CrashDoc crashDoc)
 		{
-			if (string.IsNullOrEmpty(userName))
-			{
-				throw new ArgumentException("Username cannot be empty or null");
-			}
-
-			if (url is null)
-			{
-				throw new UriFormatException("URL Cannot be null");
-			}
-
-			if (!url.AbsoluteUri.Contains("/Crash"))
-			{
-				throw new UriFormatException("URL must end in /Crash to connect!");
-			}
-
 			_crashDoc = crashDoc;
-			_user = userName;
-			_connection = GetHubConnection(url);
-			RegisterConnections();
 		}
 
 		public HubConnectionState State => _connection.State;
@@ -134,6 +113,30 @@ namespace Crash.Common.Communications
 
 		public event Action<IEnumerable<Change>> OnPushChanges;
 
+		public event EventHandler<CrashInitArgs> OnInit;
+
+		public void RegisterConnection(string userName, Uri url)
+		{
+			if (string.IsNullOrEmpty(userName))
+			{
+				throw new ArgumentException("Username cannot be empty or null");
+			}
+
+			if (url is null)
+			{
+				throw new UriFormatException("URL Cannot be null");
+			}
+
+			if (!url.AbsoluteUri.Contains("/Crash"))
+			{
+				throw new UriFormatException("URL must end in /Crash to connect!");
+			}
+
+			_user = userName;
+			_connection = GetHubConnection(url);
+			RegisterConnections();
+		}
+
 		/// <summary>Done</summary>
 		public async Task DoneAsync()
 		{
@@ -145,11 +148,9 @@ namespace Crash.Common.Communications
 		public async Task DoneRangeAsync(IEnumerable<Guid> changeIds)
 		{
 			var doneChange = new Change
-			{
-				Owner = string.Empty,
-				Action = ChangeAction.Release,
-				Type = "Crash.DoneChange"
-			};
+			                 {
+				                 Owner = string.Empty, Action = ChangeAction.Release, Type = "Crash.DoneChange"
+			                 };
 			await PushIdenticalChangesAsync(changeIds, doneChange);
 		}
 
@@ -173,28 +174,28 @@ namespace Crash.Common.Communications
 		public static HubConnection GetHubConnection(Uri url)
 		{
 			return new HubConnectionBuilder()
-				.WithUrl(url)
-				// .ConfigureLogging(LoggingConfigurer)
-				.WithAutomaticReconnect(new[]
-				{
-					TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1),
-					TimeSpan.FromSeconds(10)
-				})
-				.Build();
+			       .WithUrl(url)
+			       // .ConfigureLogging(LoggingConfigurer)
+			       .WithAutomaticReconnect(new[]
+			                               {
+				                               TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100),
+				                               TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(10)
+			                               })
+			       .Build();
 		}
 
 		public static JsonHubProtocolOptions JsonOptions()
 		{
 			return new JsonHubProtocolOptions
-			{
-				PayloadSerializerOptions = new JsonSerializerOptions
-				{
-					IgnoreReadOnlyFields = true,
-					IgnoreReadOnlyProperties = true,
-					NumberHandling = JsonNumberHandling
-						.AllowNamedFloatingPointLiterals
-				}
-			};
+			       {
+				       PayloadSerializerOptions = new JsonSerializerOptions
+				                                  {
+					                                  IgnoreReadOnlyFields = true,
+					                                  IgnoreReadOnlyProperties = true,
+					                                  NumberHandling = JsonNumberHandling
+						                                  .AllowNamedFloatingPointLiterals
+				                                  }
+			       };
 		}
 
 		private static void LoggingConfigurer(ILoggingBuilder loggingBuilder)
@@ -212,7 +213,7 @@ namespace Crash.Common.Communications
 			_connection.On<IEnumerable<string>>(INITIALIZEUSERS, users => OnInitializeUsers?.Invoke(users));
 
 			_connection.On<IEnumerable<Guid>, Change>(PUSH_IDENTICAL,
-				(ids, change) => OnPushIdentical?.Invoke(ids, change));
+			                                          (ids, change) => OnPushIdentical?.Invoke(ids, change));
 			_connection.On<Change>(PUSH_SINGLE, change => OnPushChange?.Invoke(change));
 			_connection.On<IEnumerable<Change>>(PUSH_MANY, changes => OnPushChanges?.Invoke(changes));
 
@@ -267,8 +268,6 @@ namespace Crash.Common.Communications
 		{
 			return _connection.StartAsync();
 		}
-
-		public static event EventHandler<CrashInitArgs> OnInit;
 
 		public sealed class CrashInitArgs : CrashEventArgs
 		{

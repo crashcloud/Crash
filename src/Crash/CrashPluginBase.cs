@@ -1,4 +1,6 @@
 ﻿using Crash.Common.Communications;
+using Crash.Common.Events;
+using Crash.Handlers;
 using Crash.Handlers.Plugins;
 
 using Rhino.PlugIns;
@@ -11,12 +13,17 @@ namespace Crash
 	public abstract class CrashPluginBase : PlugIn
 	{
 		private readonly Stack<IChangeDefinition> _changes;
-		internal EventDispatcher Dispatcher;
+
+		// TODO : Dispatcher needs to get disposed and recreated
+		private EventDispatcher Dispatcher;
 
 		protected CrashPluginBase()
 		{
 			_changes = new Stack<IChangeDefinition>();
-			CrashClient.OnInit += CrashClient_OnInit;
+
+			// TODO : All of this stuff needs to be moved outside a reused constructor
+			CrashDocRegistry.DocumentRegistered += CrashDocRegistryOnDocumentRegistered;
+			CrashDocRegistry.DocumentDisposed += CrashDocRegistryOnDocumentDisposed;
 		}
 
 		#region Rhino Plugin Overrides
@@ -26,22 +33,31 @@ namespace Crash
 
 		#endregion
 
-		private void CrashClient_OnInit(object sender, CrashClient.CrashInitArgs e)
+		private void CrashDocRegistryOnDocumentDisposed(object sender, CrashEventArgs e)
 		{
-			RhinoApp.WriteLine("Loading Changes ...");
+			Dispatcher = null;
+			InteractivePipe.Active.Enabled = false;
+		}
 
-			if (Dispatcher is null)
-			{
-				Dispatcher = new EventDispatcher();
-				Dispatcher.RegisterDefaultServerCalls(e.CrashDoc);
-			}
+		private void CrashDocRegistryOnDocumentRegistered(object sender, CrashEventArgs e)
+		{
+			Dispatcher = new EventDispatcher();
+			RegisterDefinitions();
+			Dispatcher.RegisterDefaultServerCalls(e.CrashDoc);
+			InteractivePipe.Active.Enabled = true;
+
+			e.CrashDoc.LocalClient.OnInit += LocalClientOnOnInit;
+		}
+
+		private void LocalClientOnOnInit(object sender, CrashClient.CrashInitArgs e)
+		{
+			e.CrashDoc.LocalClient.OnInit -= LocalClientOnOnInit;
 
 			if (Dispatcher is not null)
 			{
-				RegisterDefinitions();
-
 				e.CrashDoc.IsInit = true;
 
+				// TODO : Handle Async!
 				foreach (var change in e.Changes)
 				{
 					Dispatcher.NotifyClientAsync(e.CrashDoc, change);
@@ -49,8 +65,6 @@ namespace Crash
 
 				e.CrashDoc.IsInit = false;
 			}
-
-			RhinoDoc.ActiveDoc.Views.Redraw();
 		}
 
 		protected virtual void RegisterChangeSchema(IChangeDefinition changeDefinition)
@@ -61,9 +75,11 @@ namespace Crash
 
 		private void RegisterDefinitions()
 		{
-			while (_changes.Count > 0)
+			var changeEnuner = _changes.GetEnumerator();
+
+			while (changeEnuner.MoveNext())
 			{
-				var changeDefinition = _changes.Pop();
+				var changeDefinition = changeEnuner.Current;
 				Dispatcher.RegisterDefinition(changeDefinition);
 			}
 		}

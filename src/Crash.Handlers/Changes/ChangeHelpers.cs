@@ -11,7 +11,7 @@ using RhinoGuid = System.Guid;
 namespace Crash.Utils
 {
 	/// <summary>Utilities for Change Objects.</summary>
-	public static class ChangeUtils
+	public static class ChangeHelpers
 	{
 		public static bool IsActiveChange(this RhinoObject rhinoObject, CrashDoc crashDoc)
 		{

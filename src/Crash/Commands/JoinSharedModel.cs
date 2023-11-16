@@ -98,6 +98,7 @@ namespace Crash.Commands
 		private void QueueOnOnCompleted(object sender, CrashEventArgs e)
 		{
 			e.CrashDoc.Queue.OnCompletedQueue -= QueueOnOnCompleted;
+			UsersForm.CloseActiveForm();
 			UsersForm.ShowForm();
 		}
 

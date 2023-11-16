@@ -116,24 +116,23 @@ namespace Crash.Integration.Tests
 			return crashServer;
 		}
 
-		private async Task<CrashClient> StartClientAsync(CrashDoc crashDoc)
+		private async Task<ICrashClient> StartClientAsync(CrashDoc crashDoc)
 		{
 			var initRan = false;
 			Action<IEnumerable<Change>> func = changes => initRan = true;
 
-			var crashClient = new CrashClient(crashDoc, user.Name, clientUri);
-			crashDoc.LocalClient = crashClient;
+			crashDoc.LocalClient.RegisterConnection(user.Name, clientUri);
 
 			// TODO : FIX INIT CHECK
-			await crashClient.StartLocalClientAsync();
+			await crashDoc.LocalClient.StartLocalClientAsync();
 
 			// Wait(() => crashClient.IsConnected);
-			Assert.That(crashClient.IsConnected, Is.True, "Client is not connected");
+			Assert.That(crashDoc.LocalClient.IsConnected, Is.True, "Client is not connected");
 
 			Wait(() => initRan);
 			Assert.That(initRan, Is.True, "Init did not run!");
 
-			return crashClient;
+			return crashDoc.LocalClient;
 		}
 
 		private ProcessStartInfo GetStartInfo(string url)

@@ -1,5 +1,4 @@
-﻿using Crash.Common.Communications;
-using Crash.Handlers;
+﻿using Crash.Handlers;
 using Crash.Handlers.Plugins.Camera;
 using Crash.Handlers.Plugins.Geometry;
 using Crash.Handlers.Plugins.Initializers;
@@ -36,31 +35,20 @@ namespace Crash
 			// Dispose of Server connections etc. gracefully
 		}
 
-
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
 			// Add feature flags as advanced settings here!
 			InteractivePipe.Active = new InteractivePipe { Enabled = false };
-			CrashClient.OnInit += CrashClient_OnInit;
 
-			RhinoApp.Idle += RhinoApp_Idle;
+			// TODO : Move to JoinServer command
+			RhinoApp.Idle += DownloadServer;
 
 			return base.OnLoad(ref errorMessage);
 		}
 
-		private void CrashClient_OnInit(object sender, CrashClient.CrashInitArgs e)
+		private void DownloadServer(object sender, EventArgs e)
 		{
-			CrashClient.OnInit -= CrashClient_OnInit;
-			InteractivePipe.Active.Enabled = true;
-			RhinoApp.Idle += (sender, args) =>
-			{
-				e.CrashDoc.Queue.RunNextAction();
-			};
-		}
-
-		private void RhinoApp_Idle(object sender, EventArgs e)
-		{
-			RhinoApp.Idle -= RhinoApp_Idle;
+			RhinoApp.Idle -= DownloadServer;
 			if (!ServerInstaller.ServerExecutableExists)
 			{
 				ServerInstaller.EnsureServerExecutableExists();

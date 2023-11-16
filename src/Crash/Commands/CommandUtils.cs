@@ -1,7 +1,7 @@
 ﻿using System.Net.Http;
 
-using Crash.Common.Communications;
 using Crash.Common.Document;
+using Crash.Handlers;
 
 using Rhino.Geometry;
 
@@ -33,22 +33,30 @@ namespace Crash.Commands
 		/// <returns>True if already connected</returns>
 		internal static bool CheckAlreadyConnected(CrashDoc crashDoc)
 		{
-			if (crashDoc?.LocalClient?.IsConnected == true)
+			try
 			{
-				RhinoApp.WriteLine("You are currently part of a Shared Model Session.");
-
-				if (!_NewModelOrExit(false))
+				if (crashDoc?.LocalClient?.IsConnected == true)
 				{
-					return false;
+					RhinoApp.WriteLine("You are currently part of a Shared Model Session.");
+
+					if (!_NewModelOrExit(false))
+					{
+						return false;
+					}
+
+					if (RhinoApp.RunScript(LeaveSharedModel.Instance.EnglishName, true))
+					{
+						RhinoApp.RunScript(JoinSharedModel.Instance.EnglishName, true);
+					}
 				}
 
-				if (RhinoApp.RunScript(LeaveSharedModel.Instance.EnglishName, true))
-				{
-					RhinoApp.RunScript(JoinSharedModel.Instance.EnglishName, true);
-				}
+				return true;
 			}
-
-			return true;
+			catch (Exception e)
+			{
+				CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
+				return false;
+			}
 		}
 
 
@@ -87,10 +95,9 @@ namespace Crash.Commands
 
 			try
 			{
-				var crashClient = new CrashClient(crashDoc, userName, new Uri($"{url}/Crash"));
-				crashDoc.LocalClient = crashClient;
+				crashDoc.LocalClient.RegisterConnection(userName, new Uri($"{url}/Crash"));
 
-				await crashClient.StartLocalClientAsync();
+				await crashDoc.LocalClient.StartLocalClientAsync();
 				return true;
 			}
 			catch (HttpRequestException)

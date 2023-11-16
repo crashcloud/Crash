@@ -3,7 +3,6 @@ using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
 using Crash.Utils;
 
-using Rhino.FileIO;
 using Rhino.Geometry;
 
 namespace Crash.Handlers.Plugins.Geometry.Create
@@ -47,14 +46,14 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 
 			var user = crashDoc.Users.CurrentUser.Name;
 
+			// For unDelete
 			var currentOrNewId = Guid.NewGuid();
 			if (crashDoc.TemporaryChangeTable.TryGetChangeOfType(rhinoId, out IChange foundChange))
 			{
 				currentOrNewId = foundChange.Id;
 			}
 
-			var payload = geometry?.ToJSON(new SerializationOptions());
-			var change = GeometryChange.CreateChange(currentOrNewId, user, Action, payload);
+			var change = GeometryChange.CreateChange(currentOrNewId, user, Action, geometry);
 
 			rhinoObject.SyncHost(change, crashDoc);
 

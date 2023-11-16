@@ -34,9 +34,9 @@ namespace Crash.Events
 		}
 
 		/// <summary>Adds an Action to the Queue</summary>
-		public async Task AddActionAsync(IdleAction action)
+		public void AddAction(IdleAction action)
 		{
-			await Task.Run(() => _idleQueue.Enqueue(action));
+			_idleQueue.Enqueue(action);
 		}
 
 		/// <summary>Attempts to run the next Action</summary>

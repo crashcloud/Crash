@@ -1,4 +1,5 @@
-﻿using Crash.Handlers.Changes;
+﻿using Crash.Common.Document;
+using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
 
 namespace Crash.Handlers.Plugins.Geometry.Create
@@ -24,17 +25,22 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			}
 
 			var userName = crashArgs.Doc.Users.CurrentUser.Name;
-			changes = GetChanges(cargs.CrashObjects, userName);
+			changes = GetChanges(crashArgs.Doc, cargs.CrashObjects, userName);
 
 			return true;
 		}
 
-		private IEnumerable<Change> GetChanges(IEnumerable<CrashObject> crashObjects,
+		private IEnumerable<Change> GetChanges(CrashDoc crashDoc, IEnumerable<CrashObject> crashObjects,
 			string userName)
 		{
 			foreach (var crashObject in crashObjects)
 			{
 				if (crashObject.ChangeId == Guid.Empty)
+				{
+					continue;
+				}
+
+				if (crashDoc.RealisedChangeTable.IsSelected(crashObject.ChangeId))
 				{
 					continue;
 				}

@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 
 using Crash.Properties;
 
+using Eto.Drawing;
 using Eto.Forms;
 
 using Rhino.UI;
@@ -20,6 +21,7 @@ namespace Crash.UI.JoinModel
 			Title = "Join Shared Model";
 			Resizable = false;
 			Minimizable = false;
+			BackgroundColor = Color.FromArgb(0, 0, 0);
 			AutoSize = true;
 			Icon = Icons.crashlogo.ToEto();
 			Topmost = true;

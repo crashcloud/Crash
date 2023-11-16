@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 
-using Crash.Changes.Utils;
 using Crash.Common.Document;
 
 namespace Crash.Common.Tables
@@ -64,19 +63,8 @@ namespace Crash.Common.Tables
 		/// <returns>returns the update task</returns>
 		public void UpdateChange(IChange cache)
 		{
-			if (cache is null)
-			{
-				return;
-			}
-
-			var newChange = cache;
-			if (_cache.TryGetValue(cache.Id, out var cachedChange))
-			{
-				newChange = ChangeUtils.CombineChanges(cachedChange, cache);
-				RemoveChange(cache.Id);
-			}
-
-			_cache.TryAdd(newChange.Id, newChange);
+			_cache.TryRemove(cache.Id, out _);
+			_cache.TryAdd(cache.Id, cache);
 		}
 
 		/// <summary>

@@ -1,6 +1,8 @@
 ﻿using BidirectionalMap;
 
+using Crash.Common.Communications;
 using Crash.Common.Document;
+using Crash.Common.Events;
 
 using Rhino;
 
@@ -62,13 +64,29 @@ namespace Crash.Handlers
 
 			var crashDoc = new CrashDoc();
 			Register(crashDoc, rhinoDoc);
+			DocumentRegistered?.Invoke(null, new CrashEventArgs(crashDoc));
 
-			crashDoc.Queue.OnCompletedQueue += (s, e) =>
-			                                   {
-				                                   rhinoDoc.Views.Redraw();
-			                                   };
+			crashDoc.Queue.OnCompletedQueue += RedrawOncompleted;
+			crashDoc.LocalClient.OnInit += RegisterQueue;
 
 			return crashDoc;
+		}
+
+		private static void RegisterQueue(object sender, CrashClient.CrashInitArgs e)
+		{
+			RhinoApp.WriteLine("Loading Changes ...");
+
+			// TODO : How to deregister?
+			RhinoApp.Idle += (o, args) =>
+			                 {
+				                 e.CrashDoc.Queue.RunNextAction();
+			                 };
+		}
+
+		private static void RedrawOncompleted(object sender, CrashEventArgs e)
+		{
+			var rhinoDoc = GetRelatedDocument(e.CrashDoc);
+			rhinoDoc.Views.Redraw();
 		}
 
 		private static void Register(CrashDoc crashDoc,
@@ -77,13 +95,27 @@ namespace Crash.Handlers
 			DocumentRelationship.Add(rhinoDoc, crashDoc);
 		}
 
-		public static void DisposeOfDocument(CrashDoc crashDoc)
+		public static async Task DisposeOfDocumentAsync(CrashDoc crashDoc)
 		{
+			DocumentDisposed?.Invoke(null, new CrashEventArgs(crashDoc));
+			// DeRegister Events
+			crashDoc.Queue.OnCompletedQueue -= RedrawOncompleted;
+			if (crashDoc.LocalClient is not null)
+			{
+				crashDoc.LocalClient.OnInit -= RegisterQueue;
+				await crashDoc.LocalClient?.StopAsync();
+			}
+
+			// Remove Geometry
 			var rhinoDoc = GetRelatedDocument(crashDoc);
 			DocumentRelationship.Remove(rhinoDoc);
-			crashDoc?.LocalClient?.StopAsync();
-			crashDoc?.Dispose();
 			rhinoDoc.Objects.Clear();
+
+			// Dispose
+			crashDoc?.Dispose();
 		}
+
+		public static event EventHandler<CrashEventArgs> DocumentRegistered;
+		public static event EventHandler<CrashEventArgs> DocumentDisposed;
 	}
 }

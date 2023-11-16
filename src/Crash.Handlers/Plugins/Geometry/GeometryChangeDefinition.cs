@@ -27,7 +27,6 @@ namespace Crash.Handlers.Plugins.Geometry
 			                };
 			RecieveActions = new List<IChangeRecieveAction>
 			                 {
-				                 new GeometryTemporaryAddRecieveAction(),
 				                 new GeometryAddRecieveAction(),
 				                 new GeometryRemoveRecieveAction(),
 				                 new GeometryTransformRecieveAction(),

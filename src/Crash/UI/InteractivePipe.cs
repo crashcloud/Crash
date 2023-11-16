@@ -83,7 +83,6 @@ namespace Crash.UI
 
 		public void Dispose()
 		{
-			throw new NotImplementedException();
 		}
 
 		/// <summary>
@@ -103,17 +102,12 @@ namespace Crash.UI
 		/// <param name="e"></param>
 		internal void PostDrawObjects(object sender, DrawEventArgs e)
 		{
-			if (null == CrashDocRegistry.ActiveDoc?.TemporaryChangeTable)
+			if (CrashDocRegistry.ActiveDoc?.TemporaryChangeTable is null)
 			{
 				return;
 			}
 
-			if (null == CrashDocRegistry.ActiveDoc?.Cameras)
-			{
-				return;
-			}
-
-			if (null == CrashDocRegistry.ActiveDoc?.Users)
+			if (CrashDocRegistry.ActiveDoc?.Users is null)
 			{
 				return;
 			}
@@ -141,6 +135,11 @@ namespace Crash.UI
 				definition.Draw(e, cachedMaterial, Change);
 				var box = definition.GetBoundingBox(Change);
 				UpdateBoundingBox(box);
+			}
+
+			if (CrashDocRegistry.ActiveDoc?.Cameras is null)
+			{
+				return;
 			}
 
 			var ActiveCameras = CrashDocRegistry.ActiveDoc.Cameras.GetActiveCameras();

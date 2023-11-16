@@ -13,7 +13,7 @@ namespace Crash.Handlers.Tests.Changes
 		[Test]
 		public void TryGetChangeId_NullInput()
 		{
-			Assert.That(ChangeUtils.TryGetChangeId(null, out var id), Is.False);
+			Assert.That(ChangeHelpers.TryGetChangeId(null, out var id), Is.False);
 			Assert.That(id, Is.EqualTo(Guid.Empty));
 		}
 
@@ -34,9 +34,9 @@ namespace Crash.Handlers.Tests.Changes
 		[Test]
 		public void SyncHost_NullInputs()
 		{
-			ChangeUtils.SyncHost(null, null, null);
+			ChangeHelpers.SyncHost(null, null, null);
 
-			ChangeUtils.SyncHost(null, new ExampleRhinoChange(), null);
+			ChangeHelpers.SyncHost(null, new ExampleRhinoChange(), null);
 
 
 			var doc = RhinoDoc.CreateHeadless(null);

@@ -25,6 +25,8 @@ namespace Crash.Common.Document
 			RealisedChangeTable = new RealisedChangeTable(this);
 			Cameras = new CameraTable(this);
 
+			LocalClient = new CrashClient(this);
+
 			Queue = new IdleQueue(this);
 		}
 

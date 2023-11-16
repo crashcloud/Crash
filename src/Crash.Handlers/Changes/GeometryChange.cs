@@ -1,5 +1,7 @@
 ﻿using System.Runtime.Serialization;
-using System.Text.Json;
+
+using Crash.Common.Serialization;
+using Crash.Geometry;
 
 using Rhino;
 using Rhino.FileIO;
@@ -32,13 +34,13 @@ namespace Crash.Handlers.Changes
 		{
 			try
 			{
-				var packet = JsonSerializer.Deserialize<PayloadPacket>(change.Payload);
+				var packet = PayloadSerialization.GetPayloadPacket(change.Payload);
 				var geometry = CommonObject.FromJSON(packet.Data) as GeometryBase;
-				if (packet.Transform.IsValid() && false)
+
+				if (packet.Transform.IsValid() && !packet.Transform.Equals(CTransform.Unset))
 				{
-					// TODO : Fix Transforms!
 					var transform = packet.Transform.ToRhino();
-					if (transform.IsValid && false)
+					if (transform.IsValid)
 					{
 						geometry.Transform(transform);
 					}
@@ -58,6 +60,11 @@ namespace Crash.Handlers.Changes
 			{
 				RhinoApp.WriteLine(serialEx.Message);
 			}
+			catch (InvalidOperationException invalidEx)
+			{
+				// TODO : This means CommonObject.JSON recieved an empty string!
+				;
+			}
 			catch (Exception ex)
 			{
 				RhinoApp.WriteLine(ex.Message);
@@ -75,7 +82,7 @@ namespace Crash.Handlers.Changes
 				       Stamp = DateTime.UtcNow,
 				       Id = Guid.NewGuid(),
 				       Owner = userName,
-				       Payload = geometry?.ToJSON(new SerializationOptions()),
+				       Payload = SerializeGeometry(geometry),
 				       Action = ChangeAction.Add | ChangeAction.Temporary
 			       };
 		}
@@ -86,16 +93,27 @@ namespace Crash.Handlers.Changes
 		/// <param name="action">The action for the Change</param>
 		/// <param name="payload">The payload if an add, otherwise none.</param>
 		/// <returns>A change suitable for sending to the server</returns>
-		public static Change CreateChange(Guid id, string user, ChangeAction action, string? payload = null)
+		public static Change CreateChange(Guid id, string user, ChangeAction action, GeometryBase? geometry = null)
 		{
 			return new Change
 			       {
 				       Id = id,
 				       Owner = user,
 				       Action = action,
-				       Payload = payload,
+				       Payload = SerializeGeometry(geometry),
 				       Type = ChangeType
 			       };
+		}
+
+		/// <summary>Serializes Geometry Correctly to Rhino version 7</summary>
+		public static string SerializeGeometry(GeometryBase geometry)
+		{
+			if (geometry is null)
+			{
+				return string.Empty;
+			}
+
+			return geometry?.ToJSON(new SerializationOptions { RhinoVersion = 70, WriteUserData = false });
 		}
 	}
 }

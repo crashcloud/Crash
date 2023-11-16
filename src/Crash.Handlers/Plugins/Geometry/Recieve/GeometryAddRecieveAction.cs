@@ -1,4 +1,5 @@
 ﻿using Crash.Changes.Extensions;
+using Crash.Changes.Utils;
 using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
@@ -12,9 +13,20 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 	{
 		public bool CanRecieve(IChange change)
 		{
-			return change.Action.HasFlag(ChangeAction.Add) &&
-			       !change.Action.HasFlag(ChangeAction.Temporary) &&
-			       !change.Action.HasFlag(ChangeAction.Remove);
+			if (change is null)
+				return false;
+
+			if (!change.Action.HasFlag(ChangeAction.Add))
+			{
+				return false;
+			}
+
+			if (change.Action.HasFlag(ChangeAction.Remove))
+			{
+				return false;
+			}
+
+			return true;
 		}
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
@@ -25,22 +37,27 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 		/// <summary>Handles recieved Geometry Changes</summary>
 		public async Task OnRecieveAsync(CrashDoc crashDoc, GeometryChange geomChange)
 		{
-			if (IsDuplicate(crashDoc, geomChange))
-			{
+			if (crashDoc is null || geomChange is null)
 				return;
-			}
 
 			var changeArgs = new IdleArgs(crashDoc, geomChange);
-			var bakeAction = new IdleAction(AddToDocument, changeArgs);
-			await crashDoc.Queue.AddActionAsync(bakeAction);
-		}
+			IdleAction resultingAction = null;
 
-		// Prevents issues with the same user logged in twice
-		private static bool IsDuplicate(CrashDoc crashDoc, IChange change)
-		{
-			var isNotInit = !crashDoc.IsInit;
-			var isByCurrentUser = change.Owner.Equals(crashDoc.Users.CurrentUser.Name, StringComparison.Ordinal);
-			return isNotInit && isByCurrentUser;
+			if (!geomChange.HasFlag(ChangeAction.Temporary))
+			{
+				resultingAction = new IdleAction(AddToDocument, changeArgs);
+			}
+			else if (geomChange.Owner?.Equals(crashDoc.Users.CurrentUser.Name,
+			                                 StringComparison.InvariantCultureIgnoreCase) == true)
+			{
+				resultingAction = new IdleAction(AddToDocument, changeArgs);
+			}
+			else
+			{
+				resultingAction = new IdleAction(AddToCache, changeArgs);
+			}
+
+			crashDoc.Queue.AddAction(resultingAction);
 		}
 
 		private void AddToDocument(IdleArgs args)
@@ -67,6 +84,23 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			{
 				args.Doc.IsInit = false;
 			}
+		}
+
+		private void AddToCache(IdleArgs args)
+		{
+			if (args.Change is not GeometryChange geomChange)
+			{
+				return;
+			}
+
+			var finalChange = geomChange;
+			if (args.Doc.TemporaryChangeTable.TryGetChangeOfType(geomChange.Id, out GeometryChange existingChange))
+			{
+				var combinedChange = ChangeUtils.CombineChanges(existingChange, geomChange);
+				finalChange = GeometryChange.CreateFrom(combinedChange);
+			}
+
+			args.Doc.TemporaryChangeTable.UpdateChange(finalChange);
 		}
 	}
 }

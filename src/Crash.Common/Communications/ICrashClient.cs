@@ -5,6 +5,11 @@
 		/// <summary>Tests for an Active Connection</summary>
 		public bool IsConnected { get; }
 
+		/// <summary>Registers the client and its connection url</summary>
+		/// <param name="userName">The User of the Client</param>
+		/// <param name="url">url of the server the client will talk to</param>
+		void RegisterConnection(string userName, Uri url);
+
 		/// <summary>Stops the Connection</summary>
 		public Task StopAsync();
 
@@ -50,5 +55,8 @@
 
 		/// <summary>Local Event corresponding to a Server call for Initialize Users</summary>
 		public event Action<IEnumerable<string>> OnInitializeUsers;
+
+		/// <summary>Local event wrapping Crash Args with Initialization</summary>
+		public event EventHandler<CrashClient.CrashInitArgs> OnInit;
 	}
 }

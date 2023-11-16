@@ -30,7 +30,7 @@ namespace Crash.Common.Tests
 			var queue = new IdleQueue(new CrashDoc());
 			for (var i = 0; i < expectedCount; i++)
 			{
-				await queue.AddActionAsync(new IdleAction(args => { }, new IdleArgs(null, null)));
+				queue.AddAction(new IdleAction(args => { }, new IdleArgs(null, null)));
 			}
 
 			// Act
@@ -61,7 +61,7 @@ namespace Crash.Common.Tests
 			// Arrange
 			var queue = new IdleQueue(new CrashDoc());
 			var action = new IdleAction(DisposableCrashEvent, new IdleArgs(null, null));
-			await queue.AddActionAsync(action);
+			queue.AddAction(action);
 
 			// Act
 			queue.RunNextAction();
@@ -80,7 +80,7 @@ namespace Crash.Common.Tests
 			var queue = new IdleQueue(new CrashDoc());
 			for (var i = 0; i < expectedCount; i++)
 			{
-				await queue.AddActionAsync(new IdleAction(DisposableCrashEvent, new IdleArgs(null, null)));
+				queue.AddAction(new IdleAction(DisposableCrashEvent, new IdleArgs(null, null)));
 			}
 
 			// Act
@@ -115,7 +115,7 @@ namespace Crash.Common.Tests
 		{
 			// Arrange
 			var queue = new IdleQueue(new CrashDoc());
-			await queue.AddActionAsync(new IdleAction(DisposableCrashEvent, new IdleArgs(null, null)));
+			queue.AddAction(new IdleAction(DisposableCrashEvent, new IdleArgs(null, null)));
 
 			var eventRaised = false;
 			queue.OnCompletedQueue += (sender, args) => { eventRaised = true; };

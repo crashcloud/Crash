@@ -25,12 +25,11 @@ namespace Crash.Commands
 		public override string EnglishName => "LeaveSharedModel";
 
 
-		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc CrashDoc, RunMode mode)
+		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
 		{
-			if (!CommandUtils.CheckAlreadyConnected(CrashDoc))
+			if (crashDoc?.LocalClient?.IsConnected != true)
 			{
-				RhinoApp.WriteLine("You aren't in a shared model.");
-				return Result.Failure;
+				return Result.Cancel;
 			}
 
 			var choice = _GetReleaseChoice();
@@ -39,12 +38,12 @@ namespace Crash.Commands
 				case null:
 					return Result.Cancel;
 				case true:
-					var doneChange = DoneChange.GetDoneChange(CrashDoc.Users.CurrentUser.Name);
-					await CrashDoc.LocalClient.PushChangeAsync(doneChange);
+					var doneChange = DoneChange.GetDoneChange(crashDoc.Users.CurrentUser.Name);
+					await crashDoc.LocalClient.PushChangeAsync(doneChange);
 					break;
 			}
 
-			CrashDocRegistry.DisposeOfDocument(CrashDoc);
+			await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 			InteractivePipe.Active.Enabled = false;
 
 			RhinoApp.WriteLine("Model closed and saved successfully");
