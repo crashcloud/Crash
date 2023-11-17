@@ -2,50 +2,44 @@
 using System.Security.Cryptography;
 using System.Text;
 
-
 namespace Crash.Common.Document
 {
-
 	/// <summary>The state of the Camera for this user</summary>
 	public enum CameraState
 	{
 		None = 0,
 		Visible = 1,
-		Follow = 2,
+		Follow = 2
 	}
 
-	/// <summary>User class</summary>
+	/// <summary>An external collaborator</summary>
 	public struct User : IEquatable<User>
 	{
+		public static readonly Color DefaultColour = Color.Gray;
+
 		private string _name;
 
 		/// <summary>Is this user Visible?</summary>
 		public bool Visible { get; set; } = true;
 
 		/// <summary>Name of the user</summary>
-		public string Name
-		{
-			get => _name;
-			set => _name = CleanedUserName(value);
-		}
+		public string Name { get; }
 
 		/// <summary>Color of the user</summary>
 		public Color Color { get; set; }
 
+		/// <summary>The current state of the Users Camera</summary>
 		public CameraState Camera { get; set; } = CameraState.Visible;
 
-
-		/// <summary>
-		/// User Constructor 
-		/// </summary>
+		/// <summary>User Constructor</summary>
 		/// <param name="inputName">the name of the user</param>
 		public User(string inputName)
 		{
-			Name = inputName;
+			Name = CleanedUserName(inputName);
 
-			if (string.IsNullOrEmpty(inputName))
+			if (string.IsNullOrEmpty(Name))
 			{
-				Color = Color.Gray;
+				Color = DefaultColour;
 			}
 			else
 			{
@@ -53,25 +47,48 @@ namespace Crash.Common.Document
 				var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(Name));
 				Color = Color.FromArgb(hash[0], hash[1], hash[2]);
 			}
+
+			Camera = CameraState.Visible;
 		}
 
 		/// <summary>Checks user for being valid</summary>
-		public bool IsValid() => !string.IsNullOrEmpty(Name);
+		public bool IsValid()
+		{
+			return !string.IsNullOrEmpty(Name);
+		}
 
-		/// <inheritdoc/>
-		public override int GetHashCode() => string.IsNullOrEmpty(Name) ? -1 : Name.GetHashCode();
-		/// <inheritdoc/>
+		/// <summary>Ensures a username is lowercase and not null</summary>
+		/// <param name="username">Any string</param>
+		/// <returns>A non-null lowercase name</returns>
+		public static string CleanedUserName(string username)
+		{
+			return username?.ToLowerInvariant() ?? string.Empty;
+		}
+
+		public override int GetHashCode()
+		{
+			return CleanedUserName(Name).GetHashCode();
+		}
+
 		public override bool Equals(object? obj)
 		{
-			if (obj is not User user) return false;
-			return Equals(user);
+			return obj is User user && Equals(user);
 		}
-		/// <inheritdoc/>
-		public bool Equals(User other) => this.GetHashCode() == other.GetHashCode();
 
-		// TODO : Add cleaning methods
-		public static string CleanedUserName(string username) => username.ToLower();
 
+		public bool Equals(User other)
+		{
+			return Name.Equals(other.Name, StringComparison.InvariantCultureIgnoreCase);
+		}
+
+		public static bool operator ==(User left, User right)
+		{
+			return left.Equals(right);
+		}
+
+		public static bool operator !=(User left, User right)
+		{
+			return !(left == right);
+		}
 	}
-
 }

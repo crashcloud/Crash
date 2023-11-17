@@ -1,48 +1,69 @@
-﻿using Crash.Client;
+﻿using Crash.Common.Communications;
+using Crash.Common.Events;
+using Crash.Handlers;
 using Crash.Handlers.Plugins;
 
 using Rhino.PlugIns;
 
-
 namespace Crash
 {
-
 	/// <summary>
-	/// All CrashPlugins should inherit from this base
+	///     All CrashPlugins should inherit from this base
 	/// </summary>
 	public abstract class CrashPluginBase : PlugIn
 	{
-		internal EventDispatcher Dispatcher;
 		private readonly Stack<IChangeDefinition> _changes;
+
+		// TODO : Dispatcher needs to get disposed and recreated
+		private EventDispatcher Dispatcher;
 
 		protected CrashPluginBase()
 		{
 			_changes = new Stack<IChangeDefinition>();
-			CrashClient.OnInit += CrashClient_OnInit;
+
+			// TODO : All of this stuff needs to be moved outside a reused constructor
+			CrashDocRegistry.DocumentRegistered += CrashDocRegistryOnDocumentRegistered;
+			CrashDocRegistry.DocumentDisposed += CrashDocRegistryOnDocumentDisposed;
 		}
 
-		private void CrashClient_OnInit(object sender, CrashClient.CrashInitArgs e)
-		{
-			RhinoApp.WriteLine("Loading Changes ...");
+		#region Rhino Plugin Overrides
 
-			if (Dispatcher is null)
-			{
-				Dispatcher = new EventDispatcher();
-				Dispatcher.RegisterDefaultServerCalls(e.CrashDoc);
-			}
+		public sealed override PlugInLoadTime LoadTime
+			=> this is CrashPlugin ? PlugInLoadTime.AtStartup : PlugInLoadTime.WhenNeeded;
+
+		#endregion
+
+		private void CrashDocRegistryOnDocumentDisposed(object sender, CrashEventArgs e)
+		{
+			Dispatcher = null;
+			InteractivePipe.Active.Enabled = false;
+		}
+
+		private void CrashDocRegistryOnDocumentRegistered(object sender, CrashEventArgs e)
+		{
+			Dispatcher = new EventDispatcher();
+			RegisterDefinitions();
+			Dispatcher.RegisterDefaultServerCalls(e.CrashDoc);
+			InteractivePipe.Active.Enabled = true;
+
+			e.CrashDoc.LocalClient.OnInit += LocalClientOnOnInit;
+		}
+
+		private void LocalClientOnOnInit(object sender, CrashClient.CrashInitArgs e)
+		{
+			e.CrashDoc.LocalClient.OnInit -= LocalClientOnOnInit;
 
 			if (Dispatcher is not null)
 			{
-				RegisterDefinitions();
+				e.CrashDoc.IsInit = true;
 
-				e.CrashDoc.CacheTable.IsInit = true;
-
-				foreach (Change change in e.Changes)
+				// TODO : Handle Async!
+				foreach (var change in e.Changes)
 				{
-					Dispatcher.NotifyDispatcherAsync(e.CrashDoc, change);
+					Dispatcher.NotifyClientAsync(e.CrashDoc, change);
 				}
 
-				e.CrashDoc.CacheTable.IsInit = false;
+				e.CrashDoc.IsInit = false;
 			}
 		}
 
@@ -54,23 +75,13 @@ namespace Crash
 
 		private void RegisterDefinitions()
 		{
-			while (_changes.Count > 0)
+			var changeEnuner = _changes.GetEnumerator();
+
+			while (changeEnuner.MoveNext())
 			{
-				var changeDefinition = _changes.Pop();
+				var changeDefinition = changeEnuner.Current;
 				Dispatcher.RegisterDefinition(changeDefinition);
 			}
 		}
-
-		#region Rhino Plugin Overrides 
-
-		/// <inheritdoc />
-		public sealed override PlugInLoadTime LoadTime
-			=> this is CrashPlugin ?
-				PlugInLoadTime.AtStartup :
-				PlugInLoadTime.WhenNeeded;
-
-		#endregion
-
 	}
-
 }

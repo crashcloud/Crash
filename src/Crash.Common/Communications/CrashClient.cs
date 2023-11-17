@@ -1,46 +1,167 @@
 ﻿using System.Diagnostics;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Crash.Common.Document;
 using Crash.Common.Events;
-using Crash.Common.Exceptions;
 using Crash.Common.Logging;
 
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Crash.Client
+namespace Crash.Common.Communications
 {
-
 	/// <summary>
-	/// Crash client class
+	///     Crash client class
 	/// </summary>
-	public sealed class CrashClient
+	public sealed class CrashClient : ICrashClient
 	{
-		#region consts
-		const string ADD = "Add";
-		const string DELETE = "Delete";
-		const string DONE = "Done";
-		const string UPDATE = "Update";
-		const string SELECT = "Select";
-		const string UNSELECT = "Unselect";
-		const string INITIALIZE = "Initialize";
-		const string CAMERACHANGE = "CameraChange";
-
 		// TODO : Move to https
 		public const string DefaultURL = "http://localhost";
-		#endregion
+		private readonly CrashDoc _crashDoc;
 
-		readonly HubConnection _connection;
-		readonly string _user;
-		readonly CrashDoc _crashDoc;
-
-		public bool IsConnected => _connection.State != HubConnectionState.Disconnected;
-		public HubConnectionState State => _connection.State;
+		private HubConnection _connection;
+		private string _user;
 
 		/// <summary>
-		/// Closed event
+		///     Crash client constructor
+		/// </summary>
+		/// <param name="crashDoc">The Document to associate this Client to</param>
+		public CrashClient(CrashDoc crashDoc)
+		{
+			_crashDoc = crashDoc;
+		}
+
+		public HubConnectionState State => _connection.State;
+
+		public bool IsConnected => _connection.State != HubConnectionState.Disconnected;
+
+		/// <summary>Stops the Connection</summary>
+		public async Task StopAsync()
+		{
+			await _connection?.StopAsync();
+		}
+
+		/// <summary>Starts the Client</summary>
+		/// <exception cref="ArgumentNullException">If CrashDoc is null</exception>
+		/// <exception cref="Exception">If UserName is empty</exception>
+		public async Task StartLocalClientAsync()
+		{
+			if (_crashDoc is null)
+			{
+				throw new ArgumentNullException("CrashDoc cannot be null!");
+			}
+
+			var userName = _crashDoc?.Users?.CurrentUser.Name;
+			if (string.IsNullOrEmpty(userName))
+			{
+				throw new Exception("A User has not been assigned!");
+			}
+
+			OnInitializeChanges += Init;
+			OnInitializeUsers += InitUsers;
+
+			await StartAsync();
+		}
+
+		/// <summary>
+		///     Pushes an Update/Transform/Payload which applies to many Changes
+		///     An example of this is arraying the same item or deleting many items at once
+		/// </summary>
+		/// <param name="ids">The records to update</param>
+		/// <param name="change">The newest changes</param>
+		public async Task PushIdenticalChangesAsync(IEnumerable<Guid> ids, Change change)
+		{
+			await _connection.InvokeAsync(PUSH_IDENTICAL, ids, change);
+		}
+
+		/// <summary>Pushes a single Change</summary>
+		public async Task PushChangeAsync(Change change)
+		{
+			await _connection.InvokeAsync(PUSH_SINGLE, change);
+		}
+
+		/// <summary>
+		///     Pushes many unique changes at once
+		///     An example of this may be copying 10 unique items
+		/// </summary>
+		public async Task PushChangesAsync(IEnumerable<Change> changes)
+		{
+			await _connection.InvokeAsync(PUSH_MANY, changes);
+		}
+
+		public async Task InitializeChangesAsync(IEnumerable<Change> changes)
+		{
+			;
+		}
+
+		public async Task InitializeUsersAsync(IEnumerable<string> users)
+		{
+			;
+		}
+
+		/// <summary>Local Event corresponding to a Server call for Initialize</summary>
+		public event Action<IEnumerable<Change>> OnInitializeChanges;
+
+		/// <summary>Local Event corresponding to a Server call for Initialize Users</summary>
+		public event Action<IEnumerable<string>> OnInitializeUsers;
+
+		public event Action<IEnumerable<Guid>, Change> OnPushIdentical;
+
+		public event Action<Change> OnPushChange;
+
+		public event Action<IEnumerable<Change>> OnPushChanges;
+
+		public event EventHandler<CrashInitArgs> OnInit;
+
+		public void RegisterConnection(string userName, Uri url)
+		{
+			if (string.IsNullOrEmpty(userName))
+			{
+				throw new ArgumentException("Username cannot be empty or null");
+			}
+
+			if (url is null)
+			{
+				throw new UriFormatException("URL Cannot be null");
+			}
+
+			if (!url.AbsoluteUri.Contains("/Crash"))
+			{
+				throw new UriFormatException("URL must end in /Crash to connect!");
+			}
+
+			_user = userName;
+			_connection = GetHubConnection(url);
+			RegisterConnections();
+		}
+
+		/// <summary>Done</summary>
+		public async Task DoneAsync()
+		{
+			var doneChange = new Change { Owner = _user, Action = ChangeAction.Release, Type = "Crash.DoneChange" };
+			await PushChangeAsync(doneChange);
+		}
+
+		/// <summary>Releases a collection of changes</summary>
+		public async Task DoneRangeAsync(IEnumerable<Guid> changeIds)
+		{
+			var doneChange = new Change
+			                 {
+				                 Owner = string.Empty, Action = ChangeAction.Release, Type = "Crash.DoneChange"
+			                 };
+			await PushIdenticalChangesAsync(changeIds, doneChange);
+		}
+
+		/// <summary>Local Event corresponding to a Server call for Done</summary>
+		public event Action<string> OnDone;
+
+		/// <summary>Local Event corresponding to a Server call for Done Range</summary>
+		public event Action<IEnumerable<Guid>> OnDoneRange;
+
+		/// <summary>
+		///     Closed event
 		/// </summary>
 		public event Func<Exception, Task> Closed
 		{
@@ -48,114 +169,74 @@ namespace Crash.Client
 			remove => _connection.Closed -= value;
 		}
 
-		public event Action<string, Change> OnAdd;
-		public event Action<string, Guid> OnDelete;
-		public event Action<string, Guid, Change> OnUpdate;
-		public event Action<string> OnDone;
-		public event Action<string, Guid> OnSelect;
-		public event Action<string, Guid> OnUnselect;
-		public event Action<Change[]> OnInitialize;
-		public event Action<string, Change> OnCameraChange;
 
-		/// <summary>
-		/// Stop async task
-		/// </summary>
-		/// <returns></returns>
-		public Task StopAsync() => _connection?.StopAsync();
-
-		/// <summary>
-		/// Crash client constructor
-		/// </summary>
-		/// <param name="userName">user name</param>
-		/// <param name="url">url</param>
-		public CrashClient(CrashDoc crashDoc, string userName, Uri url)
+		/// <summary>Creates a connection to the Crash Server</summary>
+		public static HubConnection GetHubConnection(Uri url)
 		{
-			if (string.IsNullOrEmpty(userName))
-			{
-				throw new ArgumentException("Username cannot be empty or null");
-			}
-			if (null == url)
-			{
-				throw new UriFormatException("URL Cannot be null");
-			}
-			if (!url.AbsoluteUri.Contains("/Crash"))
-			{
-				throw new UriFormatException("URL must end in /Crash to connect!");
-			}
-
-			_crashDoc = crashDoc;
-			_user = userName;
-			_connection = GetHubConnection(url);
-			RegisterConnections();
+			return new HubConnectionBuilder()
+			       .WithUrl(url)
+			       // .ConfigureLogging(LoggingConfigurer)
+			       .WithAutomaticReconnect(new[]
+			                               {
+				                               TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100),
+				                               TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(10)
+			                               })
+			       .Build();
 		}
 
-		internal static HubConnection GetHubConnection(Uri url) => new HubConnectionBuilder()
-			   .WithUrl(url).AddJsonProtocol()
-			   .AddJsonProtocol((opts) => JsonOptions())
-			   // .ConfigureLogging(LoggingConfigurer)
-			   .WithAutomaticReconnect(new[] { TimeSpan.FromMilliseconds(10),
-											   TimeSpan.FromMilliseconds(100),
-											   TimeSpan.FromSeconds(1),
-											   TimeSpan.FromSeconds(10) })
-			   .Build();
-
-		public static JsonHubProtocolOptions JsonOptions() => new JsonHubProtocolOptions()
+		public static JsonHubProtocolOptions JsonOptions()
 		{
-			PayloadSerializerOptions = new System.Text.Json.JsonSerializerOptions()
-			{
-				IgnoreReadOnlyFields = true,
-				IgnoreReadOnlyProperties = true,
-				NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals,
-			}
-		};
+			return new JsonHubProtocolOptions
+			       {
+				       PayloadSerializerOptions = new JsonSerializerOptions
+				                                  {
+					                                  IgnoreReadOnlyFields = true,
+					                                  IgnoreReadOnlyProperties = true,
+					                                  NumberHandling = JsonNumberHandling
+						                                  .AllowNamedFloatingPointLiterals
+				                                  }
+			       };
+		}
 
 		private static void LoggingConfigurer(ILoggingBuilder loggingBuilder)
 		{
-			LogLevel logLevel = Debugger.IsAttached ? LogLevel.Trace : LogLevel.Information;
+			var logLevel = Debugger.IsAttached ? LogLevel.Trace : LogLevel.Information;
 			loggingBuilder.SetMinimumLevel(logLevel);
 			var loggingProvider = new CrashLoggerProvider();
 			loggingBuilder.AddProvider(loggingProvider);
 		}
 
+		/// <summary>Registers Local Events responding to Server calls</summary>
 		internal void RegisterConnections()
 		{
-			_connection.On<string, Change>(ADD, (user, change) => OnAdd?.Invoke(user, change));
-			_connection.On<string, Guid>(DELETE, (user, id) => OnDelete?.Invoke(user, id));
-			_connection.On<string, Guid, Change>(UPDATE, (user, id, Change) => OnUpdate?.Invoke(user, id, Change));
-			_connection.On<string>(DONE, (user) => OnDone?.Invoke(user));
-			_connection.On<string, Guid>(SELECT, (user, id) => OnSelect?.Invoke(user, id));
-			_connection.On<string, Guid>(UNSELECT, (user, id) => OnUnselect?.Invoke(user, id));
-			_connection.On<Change[]>(INITIALIZE, (Changes) => OnInitialize?.Invoke(Changes));
-			_connection.On<string, Change>(CAMERACHANGE, (user, Change) => OnCameraChange?.Invoke(user, Change));
+			_connection.On<IEnumerable<Change>>(INITIALIZE, changes => OnInitializeChanges?.Invoke(changes));
+			_connection.On<IEnumerable<string>>(INITIALIZEUSERS, users => OnInitializeUsers?.Invoke(users));
+
+			_connection.On<IEnumerable<Guid>, Change>(PUSH_IDENTICAL,
+			                                          (ids, change) => OnPushIdentical?.Invoke(ids, change));
+			_connection.On<Change>(PUSH_SINGLE, change => OnPushChange?.Invoke(change));
+			_connection.On<IEnumerable<Change>>(PUSH_MANY, changes => OnPushChanges?.Invoke(changes));
 
 			_connection.Reconnected += ConnectionReconnectedAsync;
 			_connection.Closed += ConnectionClosedAsync;
 			_connection.Reconnecting += ConnectionReconnectingAsync;
 		}
 
-		public async Task StartLocalClientAsync()
-		{
-			if (null == _crashDoc)
-			{
-				throw new NullReferenceException("CrashDoc cannot be null!");
-			}
-
-			string? userName = _crashDoc?.Users?.CurrentUser.Name;
-			if (string.IsNullOrEmpty(userName))
-			{
-				throw new Exception("A User has not been assigned!");
-			}
-
-			this.OnInitialize += Init;
-
-			// TODO : Check for successful connection
-			await this.StartAsync();
-		}
-
 		// This isn't calling, and needs to call the Event Dispatcher
 		private void Init(IEnumerable<Change> changes)
 		{
+			OnInitializeChanges -= Init;
 			OnInit?.Invoke(this, new CrashInitArgs(_crashDoc, changes));
+		}
+
+		private void InitUsers(IEnumerable<string> users)
+		{
+			OnInitializeUsers -= InitUsers;
+			// User Init
+			foreach (var user in users)
+			{
+				_crashDoc.Users.Add(user);
+			}
 		}
 
 		public static void CloseLocalServer(CrashDoc crashDoc)
@@ -182,86 +263,11 @@ namespace Crash.Client
 			return Task.CompletedTask;
 		}
 
-		/// <summary>
-		/// Update task
-		/// </summary>
-		/// <param name="id">id</param>
-		/// <param name="Change">Change</param>
-		/// <returns></returns>
-		public async Task UpdateAsync(Guid id, Change Change)
+		/// <summary>Start the async connection</summary>
+		private Task StartAsync()
 		{
-			await _connection.InvokeAsync(UPDATE, _user, id, Change);
+			return _connection.StartAsync();
 		}
-
-		/// <summary>
-		/// Delete task
-		/// </summary>
-		/// <param name="id">id</param>
-		/// <returns>returns task</returns>
-		public async Task DeleteAsync(Guid id)
-		{
-			await _connection.InvokeAsync(DELETE, _user, id);
-		}
-
-		/// <summary>Adds a change to database </summary>
-		public async Task AddAsync(Change Change)
-		{
-			int changeLength = Change.Payload.Length;
-			if (changeLength >= ushort.MaxValue)
-			{
-				throw new OversizedChangeException($"Change is over maximum size. {changeLength}/{ushort.MaxValue}");
-			}
-
-			CrashLogger.Logger.LogInformation($"Change {Change.Id} size is {changeLength}");
-
-			await _connection.InvokeAsync(ADD, _user, Change);
-		}
-
-		/// <summary>Done</summary>
-		public async Task DoneAsync()
-		{
-			await _connection.InvokeAsync(DONE, _user);
-		}
-
-		/// <summary>Releases a collection of changes</summary>
-		public async Task DoneAsync(IEnumerable<Guid> changeIds)
-		{
-			await _connection.InvokeAsync(DONE, _user, changeIds);
-		}
-
-		/// <summary>Select event</summary>
-		public async Task SelectAsync(Guid id)
-		{
-			await _connection.InvokeAsync(SELECT, _user, id);
-		}
-
-		/// <summary>
-		/// Unselect event
-		/// </summary>
-		/// <param name="id"></param>
-		/// <returns></returns>
-		public async Task UnselectAsync(Guid id)
-		{
-			await _connection.InvokeAsync(UNSELECT, _user, id);
-		}
-
-		/// <summary>
-		/// CameraChange event
-		/// </summary>
-		/// <param name="id"></param>
-		/// <returns></returns>
-		public async Task CameraChangeAsync(Change Change)
-		{
-			await _connection.InvokeAsync(CAMERACHANGE, _user, Change);
-		}
-
-		/// <summary>
-		/// Start the async connection
-		/// </summary>
-		/// <returns></returns>
-		private Task StartAsync() => _connection.StartAsync();
-
-		public static event EventHandler<CrashInitArgs> OnInit;
 
 		public sealed class CrashInitArgs : CrashEventArgs
 		{
@@ -274,6 +280,14 @@ namespace Crash.Client
 			}
 		}
 
-	}
+		#region consts
 
+		private const string PUSH_IDENTICAL = "PushIdenticalChanges";
+		private const string PUSH_SINGLE = "PushChange";
+		private const string PUSH_MANY = "PushChanges";
+		private const string INITIALIZE = "InitializeChanges";
+		private const string INITIALIZEUSERS = "InitializeUsers";
+
+		#endregion
+	}
 }

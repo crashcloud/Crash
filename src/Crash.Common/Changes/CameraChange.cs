@@ -1,79 +1,71 @@
 ﻿using System.Text.Json;
 
+using Crash.Common.Serialization;
 using Crash.Common.View;
 
 namespace Crash.Common.Changes
 {
-
-	/// <summary>Captues a Change of Camera</summary>
-	public sealed class CameraChange : IChange
+	/// <summary>Captures a Change of a Camera</summary>
+	public struct CameraChange : IChange
 	{
-		/// <summary>The Unique Name of this Change</summary>
-		public const string ChangeName = $"{nameof(Crash)}.{nameof(CameraChange)}";
+		public const string ChangeType = "Crash.CameraChange";
 
-		/// <inheritdoc/>
-		IChange Change { get; set; }
+		public Camera Camera { get; private set; }
 
-		public Camera Camera { get; set; }
+		public DateTime Stamp { get; private set; }
 
-		/// <inheritdoc/>
-		public DateTime Stamp => Change.Stamp;
+		public Guid Id { get; private set; }
 
-		/// <inheritdoc/>
-		public Guid Id => Change.Id;
+		public string? Owner { get; private set; }
 
-		/// <inheritdoc/>
-		public string? Owner => Change.Owner;
+		public string? Payload { get; private set; }
 
-		/// <inheritdoc/>
-		public string? Payload => Change.Payload;
+		public ChangeAction Action { get; set; } = ChangeAction.Add;
 
-		/// <inheritdoc/>
-		public ChangeAction Action
+		public readonly string Type => ChangeType;
+
+		public CameraChange() { }
+
+		/// <summary>Creates a new Camera Change from an IChange</summary>
+		public static CameraChange CreateFrom(IChange change)
 		{
-			get => Change.Action;
-			[Obsolete("For Deserialization only", true)]
-			set => Change.Action = value;
-		}
-
-		/// <inheritdoc/>
-		public string Type => ChangeName;
-
-		/// <summary>Empty Constructor</summary>
-		public CameraChange()
-		{
-
-		}
-
-		/// <summary>IChange wrapping constructor</summary>
-		public CameraChange(IChange change)
-		{
-			Change = change;
-			Change.Action = ChangeAction.Camera;
-
-			if (string.IsNullOrEmpty(Change.Payload))
+			return new CameraChange
 			{
-				throw new ArgumentNullException($"Payload is invalid, {nameof(Change.Payload)}");
-			}
-
-			var camera = JsonSerializer.Deserialize<Camera>(Change.Payload);
-
-			if (!camera.IsValid())
-			{
-				throw new JsonException("Could not deserialize Camera");
-			}
-
-			Camera = camera;
+				Camera = JsonSerializer.Deserialize<Camera>(change.Payload),
+				Stamp = change.Stamp,
+				Id = change.Id,
+				Owner = change.Owner,
+				Payload = change.Payload,
+				Action = ChangeAction.Add
+			};
 		}
 
-		/// <summary>Creates a new Camera Change</summary>
+		/// <summary>Creates a new Camera Change from the required parts</summary>
 		public static CameraChange CreateNew(Camera camera, string userName)
 		{
-			string json = JsonSerializer.Serialize(camera, Serialization.Options.Default);
-			IChange cameraChange = new Change(Guid.NewGuid(), userName, json);
-			return new CameraChange(cameraChange);
+			return new CameraChange
+			{
+				Camera = camera,
+				Stamp = DateTime.UtcNow,
+				Id = Guid.NewGuid(),
+				Owner = userName,
+				Payload = JsonSerializer.Serialize(camera, Options.Default),
+				Action = ChangeAction.Add
+			};
 		}
 
+		/// <summary>Creates a new transmittable Change</summary>
+		public static Change CreateChange(Camera camera, string userName)
+		{
+			return new Change
+			{
+				Stamp = DateTime.UtcNow,
+				Id = Guid.NewGuid(),
+				Owner = userName,
+				Payload = JsonSerializer.Serialize(camera, Options.Default),
+				Action = ChangeAction.Add,
+				Type = ChangeType
+			};
+		}
 	}
-
 }

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using Crash.Geometry;
@@ -9,20 +8,19 @@ namespace Crash.Common.Tests.Serialization
 	[TestFixture]
 	public sealed class CTransformSerializationTests
 	{
-
-		internal readonly static JsonSerializerOptions TestOptions;
+		internal static readonly JsonSerializerOptions TestOptions;
 
 		static CTransformSerializationTests()
 		{
-			TestOptions = new JsonSerializerOptions()
-			{
-				IgnoreReadOnlyFields = true,
-				IgnoreReadOnlyProperties = true,
-				IncludeFields = true,
-				NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
-				ReadCommentHandling = JsonCommentHandling.Skip,
-				WriteIndented = true, // TODO : Should this be avoided? Does it add extra memory?
-			};
+			TestOptions = new JsonSerializerOptions
+			              {
+				              IgnoreReadOnlyFields = true,
+				              IgnoreReadOnlyProperties = true,
+				              IncludeFields = true,
+				              NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
+				              ReadCommentHandling = JsonCommentHandling.Skip,
+				              WriteIndented = true // TODO : Should this be avoided? Does it add extra memory?
+			              };
 		}
 
 		[TestCaseSource(typeof(InvalidTransformValues), nameof(InvalidTransformValues.TestCases))]
@@ -60,11 +58,10 @@ namespace Crash.Common.Tests.Serialization
 			var cDoublesEnumer = cTransform.GetEnumerator();
 			var cDoublesOutEnumer = cTransformOut.GetEnumerator();
 			while (cDoublesEnumer.MoveNext() &
-				  cDoublesOutEnumer.MoveNext())
+			       cDoublesOutEnumer.MoveNext())
 			{
 				Assert.That(cDoublesEnumer.Current, Is.EqualTo(cDoublesOutEnumer.Current));
 			}
-
 		}
 
 		public static class InvalidTransformValues
@@ -73,7 +70,7 @@ namespace Crash.Common.Tests.Serialization
 			{
 				get
 				{
-					yield return new CTransform(double.NaN, 0);
+					yield return new CTransform(double.NaN);
 					yield return new CTransform(double.NegativeInfinity);
 					yield return new CTransform(double.PositiveInfinity);
 					yield return new CTransform(double.MaxValue);
@@ -81,7 +78,5 @@ namespace Crash.Common.Tests.Serialization
 				}
 			}
 		}
-
-
 	}
 }

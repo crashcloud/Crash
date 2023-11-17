@@ -2,7 +2,6 @@
 
 namespace Crash.Common.Events
 {
-
 	/// <summary>The Crash Event Args</summary>
 	public class CrashEventArgs : EventArgs
 	{
@@ -14,8 +13,5 @@ namespace Crash.Common.Events
 		{
 			CrashDoc = crashDoc;
 		}
-
-
 	}
-
 }

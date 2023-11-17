@@ -2,21 +2,18 @@
 using Crash.Utils;
 
 using Rhino;
-using Rhino.DocObjects;
 using Rhino.Geometry;
 
 namespace Crash.Handlers.Tests.Changes
 {
-
 	[RhinoFixture]
 	public sealed class ChangeUtils_Tests
 	{
-
 		/// <summary>Test that nothing throws</summary>
 		[Test]
 		public void TryGetChangeId_NullInput()
 		{
-			Assert.That(ChangeUtils.TryGetChangeId(null, out Guid id), Is.False);
+			Assert.That(ChangeHelpers.TryGetChangeId(null, out var id), Is.False);
 			Assert.That(id, Is.EqualTo(Guid.Empty));
 		}
 
@@ -24,12 +21,12 @@ namespace Crash.Handlers.Tests.Changes
 		[Test]
 		public void TryGetChangeId_EmptyDictionary()
 		{
-			RhinoDoc doc = RhinoDoc.CreateHeadless(null);
-			LineCurve lineCurve = new LineCurve(Point3d.Origin, new Point3d(100, 0, 0));
-			Guid rhinoId = doc.Objects.Add(lineCurve);
-			RhinoObject rhinoObject = doc.Objects.FindId(rhinoId);
+			var doc = RhinoDoc.CreateHeadless(null);
+			var lineCurve = new LineCurve(Point3d.Origin, new Point3d(100, 0, 0));
+			var rhinoId = doc.Objects.Add(lineCurve);
+			var rhinoObject = doc.Objects.FindId(rhinoId);
 
-			Assert.That(ChangeUtils.TryGetChangeId(rhinoObject, out Guid id), Is.False);
+			Assert.That(rhinoObject.TryGetChangeId(out var id), Is.False);
 			Assert.That(id, Is.EqualTo(Guid.Empty));
 		}
 
@@ -37,16 +34,16 @@ namespace Crash.Handlers.Tests.Changes
 		[Test]
 		public void SyncHost_NullInputs()
 		{
-			ChangeUtils.SyncHost(null, null);
+			ChangeHelpers.SyncHost(null, null, null);
 
-			ChangeUtils.SyncHost(null, new ExampleRhinoChange());
+			ChangeHelpers.SyncHost(null, new ExampleRhinoChange(), null);
 
 
-			RhinoDoc doc = RhinoDoc.CreateHeadless(null);
-			LineCurve lineCurve = new LineCurve(Point3d.Origin, new Point3d(100, 0, 0));
-			Guid rhinoId = doc.Objects.Add(lineCurve);
-			RhinoObject rhinoObject = doc.Objects.FindId(rhinoId);
-			ChangeUtils.SyncHost(rhinoObject, null);
+			var doc = RhinoDoc.CreateHeadless(null);
+			var lineCurve = new LineCurve(Point3d.Origin, new Point3d(100, 0, 0));
+			var rhinoId = doc.Objects.Add(lineCurve);
+			var rhinoObject = doc.Objects.FindId(rhinoId);
+			rhinoObject.SyncHost(null, null);
 		}
 
 		private sealed class ExampleRhinoChange : IChange
@@ -63,7 +60,5 @@ namespace Crash.Handlers.Tests.Changes
 
 			public ChangeAction Action { get; set; } = ChangeAction.Add;
 		}
-
 	}
-
 }

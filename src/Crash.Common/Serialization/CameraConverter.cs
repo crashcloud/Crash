@@ -6,14 +6,12 @@ using Crash.Geometry;
 
 namespace Crash.Common.Serialization
 {
-
 	/// <summary>
-	/// Converts the Camera class to and from JSON efficiently
+	///     Converts the Camera class to and from JSON efficiently
 	/// </summary>
 	public sealed class CameraConverter : JsonConverter<Camera>
 	{
-
-		/// <inheritdoc/>
+		
 		public override Camera Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
 			if (reader.TokenType != JsonTokenType.StartArray)
@@ -21,33 +19,25 @@ namespace Crash.Common.Serialization
 				throw new JsonException();
 			}
 
-			if (reader.Read() && reader.TryGetDouble(out double targetX) &&
-				reader.Read() && reader.TryGetDouble(out double targetY) &&
-				reader.Read() && reader.TryGetDouble(out double targetZ) &&
-
-				reader.Read() && reader.TryGetDouble(out double locationX) &&
-				reader.Read() && reader.TryGetDouble(out double locationY) &&
-				reader.Read() && reader.TryGetDouble(out double locationZ) &&
-
-				reader.Read() && reader.TryGetInt64(out long ticks) &&
-
-				reader.Read() && reader.TokenType == JsonTokenType.EndArray)
+			if (reader.Read() && reader.TryGetDouble(out var targetX) &&
+			    reader.Read() && reader.TryGetDouble(out var targetY) &&
+			    reader.Read() && reader.TryGetDouble(out var targetZ) &&
+			    reader.Read() && reader.TryGetDouble(out var locationX) &&
+			    reader.Read() && reader.TryGetDouble(out var locationY) &&
+			    reader.Read() && reader.TryGetDouble(out var locationZ) &&
+			    reader.Read() && reader.TryGetInt64(out var ticks) &&
+			    reader.Read() && reader.TokenType == JsonTokenType.EndArray)
 			{
-				CPoint location = new CPoint(locationX, locationY, locationZ);
-				CPoint target = new CPoint(targetX, targetY, targetZ);
+				var location = new CPoint(locationX, locationY, locationZ);
+				var target = new CPoint(targetX, targetY, targetZ);
 
-				return new Camera(location, target)
-				{
-					Stamp = new DateTime(ticks)
-				};
+				return new Camera(location, target) { Stamp = new DateTime(ticks) };
 			}
-			else
-			{
-				throw new JsonException();
-			}
+
+			throw new JsonException();
 		}
 
-		/// <inheritdoc/>
+		
 		public override void Write(Utf8JsonWriter writer, Camera value, JsonSerializerOptions options)
 		{
 			var target = value.Target;
@@ -67,7 +57,5 @@ namespace Crash.Common.Serialization
 
 			writer.WriteEndArray();
 		}
-
 	}
-
 }

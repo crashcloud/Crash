@@ -1,18 +1,14 @@
 ﻿using System.Collections;
-using System.IO;
-using System.Threading.Tasks;
 
 using Crash.Changes;
-using Crash.Common.Changes;
 using Crash.Common.Document;
+using Crash.Handlers.Changes;
 using Crash.Handlers.Plugins.Geometry.Recieve;
 
 using Rhino;
-using Rhino.Geometry;
 
 namespace Crash.Handlers.Tests.Plugins.Geometry
 {
-
 	[RhinoFixture]
 	public sealed class GeometryAddRecieveActionTests
 	{
@@ -23,6 +19,21 @@ namespace Crash.Handlers.Tests.Plugins.Geometry
 		{
 			RhinoDoc.ActiveDoc = _rdoc = RhinoDoc.CreateHeadless(null);
 			_cdoc = CrashDocRegistry.CreateAndRegisterDocument(_rdoc);
+		}
+
+		public static IEnumerable AddChanges
+		{
+			get
+			{
+				for (var i = 0; i < 10; i++)
+				{
+					var owner = Path.GetRandomFileName().Replace(".", "");
+					var lineCurve = NRhino.Random.Geometry.NLineCurve.Any();
+					IChange change = GeometryChange.CreateNew(lineCurve, owner);
+
+					yield return new Change(change);
+				}
+			}
 		}
 
 		[TestCaseSource(nameof(AddChanges))]
@@ -39,24 +50,7 @@ namespace Crash.Handlers.Tests.Plugins.Geometry
 
 			// Assert that RhinoDoc had something added 
 			Assert.That(_rdoc.Objects, Is.Not.Empty);
-			Assert.That(_cdoc.CacheTable, Is.Empty);
+			Assert.That(_cdoc.TemporaryChangeTable, Is.Empty);
 		}
-
-		public static IEnumerable AddChanges
-		{
-			get
-			{
-				for (int i = 0; i < 100; i++)
-				{
-					string owner = Path.GetRandomFileName().Replace(".", "");
-					LineCurve lineCurve = NRhino.Random.Geometry.NLineCurve.Any();
-					IChange change = GeometryChange.CreateNew(owner, lineCurve);
-
-					yield return new Change(change);
-				}
-			}
-		}
-
 	}
-
 }

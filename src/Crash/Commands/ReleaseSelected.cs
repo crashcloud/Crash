@@ -1,54 +1,58 @@
-﻿using Crash.Common.Document;
-using Crash.Handlers;
+﻿using Crash.Common.Changes;
+using Crash.Common.Document;
 using Crash.Utils;
 
 using Rhino.Commands;
 
-
 namespace Crash.Commands
 {
-
 	/// <summary>Command to Release Changes</summary>
-	[CommandStyle(Style.DoNotRepeat | Style.NotUndoable | Style.Hidden)]
-	public sealed class ReleaseSelected : Command
+	[CommandStyle(Style.DoNotRepeat | Style.NotUndoable)]
+	public sealed class ReleaseSelected : AsyncCommand
 	{
-
-		/// <summary>Default Constructor</summary>
 		public ReleaseSelected()
 		{
 			Instance = this;
 		}
 
-		/// <inheritdoc />
+
 		public static ReleaseSelected Instance { get; private set; }
 
-		/// <inheritdoc />
+
 		public override string EnglishName => "ReleaseSelected";
 
-		/// <inheritdoc />
-		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc CrashDoc, RunMode mode)
 		{
-			IEnumerable<Guid> selectedChanges = getSelectedChanges(doc);
-			if (selectedChanges.Count() <= 0)
+			var selectedChanges = GetSelectedChanges(doc);
+			if (!selectedChanges.Any())
+			{
 				return Result.Cancel;
+			}
+
+			if (CrashDoc?.LocalClient is null)
+			{
+				RhinoApp.WriteLine("You aren't in a shared model.");
+				return Result.Failure;
+			}
 
 			// TODO : Wait for response for data integrity check
-			CrashDoc? crashDoc = CrashDocRegistry.GetRelatedDocument(doc);
-			crashDoc?.LocalClient?.DoneAsync(selectedChanges);
+			var user = CrashDoc.Users.CurrentUser.Name;
+			await CrashDoc.LocalClient.PushIdenticalChangesAsync(selectedChanges, DoneChange.GetDoneChange(user));
 
 			return Result.Success;
 		}
 
-		private IEnumerable<Guid> getSelectedChanges(RhinoDoc doc)
+		private static IEnumerable<Guid> GetSelectedChanges(RhinoDoc doc)
 		{
 			foreach (var rhinoObj in doc.Objects.GetSelectedObjects(false, false))
 			{
-				if (!ChangeUtils.TryGetChangeId(rhinoObj, out Guid id))
+				if (!rhinoObj.TryGetChangeId(out var id))
+				{
 					continue;
+				}
 
 				yield return id;
 			}
 		}
 	}
-
 }

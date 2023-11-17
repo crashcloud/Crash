@@ -2,10 +2,8 @@
 
 namespace Crash.Tests.Collections
 {
-
 	public sealed class FixedSizedQueueTests
 	{
-
 		[Test]
 		[Parallelizable]
 		public void Enqueue_WhenQueueIsNotFull_AddsItemToQueue()
@@ -39,7 +37,5 @@ namespace Crash.Tests.Collections
 			Assert.That(queue.Count, Is.EqualTo(3));
 			CollectionAssert.AreEqual(new[] { 2, 3, 4 }, queue);
 		}
-
 	}
-
 }

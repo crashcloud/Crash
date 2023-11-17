@@ -1,5 +1,4 @@
-﻿using Eto;
-using Eto.Drawing;
+﻿using Eto.Drawing;
 
 namespace Crash.UI
 {
@@ -7,7 +6,7 @@ namespace Crash.UI
 	{
 		// Text & Highlights
 		public static Color TextColour => Color.FromArgb(29, 29, 27);
-		public static Color White => Color.FromArgb(255,255,255);
+		public static Color White => Color.FromArgb(255, 255, 255);
 		public static Color Transparent => Color.FromArgb(0, 0, 0, 0);
 
 		public static Color Grey => Color.FromArgb(125, 125, 125);
@@ -16,7 +15,5 @@ namespace Crash.UI
 		// Crash Colours
 		public static Color NavyBlue => Color.FromArgb(29, 48, 146);
 		public static Color SeaGreen => Color.FromArgb(129, 226, 200);
-
 	}
-
 }

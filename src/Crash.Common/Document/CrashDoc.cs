@@ -1,40 +1,17 @@
 ﻿using System.Runtime.CompilerServices;
 
-using Crash.Client;
+using Crash.Common.Communications;
 using Crash.Common.Tables;
-using Crash.Communications;
 using Crash.Events;
 
 [assembly: InternalsVisibleTo("Crash.Common.Tests")]
+
 namespace Crash.Common.Document
 {
-
 	/// <summary>The Crash Document</summary>
 	public sealed class CrashDoc : IEquatable<CrashDoc>, IDisposable
 	{
 		public readonly Guid Id;
-
-		#region Tables
-		/// <summary>The Users Table for the Crash Doc</summary>
-		public readonly UserTable Users;
-		/// <summary>The Changes Table for the Crash Doc</summary>
-		public readonly ChangeTable CacheTable;
-		/// <summary>The Camera Table for the crash Doc</summary>
-		public readonly CameraTable Cameras;
-		#endregion
-
-		#region Connectivity
-		/// <summary>The Local Client for the Crash Doc</summary>
-		public CrashClient? LocalClient { get; set; }
-		/// <summary>The Local Server for the Crash Doc</summary>
-		public CrashServer? LocalServer { get; set; }
-		#endregion
-
-		#region Queue
-		/// <summary>The Idle Queue for the Crash Document</summary>
-		public IdleQueue Queue { get; private set; }
-
-		#endregion
 
 		#region constructors
 
@@ -44,38 +21,96 @@ namespace Crash.Common.Document
 			Id = Guid.NewGuid();
 
 			Users = new UserTable(this);
-			CacheTable = new ChangeTable(this);
+			TemporaryChangeTable = new TemporaryChangeTable(this);
+			RealisedChangeTable = new RealisedChangeTable(this);
 			Cameras = new CameraTable(this);
+
+			LocalClient = new CrashClient(this);
 
 			Queue = new IdleQueue(this);
 		}
 
 		#endregion
 
-		#region Methods
-		/// <inheritdoc/>
-		public bool Equals(CrashDoc? other)
-			=> other?.GetHashCode() == GetHashCode();
+		/// <summary>
+		///     Marks the Document as in an "Init" state which means
+		///     Nothing added or changed in the Document will affect anything else
+		/// </summary>
+		public bool IsInit { get; set; } = false;
 
-		/// <inheritdoc/>
-		public override bool Equals(object? obj)
-		{
-			if (obj is not CrashDoc other) return false;
-			return Equals(other);
-		}
+		// TODO : What if someone DOES something when we're adding stuff?
+		/// <summary>
+		///     Marks the Document as in a "Someone Is Done" state which means
+		///     that a Release action from someone else is currently happening,
+		///     this puts the document in a similar state to IsInit where nothing that happens here will tell the server
+		/// </summary>
+		public bool SomeoneIsDone { get; set; } = false;
 
-		/// <inheritdoc/>
-		public override int GetHashCode() => Id.GetHashCode();
+		/// <summary>
+		///     Marks the Document as in a "Transform" state which means
+		///     anything that happens during the transform will not be sent to the server
+		///     This is because Transforms in Rhino are quite complex.
+		/// </summary>
+		public bool IsTransformActive { get; set; }
+
+		#region Queue
+
+		/// <summary>The Idle Queue for the Crash Document</summary>
+		public IdleQueue Queue { get; private set; }
 
 		#endregion
 
-		/// <inheritdoc/>
+
 		public void Dispose()
 		{
 			LocalClient?.StopAsync();
 			LocalServer?.Stop();
 		}
 
-	}
+		#region Tables
 
+		/// <summary>The Users Table for the Crash Doc</summary>
+		public readonly UserTable Users;
+
+		/// <summary>The Changes Table for the Crash Doc</summary>
+		public readonly TemporaryChangeTable TemporaryChangeTable;
+
+		public readonly RealisedChangeTable RealisedChangeTable;
+
+		/// <summary>The Camera Table for the crash Doc</summary>
+		public readonly CameraTable Cameras;
+
+		#endregion
+
+		#region Connectivity
+
+		/// <summary>The Local Client for the Crash Doc</summary>
+		public ICrashClient LocalClient { get; set; }
+
+		/// <summary>The Local Server for the Crash Doc</summary>
+		public CrashServer? LocalServer { get; set; }
+
+		#endregion
+
+		#region Methods
+
+		public bool Equals(CrashDoc? other)
+		{
+			return other?.GetHashCode() == GetHashCode();
+		}
+
+
+		public override bool Equals(object? obj)
+		{
+			return obj is CrashDoc other && Equals(other);
+		}
+
+
+		public override int GetHashCode()
+		{
+			return Id.GetHashCode();
+		}
+
+		#endregion
+	}
 }

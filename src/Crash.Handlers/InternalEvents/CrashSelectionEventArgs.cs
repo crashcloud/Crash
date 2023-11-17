@@ -1,33 +1,32 @@
 ﻿namespace Crash.Handlers.InternalEvents
 {
-
-	/// <summary>Wrapss the RhinoSelection and Deselection Events</summary>
+	/// <summary>Wraps the RhinoSelection and Deselection Events</summary>
 	public sealed class CrashSelectionEventArgs : EventArgs
 	{
-
 		/// <summary>Related Event Objets</summary>
 		public readonly IEnumerable<CrashObject> CrashObjects;
-		/// <summary>Was this a Selection Event?</summary>
+
+		/// <summary>Was this a Selection Event or Deselection Event</summary>
 		public readonly bool Selected;
-		/// <summary>Used only on Deselect All Event</summary>
-		public readonly bool DeselectAll;
 
 		/// <summary>Singular Selection/Deselection Event Constructor</summary>
-		public CrashSelectionEventArgs(bool selected,
-								IEnumerable<CrashObject> crashObjects)
+		private CrashSelectionEventArgs(bool selected,
+			IEnumerable<CrashObject> crashObjects)
 		{
 			CrashObjects = crashObjects;
 			Selected = selected;
-			DeselectAll = false;
 		}
 
-		/// <summary>Deselect All Event Constructor</summary>
-		public CrashSelectionEventArgs(bool selected = false)
-			: this(selected, Enumerable.Empty<CrashObject>())
+		/// <summary>Creates a new DeSelection Event for One item</summary>
+		public static CrashSelectionEventArgs CreateSelectionEvent(IEnumerable<CrashObject> crashObjects)
 		{
-			DeselectAll = true;
+			return new CrashSelectionEventArgs(true, crashObjects);
 		}
 
+		/// <summary>Creates a new Selection Event for One item</summary>
+		public static CrashSelectionEventArgs CreateDeSelectionEvent(IEnumerable<CrashObject> crashObjects)
+		{
+			return new CrashSelectionEventArgs(false, crashObjects);
+		}
 	}
-
 }

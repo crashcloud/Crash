@@ -3,20 +3,20 @@ using Rhino.Geometry;
 
 namespace Crash.Handlers.InternalEvents
 {
-
 	/// <summary>Wraps RhinoObjectEventArgs</summary>
 	public sealed class CrashObjectEventArgs : EventArgs
 	{
-
 		/// <summary>Change Id</summary>
 		public readonly Guid ChangeId;
-		/// <summary>The Event Rhino Id</summary>
-		public readonly Guid RhinoId;
+
 		/// <summary>The Event Geometry</summary>
 		public readonly GeometryBase Geometry;
 
+		/// <summary>The Event Rhino Id</summary>
+		public readonly Guid RhinoId;
+
 		/// <summary>Constructor mainly for tests</summary>
-		internal CrashObjectEventArgs(GeometryBase geometry, Guid rhinoId, Guid changeId = default)
+		public CrashObjectEventArgs(GeometryBase geometry, Guid rhinoId, Guid changeId = default)
 		{
 			ChangeId = changeId;
 			RhinoId = rhinoId;
@@ -25,8 +25,8 @@ namespace Crash.Handlers.InternalEvents
 
 		/// <summary>Default Constructor</summary>
 		public CrashObjectEventArgs(RhinoObject rhinoObject, Guid changeId = default)
-			: this(rhinoObject.Geometry, rhinoObject.Id, changeId) { }
-
+			: this(rhinoObject.Geometry, rhinoObject.Id, changeId)
+		{
+		}
 	}
-
 }

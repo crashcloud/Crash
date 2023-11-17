@@ -1,20 +1,16 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 using Crash.Changes;
-using Crash.Common.Changes;
 using Crash.Common.Document;
+using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
 using Crash.Handlers.Plugins;
 using Crash.Handlers.Plugins.Geometry.Create;
 
 using Rhino;
-using Rhino.Geometry;
 
 namespace Crash.Handlers.Tests.Plugins
 {
-
 	[RhinoFixture]
 	public sealed class GeometryCreateRemoveActionTests
 	{
@@ -25,6 +21,45 @@ namespace Crash.Handlers.Tests.Plugins
 		{
 			RhinoDoc.ActiveDoc = _rdoc = RhinoDoc.CreateHeadless(null);
 			_cdoc = CrashDocRegistry.CreateAndRegisterDocument(_rdoc);
+		}
+
+
+		public static IEnumerable GeometryCreateArgs
+		{
+			get
+			{
+				for (var i = 0; i < 10; i++)
+				{
+					var geom = NRhino.Random.Geometry.NLineCurve.Any();
+					Func<RhinoDoc, CrashObjectEventArgs> func = rdoc =>
+					                                            {
+						                                            var id = rdoc.Objects.Add(geom);
+						                                            var rhinoObject = rdoc.Objects.FindId(id);
+						                                            return new CrashObjectEventArgs(rhinoObject,
+								                                             Guid.NewGuid());
+					                                            };
+					yield return func;
+				}
+			}
+		}
+
+		public static IEnumerable GeometryRemoveArgs
+		{
+			get
+			{
+				for (var i = 0; i < 10; i++)
+				{
+					var geom = NRhino.Random.Geometry.NLineCurve.Any();
+					Func<RhinoDoc, CrashObjectEventArgs> func = rdoc =>
+					                                            {
+						                                            var id = rdoc.Objects.Add(geom);
+						                                            var rhinoObject = rdoc.Objects.FindId(id);
+						                                            return new CrashObjectEventArgs(rhinoObject,
+								                                             Guid.NewGuid());
+					                                            };
+					yield return func;
+				}
+			}
 		}
 
 		[TestCaseSource(nameof(GeometryCreateArgs))]
@@ -42,12 +77,11 @@ namespace Crash.Handlers.Tests.Plugins
 			var createRecieveArgs = argsFunction(_rdoc);
 			var createArgs = new CreateRecieveArgs(ChangeAction.Add | ChangeAction.Temporary, createRecieveArgs, _cdoc);
 			var createAction = new GeometryCreateAction();
-			Assert.That(createAction.TryConvert(null, createArgs, out IEnumerable<IChange> changes), Is.True);
+			Assert.That(createAction.TryConvert(null, createArgs, out var changes), Is.True);
 			Assert.That(changes, Is.Not.Empty);
 			foreach (var change in changes)
 			{
 				Assert.That(change.Action, Is.EqualTo(createArgs.Action));
-				Assert.That(change is GeometryChange, Is.True);
 			}
 		}
 
@@ -67,12 +101,12 @@ namespace Crash.Handlers.Tests.Plugins
 			var createArgs = new CreateRecieveArgs(ChangeAction.Remove, createRecieveArgs, _cdoc);
 			var createAction = new GeometryRemoveAction();
 
-			GeometryChange cache = GeometryChange.CreateNew("Test", createRecieveArgs.Geometry);
+			var cache = GeometryChange.CreateNew(createRecieveArgs.Geometry, "Test");
 			cache.Id = createRecieveArgs.ChangeId;
 
-			await _cdoc.CacheTable.UpdateChangeAsync(cache);
+			_cdoc.TemporaryChangeTable.UpdateChange(cache);
 
-			Assert.That(createAction.TryConvert(null, createArgs, out IEnumerable<IChange> changes), Is.True);
+			Assert.That(createAction.TryConvert(null, createArgs, out var changes), Is.True);
 			Assert.That(changes, Is.Not.Empty);
 			foreach (var change in changes)
 			{
@@ -80,44 +114,5 @@ namespace Crash.Handlers.Tests.Plugins
 				Assert.That(change is Change, Is.True);
 			}
 		}
-
-
-		public static IEnumerable GeometryCreateArgs
-		{
-			get
-			{
-				for (int i = 0; i < 10; i++)
-				{
-					LineCurve geom = NRhino.Random.Geometry.NLineCurve.Any();
-					Func<RhinoDoc, CrashObjectEventArgs> func = (rdoc) =>
-					{
-						Guid id = rdoc.Objects.Add(geom);
-						var rhinoObject = rdoc.Objects.FindId(id);
-						return new CrashObjectEventArgs(rhinoObject, Guid.NewGuid());
-					};
-					yield return func;
-				}
-			}
-		}
-
-		public static IEnumerable GeometryRemoveArgs
-		{
-			get
-			{
-				for (int i = 0; i < 10; i++)
-				{
-					LineCurve geom = NRhino.Random.Geometry.NLineCurve.Any();
-					Func<RhinoDoc, CrashObjectEventArgs> func = (rdoc) =>
-					{
-						Guid id = rdoc.Objects.Add(geom);
-						var rhinoObject = rdoc.Objects.FindId(id);
-						return new CrashObjectEventArgs(rhinoObject, Guid.NewGuid());
-					};
-					yield return func;
-				}
-			}
-		}
-
 	}
-
 }
