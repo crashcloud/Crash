@@ -76,6 +76,11 @@ namespace Crash.Common.Tables
 			foreach (var cameraLocation in cameraLocations)
 			{
 				var user = _crashDoc.Users.Get(cameraLocation.Key);
+				if (string.IsNullOrEmpty(user.Name))
+				{
+					continue;
+				}
+
 				cameras.Add(user, cameraLocation.Value.FirstOrDefault());
 			}
 

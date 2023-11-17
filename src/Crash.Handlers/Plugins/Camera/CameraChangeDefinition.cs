@@ -1,7 +1,10 @@
-﻿using Crash.Common.Changes;
+﻿using System.Drawing;
+
+using Crash.Common.Changes;
 using Crash.Handlers.Plugins.Camera.Create;
 using Crash.Handlers.Plugins.Camera.Recieve;
 
+using Rhino;
 using Rhino.Display;
 using Rhino.Geometry;
 
@@ -55,13 +58,20 @@ namespace Crash.Handlers.Plugins.Camera
 		{
 			internal readonly Line[] Lines;
 			internal readonly Plane Plane;
-			private const double Length = 3000;
-			private const double Width = 1920;
-			private const double Height = 1080;
-			private const double CrossHairLength = 80;
+			private static double Length => GetRelativeSize(260);
+			private static double Width => GetRelativeSize(192);
+			private static double Height => GetRelativeSize(108);
+			private static double CrossHairLength => GetRelativeSize(8);
 
 			private static readonly Interval WidthInterval = new(-Width / 2, Width / 2);
 			private static readonly Interval HeightInterval = new(-Height / 2, Height / 2);
+
+			private static double GetRelativeSize(double size)
+			{
+				var modelSystem = RhinoDoc.ActiveDoc.ModelUnitSystem;
+				var scale = RhinoMath.UnitScale(modelSystem, UnitSystem.Millimeters);
+				return size * scale;
+			}
 
 			// TODO : Scale correctly!
 			internal CameraGraphic(Common.View.Camera camera)
@@ -130,7 +140,8 @@ namespace Crash.Handlers.Plugins.Camera
 
 			public void Draw(DrawEventArgs drawArgs, DisplayMaterial material)
 			{
-				// drawArgs.Display.DrawLines(Lines, PatternPen);
+				var colour = Color.FromArgb(200, material.Diffuse.R, material.Diffuse.G, material.Diffuse.B);
+				drawArgs.Display.DrawLines(Lines, colour, 2);
 			}
 		}
 	}

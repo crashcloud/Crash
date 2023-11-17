@@ -47,6 +47,8 @@ namespace Crash.Common.Document
 				var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(Name));
 				Color = Color.FromArgb(hash[0], hash[1], hash[2]);
 			}
+
+			Camera = CameraState.Visible;
 		}
 
 		/// <summary>Checks user for being valid</summary>
