@@ -28,6 +28,6 @@ namespace Crash.Commands
 			}
 		}
 
-		protected abstract Task<Result> RunCommandAsync(RhinoDoc rhinoDoc, CrashDoc CrashDoc, RunMode mode);
+		protected abstract Task<Result> RunCommandAsync(RhinoDoc rhinoDoc, CrashDoc crashDoc, RunMode mode);
 	}
 }

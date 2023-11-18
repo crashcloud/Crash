@@ -18,16 +18,16 @@ namespace Crash.Commands
 
 		public override string EnglishName => "Release";
 
-		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc CrashDoc, RunMode mode)
+		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
 		{
-			if (CrashDoc?.LocalClient is null)
+			if (!CommandUtils.InSharedModel(crashDoc))
 			{
 				RhinoApp.WriteLine("You aren't in a shared model.");
 				return Result.Failure;
 			}
 
-			var doneChange = DoneChange.GetDoneChange(CrashDoc.Users.CurrentUser.Name);
-			await CrashDoc.LocalClient.PushChangeAsync(doneChange);
+			var doneChange = DoneChange.GetDoneChange(crashDoc.Users.CurrentUser.Name);
+			await crashDoc.LocalClient.PushChangeAsync(doneChange);
 			return Result.Success;
 		}
 	}

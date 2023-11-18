@@ -26,6 +26,18 @@ namespace Crash.Commands
 			                                                                      }
 		                                                                      };
 
+		/// <summary>Checks to see if the user is currently in a Shared Model</summary>
+		internal static bool InSharedModel(CrashDoc crashDoc)
+		{
+			if (crashDoc?.LocalClient?.IsConnected != true)
+			{
+				RhinoApp.WriteLine("You aren't in a shared model.");
+				return false;
+			}
+
+			return true;
+		}
+
 		/// <summary>
 		///     Checks if already connected, and prompts user
 		///     to take action if connected.
@@ -116,22 +128,6 @@ namespace Crash.Commands
 			{
 				RhinoApp.WriteLine("An unexplained exception occured, try again.");
 				RhinoApp.WriteLine(ex.Message);
-			}
-
-			return false;
-		}
-
-		/// <summary>Checks if a local server is running</summary>
-		/// <returns>True if Server is Running</returns>
-		internal static bool CheckForRunningServer(CrashDoc crashDoc)
-		{
-			if (crashDoc?.LocalServer?.IsRunning == true)
-			{
-				var leaveModelCommandName = LeaveSharedModel.Instance.EnglishName;
-				RhinoApp.WriteLine("You are currently part of a Shared Model Session. " +
-				                   $"Please use the {leaveModelCommandName} command.");
-
-				return true;
 			}
 
 			return false;

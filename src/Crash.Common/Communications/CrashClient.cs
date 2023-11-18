@@ -19,6 +19,7 @@ namespace Crash.Common.Communications
 	{
 		// TODO : Move to https
 		public const string DefaultURL = "http://localhost";
+		public const string DefaultPort = "8080";
 		private readonly CrashDoc _crashDoc;
 
 		private HubConnection _connection;
@@ -137,23 +138,6 @@ namespace Crash.Common.Communications
 			RegisterConnections();
 		}
 
-		/// <summary>Done</summary>
-		public async Task DoneAsync()
-		{
-			var doneChange = new Change { Owner = _user, Action = ChangeAction.Release, Type = "Crash.DoneChange" };
-			await PushChangeAsync(doneChange);
-		}
-
-		/// <summary>Releases a collection of changes</summary>
-		public async Task DoneRangeAsync(IEnumerable<Guid> changeIds)
-		{
-			var doneChange = new Change
-			                 {
-				                 Owner = string.Empty, Action = ChangeAction.Release, Type = "Crash.DoneChange"
-			                 };
-			await PushIdenticalChangesAsync(changeIds, doneChange);
-		}
-
 		/// <summary>Local Event corresponding to a Server call for Done</summary>
 		public event Action<string> OnDone;
 
@@ -237,12 +221,6 @@ namespace Crash.Common.Communications
 			{
 				_crashDoc.Users.Add(user);
 			}
-		}
-
-		public static void CloseLocalServer(CrashDoc crashDoc)
-		{
-			crashDoc?.LocalServer?.Stop();
-			crashDoc?.LocalServer?.Dispose();
 		}
 
 		private Task ConnectionReconnectingAsync(Exception? arg)

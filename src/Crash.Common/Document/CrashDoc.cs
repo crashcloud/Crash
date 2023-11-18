@@ -60,11 +60,17 @@ namespace Crash.Common.Document
 
 		#endregion
 
+		#region Connectivity
+
+		/// <summary>The Local Client for the Crash Doc</summary>
+		public ICrashClient LocalClient { get; set; }
+
+		#endregion
+
 
 		public void Dispose()
 		{
 			LocalClient?.StopAsync();
-			LocalServer?.Stop();
 		}
 
 		#region Tables
@@ -79,16 +85,6 @@ namespace Crash.Common.Document
 
 		/// <summary>The Camera Table for the crash Doc</summary>
 		public readonly CameraTable Cameras;
-
-		#endregion
-
-		#region Connectivity
-
-		/// <summary>The Local Client for the Crash Doc</summary>
-		public ICrashClient LocalClient { get; set; }
-
-		/// <summary>The Local Server for the Crash Doc</summary>
-		public CrashServer? LocalServer { get; set; }
 
 		#endregion
 

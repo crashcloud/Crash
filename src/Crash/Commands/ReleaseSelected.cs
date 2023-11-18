@@ -21,23 +21,22 @@ namespace Crash.Commands
 
 		public override string EnglishName => "ReleaseSelected";
 
-		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc CrashDoc, RunMode mode)
+		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
 		{
+			if (!CommandUtils.InSharedModel(crashDoc))
+			{
+				RhinoApp.WriteLine("You aren't in a shared model.");
+				return Result.Failure;
+			}
+
 			var selectedChanges = GetSelectedChanges(doc);
 			if (!selectedChanges.Any())
 			{
 				return Result.Cancel;
 			}
 
-			if (CrashDoc?.LocalClient is null)
-			{
-				RhinoApp.WriteLine("You aren't in a shared model.");
-				return Result.Failure;
-			}
-
-			// TODO : Wait for response for data integrity check
-			var user = CrashDoc.Users.CurrentUser.Name;
-			await CrashDoc.LocalClient.PushIdenticalChangesAsync(selectedChanges, DoneChange.GetDoneChange(user));
+			var user = crashDoc.Users.CurrentUser.Name;
+			await crashDoc.LocalClient.PushIdenticalChangesAsync(selectedChanges, DoneChange.GetDoneChange(user));
 
 			return Result.Success;
 		}

@@ -16,7 +16,7 @@ namespace Crash.Commands
 	{
 		private CrashDoc? CrashDoc;
 
-		private string LastURL = $"{CrashClient.DefaultURL}:{CrashServer.DefaultPort}";
+		private string LastURL = $"{CrashClient.DefaultURL}:{CrashClient.DefaultPort}";
 
 		private RhinoDoc rhinoDoc;
 
