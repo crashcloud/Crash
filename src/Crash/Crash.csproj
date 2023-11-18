@@ -2,9 +2,13 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net48;net7.0</TargetFrameworks>
+		<Version>1.4.0</Version>
 		<Title>Crash</Title>
 		<Description>A multi-user collaborative environment for Rhino</Description>
 		<TargetExt>.rhp</TargetExt>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -75,10 +79,12 @@
 		</None>
 	</ItemGroup>
 
-	<PropertyGroup Condition="$(Configuration) == 'Debug' AND $([MSBuild]::IsOSPlatform(Windows))">
-		<StartProgram>C:\Program Files\Rhino 7\System\Rhino.exe</StartProgram>
-		<StartArguments></StartArguments>
-		<StartAction>Program</StartAction>
-	</PropertyGroup>
+	<Target Name="Replace" AfterTargets="CoreCompile">
+		<PropertyGroup>
+			<InputFile>Manifest.yml</InputFile>
+			<OutputFile>$(OutputPath)Manifest.yml</OutputFile>
+		</PropertyGroup>
+		<WriteLinesToFile File="$(OutputFile)" Lines="$([System.IO.File]::ReadAllText($(InputFile)).Replace('_YakVersion_','$(Version)'))" Overwrite="true" Encoding="Unicode"/>
+	</Target>
 
 </Project>
