@@ -138,12 +138,6 @@ namespace Crash.Common.Communications
 			RegisterConnections();
 		}
 
-		/// <summary>Local Event corresponding to a Server call for Done</summary>
-		public event Action<string> OnDone;
-
-		/// <summary>Local Event corresponding to a Server call for Done Range</summary>
-		public event Action<IEnumerable<Guid>> OnDoneRange;
-
 		/// <summary>
 		///     Closed event
 		/// </summary>
