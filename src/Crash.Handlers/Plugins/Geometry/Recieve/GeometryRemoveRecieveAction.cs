@@ -23,7 +23,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			var changeArgs = new IdleArgs(crashDoc, recievedChange);
 			IdleAction resultingAction = null;
 
-			if (!recievedChange.HasFlag(ChangeAction.Temporary))
+			if (recievedChange.HasFlag(ChangeAction.Temporary))
 			{
 				resultingAction = new IdleAction(RemoveFromCache, changeArgs);
 			}
