@@ -1,7 +1,7 @@
-﻿using Crash.Common.Document;
+﻿using Crash.Changes.Extensions;
+using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
-using Crash.Handlers.Changes;
 using Crash.Utils;
 
 namespace Crash.Handlers.Plugins.Geometry.Recieve
@@ -20,38 +20,39 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			IdleArgs idleArgs;
 			IdleAction idleAction;
 
-			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
-			if (!recievedChange.TryGetRhinoObject(crashDoc, out var rhinoObject))
-			{
-				if (crashDoc.TemporaryChangeTable.TryGetChangeOfType(recievedChange.Id, out GeometryChange change))
-				{
-					idleArgs = new IdleArgs(crashDoc, recievedChange);
-					idleAction = new IdleAction(RemoveTemporaryFromDocument, idleArgs);
-					crashDoc.Queue.AddAction(idleAction);
-				}
+			var changeArgs = new IdleArgs(crashDoc, recievedChange);
+			IdleAction resultingAction = null;
 
-				return;
+			if (!recievedChange.HasFlag(ChangeAction.Temporary))
+			{
+				resultingAction = new IdleAction(RemoveFromCache, changeArgs);
+			}
+			else
+			{
+				resultingAction = new IdleAction(RemoveFromDocument, changeArgs);
 			}
 
-			idleArgs = new IdleArgs(crashDoc, recievedChange);
-			idleAction = new IdleAction(RemoveFromDocument, idleArgs);
-			crashDoc.Queue.AddAction(idleAction);
+			crashDoc.Queue.AddAction(resultingAction);
 		}
 
 		private void RemoveFromDocument(IdleArgs args)
 		{
+			args.Doc.SomeoneIsDone = true;
 			if (!args.Change.TryGetRhinoObject(args.Doc, out var rhinoObject))
 			{
 				return;
 			}
 
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
-
 			rhinoDoc.Objects.Delete(rhinoObject, true);
-			args.Doc.TemporaryChangeTable.RemoveChange(args.Change.Id);
+
+			args.Doc.RealisedChangeTable.RemoveSelected(args.Change.Id);
+			args.Doc.RealisedChangeTable.RemoveChange(args.Change.Id);
+
+			args.Doc.SomeoneIsDone = false;
 		}
 
-		private void RemoveTemporaryFromDocument(IdleArgs args)
+		private void RemoveFromCache(IdleArgs args)
 		{
 			args.Doc.TemporaryChangeTable.RemoveChange(args.Change.Id);
 		}

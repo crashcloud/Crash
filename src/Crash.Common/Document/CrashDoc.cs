@@ -44,6 +44,7 @@ namespace Crash.Common.Document
 		///     that a Release action from someone else is currently happening,
 		///     this puts the document in a similar state to IsInit where nothing that happens here will tell the server
 		/// </summary>
+		// TODO : Change to something like PauseServerListener?
 		public bool SomeoneIsDone { get; set; } = false;
 
 		/// <summary>

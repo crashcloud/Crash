@@ -1,12 +1,6 @@
 ﻿using Crash.Common.Document;
 using Crash.Common.Logging;
 using Crash.Handlers.InternalEvents;
-using Crash.Utils;
-
-using Microsoft.Extensions.Logging;
-
-using Rhino;
-using Rhino.Display;
 
 namespace Crash.Handlers.Plugins
 {
@@ -99,6 +93,11 @@ namespace Crash.Handlers.Plugins
 				{
 					break;
 				}
+			}
+
+			if (!changes.Any())
+			{
+				return;
 			}
 
 			// Here we are essentially streaming?
@@ -212,7 +211,7 @@ namespace Crash.Handlers.Plugins
 				                              // Add check for IS Transforming
 
 				                              args.TheObject.TryGetChangeId(out var changeId);
-				                              if (changeId != Guid.Empty)
+				                              if (changeId == Guid.Empty)
 				                              {
 					                              return;
 				                              }
@@ -303,10 +302,6 @@ namespace Crash.Handlers.Plugins
 					                               return;
 				                               }
 
-				                               crashDoc.RealisedChangeTable.ClearSelected();
-
-				                               // So everything was unselected
-				                               // We need to track Selections...
 
 				                               var currentlySelected = crashDoc.RealisedChangeTable.GetSelected();
 				                               var crashArgs = CrashSelectionEventArgs.CreateDeSelectionEvent(
@@ -397,7 +392,7 @@ namespace Crash.Handlers.Plugins
 						                                                      })));
 
 			var initialInit = false;
-			// OnInit is called on reconnect as well?
+			// OnInit is called on reconnect as well
 			doc.LocalClient.OnInitializeChanges += async changes =>
 			                                       {
 				                                       if (initialInit)

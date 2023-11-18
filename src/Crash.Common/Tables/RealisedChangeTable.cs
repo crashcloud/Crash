@@ -50,6 +50,12 @@ namespace Crash.Common.Tables
 			AddPair(change.Id, rhinoId);
 		}
 
+		/// <summary>Removes a Pair via the Change Id from the table</summary>
+		public void RemoveChange(ChangeGuid changeId)
+		{
+			_rhinoChangeMap.Remove(changeId);
+		}
+
 		/// <summary>Adds a synced pair of Change (Id) and Rhino Id</summary>
 		/// <param name="changeId">The Change Id to Add</param>
 		/// <param name="rhinoId">The Rhino Id to Add</param>

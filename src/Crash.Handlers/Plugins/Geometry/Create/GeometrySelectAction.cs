@@ -40,11 +40,6 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 					continue;
 				}
 
-				if (crashDoc.RealisedChangeTable.IsSelected(crashObject.ChangeId))
-				{
-					continue;
-				}
-
 				var change = GeometryChange.CreateChange(crashObject.ChangeId, userName, ChangeAction.Locked);
 
 				yield return change;
