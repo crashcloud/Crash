@@ -34,6 +34,7 @@ namespace Crash.UI.UsersView
 			var form = new UsersForm();
 			form.Closed += OnFormClosed;
 			form.Show();
+			form.BringToFront();
 
 			ActiveForm = form;
 		}

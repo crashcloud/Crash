@@ -29,6 +29,11 @@ namespace Crash.Handlers
 
 		public static CrashDoc? GetRelatedDocument(RhinoDoc doc)
 		{
+			if (doc is null)
+			{
+				return null;
+			}
+
 			if (DocumentRelationship.Forward.ContainsKey(doc))
 			{
 				return DocumentRelationship.Forward[doc];
