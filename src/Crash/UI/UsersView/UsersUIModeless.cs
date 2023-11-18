@@ -1,11 +1,16 @@
 ﻿using System.ComponentModel;
+using System.Drawing;
+using System.Runtime.InteropServices;
 
 using Crash.Properties;
 
-using Eto.Drawing;
 using Eto.Forms;
 
 using Rhino.UI;
+
+using Pen = Eto.Drawing.Pen;
+using RectangleF = Eto.Drawing.RectangleF;
+using Size = Eto.Drawing.Size;
 
 namespace Crash.UI.UsersView
 {
@@ -20,6 +25,10 @@ namespace Crash.UI.UsersView
 			ViewModel = new UsersViewModel();
 			CreateForm();
 			Icon = Icons.crashlogo.ToEto();
+			BackgroundColor = Color.White.ToEto();
+			Padding = 0;
+			MinimumSize = new Size(120, 40);
+			Size = new Size(240, 80);
 		}
 
 		internal static UsersForm? ActiveForm { get; set; }
@@ -90,23 +99,23 @@ namespace Crash.UI.UsersView
 		{
 			Maximizable = false;
 			Minimizable = false;
-			Padding = new Padding(5);
+			Padding = 0;
 			Resizable = false;
 			ShowInTaskbar = false;
-			Title = "Crash";
+			Title = "Collaborators";
 			WindowStyle = WindowStyle.Default;
-			MinimumSize = new Size(300, 80);
+			MinimumSize = new Size(20, 50);
 
 			m_grid = new GridView
 			         {
 				         AllowMultipleSelection = false,
 				         DataStore = ViewModel.Users,
-				         ShowHeader = true,
-				         Width = 270,
-				         Border = BorderType.Bezel,
+				         ShowHeader = false,
+				         Border = BorderType.None,
 				         AllowEmptySelection = true,
 				         RowHeight = 24
 			         };
+
 			ViewModel.View = m_grid;
 			m_grid.CellClick += ViewModel.CycleCameraSetting;
 			m_grid.DataContextChanged += M_grid_DataContextChanged;
@@ -124,7 +133,7 @@ namespace Crash.UI.UsersView
 				                   HeaderText = "",
 				                   Resizable = false,
 				                   Sortable = false,
-				                   Width = 36
+				                   Width = 30
 			                   });
 
 			// Visible
@@ -159,10 +168,11 @@ namespace Crash.UI.UsersView
 			                   {
 				                   DataCell = new TextBoxCell { Binding = ViewModel.TextCellBinding },
 				                   AutoSize = true,
+				                   MinWidth = 120,
 				                   Editable = false,
 				                   HeaderText = "Name",
 				                   Resizable = false,
-				                   Sortable = false
+				                   Sortable = true
 			                   });
 
 			var user_layout = new TableLayout
@@ -192,8 +202,14 @@ namespace Crash.UI.UsersView
 				return;
 			}
 
-			// e.Graphics.DrawEllipse(user.Color.ToEto(), new RectangleF(2, 2, 16, 16),);
-			e.Graphics.FillEllipse(user.Colour.ToEto(), new RectangleF(2, 2, 16, 16));
+			var bottomOffset = 4;
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				bottomOffset = 2;
+			}
+
+			e.Graphics.FillEllipse(user.Colour.ToEto(), new RectangleF(bottomOffset, bottomOffset, 16, 16));
+			e.Graphics.DrawEllipse(new Pen(Color.Black.ToEto()), new RectangleF(bottomOffset, bottomOffset, 16, 16));
 		}
 
 		protected override void OnClosing(CancelEventArgs e)
