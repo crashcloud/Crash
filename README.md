@@ -10,7 +10,7 @@
 <!-- PROJECT LOGO -->
 
 <div align="center">
-  <a href="https://github.com/clicketyclackety/Crash">
+  <a href="https://github.com/crashcloud/Crash">
     <img src="art\crash-logo.jpg" alt="Logo">
   </a>
 
@@ -19,9 +19,9 @@
     <br />
     <a href="http://crsh.cloud">User Guide</A>
     ·
-    <a href="https://github.com/clicketyclackety/Crash/issues">Report Bug</a>
+    <a href="https://github.com/crashcloud/Crash/issues">Report Bug</a>
     ·
-    <a href="https://github.com/clicketyclackety/Crash/issues">Request Feature</a>
+    <a href="https://github.com/crashcloud/Crash/issues">Request Feature</a>
   </p>
 </div>
 
@@ -176,7 +176,7 @@ Rhino will launch in debug mode.
 
 ## Contributing
 
-See the [open issues](https://github.com/clicketyclackety/Crash/issues) for a full list of proposed features (and known
+See the [open issues](https://github.com/crashcloud/Crash/issues) for a full list of proposed features (and known
 issues).
 
 [Please see contribution guide](CONTRIBUTING.md)
@@ -194,31 +194,31 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 Big thanks to AEC Tech 2022 for arranging this event! Also we would like to thank McNeel for all their awesome work!
 This project has been a great collaboration of several great minds. Please check out other hackathon projects and future
 hackathon events hosted by [AECTech](https://www.aectech.us/). Original repo can be found
-at : [clicketyclackety/crash](https://github.com/clicketyclackety/crash)
+at : [crashcloud/crash](https://github.com/crashcloud/crash)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
-[contributors-shield]: https://img.shields.io/github/contributors/clicketyclackety/Crash.svg?style=for-the-badge
+[contributors-shield]: https://img.shields.io/github/contributors/crashcloud/Crash.svg?style=for-the-badge
 
-[contributors-url]: https://github.com/clicketyclackety/Crash/graphs/contributors
+[contributors-url]: https://github.com/crashcloud/Crash/graphs/contributors
 
-[forks-shield]: https://img.shields.io/github/forks/clicketyclackety/Crash.svg?style=for-the-badge
+[forks-shield]: https://img.shields.io/github/forks/crashcloud/Crash.svg?style=for-the-badge
 
-[forks-url]: https://github.com/clicketyclackety/Crash/network/members
+[forks-url]: https://github.com/crashcloud/Crash/network/members
 
-[stars-shield]: https://img.shields.io/github/stars/clicketyclackety/Crash.svg?style=for-the-badge
+[stars-shield]: https://img.shields.io/github/stars/crashcloud/Crash.svg?style=for-the-badge
 
-[stars-url]: https://github.com/clicketyclackety/Crash/stargazers
+[stars-url]: https://github.com/crashcloud/Crash/stargazers
 
-[issues-shield]: https://img.shields.io/github/issues/clicketyclackety/Crash.svg?style=for-the-badge
+[issues-shield]: https://img.shields.io/github/issues/crashcloud/Crash.svg?style=for-the-badge
 
-[issues-url]: https://github.com/clicketyclackety/Crash/issues
+[issues-url]: https://github.com/crashcloud/Crash/issues
 
-[license-shield]: https://img.shields.io/github/license/clicketyclackety/Crash.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/crashcloud/Crash.svg?style=for-the-badge
 
-[license-url]: https://github.com/clicketyclackety/Crash/blob/master/LICENSE.txt
+[license-url]: https://github.com/crashcloud/Crash/blob/master/LICENSE.txt
 
 [product-screenshot]: images/screenshot.png
