@@ -35,8 +35,8 @@ namespace Crash.Commands
 				return Result.Cancel;
 			}
 
-			var user = crashDoc.Users.CurrentUser.Name;
-			await crashDoc.LocalClient.PushIdenticalChangesAsync(selectedChanges, DoneChange.GetDoneChange(user));
+			await crashDoc.LocalClient.PushIdenticalChangesAsync(selectedChanges,
+			                                                     DoneChange.GetDoneChange(string.Empty));
 
 			return Result.Success;
 		}

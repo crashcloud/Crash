@@ -22,19 +22,19 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 				// Done Range
 				if (string.IsNullOrEmpty(recievedChange.Owner))
 				{
-					if (!crashDoc.TemporaryChangeTable.TryGetChangeOfType(recievedChange.Id, out Change doneChange))
+					if (!crashDoc.TemporaryChangeTable.TryGetChangeOfType(recievedChange.Id, out IChange doneChange))
 					{
 						return;
 					}
 
-					ReleaseChange(crashDoc, doneChange);
+					await ReleaseChange(crashDoc, doneChange);
 				}
 				// Done
 				else
 				{
 					foreach (var change in crashDoc.TemporaryChangeTable.GetChanges())
 					{
-						ReleaseChange(crashDoc, change);
+						await ReleaseChange(crashDoc, change);
 					}
 				}
 			}
@@ -45,8 +45,6 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 			}
 			finally
 			{
-				// TODO: This seems like it is doomed to fail!
-				// We need to specify which packets dont need reporting to the server
 				EventHandler<CrashEventArgs>? _event = null;
 				_event = (sender, args) =>
 				         {
@@ -54,7 +52,7 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 					         crashDoc.Queue.OnCompletedQueue -= _event;
 				         };
 
-				// TODO : What about things in the existing queue etc?
+				// TODO : What about things in the existing queue etc? <<< --- YES ABOUT THIS
 				crashDoc.Queue.OnCompletedQueue += _event;
 			}
 		}
@@ -67,11 +65,13 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 				return;
 			}
 
+			crashDoc.TemporaryChangeTable.RemoveChange(change.Id);
+
 			geomChange.RemoveAction(ChangeAction.Temporary);
+			geomChange.RemoveAction(ChangeAction.Locked);
 
 			var add = new GeometryAddRecieveAction();
 			await add.OnRecieveAsync(crashDoc, geomChange);
-			crashDoc.TemporaryChangeTable.RemoveChange(change.Id);
 		}
 	}
 }

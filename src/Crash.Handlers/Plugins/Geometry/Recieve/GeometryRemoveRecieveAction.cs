@@ -23,13 +23,17 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			var changeArgs = new IdleArgs(crashDoc, recievedChange);
 			IdleAction resultingAction = null;
 
-			if (recievedChange.HasFlag(ChangeAction.Temporary))
+			if (crashDoc.TemporaryChangeTable.TryGetChangeOfType(recievedChange.Id, out IChange temporaryChange))
 			{
 				resultingAction = new IdleAction(RemoveFromCache, changeArgs);
 			}
-			else
+			else if (crashDoc.RealisedChangeTable.ContainsChangeId(recievedChange.Id))
 			{
 				resultingAction = new IdleAction(RemoveFromDocument, changeArgs);
+			}
+			else
+			{
+				return;
 			}
 
 			crashDoc.Queue.AddAction(resultingAction);
