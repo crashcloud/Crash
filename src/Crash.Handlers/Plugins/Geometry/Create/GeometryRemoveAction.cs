@@ -6,14 +6,13 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 	/// <summary>Handles Removed Objects</summary>
 	internal sealed class GeometryRemoveAction : IChangeCreateAction
 	{
-		
 		public ChangeAction Action => ChangeAction.Remove;
 
-		
+
 		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
 		{
 			return crashArgs.Args is CrashObjectEventArgs rargs &&
-				   rargs.ChangeId != Guid.Empty;
+			       rargs.ChangeId != Guid.Empty;
 		}
 
 

@@ -225,6 +225,7 @@ namespace Crash.Handlers.Plugins
 				                              var crashArgs = new CrashObjectEventArgs(args.TheObject, changeId);
 				                              NotifyServerAsync(ChangeAction.Remove, sender, crashArgs,
 				                                                args.TheObject.Document);
+				                              crashDoc.RealisedChangeTable.RemoveChange(changeId);
 			                              };
 
 			RhinoDoc.BeforeTransformObjects += (sender, args) =>

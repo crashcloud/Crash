@@ -53,6 +53,8 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 				currentOrNewId = foundChange.Id;
 			}
 
+			crashDoc.RealisedChangeTable.AddPair(currentOrNewId, rhinoId);
+
 			var change = GeometryChange.CreateChange(currentOrNewId, user, Action, geometry);
 
 			rhinoObject.SyncHost(change, crashDoc);

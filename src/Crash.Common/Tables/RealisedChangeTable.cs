@@ -54,6 +54,7 @@ namespace Crash.Common.Tables
 		public void RemoveChange(ChangeGuid changeId)
 		{
 			_rhinoChangeMap.Remove(changeId);
+			Selected.Remove(changeId);
 		}
 
 		/// <summary>Adds a synced pair of Change (Id) and Rhino Id</summary>
