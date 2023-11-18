@@ -68,6 +68,7 @@ namespace Crash
 			{
 				var changeDefinition = changeEnuner.Current;
 				_dispatcher.RegisterDefinition(changeDefinition);
+				InteractivePipe.RegisterChangeDefinition(changeDefinition);
 			}
 		}
 
