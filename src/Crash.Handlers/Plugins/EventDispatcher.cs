@@ -1,6 +1,12 @@
 ﻿using Crash.Common.Document;
 using Crash.Common.Logging;
 using Crash.Handlers.InternalEvents;
+using Crash.Utils;
+
+using Microsoft.Extensions.Logging;
+
+using Rhino;
+using Rhino.Display;
 
 namespace Crash.Handlers.Plugins
 {
