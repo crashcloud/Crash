@@ -2,9 +2,6 @@
 using Crash.Handlers.Plugins.Camera;
 using Crash.Handlers.Plugins.Geometry;
 using Crash.Handlers.Plugins.Initializers;
-using Crash.Handlers.Server;
-
-using Rhino.PlugIns;
 
 namespace Crash
 {
@@ -40,19 +37,7 @@ namespace Crash
 			// Add feature flags as advanced settings here!
 			InteractivePipe.Active = new InteractivePipe { Enabled = false };
 
-			// TODO : Move to JoinServer command
-			RhinoApp.Idle += DownloadServer;
-
 			return base.OnLoad(ref errorMessage);
-		}
-
-		private void DownloadServer(object sender, EventArgs e)
-		{
-			RhinoApp.Idle -= DownloadServer;
-			if (!ServerInstaller.ServerExecutableExists)
-			{
-				ServerInstaller.EnsureServerExecutableExists();
-			}
 		}
 
 		private void LoadCrashPlugins()
