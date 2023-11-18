@@ -200,5 +200,10 @@ namespace Crash.UI
 		{
 			definitionRegistry.Add(changeDefinition.ChangeName, changeDefinition);
 		}
+
+		public static void ClearChangeDefinitions()
+		{
+			definitionRegistry.Clear();
+		}
 	}
 }

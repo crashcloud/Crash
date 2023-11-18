@@ -36,12 +36,19 @@ namespace Crash.Commands
 		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
 		{
 			rhinoDoc = doc;
-			CrashDoc = crashDoc;
+			CrashDoc = null;
 
-			CommandUtils.CheckAlreadyConnected(crashDoc);
+			if (!CommandUtils.CheckAlreadyConnected(crashDoc))
+			{
+				return Result.Cancel;
+			}
+
+			if (crashDoc is not null)
+			{
+				CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
+			}
 
 			var name = Environment.UserName;
-
 			if (mode == RunMode.Interactive)
 			{
 				var dialog = new JoinWindow();

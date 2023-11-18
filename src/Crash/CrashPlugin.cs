@@ -48,6 +48,7 @@ namespace Crash
 		{
 			_dispatcher = null;
 			InteractivePipe.Active.Enabled = false;
+			InteractivePipe.ClearChangeDefinitions();
 		}
 
 		private void CrashDocRegistryOnDocumentRegistered(object sender, CrashEventArgs e)

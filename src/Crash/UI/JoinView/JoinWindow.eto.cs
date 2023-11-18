@@ -30,9 +30,18 @@ namespace Crash.UI.JoinModel
 		                                         (RowHeight +
 		                                          DividerHeight);
 
+		protected SharedModel CurrentSelection { get; set; }
+
 		public void InitializeComponent()
 		{
 			ActiveModels = CreateExistingGrid();
+			ActiveModels.SelectionChanged += (sender, args) =>
+			                                 {
+				                                 if (ActiveModels.SelectedItem is SharedModel model)
+				                                 {
+					                                 CurrentSelection = model;
+				                                 }
+			                                 };
 			NewModel = CreateAddGrid();
 
 			Content = new StackLayout

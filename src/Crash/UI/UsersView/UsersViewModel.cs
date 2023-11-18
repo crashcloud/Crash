@@ -66,14 +66,14 @@ namespace Crash.UI.UsersView
 		private void UserTable_OnUserChanged(object sender, UserEventArgs e)
 		{
 			Application.Instance.Invoke(() =>
-			{
-				try
-				{
-					SetUsers();
-					UsersForm.ReDraw();
-				}
-				catch { }
-			});
+			                            {
+				                            try
+				                            {
+					                            SetUsers();
+					                            UsersForm.ReDraw();
+				                            }
+				                            catch { }
+			                            });
 		}
 
 		private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -93,6 +93,8 @@ namespace Crash.UI.UsersView
 			{
 				userTable.Update(user.CUser);
 			}
+
+			SetUsers();
 
 			RhinoDoc.ActiveDoc.Views.Redraw();
 			UsersForm.ReDraw();
@@ -194,11 +196,11 @@ namespace Crash.UI.UsersView
 			static UserUIExtensions()
 			{
 				cameras = new Dictionary<CameraState, Image>
-						  {
-							  { CameraState.None, Icons.CameraNone.ToEto() },
-							  { CameraState.Visible, Icons.CameraVisible.ToEto() },
-							  { CameraState.Follow, Icons.CameraFollow.ToEto() }
-						  };
+				          {
+					          { CameraState.None, Icons.CameraNone.ToEto() },
+					          { CameraState.Visible, Icons.CameraVisible.ToEto() },
+					          { CameraState.Follow, Icons.CameraFollow.ToEto() }
+				          };
 			}
 
 			internal static Image GetCameraImage(UserObject user)

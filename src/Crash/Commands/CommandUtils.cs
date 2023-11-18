@@ -50,16 +50,7 @@ namespace Crash.Commands
 				if (crashDoc?.LocalClient?.IsConnected == true)
 				{
 					RhinoApp.WriteLine("You are currently part of a Shared Model Session.");
-
-					if (!_NewModelOrExit(false))
-					{
-						return false;
-					}
-
-					if (RhinoApp.RunScript(LeaveSharedModel.Instance.EnglishName, true))
-					{
-						RhinoApp.RunScript(JoinSharedModel.Instance.EnglishName, true);
-					}
+					return RhinoApp.RunScript(LeaveSharedModel.Instance.EnglishName, true);
 				}
 
 				return true;
@@ -67,17 +58,8 @@ namespace Crash.Commands
 			catch (Exception e)
 			{
 				CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
-				return false;
+				return true;
 			}
-		}
-
-
-		private static bool _NewModelOrExit(bool defaultValue)
-		{
-			return SelectionUtils.GetBoolean(ref defaultValue,
-			                                 "Would you like to close this model?",
-			                                 "ExitCommand",
-			                                 "CloseModel") == true;
 		}
 
 		/// <summary>Gets the Users Name from a command line prompt</summary>

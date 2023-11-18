@@ -60,7 +60,7 @@ namespace Crash.UI.JoinModel
 
 			JoinModel += (sender, args) =>
 			             {
-				             if (ActiveModels.SelectedItem is not SharedModel model)
+				             if (CurrentSelection is not SharedModel model)
 				             {
 					             return;
 				             }
@@ -70,7 +70,7 @@ namespace Crash.UI.JoinModel
 
 			RemoveModel += (sender, args) =>
 			               {
-				               if (ActiveModels.SelectedItem is not SharedModel model)
+				               if (CurrentSelection is not SharedModel model)
 				               {
 					               return;
 				               }
@@ -81,7 +81,7 @@ namespace Crash.UI.JoinModel
 
 			RefreshModels += (sender, args) =>
 			                 {
-				                 if (ActiveModels.SelectedItem is not SharedModel model)
+				                 if (CurrentSelection is not SharedModel model)
 				                 {
 					                 return;
 				                 }
@@ -104,8 +104,8 @@ namespace Crash.UI.JoinModel
 				                       {
 					                       DataContext = modelContext, ToolTip = "Join Shared Model"
 				                       },
-				             Enabled = false,
-				             TextColor = Palette.TextColour
+				             TextColor = Palette.TextColour,
+				             Enabled = true
 			             };
 
 			return button;
