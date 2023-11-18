@@ -3,6 +3,14 @@
 	<PropertyGroup>
 		<TargetFrameworks>net48;net7.0</TargetFrameworks>
 		<RootNamespace>Crash.Handlers</RootNamespace>
+		<IsPackable>true</IsPackable>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Version>1.4.0</Version>
+		<Title>Crash.Handlers</Title>
+		<Authors>Callum Sykes</Authors>
+		<Description>Crash.Handlers manipluates Crash.Common, Crash.Changes and handles Crash.Server requests. It is the foundation package for making Crash work, and allowing 3rd parties to consume crash.</Description>
+		<PackageLicenseUrl></PackageLicenseUrl>
+		<PackageTags>Crash, Handlers, CrashCloud</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup>
