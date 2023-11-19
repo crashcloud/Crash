@@ -6,6 +6,8 @@ using Crash.Handlers.Plugins.Camera;
 using Crash.Handlers.Plugins.Geometry;
 using Crash.Handlers.Plugins.Initializers;
 
+using Rhino.PlugIns;
+
 namespace Crash
 {
 	///<summary>The crash plugin for multi user rhino collaboration</summary>
