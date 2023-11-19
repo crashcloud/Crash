@@ -1,7 +1,6 @@
 ﻿using Crash.Common.Changes;
 using Crash.Common.Document;
 using Crash.Handlers.Changes;
-using Crash.Utils;
 
 namespace Crash.Handlers.Plugins.Geometry.Recieve
 {
@@ -40,21 +39,26 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				}
 
 				crashDoc.DocumentIsBusy = true;
-				var isLocked = rhinoObject.IsLocked;
-
-				if (isLocked)
+				try
 				{
-					rhinoDoc.Objects.Unlock(rhinoObject, true);
+					var isLocked = rhinoObject.IsLocked;
+
+					if (isLocked)
+					{
+						rhinoDoc.Objects.Unlock(rhinoObject, true);
+					}
+
+					rhinoObject.Geometry.Transform(xform);
+
+					if (isLocked)
+					{
+						rhinoDoc.Objects.Lock(rhinoObject, true);
+					}
 				}
-
-				rhinoObject.Geometry.Transform(xform);
-
-				if (isLocked)
+				finally
 				{
-					rhinoDoc.Objects.Lock(rhinoObject, true);
+					crashDoc.DocumentIsBusy = false;
 				}
-
-				crashDoc.DocumentIsBusy = false;
 			}
 		}
 	}

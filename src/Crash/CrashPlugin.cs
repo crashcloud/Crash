@@ -6,8 +6,6 @@ using Crash.Handlers.Plugins.Camera;
 using Crash.Handlers.Plugins.Geometry;
 using Crash.Handlers.Plugins.Initializers;
 
-using Rhino.PlugIns;
-
 namespace Crash
 {
 	///<summary>The crash plugin for multi user rhino collaboration</summary>
@@ -82,14 +80,18 @@ namespace Crash
 			if (_dispatcher is not null)
 			{
 				e.CrashDoc.DocumentIsBusy = true;
-
-				// TODO : Handle Async!
-				foreach (var change in e.Changes)
+				try
 				{
-					_dispatcher.NotifyClientAsync(e.CrashDoc, change);
+					// TODO : Handle Async!
+					foreach (var change in e.Changes)
+					{
+						_dispatcher.NotifyClientAsync(e.CrashDoc, change);
+					}
 				}
-
-				e.CrashDoc.DocumentIsBusy = false;
+				finally
+				{
+					e.CrashDoc.DocumentIsBusy = false;
+				}
 			}
 		}
 

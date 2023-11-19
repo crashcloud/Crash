@@ -1,7 +1,6 @@
 ﻿using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
-using Crash.Utils;
 
 namespace Crash.Handlers.Plugins.Geometry.Recieve
 {
@@ -41,18 +40,24 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 		private void RemoveFromDocument(IdleArgs args)
 		{
 			args.Doc.DocumentIsBusy = true;
-			if (!args.Change.TryGetRhinoObject(args.Doc, out var rhinoObject))
+			try
 			{
-				return;
+				if (!args.Change.TryGetRhinoObject(args.Doc, out var rhinoObject))
+				{
+					args.Doc.DocumentIsBusy = false;
+					return;
+				}
+
+				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
+				rhinoDoc.Objects.Delete(rhinoObject, true, true);
+
+				args.Doc.RealisedChangeTable.RemoveSelected(args.Change.Id);
+				args.Doc.RealisedChangeTable.RemoveChange(args.Change.Id);
 			}
-
-			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
-			rhinoDoc.Objects.Delete(rhinoObject, true, true);
-
-			args.Doc.RealisedChangeTable.RemoveSelected(args.Change.Id);
-			args.Doc.RealisedChangeTable.RemoveChange(args.Change.Id);
-
-			args.Doc.DocumentIsBusy = false;
+			finally
+			{
+				args.Doc.DocumentIsBusy = false;
+			}
 		}
 
 		private void RemoveFromCache(IdleArgs args)

@@ -1,13 +1,6 @@
 ﻿using Crash.Common.Document;
 using Crash.Common.Logging;
 using Crash.Handlers.InternalEvents;
-using Crash.Utils;
-
-using Microsoft.Extensions.Logging;
-
-using Rhino;
-using Rhino.Display;
-using Rhino.DocObjects;
 
 namespace Crash.Handlers.Plugins
 {
@@ -168,7 +161,7 @@ namespace Crash.Handlers.Plugins
 
 			var crashArgs = new CrashObjectEventArgs(args.TheObject);
 			NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary, sender,
-							  crashArgs, args.TheObject.Document);
+			                  crashArgs, args.TheObject.Document);
 		}
 
 		private void DeleteRhinoObject(object sender, RhinoObjectEventArgs args)
@@ -195,7 +188,7 @@ namespace Crash.Handlers.Plugins
 
 			var crashArgs = new CrashObjectEventArgs(args.TheObject, changeId);
 			NotifyServerAsync(ChangeAction.Remove, sender, crashArgs,
-							  args.TheObject.Document);
+			                  args.TheObject.Document);
 			crashDoc.RealisedChangeTable.RemoveChange(changeId);
 		}
 
@@ -207,8 +200,8 @@ namespace Crash.Handlers.Plugins
 			}
 
 			var rhinoDoc = args.Objects
-							   .FirstOrDefault(o => o.Document is not null)
-							   .Document;
+			                   .FirstOrDefault(o => o.Document is not null)
+			                   .Document;
 
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
 			if (crashDoc is null)
@@ -221,15 +214,13 @@ namespace Crash.Handlers.Plugins
 				return;
 			}
 
-			crashDoc.DocumentIsBusy = true;
-
 			var crashArgs =
 				new CrashTransformEventArgs(args.Transform.ToCrash(),
-					args.Objects.Select(o => new CrashObject(o)),
-					args.ObjectsWillBeCopied);
+				                            args.Objects.Select(o => new CrashObject(o)),
+				                            args.ObjectsWillBeCopied);
 
 			NotifyServerAsync(ChangeAction.Transform, sender, crashArgs,
-							  rhinoDoc);
+			                  rhinoDoc);
 		}
 
 		private void DeselectRhinoObjects(object sender, RhinoObjectSelectionEventArgs args)
@@ -259,7 +250,7 @@ namespace Crash.Handlers.Plugins
 
 			var crashArgs =
 				CrashSelectionEventArgs.CreateDeSelectionEvent(args.RhinoObjects
-					.Select(o => new CrashObject(o)));
+				                                                   .Select(o => new CrashObject(o)));
 			NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs, args.Document);
 		}
 
@@ -276,12 +267,15 @@ namespace Crash.Handlers.Plugins
 			{
 				return;
 			}
-			
+
 			var currentlySelected = crashDoc.RealisedChangeTable.GetSelected();
 			var crashArgs = CrashSelectionEventArgs.CreateDeSelectionEvent(
-			 currentlySelected.Select(cs => new CrashObject(cs, Guid.Empty)));
+			                                                               currentlySelected
+				                                                               .Select(cs =>
+					                                                               new CrashObject(cs,
+						                                                               Guid.Empty)));
 			NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs,
-							  args.Document);
+			                  args.Document);
 
 			crashDoc.RealisedChangeTable.ClearSelected();
 		}
@@ -294,7 +288,7 @@ namespace Crash.Handlers.Plugins
 			{
 				return;
 			}
-			
+
 			if (crashDoc.DocumentIsBusy)
 			{
 				return;
@@ -311,7 +305,7 @@ namespace Crash.Handlers.Plugins
 			}
 
 			var crashArgs = CrashSelectionEventArgs.CreateSelectionEvent(args.RhinoObjects
-				.Select(o => new CrashObject(o)));
+			                                                                 .Select(o => new CrashObject(o)));
 			NotifyServerAsync(ChangeAction.Locked, sender, crashArgs, args.Document);
 		}
 
@@ -349,6 +343,7 @@ namespace Crash.Handlers.Plugins
 			// View Events
 			RhinoView.Modified += RhinoViewModified;
 		}
+
 		public void DeRegisterDefaultEvents()
 		{
 			// Object Events
