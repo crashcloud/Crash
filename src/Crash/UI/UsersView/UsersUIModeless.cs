@@ -28,7 +28,7 @@ namespace Crash.UI.UsersView
 			BackgroundColor = Color.White.ToEto();
 			Padding = 0;
 			MinimumSize = new Size(120, 40);
-			Size = new Size(240, 80);
+			// Size = new Size(240, 80); // Required to make UI smaller on windows, but prevents resizing later
 		}
 
 		internal static UsersForm? ActiveForm { get; set; }
