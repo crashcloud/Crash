@@ -55,7 +55,7 @@ namespace Crash
 		private void CrashDocRegistryOnDocumentRegistered(object sender, CrashEventArgs e)
 		{
 			_dispatcher = new EventDispatcher();
-			_dispatcher.DeRegisterDefaultEvents();
+			_dispatcher.RegisterDefaultEvents();
 			RegisterDefinitions();
 			_dispatcher.RegisterDefaultServerCalls(e.CrashDoc);
 			InteractivePipe.Active.Enabled = true;

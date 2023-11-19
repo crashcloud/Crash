@@ -341,7 +341,7 @@ namespace Crash.Handlers.Plugins
 			NotifyServerAsync(ChangeAction.Add, sender, crashArgs, args.View.Document);
 		}
 
-		private void RegisterDefaultEvents()
+		public void RegisterDefaultEvents()
 		{
 			// Object Events
 			RhinoDoc.AddRhinoObject += AddRhinoObject;
