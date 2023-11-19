@@ -81,7 +81,7 @@ namespace Crash
 
 			if (_dispatcher is not null)
 			{
-				e.CrashDoc.IsInit = true;
+				e.CrashDoc.DocumentIsBusy = true;
 
 				// TODO : Handle Async!
 				foreach (var change in e.Changes)
@@ -89,7 +89,7 @@ namespace Crash
 					_dispatcher.NotifyClientAsync(e.CrashDoc, change);
 				}
 
-				e.CrashDoc.IsInit = false;
+				e.CrashDoc.DocumentIsBusy = false;
 			}
 		}
 

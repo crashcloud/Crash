@@ -156,9 +156,7 @@ namespace Crash.Handlers.Plugins
 				return;
 			}
 
-			if (crashDoc.IsInit ||
-				crashDoc.SomeoneIsDone ||
-				crashDoc.IsTransformActive)
+			if (crashDoc.DocumentIsBusy)
 			{
 				return;
 			}
@@ -182,9 +180,7 @@ namespace Crash.Handlers.Plugins
 				return;
 			}
 
-			if (crashDoc.IsInit ||
-				crashDoc.SomeoneIsDone ||
-				crashDoc.IsTransformActive)
+			if (crashDoc.DocumentIsBusy)
 			{
 				return;
 			}
@@ -220,13 +216,12 @@ namespace Crash.Handlers.Plugins
 				return;
 			}
 
-			if (crashDoc.IsInit ||
-				crashDoc.SomeoneIsDone)
+			if (crashDoc.DocumentIsBusy)
 			{
 				return;
 			}
 
-			crashDoc.IsTransformActive = true;
+			crashDoc.DocumentIsBusy = true;
 
 			var crashArgs =
 				new CrashTransformEventArgs(args.Transform.ToCrash(),
@@ -246,12 +241,11 @@ namespace Crash.Handlers.Plugins
 				return;
 			}
 
-			if (crashDoc.IsInit ||
-				crashDoc.SomeoneIsDone)
+
+			if (crashDoc.DocumentIsBusy)
 			{
 				return;
 			}
-
 
 			foreach (var rhinoObject in args.RhinoObjects)
 			{
@@ -278,12 +272,11 @@ namespace Crash.Handlers.Plugins
 				return;
 			}
 
-			if (crashDoc.IsInit ||
-				crashDoc.SomeoneIsDone)
+			if (crashDoc.DocumentIsBusy)
 			{
 				return;
 			}
-
+			
 			var currentlySelected = crashDoc.RealisedChangeTable.GetSelected();
 			var crashArgs = CrashSelectionEventArgs.CreateDeSelectionEvent(
 			 currentlySelected.Select(cs => new CrashObject(cs, Guid.Empty)));
@@ -301,9 +294,8 @@ namespace Crash.Handlers.Plugins
 			{
 				return;
 			}
-
-			if (crashDoc.IsInit ||
-				crashDoc.SomeoneIsDone)
+			
+			if (crashDoc.DocumentIsBusy)
 			{
 				return;
 			}

@@ -1,5 +1,4 @@
-﻿using Crash.Changes.Extensions;
-using Crash.Common.Document;
+﻿using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
 using Crash.Utils;
@@ -41,7 +40,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 
 		private void RemoveFromDocument(IdleArgs args)
 		{
-			args.Doc.SomeoneIsDone = true;
+			args.Doc.DocumentIsBusy = true;
 			if (!args.Change.TryGetRhinoObject(args.Doc, out var rhinoObject))
 			{
 				return;
@@ -53,7 +52,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			args.Doc.RealisedChangeTable.RemoveSelected(args.Change.Id);
 			args.Doc.RealisedChangeTable.RemoveChange(args.Change.Id);
 
-			args.Doc.SomeoneIsDone = false;
+			args.Doc.DocumentIsBusy = false;
 		}
 
 		private void RemoveFromCache(IdleArgs args)

@@ -39,9 +39,22 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 					return;
 				}
 
-				crashDoc.IsTransformActive = true;
+				crashDoc.DocumentIsBusy = true;
+				var isLocked = rhinoObject.IsLocked;
+
+				if (isLocked)
+				{
+					rhinoDoc.Objects.Unlock(rhinoObject, true);
+				}
+
 				rhinoObject.Geometry.Transform(xform);
-				crashDoc.IsTransformActive = false;
+
+				if (isLocked)
+				{
+					rhinoDoc.Objects.Lock(rhinoObject, true);
+				}
+
+				crashDoc.DocumentIsBusy = false;
 			}
 		}
 	}

@@ -68,7 +68,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				return;
 			}
 
-			args.Doc.IsInit = true;
+			args.Doc.DocumentIsBusy = true;
 			try
 			{
 				var rhinoId = rhinoDoc.Objects.Add(geomChange.Geometry);
@@ -82,7 +82,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			}
 			finally
 			{
-				args.Doc.IsInit = false;
+				args.Doc.DocumentIsBusy = false;
 			}
 		}
 

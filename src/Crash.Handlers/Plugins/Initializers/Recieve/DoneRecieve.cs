@@ -16,7 +16,7 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
 		{
-			crashDoc.SomeoneIsDone = true;
+			crashDoc.DocumentIsBusy = true;
 			try
 			{
 				// Done Range
@@ -48,7 +48,7 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 				EventHandler<CrashEventArgs>? _event = null;
 				_event = (sender, args) =>
 				         {
-					         crashDoc.SomeoneIsDone = false;
+					         crashDoc.DocumentIsBusy = false;
 					         crashDoc.Queue.OnCompletedQueue -= _event;
 				         };
 
