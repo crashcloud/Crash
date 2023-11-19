@@ -221,6 +221,9 @@ namespace Crash.Handlers.Plugins
 				return;
 			}
 
+			// Delete will fire and this prevents that sending anything
+			crashDoc.DocumentIsBusy = true;
+
 			var crashArgs =
 				new CrashTransformEventArgs(args.Transform.ToCrash(),
 				                            args.Objects.Select(o => new CrashObject(o)),

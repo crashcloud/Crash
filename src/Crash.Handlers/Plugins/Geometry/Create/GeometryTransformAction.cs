@@ -1,4 +1,6 @@
 ﻿using Crash.Common.Changes;
+using Crash.Common.Events;
+using Crash.Events;
 using Crash.Geometry;
 using Crash.Handlers.InternalEvents;
 
@@ -22,6 +24,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			changes = Array.Empty<Change>();
 			if (crashArgs.Args is not CrashTransformEventArgs cargs)
 			{
+				crashArgs.Doc.DocumentIsBusy = false;
 				return false;
 			}
 
@@ -29,8 +32,14 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			var transform = cargs.Transform;
 
 			changes = getTransforms(transform, user, cargs.Objects);
+			crashArgs.Doc.Queue.AddAction(new IdleAction(ResetBusy, new IdleArgs(crashArgs.Doc, null)));
 
 			return true;
+		}
+
+		private void ResetBusy(IdleArgs args)
+		{
+			args.Doc.DocumentIsBusy = false;
 		}
 
 		private IEnumerable<Change> getTransforms(CTransform transform, string userName,
