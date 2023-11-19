@@ -1,10 +1,7 @@
-﻿using Crash.Changes.Extensions;
-using Crash.Common.Changes;
+﻿using Crash.Common.Changes;
 using Crash.Common.Document;
 using Crash.Handlers.Changes;
 using Crash.Utils;
-
-using Rhino.Geometry;
 
 namespace Crash.Handlers.Plugins.Geometry.Recieve
 {
@@ -18,8 +15,6 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
 		{
-			GeometryBase geometry = null;
-
 			var transChange = TransformChange.CreateFrom(recievedChange);
 			if (!transChange.Transform.IsValid())
 			{
@@ -32,7 +27,11 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				return;
 			}
 
-			if (!recievedChange.HasFlag(ChangeAction.Temporary))
+			if (crashDoc.TemporaryChangeTable.TryGetChangeOfType(recievedChange.Id, out GeometryChange geomChange))
+			{
+				geomChange.Geometry.Transform(xform);
+			}
+			else
 			{
 				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
 				if (!recievedChange.TryGetRhinoObject(crashDoc, out var rhinoObject))
@@ -40,18 +39,10 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 					return;
 				}
 
-				geometry = rhinoObject.Geometry;
+				crashDoc.IsTransformActive = true;
+				rhinoObject.Geometry.Transform(xform);
+				crashDoc.IsTransformActive = false;
 			}
-			else if (crashDoc.TemporaryChangeTable.TryGetChangeOfType(recievedChange.Id, out GeometryChange geomChange))
-			{
-				geometry = geomChange.Geometry;
-			}
-			else
-			{
-				return;
-			}
-
-			geometry.Transform(xform);
 		}
 	}
 }
