@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 
 using Rhino;
 using Rhino.Display;
+using Rhino.DocObjects;
 
 namespace Crash.Handlers.Plugins
 {
@@ -26,8 +27,6 @@ namespace Crash.Handlers.Plugins
 
 			_createActions = new Dictionary<ChangeAction, List<IChangeCreateAction>>();
 			_recieveActions = new Dictionary<string, List<IChangeRecieveAction>>();
-
-			RegisterDefaultEvents();
 		}
 
 		/// <summary>Registers a Definition and all of the Create and recieve actions within</summary>
@@ -148,234 +147,231 @@ namespace Crash.Handlers.Plugins
 			doc.Users.Add(change.Owner);
 		}
 
+		private void AddRhinoObject(object sender, RhinoObjectEventArgs args)
+		{
+			var crashDoc =
+				CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
+			if (crashDoc is null)
+			{
+				return;
+			}
+
+			if (crashDoc.IsInit ||
+				crashDoc.SomeoneIsDone ||
+				crashDoc.IsTransformActive)
+			{
+				return;
+			}
+
+			if (args.TheObject.IsActiveChange(crashDoc))
+			{
+				return;
+			}
+
+			var crashArgs = new CrashObjectEventArgs(args.TheObject);
+			NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary, sender,
+							  crashArgs, args.TheObject.Document);
+		}
+
+		private void DeleteRhinoObject(object sender, RhinoObjectEventArgs args)
+		{
+			var crashDoc =
+				CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
+			if (crashDoc is null)
+			{
+				return;
+			}
+
+			if (crashDoc.IsInit ||
+				crashDoc.SomeoneIsDone ||
+				crashDoc.IsTransformActive)
+			{
+				return;
+			}
+
+			// Add check for IS Transforming
+
+			args.TheObject.TryGetChangeId(out var changeId);
+			if (changeId == Guid.Empty)
+			{
+				return;
+			}
+
+			var crashArgs = new CrashObjectEventArgs(args.TheObject, changeId);
+			NotifyServerAsync(ChangeAction.Remove, sender, crashArgs,
+							  args.TheObject.Document);
+			crashDoc.RealisedChangeTable.RemoveChange(changeId);
+		}
+
+		private void TransformRhinoObject(object sender, RhinoTransformObjectsEventArgs args)
+		{
+			if (args.GripCount > 0)
+			{
+				return;
+			}
+
+			var rhinoDoc = args.Objects
+							   .FirstOrDefault(o => o.Document is not null)
+							   .Document;
+
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
+			if (crashDoc is null)
+			{
+				return;
+			}
+
+			if (crashDoc.IsInit ||
+				crashDoc.SomeoneIsDone)
+			{
+				return;
+			}
+
+			crashDoc.IsTransformActive = true;
+
+			var crashArgs =
+				new CrashTransformEventArgs(args.Transform.ToCrash(),
+					args.Objects.Select(o => new CrashObject(o)),
+					args.ObjectsWillBeCopied);
+
+			NotifyServerAsync(ChangeAction.Transform, sender, crashArgs,
+							  rhinoDoc);
+		}
+
+		private void DeselectRhinoObjects(object sender, RhinoObjectSelectionEventArgs args)
+		{
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
+
+			if (crashDoc is null)
+			{
+				return;
+			}
+
+			if (crashDoc.IsInit ||
+				crashDoc.SomeoneIsDone)
+			{
+				return;
+			}
+
+
+			foreach (var rhinoObject in args.RhinoObjects)
+			{
+				if (!rhinoObject.TryGetChangeId(out var changeId))
+				{
+					continue;
+				}
+
+				crashDoc.RealisedChangeTable.RemoveSelected(changeId);
+			}
+
+			var crashArgs =
+				CrashSelectionEventArgs.CreateDeSelectionEvent(args.RhinoObjects
+					.Select(o => new CrashObject(o)));
+			NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs, args.Document);
+		}
+
+		private void DeselectAllRhinoObjects(object sender, RhinoDeselectAllObjectsEventArgs args)
+		{
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
+
+			if (crashDoc is null)
+			{
+				return;
+			}
+
+			if (crashDoc.IsInit ||
+				crashDoc.SomeoneIsDone)
+			{
+				return;
+			}
+
+			var currentlySelected = crashDoc.RealisedChangeTable.GetSelected();
+			var crashArgs = CrashSelectionEventArgs.CreateDeSelectionEvent(
+			 currentlySelected.Select(cs => new CrashObject(cs, Guid.Empty)));
+			NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs,
+							  args.Document);
+
+			crashDoc.RealisedChangeTable.ClearSelected();
+		}
+
+		private void SelectRhinoObjects(object sender, RhinoObjectSelectionEventArgs args)
+		{
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
+
+			if (crashDoc is null)
+			{
+				return;
+			}
+
+			if (crashDoc.IsInit ||
+				crashDoc.SomeoneIsDone)
+			{
+				return;
+			}
+
+			foreach (var rhinoObject in args.RhinoObjects)
+			{
+				if (!rhinoObject.TryGetChangeId(out var changeId))
+				{
+					continue;
+				}
+
+				crashDoc.RealisedChangeTable.AddSelected(changeId);
+			}
+
+			var crashArgs = CrashSelectionEventArgs.CreateSelectionEvent(args.RhinoObjects
+				.Select(o => new CrashObject(o)));
+			NotifyServerAsync(ChangeAction.Locked, sender, crashArgs, args.Document);
+		}
+
+		private void ModifyRhinoObjectAttributes(object sender, RhinoModifyObjectAttributesEventArgs args)
+		{
+			// TODO : Create Wrapper
+			NotifyServerAsync(ChangeAction.Update, sender, args, args.Document);
+		}
+
+		private void UserStringChanged(object sender, RhinoDoc.UserStringChangedArgs args)
+		{
+			// TODO : Create Wrapper
+			NotifyServerAsync(ChangeAction.Update, sender, args, args.Document);
+		}
+
+		private void RhinoViewModified(object sender, ViewEventArgs args)
+		{
+			var crashArgs = new CrashViewArgs(args.View);
+			NotifyServerAsync(ChangeAction.Add, sender, crashArgs, args.View.Document);
+		}
+
 		private void RegisterDefaultEvents()
 		{
 			// Object Events
-			RhinoDoc.AddRhinoObject += (sender, args) =>
-			                           {
-				                           var crashDoc =
-					                           CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
-				                           if (crashDoc is null)
-				                           {
-					                           return;
-				                           }
-
-				                           if (crashDoc.IsInit ||
-				                               crashDoc.SomeoneIsDone ||
-				                               crashDoc.IsTransformActive)
-				                           {
-					                           return;
-				                           }
-
-				                           if (args.TheObject.IsActiveChange(crashDoc))
-				                           {
-					                           return;
-				                           }
-
-				                           var crashArgs = new CrashObjectEventArgs(args.TheObject);
-				                           NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary, sender,
-				                                             crashArgs, args.TheObject.Document);
-			                           };
-
-			RhinoDoc.UndeleteRhinoObject += (sender, args) =>
-			                                {
-				                                var crashDoc =
-					                                CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
-				                                if (crashDoc is null)
-				                                {
-					                                return;
-				                                }
-
-				                                if (crashDoc.IsInit ||
-				                                    crashDoc.SomeoneIsDone ||
-				                                    crashDoc.IsTransformActive)
-				                                {
-					                                return;
-				                                }
-
-				                                var crashArgs = new CrashObjectEventArgs(args.TheObject);
-				                                NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary, sender,
-				                                                  crashArgs, args.TheObject.Document);
-			                                };
-
-			RhinoDoc.DeleteRhinoObject += (sender, args) =>
-			                              {
-				                              var crashDoc =
-					                              CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
-				                              if (crashDoc is null)
-				                              {
-					                              return;
-				                              }
-
-				                              if (crashDoc.IsInit ||
-				                                  crashDoc.SomeoneIsDone ||
-				                                  crashDoc.IsTransformActive)
-				                              {
-					                              return;
-				                              }
-
-				                              // Add check for IS Transforming
-
-				                              args.TheObject.TryGetChangeId(out var changeId);
-				                              if (changeId == Guid.Empty)
-				                              {
-					                              return;
-				                              }
-
-				                              var crashArgs = new CrashObjectEventArgs(args.TheObject, changeId);
-				                              NotifyServerAsync(ChangeAction.Remove, sender, crashArgs,
-				                                                args.TheObject.Document);
-				                              crashDoc.RealisedChangeTable.RemoveChange(changeId);
-			                              };
-
-			RhinoDoc.BeforeTransformObjects += (sender, args) =>
-			                                   {
-				                                   if (args.GripCount > 0)
-				                                   {
-					                                   return;
-				                                   }
-
-				                                   var rhinoDoc = args.Objects
-				                                                      .FirstOrDefault(o => o.Document is not null)
-				                                                      .Document;
-
-				                                   var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
-				                                   if (crashDoc is null)
-				                                   {
-					                                   return;
-				                                   }
-
-				                                   if (crashDoc.IsInit ||
-				                                       crashDoc.SomeoneIsDone)
-				                                   {
-					                                   return;
-				                                   }
-
-				                                   crashDoc.IsTransformActive = true;
-
-				                                   var crashArgs =
-					                                   new CrashTransformEventArgs(args.Transform.ToCrash(),
-						                                   args.Objects.Select(o => new CrashObject(o)),
-						                                   args.ObjectsWillBeCopied);
-
-				                                   NotifyServerAsync(ChangeAction.Transform, sender, crashArgs,
-				                                                     rhinoDoc);
-			                                   };
-
-			RhinoDoc.DeselectObjects += (sender, args) =>
-			                            {
-				                            var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-
-				                            if (crashDoc is null)
-				                            {
-					                            return;
-				                            }
-
-				                            if (crashDoc.IsInit ||
-				                                crashDoc.SomeoneIsDone)
-				                            {
-					                            return;
-				                            }
-
-
-				                            foreach (var rhinoObject in args.RhinoObjects)
-				                            {
-					                            if (!rhinoObject.TryGetChangeId(out var changeId))
-					                            {
-						                            continue;
-					                            }
-
-					                            crashDoc.RealisedChangeTable.RemoveSelected(changeId);
-				                            }
-
-				                            var crashArgs =
-					                            CrashSelectionEventArgs.CreateDeSelectionEvent(args.RhinoObjects
-						                            .Select(o => new CrashObject(o)));
-				                            NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs, args.Document);
-			                            };
-
-			RhinoDoc.DeselectAllObjects += (sender, args) =>
-			                               {
-				                               var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-
-				                               if (crashDoc is null)
-				                               {
-					                               return;
-				                               }
-
-				                               if (crashDoc.IsInit ||
-				                                   crashDoc.SomeoneIsDone)
-				                               {
-					                               return;
-				                               }
-
-
-				                               var currentlySelected = crashDoc.RealisedChangeTable.GetSelected();
-				                               var crashArgs = CrashSelectionEventArgs.CreateDeSelectionEvent(
-				                                currentlySelected.Select(cs => new CrashObject(cs, Guid.Empty)));
-				                               NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs,
-				                                                 args.Document);
-
-				                               crashDoc.RealisedChangeTable.ClearSelected();
-			                               };
-			RhinoDoc.SelectObjects += (sender, args) =>
-			                          {
-				                          var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-
-				                          if (crashDoc is null)
-				                          {
-					                          return;
-				                          }
-
-				                          if (crashDoc.IsInit ||
-				                              crashDoc.SomeoneIsDone)
-				                          {
-					                          return;
-				                          }
-
-				                          foreach (var rhinoObject in args.RhinoObjects)
-				                          {
-					                          if (!rhinoObject.TryGetChangeId(out var changeId))
-					                          {
-						                          continue;
-					                          }
-
-					                          crashDoc.RealisedChangeTable.AddSelected(changeId);
-				                          }
-
-				                          var crashArgs = CrashSelectionEventArgs.CreateSelectionEvent(args.RhinoObjects
-					                          .Select(o => new CrashObject(o)));
-				                          NotifyServerAsync(ChangeAction.Locked, sender, crashArgs, args.Document);
-			                          };
-
-			RhinoDoc.ModifyObjectAttributes += (sender, args) =>
-			                                   {
-				                                   // TODO : Create Wrapper
-				                                   NotifyServerAsync(ChangeAction.Update, sender, args, args.Document);
-			                                   };
-
-			RhinoDoc.UserStringChanged += (sender, args) =>
-			                              {
-				                              // TODO : Create Wrapper
-				                              NotifyServerAsync(ChangeAction.Update, sender, args, args.Document);
-			                              };
-
-			// Doc Events
-			// RhinoDoc.UnitsChangedWithScaling += 
+			RhinoDoc.AddRhinoObject += AddRhinoObject;
+			RhinoDoc.UndeleteRhinoObject += AddRhinoObject;
+			RhinoDoc.DeleteRhinoObject += DeleteRhinoObject;
+			RhinoDoc.BeforeTransformObjects += TransformRhinoObject;
+			RhinoDoc.DeselectObjects += DeselectRhinoObjects;
+			RhinoDoc.DeselectAllObjects += DeselectAllRhinoObjects;
+			RhinoDoc.SelectObjects += SelectRhinoObjects;
+			RhinoDoc.ModifyObjectAttributes += ModifyRhinoObjectAttributes;
+			RhinoDoc.UserStringChanged += UserStringChanged;
 
 			// View Events
-			RhinoView.Modified += (sender, args) =>
-			                      {
-				                      var crashArgs = new CrashViewArgs(args.View);
-				                      NotifyServerAsync(ChangeAction.Add, sender, crashArgs, args.View.Document);
-			                      };
+			RhinoView.Modified += RhinoViewModified;
+		}
+		public void DeRegisterDefaultEvents()
+		{
+			// Object Events
+			RhinoDoc.AddRhinoObject -= AddRhinoObject;
+			RhinoDoc.UndeleteRhinoObject -= AddRhinoObject;
+			RhinoDoc.DeleteRhinoObject -= DeleteRhinoObject;
+			RhinoDoc.BeforeTransformObjects -= TransformRhinoObject;
+			RhinoDoc.DeselectObjects -= DeselectRhinoObjects;
+			RhinoDoc.DeselectAllObjects -= DeselectAllRhinoObjects;
+			RhinoDoc.SelectObjects -= SelectRhinoObjects;
+			RhinoDoc.ModifyObjectAttributes -= ModifyRhinoObjectAttributes;
+			RhinoDoc.UserStringChanged -= UserStringChanged;
 
-			RhinoApp.Initialized += (sender, args) =>
-			                        {
-				                        // TODO : Avoid
-				                        var crashDoc = CrashDocRegistry.GetRelatedDocument(RhinoDoc.ActiveDoc);
-				                        crashDoc.IsTransformActive = false;
-			                        };
+			// View Events
+			RhinoView.Modified -= RhinoViewModified;
 		}
 
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates
