@@ -103,6 +103,7 @@ namespace Crash.Handlers.Plugins
 					break;
 				}
 			}
+
 			if (!changes.Any())
 			{
 				if (args is not CrashViewArgs)
@@ -411,6 +412,7 @@ namespace Crash.Handlers.Plugins
 			RhinoView.Modified += RhinoViewModified;
 		}
 
+		// TODO : Use End?
 		private void RhinoDocOnBeginOpenDocument(object sender, DocumentOpenEventArgs e)
 		{
 			if (!e.Merge)

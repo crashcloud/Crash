@@ -30,12 +30,12 @@ namespace Crash.UI
 		[JsonIgnore]
 		public Bitmap Signal => Loaded switch
 		                        {
-			                        true  => Icons.wifi.ToEto(),
-			                        false => Icons.wifi_off.ToEto(),
-			                        null  => Icons.wifi_unstable.ToEto()
+			                        true  => (Palette.DarkMode ? Icons.Wifi_Light : Icons.Wifi_Dark).ToEto(),
+			                        false => (Palette.DarkMode ? Icons.WifiOff_Light : Icons.WifiOff_Dark).ToEto(),
+			                        null  => (Palette.DarkMode ? Icons.WifiUnstable_Light : Icons.WifiUnstable_Dark).ToEto()
 		                        };
 
-		[JsonIgnore] public Bitmap UserIcon => Icons.user.ToEto();
+		[JsonIgnore] public Bitmap UserIcon => (Palette.DarkMode ? Icons.User_Light : Icons.User_Dark).ToEto();
 
 		[JsonIgnore] public string UserCount => Users?.Length.ToString() ?? "0";
 

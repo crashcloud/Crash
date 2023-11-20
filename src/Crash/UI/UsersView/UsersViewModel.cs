@@ -197,9 +197,9 @@ namespace Crash.UI.UsersView
 			{
 				cameras = new Dictionary<CameraState, Image>
 				          {
-					          { CameraState.None, Icons.CameraNone.ToEto() },
-					          { CameraState.Visible, Icons.CameraVisible.ToEto() },
-					          { CameraState.Follow, Icons.CameraFollow.ToEto() }
+					          { CameraState.None, (Palette.DarkMode ? Icons.CameraNone_Light : Icons.CameraNone_Dark).ToEto() },
+					          { CameraState.Visible, (Palette.DarkMode ? Icons.CameraVisible_Light : Icons.CameraVisible_Dark).ToEto() },
+					          { CameraState.Follow, (Palette.DarkMode ? Icons.CameraFollow_Light : Icons.CameraFollow_Dark).ToEto() },
 				          };
 			}
 

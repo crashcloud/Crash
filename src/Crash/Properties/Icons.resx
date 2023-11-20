@@ -124,18 +124,33 @@
 	</resheader>
 	<assembly alias="System.Windows.Forms"
 						name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
-	<data name="CameraFollow" type="System.Resources.ResXFileRef, System.Windows.Forms">
-		<value>..\Resources\CameraFollow.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
+	<data name="CameraFollow_Dark" type="System.Resources.ResXFileRef, System.Windows.Forms">
+		<value>..\Resources\CameraFollow_Dark.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
 			PublicKeyToken=b03f5f7f11d50a3a
 		</value>
 	</data>
-	<data name="CameraNone" type="System.Resources.ResXFileRef, System.Windows.Forms">
-		<value>..\Resources\CameraNone.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
+	<data name="CameraFollow_Light" type="System.Resources.ResXFileRef, System.Windows.Forms">
+		<value>..\Resources\CameraFollow_Light.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
 			PublicKeyToken=b03f5f7f11d50a3a
 		</value>
 	</data>
-	<data name="CameraVisible" type="System.Resources.ResXFileRef, System.Windows.Forms">
-		<value>..\Resources\CameraVisible.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
+	<data name="CameraNone_Dark" type="System.Resources.ResXFileRef, System.Windows.Forms">
+		<value>..\Resources\CameraNone_Dark.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
+			PublicKeyToken=b03f5f7f11d50a3a
+		</value>
+	</data>
+	<data name="CameraNone_Light" type="System.Resources.ResXFileRef, System.Windows.Forms">
+		<value>..\Resources\CameraNone_Light.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
+			PublicKeyToken=b03f5f7f11d50a3a
+		</value>
+	</data>
+	<data name="CameraVisible_Dark" type="System.Resources.ResXFileRef, System.Windows.Forms">
+		<value>..\Resources\CameraVisible_Dark.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
+			PublicKeyToken=b03f5f7f11d50a3a
+		</value>
+	</data>
+	<data name="CameraVisible_Light" type="System.Resources.ResXFileRef, System.Windows.Forms">
+		<value>..\Resources\CameraVisible_Light.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
 			PublicKeyToken=b03f5f7f11d50a3a
 		</value>
 	</data>
@@ -144,23 +159,43 @@
 			PublicKeyToken=b03f5f7f11d50a3a
 		</value>
 	</data>
-	<data name="user" type="System.Resources.ResXFileRef, System.Windows.Forms">
-		<value>..\Resources\user.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
+	<data name="User_Dark" type="System.Resources.ResXFileRef, System.Windows.Forms">
+		<value>..\Resources\User_Dark.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
 			PublicKeyToken=b03f5f7f11d50a3a
 		</value>
 	</data>
-	<data name="wifi" type="System.Resources.ResXFileRef, System.Windows.Forms">
-		<value>..\Resources\wifi.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
+	<data name="User_Light" type="System.Resources.ResXFileRef, System.Windows.Forms">
+		<value>..\Resources\User_Light.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
 			PublicKeyToken=b03f5f7f11d50a3a
 		</value>
 	</data>
-	<data name="wifi_off" type="System.Resources.ResXFileRef, System.Windows.Forms">
-		<value>..\Resources\wifi-off.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
+	<data name="WifiOff_Dark" type="System.Resources.ResXFileRef, System.Windows.Forms">
+		<value>..\Resources\WifiOff_Dark.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
 			PublicKeyToken=b03f5f7f11d50a3a
 		</value>
 	</data>
-	<data name="wifi_unstable" type="System.Resources.ResXFileRef, System.Windows.Forms">
-		<value>..\Resources\wifi-unstable.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
+	<data name="WifiOff_Light" type="System.Resources.ResXFileRef, System.Windows.Forms">
+		<value>..\Resources\WifiOff_Light.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
+			PublicKeyToken=b03f5f7f11d50a3a
+		</value>
+	</data>
+	<data name="WifiUnstable_Dark" type="System.Resources.ResXFileRef, System.Windows.Forms">
+		<value>..\Resources\WifiUnstable_Dark.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
+			PublicKeyToken=b03f5f7f11d50a3a
+		</value>
+	</data>
+	<data name="WifiUnstable_Light" type="System.Resources.ResXFileRef, System.Windows.Forms">
+		<value>..\Resources\WifiUnstable_Light.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
+			PublicKeyToken=b03f5f7f11d50a3a
+		</value>
+	</data>
+	<data name="Wifi_Dark" type="System.Resources.ResXFileRef, System.Windows.Forms">
+		<value>..\Resources\Wifi_Dark.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
+			PublicKeyToken=b03f5f7f11d50a3a
+		</value>
+	</data>
+	<data name="Wifi_Light" type="System.Resources.ResXFileRef, System.Windows.Forms">
+		<value>..\Resources\Wifi_Light.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral,
 			PublicKeyToken=b03f5f7f11d50a3a
 		</value>
 	</data>
