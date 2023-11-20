@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
+using Crash.Common.App;
 using Crash.Common.Communications;
 using Crash.Common.Tables;
 using Crash.Events;
@@ -32,13 +33,22 @@ namespace Crash.Common.Document
 
 		#endregion
 
+		private bool _documentIsBusy { get; set; }
+
 		// TODO : What if someone DOES something when we're adding stuff?
 		/// <summary>
 		///     Marks the Document as in a "Busy State" state which means
 		///     Nothing can be sent to the server
 		/// </summary>
-		// TODO : Change to something like PauseServerListener?
-		public bool DocumentIsBusy { get; set; } = false;
+		public bool DocumentIsBusy
+		{
+			get => _documentIsBusy;
+			set
+			{
+				_documentIsBusy = value;
+				CrashApp.Log($"{nameof(DocumentIsBusy)} was set to {value}");
+			}
+		}
 
 		#region Queue
 
