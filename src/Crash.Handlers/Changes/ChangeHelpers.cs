@@ -13,11 +13,6 @@ namespace Crash.Utils
 	/// <summary>Utilities for Change Objects.</summary>
 	public static class ChangeHelpers
 	{
-		public static bool IsActiveChange(this RhinoObject rhinoObject, CrashDoc crashDoc)
-		{
-			return crashDoc.RealisedChangeTable.ContainsRhinoId(rhinoObject.Id);
-		}
-
 		/// <summary>Acquires the Rhino Object given the RhinoId from an IRhinoChange</summary>
 		public static bool TryGetRhinoObject(this IChange change, CrashDoc crashDoc, out RhinoObject rhinoObject)
 		{

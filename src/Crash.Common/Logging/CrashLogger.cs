@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Crash.Common.Logging
 {
+	// TODO : Merge with CrashApp
 	/// <summary>Enables logging for Crash</summary>
 	public sealed class CrashLogger : ILogger, IDisposable
 	{

@@ -67,19 +67,19 @@ namespace Crash.Handlers.Plugins
 		/// </summary>
 		/// <param name="changeAction">The ChangeAction</param>
 		/// <param name="sender">The sender of the Event</param>
-		/// <param name="args">
-		///     The EventArgs
-		///     <-/param>
-		///         <param name="doc">The associated RhinoDoc</param>
+		/// <param name="args">The EventArgs</param>
+		/// <param name="doc">The associated RhinoDoc</param>
 		public async Task NotifyServerAsync(ChangeAction changeAction, object sender, EventArgs args, RhinoDoc doc)
 		{
 			if (!_createActions.TryGetValue(changeAction, out var actionChain))
 			{
-				CrashLogger.Logger.LogDebug($"Could not find a CreateAction for {changeAction}");
+				if (args is not CrashViewArgs)
+				{
+					CrashLogger.Logger.LogDebug($"Could not find a CreateAction for {changeAction}");
+				}
+
 				return;
 			}
-
-			CrashApp.Log("Create Action Found", LogLevel.Trace);
 
 			var crashArgs = new CreateRecieveArgs(changeAction, args, doc);
 
@@ -103,17 +103,28 @@ namespace Crash.Handlers.Plugins
 					break;
 				}
 			}
-
 			if (!changes.Any())
 			{
-				CrashApp.Log("No changes created as a result", LogLevel.Trace);
+				if (args is not CrashViewArgs)
+				{
+					CrashApp.Log("No changes created as a result", LogLevel.Trace);
+				}
+
 				return;
 			}
 
 			// Here we are essentially streaming?
 			// We need to make sure this gets broken up better.
 			await crashDoc.LocalClient.PushChangesAsync(changes);
+
+#if DEBUG
+			// This logic is a bit slow and I'd rather it wasn't compiled unless necessary
 			CrashApp.Log($"{changes.Count()} Changes sent.", LogLevel.Trace);
+			foreach (var change in changes)
+			{
+				CrashApp.Log($"Sent Change : {change.Type} | {change.Action} | {change.Id}", LogLevel.Trace);
+			}
+#endif
 		}
 
 		/// <summary>
@@ -169,12 +180,14 @@ namespace Crash.Handlers.Plugins
 				return;
 			}
 
-			if (crashDoc.DocumentIsBusy)
+			/* TODO : This needs to be used carefully
+			if (!crashDoc.RealisedChangeTable.TryGetChangeId(args.TheObject.Id, out _))
 			{
-				return;
+				args.TheObject.Geometry.UserDictionary.Clear();
 			}
+			*/
 
-			if (args.TheObject.IsActiveChange(crashDoc))
+			if (crashDoc.DocumentIsBusy)
 			{
 				return;
 			}
@@ -374,12 +387,8 @@ namespace Crash.Handlers.Plugins
 
 		private void RhinoViewModified(object sender, ViewEventArgs args)
 		{
-			CrashApp.Log($"{nameof(RhinoViewModified)} event fired.", LogLevel.Trace);
-
 			var crashArgs = new CrashViewArgs(args.View);
 			NotifyServerAsync(ChangeAction.Add, sender, crashArgs, args.View.Document);
-
-			CrashApp.Log($"{nameof(RhinoViewModified)} notified server.", LogLevel.Trace);
 		}
 
 		public void RegisterDefaultEvents()
@@ -395,8 +404,26 @@ namespace Crash.Handlers.Plugins
 			RhinoDoc.ModifyObjectAttributes += ModifyRhinoObjectAttributes;
 			RhinoDoc.UserStringChanged += UserStringChanged;
 
+			// Doc Events
+			RhinoDoc.BeginOpenDocument += RhinoDocOnBeginOpenDocument;
+
 			// View Events
 			RhinoView.Modified += RhinoViewModified;
+		}
+
+		private void RhinoDocOnBeginOpenDocument(object sender, DocumentOpenEventArgs e)
+		{
+			if (!e.Merge)
+			{
+				return;
+			}
+
+			ObjectEnumeratorSettings settings = new() { HiddenObjects = true, LockedObjects = true };
+			var objects = e.Document.Objects.GetObjectList(settings);
+			foreach (var rhinoObject in objects)
+			{
+				rhinoObject.Geometry.UserDictionary.Clear();
+			}
 		}
 
 		public void DeRegisterDefaultEvents()
@@ -411,6 +438,9 @@ namespace Crash.Handlers.Plugins
 			RhinoDoc.SelectObjects -= SelectRhinoObjects;
 			RhinoDoc.ModifyObjectAttributes -= ModifyRhinoObjectAttributes;
 			RhinoDoc.UserStringChanged -= UserStringChanged;
+
+			// Doc Events
+			RhinoDoc.BeginOpenDocument -= RhinoDocOnBeginOpenDocument;
 
 			// View Events
 			RhinoView.Modified -= RhinoViewModified;

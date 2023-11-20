@@ -32,18 +32,13 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 
 		private IEnumerable<Change> getChanges(IEnumerable<CrashObject> crashObjects, string userName)
 		{
+			var changes = new List<Change>();
 			foreach (var crashObject in crashObjects)
 			{
-				yield return CreateChange(crashObject.ChangeId, userName);
+				changes.Add(CreateChange(crashObject.ChangeId, userName));
 			}
-		}
 
-		private IEnumerable<Change> getChanges(IEnumerable<Guid> changeIds, string userName)
-		{
-			foreach (var changeId in changeIds)
-			{
-				yield return CreateChange(changeId, userName);
-			}
+			return changes;
 		}
 
 		private Change CreateChange(Guid changeId, string userName)

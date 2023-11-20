@@ -10,7 +10,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 	{
 		public bool CanRecieve(IChange change)
 		{
-			return change.Action.HasFlag(ChangeAction.Transform);
+			return change.Action == ChangeAction.Transform;
 		}
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)

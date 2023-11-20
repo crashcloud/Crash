@@ -33,6 +33,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 		private IEnumerable<Change> GetChanges(CrashDoc crashDoc, IEnumerable<CrashObject> crashObjects,
 			string userName)
 		{
+			var changes = new List<Change>(crashObjects.Count());
 			foreach (var crashObject in crashObjects)
 			{
 				if (crashObject.ChangeId == Guid.Empty)
@@ -41,9 +42,10 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 				}
 
 				var change = GeometryChange.CreateChange(crashObject.ChangeId, userName, ChangeAction.Locked);
-
-				yield return change;
+				changes.Add(change);
 			}
+
+			return changes;
 		}
 	}
 }

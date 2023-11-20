@@ -43,6 +43,7 @@ namespace Crash.Commands
 
 		private static IEnumerable<Guid> GetSelectedChanges(RhinoDoc doc)
 		{
+			var selected = new List<Guid>();
 			foreach (var rhinoObj in doc.Objects.GetSelectedObjects(false, false))
 			{
 				if (!rhinoObj.TryGetChangeId(out var id))
@@ -50,8 +51,10 @@ namespace Crash.Commands
 					continue;
 				}
 
-				yield return id;
+				selected.Add(id);
 			}
+
+			return selected;
 		}
 	}
 }

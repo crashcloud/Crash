@@ -1,7 +1,10 @@
-﻿using Crash.Common.Document;
+﻿using Crash.Common.App;
+using Crash.Common.Document;
 using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
 using Crash.Utils;
+
+using Microsoft.Extensions.Logging;
 
 using Rhino.Geometry;
 
@@ -41,7 +44,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			var rhinoObject = rhinoDoc.Objects.FindId(rhinoId);
 			if (rhinoObject is null)
 			{
-				yield break;
+				return Array.Empty<Change>();
 			}
 
 			var user = crashDoc.Users.CurrentUser.Name;
@@ -53,13 +56,15 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 				currentOrNewId = foundChange.Id;
 			}
 
+			CrashApp.Log($"Created Change : {currentOrNewId}", LogLevel.Trace);
+
 			crashDoc.RealisedChangeTable.AddPair(currentOrNewId, rhinoId);
 
 			var change = GeometryChange.CreateChange(currentOrNewId, user, Action, geometry);
 
 			rhinoObject.SyncHost(change, crashDoc);
 
-			yield return change;
+			return new[] { change };
 		}
 	}
 }

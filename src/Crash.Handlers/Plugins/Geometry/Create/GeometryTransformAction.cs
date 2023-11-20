@@ -45,6 +45,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 		private IEnumerable<Change> getTransforms(CTransform transform, string userName,
 			IEnumerable<CrashObject> crashObjects)
 		{
+			var transformChanges = new List<Change>(crashObjects.Count());
 			foreach (var crashObject in crashObjects)
 			{
 				if (crashObject.ChangeId == Guid.Empty)
@@ -52,9 +53,11 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 					continue;
 				}
 
-				var transChange = TransformChange.CreateChange(crashObject.ChangeId, userName, transform);
-				yield return transChange;
+				var transformChange = TransformChange.CreateChange(crashObject.ChangeId, userName, transform);
+				transformChanges.Add(transformChange);
 			}
+
+			return transformChanges;
 		}
 	}
 }
