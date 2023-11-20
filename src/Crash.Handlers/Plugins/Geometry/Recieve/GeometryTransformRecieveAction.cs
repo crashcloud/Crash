@@ -1,5 +1,7 @@
 ﻿using Crash.Common.Changes;
 using Crash.Common.Document;
+using Crash.Common.Events;
+using Crash.Events;
 using Crash.Handlers.Changes;
 using Crash.Utils;
 
@@ -15,13 +17,13 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
 		{
-			var transChange = TransformChange.CreateFrom(recievedChange);
-			if (!transChange.Transform.IsValid())
+			var transformChange = TransformChange.CreateFrom(recievedChange);
+			if (!transformChange.Transform.IsValid())
 			{
 				return;
 			}
 
-			var xform = transChange.Transform.ToRhino();
+			var xform = transformChange.Transform.ToRhino();
 			if (!xform.IsValid)
 			{
 				return;
@@ -33,33 +35,52 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			}
 			else
 			{
-				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
-				if (!recievedChange.TryGetRhinoObject(crashDoc, out var rhinoObject))
+				crashDoc.Queue.AddAction(new IdleAction(TransformGeometry, new IdleArgs(crashDoc, transformChange)));
+			}
+		}
+
+		private void TransformGeometry(IdleArgs args)
+		{
+			if (args.Change is not TransformChange transformChange)
+			{
+				return;
+			}
+
+			var xform = transformChange.Transform.ToRhino();
+			if (!xform.IsValid)
+			{
+				return;
+			}
+
+			args.Doc.DocumentIsBusy = true;
+			try
+			{
+				if (!args.Change.TryGetRhinoObject(args.Doc, out var rhinoObject))
 				{
 					return;
 				}
 
-				crashDoc.DocumentIsBusy = true;
-				try
+				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
+
+				var isLocked = rhinoObject.IsLocked;
+				if (isLocked)
 				{
-					var isLocked = rhinoObject.IsLocked;
-
-					if (isLocked)
-					{
-						rhinoDoc.Objects.Unlock(rhinoObject, true);
-					}
-
-					rhinoObject.Geometry.Transform(xform);
-
-					if (isLocked)
-					{
-						rhinoDoc.Objects.Lock(rhinoObject, true);
-					}
+					rhinoDoc.Objects.Unlock(rhinoObject, true);
+					rhinoObject.CommitChanges();
 				}
-				finally
+
+				rhinoObject.Geometry.Transform(xform);
+				rhinoObject.CommitChanges();
+
+				if (isLocked)
 				{
-					crashDoc.DocumentIsBusy = false;
+					rhinoDoc.Objects.Lock(rhinoObject, true);
+					rhinoObject.CommitChanges();
 				}
+			}
+			finally
+			{
+				args.Doc.DocumentIsBusy = false;
 			}
 		}
 	}
