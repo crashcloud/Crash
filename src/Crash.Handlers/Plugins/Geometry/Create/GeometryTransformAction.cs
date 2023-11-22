@@ -29,6 +29,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 
 			if (transformArgs.ObjectsWillBeCopied)
 			{
+				return true;
 				var create = new GeometryCreateAction();
 				var newChanges = new List<Change>(transformArgs.Objects.Count());
 				foreach (var crashObject in transformArgs.Objects)
@@ -43,7 +44,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 					var changeId = Guid.NewGuid();
 					var createArgs = new CreateRecieveArgs(ChangeAction.Add | ChangeAction.Temporary,
 					                                       new CrashObjectEventArgs(geometry,
-						                                       crashObject.RhinoId, changeId),
+							                                        crashObject.RhinoId, changeId),
 					                                       crashArgs.Doc);
 
 					create.TryConvert(sender, createArgs, out var changesOut);
@@ -52,13 +53,11 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 
 				changes = newChanges;
 			}
-			else
-			{
-				var user = crashArgs.Doc.Users.CurrentUser.Name;
-				var transform = transformArgs.Transform;
 
-				changes = getTransforms(transform, user, transformArgs.Objects);
-			}
+			var user = crashArgs.Doc.Users.CurrentUser.Name;
+			var transform = transformArgs.Transform;
+
+			changes = getTransforms(transform, user, transformArgs.Objects);
 
 			crashArgs.Doc.Queue.AddAction(new IdleAction(ResetBusy, new IdleArgs(crashArgs.Doc, null),
 			                                             nameof(ResetBusy)));
