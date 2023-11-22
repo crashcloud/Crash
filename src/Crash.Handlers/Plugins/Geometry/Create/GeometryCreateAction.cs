@@ -57,7 +57,6 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			}
 
 			CrashApp.Log($"Created Change : {currentOrNewId}", LogLevel.Trace);
-
 			crashDoc.RealisedChangeTable.AddPair(currentOrNewId, rhinoId);
 
 			var change = GeometryChange.CreateChange(currentOrNewId, user, Action, geometry);

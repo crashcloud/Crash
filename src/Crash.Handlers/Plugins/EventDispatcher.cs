@@ -181,16 +181,17 @@ namespace Crash.Handlers.Plugins
 				return;
 			}
 
-			/* TODO : This needs to be used carefully
-			if (!crashDoc.RealisedChangeTable.TryGetChangeId(args.TheObject.Id, out _))
-			{
-				args.TheObject.Geometry.UserDictionary.Clear();
-			}
-			*/
+			// object HAS a Crash ID
 
 			if (crashDoc.DocumentIsBusy)
 			{
 				return;
+			}
+
+			// TODO : This needs to be used carefully
+			if (!crashDoc.RealisedChangeTable.TryGetChangeId(args.TheObject.Id, out _))
+			{
+				args.TheObject.Geometry.UserDictionary.Clear();
 			}
 
 			var crashArgs = new CrashObjectEventArgs(args.TheObject);
@@ -251,13 +252,10 @@ namespace Crash.Handlers.Plugins
 				return;
 			}
 
-			if (crashDoc.DocumentIsBusy)
+			if (crashDoc is { CopyIsActive: false, DocumentIsBusy: true })
 			{
 				return;
 			}
-
-			// Delete will fire and this prevents that sending anything
-			crashDoc.DocumentIsBusy = true;
 
 			var crashArgs =
 				new CrashTransformEventArgs(args.Transform.ToCrash(),

@@ -60,6 +60,7 @@ namespace Crash.Handlers.Plugins.Geometry
 			}
 			else if (geom is Brep brep)
 			{
+				// TODO : Spheres draw BADLY in wireframe
 				drawArgs.Display.DrawBrepWires(brep, material.Diffuse, -1);
 				if (!drawWireframe)
 				{

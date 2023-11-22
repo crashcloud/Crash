@@ -9,10 +9,9 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 	/// <summary>Handles Transform Changes</summary>
 	internal sealed class GeometryTransformAction : IChangeCreateAction
 	{
-		
 		public ChangeAction Action => ChangeAction.Transform;
 
-		
+
 		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
 		{
 			return crashArgs.Args is CrashTransformEventArgs;
@@ -22,16 +21,45 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
 		{
 			changes = Array.Empty<Change>();
-			if (crashArgs.Args is not CrashTransformEventArgs cargs)
+			if (crashArgs.Args is not CrashTransformEventArgs transformArgs)
 			{
 				crashArgs.Doc.DocumentIsBusy = false;
 				return false;
 			}
 
-			var user = crashArgs.Doc.Users.CurrentUser.Name;
-			var transform = cargs.Transform;
+			if (transformArgs.ObjectsWillBeCopied)
+			{
+				var create = new GeometryCreateAction();
+				var newChanges = new List<Change>(transformArgs.Objects.Count());
+				foreach (var crashObject in transformArgs.Objects)
+				{
+					var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashArgs.Doc);
+					var rhinoObject = rhinoDoc.Objects.FindId(crashObject.RhinoId);
+					rhinoObject.Geometry.UserDictionary.Clear();
 
-			changes = getTransforms(transform, user, cargs.Objects);
+					var geometry = rhinoObject.Geometry.Duplicate();
+					geometry.Transform(transformArgs.Transform.ToRhino());
+
+					var changeId = Guid.NewGuid();
+					var createArgs = new CreateRecieveArgs(ChangeAction.Add | ChangeAction.Temporary,
+					                                       new CrashObjectEventArgs(geometry,
+							                                        crashObject.RhinoId, changeId),
+					                                       crashArgs.Doc);
+
+					create.TryConvert(sender, createArgs, out var changesOut);
+					newChanges.AddRange(changesOut);
+				}
+
+				changes = newChanges;
+			}
+			else
+			{
+				var user = crashArgs.Doc.Users.CurrentUser.Name;
+				var transform = transformArgs.Transform;
+
+				changes = getTransforms(transform, user, transformArgs.Objects);
+			}
+
 			crashArgs.Doc.Queue.AddAction(new IdleAction(ResetBusy, new IdleArgs(crashArgs.Doc, null)));
 
 			return true;
