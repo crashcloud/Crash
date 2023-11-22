@@ -43,7 +43,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 					var changeId = Guid.NewGuid();
 					var createArgs = new CreateRecieveArgs(ChangeAction.Add | ChangeAction.Temporary,
 					                                       new CrashObjectEventArgs(geometry,
-							                                        crashObject.RhinoId, changeId),
+						                                       crashObject.RhinoId, changeId),
 					                                       crashArgs.Doc);
 
 					create.TryConvert(sender, createArgs, out var changesOut);
@@ -60,7 +60,8 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 				changes = getTransforms(transform, user, transformArgs.Objects);
 			}
 
-			crashArgs.Doc.Queue.AddAction(new IdleAction(ResetBusy, new IdleArgs(crashArgs.Doc, null)));
+			crashArgs.Doc.Queue.AddAction(new IdleAction(ResetBusy, new IdleArgs(crashArgs.Doc, null),
+			                                             nameof(ResetBusy)));
 
 			return true;
 		}

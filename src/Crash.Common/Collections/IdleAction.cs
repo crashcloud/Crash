@@ -11,21 +11,23 @@ namespace Crash.Events
 	{
 		private readonly Action<IdleArgs> _action;
 		private readonly IdleArgs _args;
+		public readonly string Name;
 
 		/// <summary>Constructs an Idle Action</summary>
 		/// <param name="action">The Action to be called on Idle</param>
 		/// <param name="args">The Args to be passed into the Action</param>
 		/// <exception cref="ArgumentNullException">If any inputs are null</exception>
-		public IdleAction(Action<IdleArgs> action, IdleArgs args)
+		public IdleAction(Action<IdleArgs> action, IdleArgs args, string name = "")
 		{
 			_action = action ?? throw new ArgumentNullException($"{nameof(action)} is null");
 			_args = args ?? throw new ArgumentNullException($"{nameof(args)} is null");
+			Name = name;
 		}
 
 		/// <summary>True if successfully invoked</summary>
 		public bool Invoked { get; private set; }
 
-		
+
 		public void Dispose()
 		{
 		}

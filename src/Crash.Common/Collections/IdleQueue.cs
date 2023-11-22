@@ -36,7 +36,10 @@ namespace Crash.Events
 		/// <summary>Adds an Action to the Queue</summary>
 		public void AddAction(IdleAction action)
 		{
-			_idleQueue.Enqueue(action);
+			if (_idleQueue.All(iq => iq.Name?.Equals(action.Name) != true))
+			{
+				_idleQueue.Enqueue(action);
+			}
 		}
 
 		/// <summary>Attempts to run the next Action</summary>
