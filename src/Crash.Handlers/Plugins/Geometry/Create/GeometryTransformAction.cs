@@ -20,6 +20,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 
 		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
 		{
+			// TODO : Transform such as stretch creates new Change!
 			changes = Array.Empty<Change>();
 			if (crashArgs.Args is not CrashTransformEventArgs transformArgs)
 			{
