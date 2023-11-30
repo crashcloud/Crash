@@ -170,7 +170,7 @@ namespace Crash.Handlers.Plugins
 			CrashApp.Log($"User {change.Owner} registered.", LogLevel.Trace);
 		}
 
-		private void AddRhinoObject(object sender, RhinoObjectEventArgs args)
+		private async void AddRhinoObject(object sender, RhinoObjectEventArgs args)
 		{
 			CrashApp.Log($"{nameof(AddRhinoObject)} event fired.", LogLevel.Trace);
 
@@ -180,6 +180,8 @@ namespace Crash.Handlers.Plugins
 			{
 				return;
 			}
+
+			if(crashDoc.CopyIsActive)
 
 			// object HAS a Crash ID
 
@@ -193,15 +195,16 @@ namespace Crash.Handlers.Plugins
 			{
 				args.TheObject.Geometry.UserDictionary.Clear();
 			}
-
-			var crashArgs = new CrashObjectEventArgs(args.TheObject);
-			NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary, sender,
+			args.TheObject.TryGetChangeId(out var changeId);
+			
+			var crashArgs = new CrashObjectEventArgs(args.TheObject, changeId);
+			await NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary, sender,
 			                  crashArgs, args.TheObject.Document);
 
 			CrashApp.Log($"{nameof(AddRhinoObject)} notified server.", LogLevel.Trace);
 		}
 
-		private void DeleteRhinoObject(object sender, RhinoObjectEventArgs args)
+		private async void DeleteRhinoObject(object sender, RhinoObjectEventArgs args)
 		{
 			CrashApp.Log($"{nameof(DeleteRhinoObject)} event fired.", LogLevel.Trace);
 
@@ -226,14 +229,14 @@ namespace Crash.Handlers.Plugins
 			}
 
 			var crashArgs = new CrashObjectEventArgs(args.TheObject, changeId);
-			NotifyServerAsync(ChangeAction.Remove, sender, crashArgs,
+			await NotifyServerAsync(ChangeAction.Remove, sender, crashArgs,
 			                  args.TheObject.Document);
 			crashDoc.RealisedChangeTable.RemoveChange(changeId);
 
 			CrashApp.Log($"{nameof(DeleteRhinoObject)} notified server.", LogLevel.Trace);
 		}
 
-		private void TransformRhinoObject(object sender, RhinoTransformObjectsEventArgs args)
+		private async void TransformRhinoObject(object sender, RhinoTransformObjectsEventArgs args)
 		{
 			if (args.GripCount > 0)
 			{
@@ -262,7 +265,7 @@ namespace Crash.Handlers.Plugins
 				                            args.Objects.Select(o => new CrashObject(o)),
 				                            args.ObjectsWillBeCopied);
 
-			NotifyServerAsync(ChangeAction.Transform, sender, crashArgs, rhinoDoc);
+			await NotifyServerAsync(ChangeAction.Transform, sender, crashArgs, rhinoDoc);
 
 			CrashApp.Log($"{nameof(TransformRhinoObject)} notified server.", LogLevel.Trace);
 		}

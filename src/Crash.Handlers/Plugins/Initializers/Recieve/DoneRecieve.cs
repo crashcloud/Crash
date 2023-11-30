@@ -68,7 +68,7 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 			crashDoc.TemporaryChangeTable.RemoveChange(change.Id);
 
 			geomChange.RemoveAction(ChangeAction.Temporary);
-			geomChange.RemoveAction(ChangeAction.Locked);
+			//geomChange.RemoveAction(ChangeAction.Locked);
 
 			var add = new GeometryAddRecieveAction();
 			await add.OnRecieveAsync(crashDoc, geomChange);
