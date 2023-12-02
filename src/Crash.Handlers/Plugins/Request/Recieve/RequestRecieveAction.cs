@@ -17,7 +17,7 @@ namespace Crash.Handlers.Plugins.Request.Recieve
 				return Task.CompletedTask;
 			}
 
-			crashDoc.TemporaryChangeTable.UpdateChange(requestChange);
+			return Task.CompletedTask;
 		}
 	}
 }
