@@ -49,12 +49,12 @@ namespace Crash.UI.JoinModel
 				return;
 			}
 
-			CrashPlugin.Instance.Settings.SetString(PREVIOUS_MODELS_KEY, json);
+			CrashRhinoPlugIn.Instance.Settings.SetString(PREVIOUS_MODELS_KEY, json);
 		}
 
 		private void LoadSharedModels()
 		{
-			var inst = CrashPlugin.Instance;
+			var inst = CrashRhinoPlugIn.Instance;
 			if (inst is null)
 			{
 				return;
