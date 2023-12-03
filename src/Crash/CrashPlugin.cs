@@ -75,7 +75,7 @@ namespace Crash
 			}
 		}
 
-		private void LocalClientOnOnInit(object sender, CrashClient.CrashInitArgs e)
+		private async void LocalClientOnOnInit(object sender, CrashClient.CrashInitArgs e)
 		{
 			e.CrashDoc.LocalClient.OnInit -= LocalClientOnOnInit;
 
@@ -87,7 +87,7 @@ namespace Crash
 					// TODO : Handle Async!
 					foreach (var change in e.Changes)
 					{
-						_dispatcher.NotifyClientAsync(e.CrashDoc, change);
+						await _dispatcher.NotifyClientAsync(e.CrashDoc, change);
 					}
 				}
 				finally

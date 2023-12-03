@@ -67,6 +67,21 @@ namespace Crash.Common.Document
 			}
 		}
 
+		private bool _transformIsActive { get; set; }
+
+		/// <summary>
+		///     Marks the Document as in a "Transformation Active State" state which means
+		/// </summary>
+		public bool TransformIsActive
+		{
+			get => _transformIsActive;
+			set
+			{
+				_transformIsActive = value;
+				CrashApp.Log($"{nameof(TransformIsActive)} was set to {value}");
+			}
+		}
+
 		#region Queue
 
 		/// <summary>The Idle Queue for the Crash Document</summary>

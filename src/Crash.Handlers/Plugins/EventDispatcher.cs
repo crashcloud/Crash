@@ -181,10 +181,12 @@ namespace Crash.Handlers.Plugins
 				return;
 			}
 
-			if(crashDoc.CopyIsActive)
-
 			// object HAS a Crash ID
-
+			if(crashDoc.TransformIsActive)
+			{
+				crashDoc.TransformIsActive = false;
+				return;
+			}
 			if (crashDoc.DocumentIsBusy)
 			{
 				return;
@@ -215,7 +217,7 @@ namespace Crash.Handlers.Plugins
 				return;
 			}
 
-			if (crashDoc.DocumentIsBusy)
+			if (crashDoc.DocumentIsBusy || crashDoc.TransformIsActive)
 			{
 				return;
 			}
@@ -259,18 +261,18 @@ namespace Crash.Handlers.Plugins
 			{
 				return;
 			}
-
+			crashDoc.TransformIsActive = true;
 			var crashArgs =
 				new CrashTransformEventArgs(args.Transform.ToCrash(),
 				                            args.Objects.Select(o => new CrashObject(o)),
 				                            args.ObjectsWillBeCopied);
 
 			await NotifyServerAsync(ChangeAction.Transform, sender, crashArgs, rhinoDoc);
-
+			
 			CrashApp.Log($"{nameof(TransformRhinoObject)} notified server.", LogLevel.Trace);
 		}
 
-		private void DeselectRhinoObjects(object sender, RhinoObjectSelectionEventArgs args)
+		private async void DeselectRhinoObjects(object sender, RhinoObjectSelectionEventArgs args)
 		{
 			CrashApp.Log($"{nameof(DeselectRhinoObjects)} event fired.", LogLevel.Trace);
 
@@ -299,12 +301,12 @@ namespace Crash.Handlers.Plugins
 			var crashArgs =
 				CrashSelectionEventArgs.CreateDeSelectionEvent(args.RhinoObjects
 				                                                   .Select(o => new CrashObject(o)));
-			NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs, args.Document);
+			await NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs, args.Document);
 
 			CrashApp.Log($"{nameof(DeselectRhinoObjects)} notified server.", LogLevel.Trace);
 		}
 
-		private void DeselectAllRhinoObjects(object sender, RhinoDeselectAllObjectsEventArgs args)
+		private async void DeselectAllRhinoObjects(object sender, RhinoDeselectAllObjectsEventArgs args)
 		{
 			CrashApp.Log($"{nameof(DeselectAllRhinoObjects)} event fired.", LogLevel.Trace);
 
@@ -326,7 +328,7 @@ namespace Crash.Handlers.Plugins
 				                                                               .Select(cs =>
 					                                                               new CrashObject(cs,
 						                                                               Guid.Empty)));
-			NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs,
+			await NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs,
 			                  args.Document);
 
 			crashDoc.RealisedChangeTable.ClearSelected();
@@ -334,7 +336,7 @@ namespace Crash.Handlers.Plugins
 			CrashApp.Log($"{nameof(DeselectAllRhinoObjects)} notified server.", LogLevel.Trace);
 		}
 
-		private void SelectRhinoObjects(object sender, RhinoObjectSelectionEventArgs args)
+		private async void SelectRhinoObjects(object sender, RhinoObjectSelectionEventArgs args)
 		{
 			CrashApp.Log($"{nameof(SelectRhinoObjects)} event fired.", LogLevel.Trace);
 
@@ -362,35 +364,35 @@ namespace Crash.Handlers.Plugins
 
 			var crashArgs = CrashSelectionEventArgs.CreateSelectionEvent(args.RhinoObjects
 			                                                                 .Select(o => new CrashObject(o)));
-			NotifyServerAsync(ChangeAction.Locked, sender, crashArgs, args.Document);
+			await NotifyServerAsync(ChangeAction.Locked, sender, crashArgs, args.Document);
 
 			CrashApp.Log($"{nameof(SelectRhinoObjects)} notified server.", LogLevel.Trace);
 		}
 
-		private void ModifyRhinoObjectAttributes(object sender, RhinoModifyObjectAttributesEventArgs args)
+		private async void ModifyRhinoObjectAttributes(object sender, RhinoModifyObjectAttributesEventArgs args)
 		{
 			CrashApp.Log($"{nameof(ModifyRhinoObjectAttributes)} event fired.", LogLevel.Trace);
 
 			// TODO : Create Wrapper
-			NotifyServerAsync(ChangeAction.Update, sender, args, args.Document);
+			await NotifyServerAsync(ChangeAction.Update, sender, args, args.Document);
 
 			CrashApp.Log($"{nameof(ModifyRhinoObjectAttributes)} notified server.", LogLevel.Trace);
 		}
 
-		private void UserStringChanged(object sender, RhinoDoc.UserStringChangedArgs args)
+		private async void UserStringChanged(object sender, RhinoDoc.UserStringChangedArgs args)
 		{
 			CrashApp.Log($"{nameof(UserStringChanged)} event fired.", LogLevel.Trace);
 
 			// TODO : Create Wrapper
-			NotifyServerAsync(ChangeAction.Update, sender, args, args.Document);
+			await NotifyServerAsync(ChangeAction.Update, sender, args, args.Document);
 
 			CrashApp.Log($"{nameof(UserStringChanged)} notified server.", LogLevel.Trace);
 		}
 
-		private void RhinoViewModified(object sender, ViewEventArgs args)
+		private async void RhinoViewModified(object sender, ViewEventArgs args)
 		{
 			var crashArgs = new CrashViewArgs(args.View);
-			NotifyServerAsync(ChangeAction.Add, sender, crashArgs, args.View.Document);
+			await NotifyServerAsync(ChangeAction.Add, sender, crashArgs, args.View.Document);
 		}
 
 		public void RegisterDefaultEvents()
