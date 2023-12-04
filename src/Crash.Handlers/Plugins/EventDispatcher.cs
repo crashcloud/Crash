@@ -204,7 +204,6 @@ namespace Crash.Handlers.Plugins
 		private async Task NotifyServerOfCrashViewModified(object sender, CrashViewArgs crashArgs)
 		{
 			await NotifyServerAsync(ChangeAction.Add, sender, crashArgs, crashArgs.Doc);
-			CrashApp.Log($"{nameof(NotifyServerOfCrashViewModified)} notified server.", LogLevel.Trace);
 		}
 
 		// TODO : Use End?
