@@ -1,4 +1,5 @@
 ﻿using Crash.Common.App;
+using Crash.Common.Communications;
 using Crash.Common.Document;
 using Crash.Common.Logging;
 using Crash.Handlers.InternalEvents;
@@ -11,11 +12,8 @@ using Rhino.DocObjects;
 namespace Crash.Handlers.Plugins
 {
 	/// <summary>Handles all events that should be communicated through the server</summary>
-	public sealed class EventDispatcher
+	public sealed class EventDispatcher : IEventDispatcher
 	{
-		/// <summary>The current Dispatcher. This is used across Docs</summary>
-		public static EventDispatcher Instance;
-
 		private readonly Dictionary<ChangeAction, List<IChangeCreateAction>> _createActions;
 		private readonly Dictionary<string, List<IChangeRecieveAction>> _recieveActions;
 
@@ -24,51 +22,11 @@ namespace Crash.Handlers.Plugins
 		/// <summary>Default Constructor</summary>
 		public EventDispatcher()
 		{
-			Instance = this;
-
 			_createActions = new Dictionary<ChangeAction, List<IChangeCreateAction>>();
 			_recieveActions = new Dictionary<string, List<IChangeRecieveAction>>();
 		}
 
-		/// <summary>Registers a Definition and all of the Create and recieve actions within</summary>
-		public void RegisterDefinition(IChangeDefinition definition)
-		{
-			// TODO : Test this! Are we sure this stack stuff is working?
-			foreach (var create in definition.CreateActions)
-			{
-				if (_createActions.TryGetValue(create.Action, out var actions))
-				{
-					actions.Add(create);
-				}
-				else
-				{
-					_createActions.Add(create.Action, new List<IChangeCreateAction> { create });
-				}
-			}
-
-			foreach (var recieve in definition.RecieveActions)
-			{
-				if (_recieveActions.TryGetValue(definition.ChangeName, out var recievers))
-				{
-					recievers.Add(recieve);
-				}
-				else
-				{
-					_recieveActions.Add(definition.ChangeName, new List<IChangeRecieveAction> { recieve });
-				}
-			}
-		}
-
 		// TODO : How can we prevent the same events being subscribed multiple times?
-		/// <summary>
-		///     Notifies the Dispatcher of any Events that should notify the server
-		///     Avoid Subscribing to events and pinging the server yourself
-		///     Wrap any related events with this method.
-		/// </summary>
-		/// <param name="changeAction">The ChangeAction</param>
-		/// <param name="sender">The sender of the Event</param>
-		/// <param name="args">The EventArgs</param>
-		/// <param name="crashDoc">The associated RhinoDoc</param>
 		public async Task NotifyServerAsync(ChangeAction changeAction, object sender, EventArgs args, CrashDoc crashDoc)
 		{
 			if (!_createActions.TryGetValue(changeAction, out var actionChain))
@@ -119,6 +77,35 @@ namespace Crash.Handlers.Plugins
 				CrashApp.Log($"Sent Change : {change.Type} | {change.Action} | {change.Id}", LogLevel.Trace);
 			}
 #endif
+		}
+
+		/// <summary>Registers a Definition and all of the Create and recieve actions within</summary>
+		public void RegisterDefinition(IChangeDefinition definition)
+		{
+			// TODO : Test this! Are we sure this stack stuff is working?
+			foreach (var create in definition.CreateActions)
+			{
+				if (_createActions.TryGetValue(create.Action, out var actions))
+				{
+					actions.Add(create);
+				}
+				else
+				{
+					_createActions.Add(create.Action, new List<IChangeCreateAction> { create });
+				}
+			}
+
+			foreach (var recieve in definition.RecieveActions)
+			{
+				if (_recieveActions.TryGetValue(definition.ChangeName, out var recievers))
+				{
+					recievers.Add(recieve);
+				}
+				else
+				{
+					_recieveActions.Add(definition.ChangeName, new List<IChangeRecieveAction> { recieve });
+				}
+			}
 		}
 
 		/// <summary>

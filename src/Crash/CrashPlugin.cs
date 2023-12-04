@@ -42,35 +42,36 @@ namespace Crash
 
 		#region Crash Plugin Specifics
 
-		private EventDispatcher _dispatcher;
-
 		private void CrashDocRegistryOnDocumentDisposed(object sender, CrashEventArgs e)
 		{
-			_dispatcher.DeregisterDefaultServerCalls();
-			_dispatcher = null;
+			var dispatcher = e.CrashDoc.Dispatcher as EventDispatcher;
+			dispatcher?.DeregisterDefaultServerCalls();
+			e.CrashDoc.Dispatcher = null;
 			InteractivePipe.Active.Enabled = false;
 			InteractivePipe.ClearChangeDefinitions();
 		}
 
 		private void CrashDocRegistryOnDocumentRegistered(object sender, CrashEventArgs e)
 		{
-			_dispatcher = new EventDispatcher();
-			_dispatcher.RegisterDefaultServerNotifiers();
-			RegisterDefinitions();
-			_dispatcher.RegisterDefaultServerCalls(e.CrashDoc);
+			var dispatcher = new EventDispatcher();
+			dispatcher.RegisterDefaultServerNotifiers();
+			RegisterDefinitions(dispatcher);
+			dispatcher.RegisterDefaultServerCalls(e.CrashDoc);
+			e.CrashDoc.Dispatcher = dispatcher;
+
 			InteractivePipe.Active.Enabled = true;
 
 			e.CrashDoc.LocalClient.OnInit += LocalClientOnOnInit;
 		}
 
-		private void RegisterDefinitions()
+		private void RegisterDefinitions(EventDispatcher dispatcher)
 		{
 			var changeEnuner = Changes.GetEnumerator();
 
 			while (changeEnuner.MoveNext())
 			{
 				var changeDefinition = changeEnuner.Current;
-				_dispatcher.RegisterDefinition(changeDefinition);
+				dispatcher.RegisterDefinition(changeDefinition);
 				InteractivePipe.RegisterChangeDefinition(changeDefinition);
 			}
 		}
@@ -79,7 +80,8 @@ namespace Crash
 		{
 			e.CrashDoc.LocalClient.OnInit -= LocalClientOnOnInit;
 
-			if (_dispatcher is not null)
+			var dispatcher = e.CrashDoc.Dispatcher as EventDispatcher;
+			if (dispatcher is not null)
 			{
 				e.CrashDoc.DocumentIsBusy = true;
 				try
@@ -87,7 +89,7 @@ namespace Crash
 					// TODO : Handle Async!
 					foreach (var change in e.Changes)
 					{
-						_dispatcher.NotifyClientAsync(e.CrashDoc, change);
+						dispatcher.NotifyClientAsync(e.CrashDoc, change);
 					}
 				}
 				finally
