@@ -446,7 +446,6 @@ namespace Crash.Handlers.Plugins
 			RhinoView.Modified -= RhinoViewModified;
 		}
 
-#pragma warning disable VSTHRD101 // Avoid unsupported async delegates
 		/// <summary>
 		///     Registers all default server calls.
 		///     If you need to create custom calls do this elsewhere.
@@ -486,6 +485,6 @@ namespace Crash.Handlers.Plugins
 			                                       };
 			;
 		}
-#pragma warning restore VSTHRD101 // Avoid unsupported async delegates
+		
 	}
 }
