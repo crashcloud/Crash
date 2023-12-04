@@ -22,11 +22,11 @@ namespace Crash.Handlers.InternalEvents
 
 		private event AsyncEventHandler<CrashObjectEventArgs>? AddCrashObject;
 		private event AsyncEventHandler<CrashObjectEventArgs>? DeleteCrashObject;
-		private event AsyncEventHandler<CrashObjectEventArgs>? TransformCrashObject;
-		private event AsyncEventHandler<CrashObjectEventArgs>? SelectCrashObjects;
-		private event AsyncEventHandler<CrashObjectEventArgs>? DeSelectCrashObjects;
-		private event AsyncEventHandler<CrashObjectEventArgs>? UpdateCrashObject;
-		private event AsyncEventHandler<CrashObjectEventArgs>? CrashViewModified;
+		private event AsyncEventHandler<CrashTransformEventArgs>? TransformCrashObject;
+		private event AsyncEventHandler<CrashSelectionEventArgs>? SelectCrashObjects;
+		private event AsyncEventHandler<CrashSelectionEventArgs>? DeSelectCrashObjects;
+		private event AsyncEventHandler<CrashUpdateArgs>? UpdateCrashObject;
+		private event AsyncEventHandler<CrashViewArgs>? CrashViewModified;
 
 		private async void CaptureAddRhinoObject(object sender, RhinoObjectEventArgs args)
 		{
@@ -74,11 +74,64 @@ namespace Crash.Handlers.InternalEvents
 
 		private async void CaptureModifyRhinoObjectAttributes(object sender, RhinoModifyObjectAttributesEventArgs args)
 		{
+			try
+			{
+				if (UpdateCrashObject is null)
+				{
+					return;
+				}
+
+				var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
+				if (crashDoc is null || crashDoc.DocumentIsBusy)
+				{
+					return;
+				}
+
+				if (!crashDoc.TemporaryChangeTable.TryGetChangeOfType(args.RhinoObject.Id, out IChange change))
+				{
+					return;
+				}
+
+				var updates =
+					RhinoObjectAttributesUtils.GetAttributeDifferencesAsDictionary(args.OldAttributes,
+						args.NewAttributes);
+				if (updates is null || !updates.Any())
+				{
+					return;
+				}
+
+				// TODO : Make into a const and document
+				// Adding this allows us to quickly check if we need to loop through all the Rhino Object Attributes.
+				updates.Add("HasRhinoObjectAttributes", bool.TrueString);
+
+				var crashObject = new CrashObject(crashDoc.Id, args.RhinoObject.Id);
+
+				var updateArgs = new CrashUpdateArgs(crashObject, updates);
+				await UpdateCrashObject.Invoke(sender, updateArgs);
+			}
+			catch (Exception e)
+			{
+				CrashApp.Log(e.Message);
+			}
 		}
 
-		private async void CaptureUserStringChanged(object sender, RhinoDoc.UserStringChangedArgs args) { }
+		private async void CaptureRhinoViewModified(object sender, ViewEventArgs args)
+		{
+			try
+			{
+				if (CrashViewModified is null)
+				{
+					return;
+				}
 
-		private async void CaptureRhinoViewModified(object sender, ViewEventArgs args) { }
+				var viewArgs = new CrashViewArgs(args.View);
+				await CrashViewModified.Invoke(sender, viewArgs);
+			}
+			catch (Exception e)
+			{
+				CrashApp.Log(e.Message);
+			}
+		}
 
 		private void RegisterDefaultEvents()
 		{
