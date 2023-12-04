@@ -20,15 +20,62 @@ namespace Crash.Handlers.InternalEvents
 			DeRegisterDefaultEvents();
 		}
 
+		/// <summary>Invoked when an Object is added to the Rhino Doc And the Crash Doc is not busy</summary>
 		private event AsyncEventHandler<CrashObjectEventArgs>? AddCrashObject;
+
 		private event AsyncEventHandler<CrashObjectEventArgs>? DeleteCrashObject;
 		private event AsyncEventHandler<CrashTransformEventArgs>? TransformCrashObject;
 		private event AsyncEventHandler<CrashSelectionEventArgs>? SelectCrashObjects;
 		private event AsyncEventHandler<CrashSelectionEventArgs>? DeSelectCrashObjects;
 		private event AsyncEventHandler<CrashUpdateArgs>? UpdateCrashObject;
+
+		/// <summary>Is invoked when the Rhino View is modified and the Crash Document is not busy</summary>
 		private event AsyncEventHandler<CrashViewArgs>? CrashViewModified;
 
+		private async void CaptureAddOrUndeleteRhinoObject(object sender, RhinoObjectEventArgs args, bool undelete)
+		{
+			try
+			{
+				CrashApp.Log($"{nameof(AddCrashObject)} event fired.", LogLevel.Trace);
+
+				var crashDoc =
+					CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
+				if (crashDoc is null)
+				{
+					return;
+				}
+
+				// object HAS a Crash ID
+
+				if (crashDoc.DocumentIsBusy)
+				{
+					return;
+				}
+
+				var crashArgs = new CrashObjectEventArgs(args.TheObject, unDelete: undelete);
+				if (AddCrashObject is not null)
+				{
+					await AddCrashObject.Invoke(sender, crashArgs);
+				}
+			}
+			catch (Exception e)
+			{
+				CrashApp.Log(e.Message);
+				Console.WriteLine(e);
+			}
+		}
+
 		private async void CaptureAddRhinoObject(object sender, RhinoObjectEventArgs args)
+		{
+			CaptureAddOrUndeleteRhinoObject(sender, args, false);
+		}
+
+		private async void CaptureUnDeleteRhinoObject(object sender, RhinoObjectEventArgs args)
+		{
+			CaptureAddOrUndeleteRhinoObject(sender, args, true);
+		}
+
+		private async void CaptureDeleteRhinoObject(object sender, RhinoObjectEventArgs args)
 		{
 			try
 			{
@@ -49,20 +96,17 @@ namespace Crash.Handlers.InternalEvents
 				}
 
 				var crashArgs = new CrashObjectEventArgs(args.TheObject);
-				if (AddCrashObject is not null)
+				if (DeleteCrashObject is not null)
 				{
-					await AddCrashObject.Invoke(sender, crashArgs);
+					await DeleteCrashObject.Invoke(sender, crashArgs);
 				}
 			}
 			catch (Exception e)
 			{
 				CrashApp.Log(e.Message);
 				Console.WriteLine(e);
-				throw;
 			}
 		}
-
-		private async void CaptureDeleteRhinoObject(object sender, RhinoObjectEventArgs args) { }
 
 		private async void CaptureTransformRhinoObject(object sender, RhinoTransformObjectsEventArgs args) { }
 
@@ -94,7 +138,7 @@ namespace Crash.Handlers.InternalEvents
 
 				var updates =
 					RhinoObjectAttributesUtils.GetAttributeDifferencesAsDictionary(args.OldAttributes,
-						args.NewAttributes);
+							 args.NewAttributes);
 				if (updates is null || !updates.Any())
 				{
 					return;
@@ -137,14 +181,13 @@ namespace Crash.Handlers.InternalEvents
 		{
 			// Object Events
 			RhinoDoc.AddRhinoObject += CaptureAddRhinoObject;
-			RhinoDoc.AddRhinoObject += CaptureAddRhinoObject;
+			RhinoDoc.UndeleteRhinoObject += CaptureUnDeleteRhinoObject;
 			RhinoDoc.DeleteRhinoObject += CaptureDeleteRhinoObject;
 			RhinoDoc.BeforeTransformObjects += CaptureTransformRhinoObject;
 			RhinoDoc.DeselectObjects += CaptureDeselectRhinoObjects;
 			RhinoDoc.DeselectAllObjects += CaptureDeselectAllRhinoObjects;
 			RhinoDoc.SelectObjects += CaptureSelectRhinoObjects;
 			RhinoDoc.ModifyObjectAttributes += CaptureModifyRhinoObjectAttributes;
-			RhinoDoc.UserStringChanged += CaptureUserStringChanged;
 
 			// Doc Events
 			// TODO : Implement
@@ -158,7 +201,7 @@ namespace Crash.Handlers.InternalEvents
 		{
 			// Object Events
 			RhinoDoc.AddRhinoObject -= CaptureAddRhinoObject;
-			RhinoDoc.AddRhinoObject -= CaptureAddRhinoObject;
+			RhinoDoc.UndeleteRhinoObject -= CaptureAddRhinoObject;
 			RhinoDoc.DeleteRhinoObject -= CaptureDeleteRhinoObject;
 			RhinoDoc.BeforeTransformObjects -= CaptureTransformRhinoObject;
 			RhinoDoc.DeselectObjects -= CaptureDeselectRhinoObjects;

@@ -30,6 +30,11 @@ namespace Crash.Handlers
 				results.Add(nameof(ObjectAttributes.Url), newAttributes.Url);
 			}
 
+			if (!oldAttributes.LayerIndex.Equals(newAttributes.LayerIndex))
+			{
+				results.Add(nameof(ObjectAttributes.LayerIndex), newAttributes.LayerIndex.ToString());
+			}
+
 			return results;
 			/* Currently Unsupported
 			   if (!oldAttributes.CastsShadows.Equals(newAttributes.CastsShadows))
@@ -51,10 +56,6 @@ namespace Crash.Handlers
 			   if (!oldAttributes.HatchBoundaryVisible.Equals(newAttributes.HatchBoundaryVisible))
 			   {
 			   results.Add(nameof(ObjectAttributes.HatchBoundaryVisible), newAttributes.HatchBoundaryVisible);
-			   }
-			   if (!oldAttributes.IsInstanceDefinitionObject.Equals(newAttributes.IsInstanceDefinitionObject))
-			   {
-			   results.Add(nameof(ObjectAttributes.IsInstanceDefinitionObject), newAttributes.IsInstanceDefinitionObject);
 			   }
 			   if (!oldAttributes.ReceivesShadows.Equals(newAttributes.ReceivesShadows))
 			   {
@@ -111,10 +112,6 @@ namespace Crash.Handlers
 			   if (!oldAttributes.GroupCount.Equals(newAttributes.GroupCount))
 			   {
 			   results.Add(nameof(ObjectAttributes.GroupCount), newAttributes.GroupCount);
-			   }
-			   if (!oldAttributes.LayerIndex.Equals(newAttributes.LayerIndex))
-			   {
-			   results.Add(nameof(ObjectAttributes.LayerIndex), newAttributes.LayerIndex);
 			   }
 			   if (!oldAttributes.LinetypeIndex.Equals(newAttributes.LinetypeIndex))
 			   {

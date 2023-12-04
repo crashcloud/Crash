@@ -15,17 +15,21 @@ namespace Crash.Handlers.InternalEvents
 		/// <summary>The Event Rhino Id</summary>
 		public readonly Guid RhinoId;
 
+		/// <summary>UnDelete flag</summary>
+		public readonly bool UnDelete;
+
 		/// <summary>Constructor mainly for tests</summary>
-		public CrashObjectEventArgs(GeometryBase geometry, Guid rhinoId, Guid changeId = default)
+		public CrashObjectEventArgs(GeometryBase geometry, Guid rhinoId, Guid changeId = default, bool unDelete = false)
 		{
 			ChangeId = changeId;
 			RhinoId = rhinoId;
 			Geometry = geometry;
+			UnDelete = unDelete;
 		}
 
 		/// <summary>Default Constructor</summary>
-		public CrashObjectEventArgs(RhinoObject rhinoObject, Guid changeId = default)
-			: this(rhinoObject.Geometry, rhinoObject.Id, changeId)
+		public CrashObjectEventArgs(RhinoObject rhinoObject, Guid changeId = default, bool unDelete = false)
+			: this(rhinoObject.Geometry, rhinoObject.Id, changeId, unDelete)
 		{
 		}
 	}
