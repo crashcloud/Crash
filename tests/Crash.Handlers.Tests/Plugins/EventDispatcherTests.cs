@@ -118,11 +118,9 @@ namespace Crash.Handlers.Tests.Plugins
 			                                           { nameof(ICrashClient.PushIdenticalChangesAsync), 0 },
 			                                           { nameof(ICrashClient.PushChangeAsync), 0 },
 			                                           { nameof(ICrashClient.PushChangesAsync), 0 },
-			                                           { nameof(ICrashClient.InitializeChangesAsync), 0 },
-			                                           { nameof(ICrashClient.InitializeUsersAsync), 0 },
-			                                           { nameof(ICrashClient.OnPushIdentical), 0 },
-			                                           { nameof(ICrashClient.OnPushChange), 0 },
-			                                           { nameof(ICrashClient.OnPushChanges), 0 },
+			                                           { nameof(ICrashClient.OnRecieveIdentical), 0 },
+			                                           { nameof(ICrashClient.OnRecieveChange), 0 },
+			                                           { nameof(ICrashClient.OnRecieveChanges), 0 },
 			                                           { nameof(ICrashClient.OnInitializeChanges), 0 },
 			                                           { nameof(ICrashClient.OnInitializeUsers), 0 }
 		                                           };
@@ -134,24 +132,7 @@ namespace Crash.Handlers.Tests.Plugins
 		}
 
 		public bool IsConnected { get; } = true;
-		public event Action<IEnumerable<string>>? OnInitializeUsers;
 		public event EventHandler<CrashClient.CrashInitArgs>? OnInit;
-		public event Action<IEnumerable<Guid>, Change> OnPushIdentical;
-		public event Action<Change> OnPushChange;
-		public event Action<IEnumerable<Change>> OnPushChanges;
-		public event Action<IEnumerable<Change>> OnInitializeChanges;
-
-		public async Task InitializeChangesAsync(IEnumerable<Change> changes)
-		{
-			IncrementCallCount(nameof(ICrashClient.InitializeChangesAsync));
-			await Task.CompletedTask;
-		}
-
-		public async Task InitializeUsersAsync(IEnumerable<string> users)
-		{
-			IncrementCallCount(nameof(ICrashClient.InitializeUsersAsync));
-			await Task.CompletedTask;
-		}
 
 		public void RegisterConnection(string userName, Uri url)
 		{
@@ -188,15 +169,26 @@ namespace Crash.Handlers.Tests.Plugins
 			await Task.CompletedTask;
 		}
 
-		public event Action<string>? OnDone;
-		public event Action<IEnumerable<Guid>>? OnDoneRange;
+		public event Action<IEnumerable<string>>? OnInitializeUsers;
+		public event Action<IEnumerable<Guid>, Change> OnPushIdentical;
+		public event Action<Change> OnPushChange;
+		public event Action<IEnumerable<Change>> OnPushChanges;
+		public event Action<IEnumerable<Change>> OnInitializeChanges;
 
-		public async Task InitializeUsersAsync(IEnumerable<Change> changes)
+		public async Task InitializeChangesAsync(IEnumerable<Change> changes)
+		{
+			IncrementCallCount(nameof(ICrashClient.InitializeChangesAsync));
+			await Task.CompletedTask;
+		}
+
+		public async Task InitializeUsersAsync(IEnumerable<string> users)
 		{
 			IncrementCallCount(nameof(ICrashClient.InitializeUsersAsync));
 			await Task.CompletedTask;
 		}
 
+		public event Action<string>? OnDone;
+		public event Action<IEnumerable<Guid>>? OnDoneRange;
 		public event Action<Change>? OnAdd;
 		public event Action<Guid>? OnDelete;
 		public event Action<Change>? OnUpdate;

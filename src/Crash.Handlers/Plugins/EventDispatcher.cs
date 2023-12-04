@@ -453,11 +453,11 @@ namespace Crash.Handlers.Plugins
 		/// </summary>
 		public void RegisterDefaultServerCalls(CrashDoc doc)
 		{
-			doc.LocalClient.OnPushChange += async change =>
+			doc.LocalClient.OnRecieveChange += async change =>
 				                                await NotifyClientAsync(doc, change);
-			doc.LocalClient.OnPushChanges += async changes =>
+			doc.LocalClient.OnRecieveChanges += async changes =>
 				                                 await Task.WhenAll(changes.Select(c => NotifyClientAsync(doc, c)));
-			doc.LocalClient.OnPushIdentical += async (ids, change) =>
+			doc.LocalClient.OnRecieveIdentical += async (ids, change) =>
 				                                   await Task.WhenAll(ids.Select(c =>
 					                                                      NotifyClientAsync(doc,
 						                                                      new Change(change)

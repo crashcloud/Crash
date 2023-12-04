@@ -35,20 +35,14 @@
 		/// </summary>
 		Task PushChangesAsync(IEnumerable<Change> changes);
 
-		/// <summary>Initialises the latest changes to a connecting client</summary>
-		Task InitializeChangesAsync(IEnumerable<Change> changes);
-
-		/// <summary>Initialises the latest changes to a connecting client</summary>
-		Task InitializeUsersAsync(IEnumerable<string> changes);
+		/// <summary>Pushes a single Change</summary>
+		public event Func<IEnumerable<Guid>, Change, Task> OnRecieveIdentical;
 
 		/// <summary>Pushes a single Change</summary>
-		public event Func<IEnumerable<Guid>, Change, Task > OnPushIdentical;
+		public event Func<Change, Task> OnRecieveChange;
 
 		/// <summary>Pushes a single Change</summary>
-		public event Func<Change, Task> OnPushChange;
-
-		/// <summary>Pushes a single Change</summary>
-		public event Func<IEnumerable<Change>, Task> OnPushChanges;
+		public event Func<IEnumerable<Change>, Task> OnRecieveChanges;
 
 		/// <summary>Local Event corresponding to a Server call for Initialize</summary>
 		public event Func<IEnumerable<Change>, Task> OnInitializeChanges;

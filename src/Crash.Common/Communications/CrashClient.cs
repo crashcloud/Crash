@@ -60,8 +60,8 @@ namespace Crash.Common.Communications
 				throw new Exception("A User has not been assigned!");
 			}
 
-			OnInitializeChanges += Init;
-			OnInitializeUsers += InitUsers;
+			OnInitializeChanges += InitChangesAsync;
+			OnInitializeUsers += InitUsersAsync;
 
 			await StartAsync();
 		}
@@ -92,27 +92,15 @@ namespace Crash.Common.Communications
 			await _connection.InvokeAsync(PUSH_MANY, changes);
 		}
 
-		public async Task InitializeChangesAsync(IEnumerable<Change> changes)
-		{
-			;
-		}
+		public event Func<IEnumerable<Guid>, Change, Task> OnRecieveIdentical;
 
-		public async Task InitializeUsersAsync(IEnumerable<string> users)
-		{
-			;
-		}
+		public event Func<Change, Task> OnRecieveChange;
 
-		/// <summary>Local Event corresponding to a Server call for Initialize</summary>
-		public event Action<IEnumerable<Change>> OnInitializeChanges;
+		public event Func<IEnumerable<Change>, Task> OnRecieveChanges;
 
-		/// <summary>Local Event corresponding to a Server call for Initialize Users</summary>
-		public event Action<IEnumerable<string>> OnInitializeUsers;
+		public event Func<IEnumerable<Change>, Task> OnInitializeChanges;
 
-		public event Action<IEnumerable<Guid>, Change> OnPushIdentical;
-
-		public event Action<Change> OnPushChange;
-
-		public event Action<IEnumerable<Change>> OnPushChanges;
+		public event Func<IEnumerable<string>, Task> OnInitializeUsers;
 
 		public event EventHandler<CrashInitArgs> OnInit;
 
@@ -136,6 +124,26 @@ namespace Crash.Common.Communications
 			_user = userName;
 			_connection = GetHubConnection(url);
 			RegisterConnections();
+		}
+
+		public async Task InitializeChangesAsync(IEnumerable<Change> changes)
+		{
+			if (OnInitializeChanges is null)
+			{
+				return;
+			}
+
+			await OnInitializeChanges.Invoke(changes);
+		}
+
+		public async Task InitializeUsersAsync(IEnumerable<string> users)
+		{
+			if (OnInitializeUsers is null)
+			{
+				return;
+			}
+
+			await OnInitializeUsers.Invoke(users);
 		}
 
 		/// <summary>
@@ -185,31 +193,58 @@ namespace Crash.Common.Communications
 		}
 
 		/// <summary>Registers Local Events responding to Server calls</summary>
-		internal void RegisterConnections()
+		private void RegisterConnections()
 		{
-			_connection.On<IEnumerable<Change>>(INITIALIZE, changes => OnInitializeChanges?.Invoke(changes));
-			_connection.On<IEnumerable<string>>(INITIALIZEUSERS, users => OnInitializeUsers?.Invoke(users));
-
-			_connection.On<IEnumerable<Guid>, Change>(PUSH_IDENTICAL,
-			                                          (ids, change) => OnPushIdentical?.Invoke(ids, change));
-			_connection.On<Change>(PUSH_SINGLE, change => OnPushChange?.Invoke(change));
-			_connection.On<IEnumerable<Change>>(PUSH_MANY, changes => OnPushChanges?.Invoke(changes));
+			_connection.On<IEnumerable<Change>>(INITIALIZE, InitializeChangesAsync);
+			_connection.On<IEnumerable<string>>(INITIALIZEUSERS, InitializeUsersAsync);
+			_connection.On<IEnumerable<Guid>, Change>(PUSH_IDENTICAL, RecieveIdenticalChangesAsync);
+			_connection.On<Change>(PUSH_SINGLE, RecieveChangeAsync);
+			_connection.On<IEnumerable<Change>>(PUSH_MANY, RecieveManyUniqueChangesAsync);
 
 			_connection.Reconnected += ConnectionReconnectedAsync;
 			_connection.Closed += ConnectionClosedAsync;
 			_connection.Reconnecting += ConnectionReconnectingAsync;
 		}
 
-		// This isn't calling, and needs to call the Event Dispatcher
-		private void Init(IEnumerable<Change> changes)
+		private async Task RecieveIdenticalChangesAsync(IEnumerable<Guid> ids, Change change)
 		{
-			OnInitializeChanges -= Init;
+			if (OnRecieveIdentical is null)
+			{
+				return;
+			}
+
+			await OnRecieveIdentical.Invoke(ids, change);
+		}
+		private async Task RecieveChangeAsync(Change change)
+		{
+			if (OnRecieveChange is null)
+			{
+				return;
+			}
+
+			await OnRecieveChange.Invoke(change);
+		}
+		private async Task RecieveManyUniqueChangesAsync(IEnumerable<Change> changes)
+		{
+			if (OnRecieveChanges is null)
+			{
+				return;
+			}
+
+			await OnRecieveChanges.Invoke(changes);
+		}
+		
+		// TODO : This isn't calling, and needs to call the Event Dispatcher
+		// TODO : Resolve this and Init
+		private async Task InitChangesAsync(IEnumerable<Change> changes)
+		{
+			OnInitializeChanges -= InitChangesAsync;
 			OnInit?.Invoke(this, new CrashInitArgs(_crashDoc, changes));
 		}
 
-		private void InitUsers(IEnumerable<string> users)
+		private async Task InitUsersAsync(IEnumerable<string> users)
 		{
-			OnInitializeUsers -= InitUsers;
+			OnInitializeUsers -= InitUsersAsync;
 			// User Init
 			foreach (var user in users)
 			{
