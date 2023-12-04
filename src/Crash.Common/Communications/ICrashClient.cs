@@ -42,19 +42,19 @@
 		Task InitializeUsersAsync(IEnumerable<string> changes);
 
 		/// <summary>Pushes a single Change</summary>
-		public event Action<IEnumerable<Guid>, Change> OnPushIdentical;
+		public event Func<IEnumerable<Guid>, Change, Task > OnPushIdentical;
 
 		/// <summary>Pushes a single Change</summary>
-		public event Action<Change> OnPushChange;
+		public event Func<Change, Task> OnPushChange;
 
 		/// <summary>Pushes a single Change</summary>
-		public event Action<IEnumerable<Change>> OnPushChanges;
+		public event Func<IEnumerable<Change>, Task> OnPushChanges;
 
 		/// <summary>Local Event corresponding to a Server call for Initialize</summary>
-		public event Action<IEnumerable<Change>> OnInitializeChanges;
+		public event Func<IEnumerable<Change>, Task> OnInitializeChanges;
 
 		/// <summary>Local Event corresponding to a Server call for Initialize Users</summary>
-		public event Action<IEnumerable<string>> OnInitializeUsers;
+		public event Func<IEnumerable<string>, Task> OnInitializeUsers;
 
 		/// <summary>Local event wrapping Crash Args with Initialization</summary>
 		public event EventHandler<CrashClient.CrashInitArgs> OnInit;
