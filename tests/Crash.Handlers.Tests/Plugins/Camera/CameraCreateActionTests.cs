@@ -29,7 +29,7 @@ namespace Crash.Handlers.Tests.Plugins
 					var location = NRhino.Random.Geometry.NPoint3d.Any().ToCrash();
 					var target = NRhino.Random.Geometry.NPoint3d.Any().ToCrash();
 
-					yield return new CrashViewArgs(location, target);
+					yield return new CrashViewArgs(null, location, target);
 				}
 			}
 		}
