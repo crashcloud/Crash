@@ -1,4 +1,5 @@
 ﻿using Crash.Common.App;
+using Crash.Utils;
 
 using Microsoft.Extensions.Logging;
 
@@ -110,7 +111,35 @@ namespace Crash.Handlers.InternalEvents
 
 		private async void CaptureTransformRhinoObject(object sender, RhinoTransformObjectsEventArgs args) { }
 
-		private async void CaptureSelectRhinoObjects(object sender, RhinoObjectSelectionEventArgs args) { }
+		private async void CaptureSelectRhinoObjects(object sender, RhinoObjectSelectionEventArgs args)
+		{
+			if (SelectCrashObjects is null)
+			{
+				return;
+			}
+
+			CrashApp.Log($"{nameof(CaptureSelectRhinoObjects)} event fired.", LogLevel.Trace);
+
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
+			if (crashDoc is null || crashDoc.DocumentIsBusy)
+			{
+				return;
+			}
+
+			foreach (var rhinoObject in args.RhinoObjects)
+			{
+				if (!rhinoObject.TryGetChangeId(out var changeId))
+				{
+					continue;
+				}
+
+				crashDoc.RealisedChangeTable.AddSelected(changeId);
+			}
+
+			var crashArgs = CrashSelectionEventArgs.CreateSelectionEvent(args.RhinoObjects
+			                                                                 .Select(o => new CrashObject(o)));
+			SelectCrashObjects.Invoke(sender, crashArgs);
+		}
 
 		private async void CaptureDeselectRhinoObjects(object sender, RhinoObjectSelectionEventArgs args) { }
 
