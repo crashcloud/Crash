@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 
 using Crash.Changes;
-using Crash.Common.Changes;
 using Crash.Common.Document;
 using Crash.Geometry;
 using Crash.Handlers.InternalEvents;
@@ -36,7 +35,7 @@ namespace Crash.Handlers.Tests.Plugins
 
 					var transform = new CTransform(doubles);
 					var objects = new List<CrashObject> { crashObject };
-					yield return new CrashTransformEventArgs(transform, objects, false);
+					yield return new CrashTransformEventArgs(null, transform, objects, false);
 				}
 			}
 		}
