@@ -1,4 +1,6 @@
-﻿using Rhino.DocObjects;
+﻿using Crash.Common.Document;
+
+using Rhino.DocObjects;
 using Rhino.Geometry;
 
 namespace Crash.Handlers.InternalEvents
@@ -8,6 +10,9 @@ namespace Crash.Handlers.InternalEvents
 	{
 		/// <summary>Change Id</summary>
 		public readonly Guid ChangeId;
+
+		/// <summary>The Crash Doc this Object comes from</summary>
+		public readonly CrashDoc Doc;
 
 		/// <summary>The Event Geometry</summary>
 		public readonly GeometryBase Geometry;
@@ -19,8 +24,10 @@ namespace Crash.Handlers.InternalEvents
 		public readonly bool UnDelete;
 
 		/// <summary>Constructor mainly for tests</summary>
-		public CrashObjectEventArgs(GeometryBase geometry, Guid rhinoId, Guid changeId = default, bool unDelete = false)
+		public CrashObjectEventArgs(CrashDoc crashDoc, GeometryBase geometry, Guid rhinoId, Guid changeId = default,
+			bool unDelete = false)
 		{
+			Doc = crashDoc;
 			ChangeId = changeId;
 			RhinoId = rhinoId;
 			Geometry = geometry;
@@ -28,8 +35,9 @@ namespace Crash.Handlers.InternalEvents
 		}
 
 		/// <summary>Default Constructor</summary>
-		public CrashObjectEventArgs(RhinoObject rhinoObject, Guid changeId = default, bool unDelete = false)
-			: this(rhinoObject.Geometry, rhinoObject.Id, changeId, unDelete)
+		public CrashObjectEventArgs(CrashDoc crashDoc, RhinoObject rhinoObject, Guid changeId = default,
+			bool unDelete = false)
+			: this(crashDoc, rhinoObject.Geometry, rhinoObject.Id, changeId, unDelete)
 		{
 		}
 	}
