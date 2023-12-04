@@ -34,10 +34,6 @@ namespace Crash.Common.Communications
 			_crashDoc = crashDoc;
 		}
 
-		public HubConnectionState State => _connection.State;
-
-		public bool IsConnected => _connection.State != HubConnectionState.Disconnected;
-
 		/// <summary>Stops the Connection</summary>
 		public async Task StopAsync()
 		{
@@ -67,86 +63,6 @@ namespace Crash.Common.Communications
 		}
 
 		/// <summary>
-		///     Pushes an Update/Transform/Payload which applies to many Changes
-		///     An example of this is arraying the same item or deleting many items at once
-		/// </summary>
-		/// <param name="ids">The records to update</param>
-		/// <param name="change">The newest changes</param>
-		public async Task PushIdenticalChangesAsync(IEnumerable<Guid> ids, Change change)
-		{
-			await _connection.InvokeAsync(PUSH_IDENTICAL, ids, change);
-		}
-
-		/// <summary>Pushes a single Change</summary>
-		public async Task PushChangeAsync(Change change)
-		{
-			await _connection.InvokeAsync(PUSH_SINGLE, change);
-		}
-
-		/// <summary>
-		///     Pushes many unique changes at once
-		///     An example of this may be copying 10 unique items
-		/// </summary>
-		public async Task PushChangesAsync(IEnumerable<Change> changes)
-		{
-			await _connection.InvokeAsync(PUSH_MANY, changes);
-		}
-
-		public event Func<IEnumerable<Guid>, Change, Task> OnRecieveIdentical;
-
-		public event Func<Change, Task> OnRecieveChange;
-
-		public event Func<IEnumerable<Change>, Task> OnRecieveChanges;
-
-		public event Func<IEnumerable<Change>, Task> OnInitializeChanges;
-
-		public event Func<IEnumerable<string>, Task> OnInitializeUsers;
-
-		public event EventHandler<CrashInitArgs> OnInit;
-
-		public void RegisterConnection(string userName, Uri url)
-		{
-			if (string.IsNullOrEmpty(userName))
-			{
-				throw new ArgumentException("Username cannot be empty or null");
-			}
-
-			if (url is null)
-			{
-				throw new UriFormatException("URL Cannot be null");
-			}
-
-			if (!url.AbsoluteUri.Contains("/Crash"))
-			{
-				throw new UriFormatException("URL must end in /Crash to connect!");
-			}
-
-			_user = userName;
-			_connection = GetHubConnection(url);
-			RegisterConnections();
-		}
-
-		public async Task InitializeChangesAsync(IEnumerable<Change> changes)
-		{
-			if (OnInitializeChanges is null)
-			{
-				return;
-			}
-
-			await OnInitializeChanges.Invoke(changes);
-		}
-
-		public async Task InitializeUsersAsync(IEnumerable<string> users)
-		{
-			if (OnInitializeUsers is null)
-			{
-				return;
-			}
-
-			await OnInitializeUsers.Invoke(users);
-		}
-
-		/// <summary>
 		///     Closed event
 		/// </summary>
 		public event Func<Exception, Task> Closed
@@ -154,7 +70,6 @@ namespace Crash.Common.Communications
 			add => _connection.Closed += value;
 			remove => _connection.Closed -= value;
 		}
-
 
 		/// <summary>Creates a connection to the Crash Server</summary>
 		public static HubConnection GetHubConnection(Uri url)
@@ -206,51 +121,25 @@ namespace Crash.Common.Communications
 			_connection.Reconnecting += ConnectionReconnectingAsync;
 		}
 
-		private async Task RecieveIdenticalChangesAsync(IEnumerable<Guid> ids, Change change)
+		/// <summary>Start the async connection</summary>
+		private Task StartAsync()
 		{
-			if (OnRecieveIdentical is null)
-			{
-				return;
-			}
-
-			await OnRecieveIdentical.Invoke(ids, change);
-		}
-		private async Task RecieveChangeAsync(Change change)
-		{
-			if (OnRecieveChange is null)
-			{
-				return;
-			}
-
-			await OnRecieveChange.Invoke(change);
-		}
-		private async Task RecieveManyUniqueChangesAsync(IEnumerable<Change> changes)
-		{
-			if (OnRecieveChanges is null)
-			{
-				return;
-			}
-
-			await OnRecieveChanges.Invoke(changes);
-		}
-		
-		// TODO : This isn't calling, and needs to call the Event Dispatcher
-		// TODO : Resolve this and Init
-		private async Task InitChangesAsync(IEnumerable<Change> changes)
-		{
-			OnInitializeChanges -= InitChangesAsync;
-			OnInit?.Invoke(this, new CrashInitArgs(_crashDoc, changes));
+			return _connection.StartAsync();
 		}
 
-		private async Task InitUsersAsync(IEnumerable<string> users)
+		public sealed class CrashInitArgs : CrashEventArgs
 		{
-			OnInitializeUsers -= InitUsersAsync;
-			// User Init
-			foreach (var user in users)
+			public readonly IEnumerable<Change> Changes;
+
+			public CrashInitArgs(CrashDoc crashDoc, IEnumerable<Change> changes)
+				: base(crashDoc)
 			{
-				_crashDoc.Users.Add(user);
+				Changes = changes;
 			}
 		}
+
+
+		#region Connection Watchers
 
 		private Task ConnectionReconnectingAsync(Exception? arg)
 		{
@@ -270,22 +159,151 @@ namespace Crash.Common.Communications
 			return Task.CompletedTask;
 		}
 
-		/// <summary>Start the async connection</summary>
-		private Task StartAsync()
+		#endregion
+
+		#region Connection
+
+		public HubConnectionState State => _connection.State;
+
+		public bool IsConnected => _connection.State != HubConnectionState.Disconnected;
+
+		public void RegisterConnection(string userName, Uri url)
 		{
-			return _connection.StartAsync();
+			if (string.IsNullOrEmpty(userName))
+			{
+				throw new ArgumentException("Username cannot be empty or null");
+			}
+
+			if (url is null)
+			{
+				throw new UriFormatException("URL Cannot be null");
+			}
+
+			if (!url.AbsoluteUri.Contains("/Crash"))
+			{
+				throw new UriFormatException("URL must end in /Crash to connect!");
+			}
+
+			_user = userName;
+			_connection = GetHubConnection(url);
+			RegisterConnections();
 		}
 
-		public sealed class CrashInitArgs : CrashEventArgs
-		{
-			public readonly IEnumerable<Change> Changes;
+		#endregion
 
-			public CrashInitArgs(CrashDoc crashDoc, IEnumerable<Change> changes)
-				: base(crashDoc)
+		#region Push to Server
+
+		/// <summary>
+		///     Pushes an Update/Transform/Payload which applies to many Changes
+		///     An example of this is arraying the same item or deleting many items at once
+		/// </summary>
+		/// <param name="ids">The records to update</param>
+		/// <param name="change">The newest changes</param>
+		public async Task PushIdenticalChangesAsync(IEnumerable<Guid> ids, Change change)
+		{
+			await _connection.InvokeAsync(PUSH_IDENTICAL, ids, change);
+		}
+
+		/// <summary>Pushes a single Change</summary>
+		public async Task PushChangeAsync(Change change)
+		{
+			await _connection.InvokeAsync(PUSH_SINGLE, change);
+		}
+
+		/// <summary>
+		///     Pushes many unique changes at once
+		///     An example of this may be copying 10 unique items
+		/// </summary>
+		public async Task PushChangesAsync(IEnumerable<Change> changes)
+		{
+			await _connection.InvokeAsync(PUSH_MANY, changes);
+		}
+
+		#endregion
+
+		#region Recieve from Server
+
+		public event Func<IEnumerable<Guid>, Change, Task> OnRecieveIdentical;
+
+		public event Func<Change, Task> OnRecieveChange;
+
+		public event Func<IEnumerable<Change>, Task> OnRecieveChanges;
+
+		public event Func<IEnumerable<Change>, Task> OnInitializeChanges;
+
+		public event Func<IEnumerable<string>, Task> OnInitializeUsers;
+
+		public event EventHandler<CrashInitArgs> OnInit;
+
+		public async Task InitializeChangesAsync(IEnumerable<Change> changes)
+		{
+			if (OnInitializeChanges is null)
 			{
-				Changes = changes;
+				return;
+			}
+
+			await OnInitializeChanges.Invoke(changes);
+		}
+
+		public async Task InitializeUsersAsync(IEnumerable<string> users)
+		{
+			if (OnInitializeUsers is null)
+			{
+				return;
+			}
+
+			await OnInitializeUsers.Invoke(users);
+		}
+
+		// TODO : This isn't calling, and needs to call the Event Dispatcher
+		// TODO : Resolve this and Init
+		private async Task InitChangesAsync(IEnumerable<Change> changes)
+		{
+			OnInitializeChanges -= InitChangesAsync;
+			OnInit?.Invoke(this, new CrashInitArgs(_crashDoc, changes));
+		}
+
+		private async Task InitUsersAsync(IEnumerable<string> users)
+		{
+			OnInitializeUsers -= InitUsersAsync;
+			// User Init
+			foreach (var user in users)
+			{
+				_crashDoc.Users.Add(user);
 			}
 		}
+
+		private async Task RecieveIdenticalChangesAsync(IEnumerable<Guid> ids, Change change)
+		{
+			if (OnRecieveIdentical is null)
+			{
+				return;
+			}
+
+			await OnRecieveIdentical.Invoke(ids, change);
+		}
+
+		private async Task RecieveChangeAsync(Change change)
+		{
+			if (OnRecieveChange is null)
+			{
+				return;
+			}
+
+			await OnRecieveChange.Invoke(change);
+		}
+
+		private async Task RecieveManyUniqueChangesAsync(IEnumerable<Change> changes)
+		{
+			if (OnRecieveChanges is null)
+			{
+				return;
+			}
+
+			await OnRecieveChanges.Invoke(changes);
+		}
+
+		#endregion
 
 		#region consts
 
