@@ -44,7 +44,7 @@ namespace Crash.Handlers.InternalEvents
 
 		private async Task CaptureAddOrUndeleteRhinoObject(object sender, RhinoObjectEventArgs args, bool undelete)
 		{
-			CrashApp.Log($"{nameof(AddCrashObject)} event fired.", LogLevel.Trace);
+			CrashApp.Log($"{nameof(CaptureAddRhinoObject)} event fired.", LogLevel.Trace);
 
 			var crashDoc =
 				CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
@@ -81,7 +81,7 @@ namespace Crash.Handlers.InternalEvents
 
 		private async void CaptureDeleteRhinoObject(object sender, RhinoObjectEventArgs args)
 		{
-			CrashApp.Log($"{nameof(AddCrashObject)} event fired.", LogLevel.Trace);
+			CrashApp.Log($"{nameof(CaptureDeleteRhinoObject)} event fired.", LogLevel.Trace);
 
 			var crashDoc =
 				CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
@@ -256,6 +256,8 @@ namespace Crash.Handlers.InternalEvents
 				return;
 			}
 
+			CrashApp.Log($"{nameof(CaptureModifyRhinoObjectAttributes)} event fired.", LogLevel.Trace);
+
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
 			if (crashDoc is null || crashDoc.DocumentIsBusy)
 			{
@@ -295,14 +297,21 @@ namespace Crash.Handlers.InternalEvents
 
 		private async void CaptureRhinoViewModified(object sender, ViewEventArgs args)
 		{
+			if (CrashViewModified is null)
+			{
+				return;
+			}
+
+			CrashApp.Log($"{nameof(CaptureRhinoViewModified)} event fired.", LogLevel.Trace);
+
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.View.Document);
+			if (crashDoc is null)
+			{
+				return;
+			}
+
 			try
 			{
-				if (CrashViewModified is null)
-				{
-					return;
-				}
-
-				var crashDoc = CrashDocRegistry.GetRelatedDocument(args.View.Document);
 				var viewArgs = new CrashViewArgs(crashDoc, args.View);
 				await CrashViewModified.Invoke(sender, viewArgs);
 			}
