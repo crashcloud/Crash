@@ -302,8 +302,6 @@ namespace Crash.Handlers.InternalEvents
 				return;
 			}
 
-			CrashApp.Log($"{nameof(CaptureRhinoViewModified)} event fired.", LogLevel.Trace);
-
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.View.Document);
 			if (crashDoc is null)
 			{

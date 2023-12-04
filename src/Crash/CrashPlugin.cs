@@ -58,7 +58,6 @@ namespace Crash
 			RegisterDefinitions(dispatcher);
 			dispatcher.RegisterDefaultServerCalls(e.CrashDoc);
 			e.CrashDoc.Dispatcher = dispatcher;
-
 			InteractivePipe.Active.Enabled = true;
 
 			e.CrashDoc.LocalClient.OnInit += LocalClientOnOnInit;
