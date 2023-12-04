@@ -153,7 +153,7 @@ namespace Crash.Handlers.Plugins
 			}
 		}
 
-		private void RegisterUser(CrashDoc doc, Change change)
+		private static void RegisterUser(CrashDoc doc, Change change)
 		{
 			if (!doc.Users.Add(change.Owner))
 			{
