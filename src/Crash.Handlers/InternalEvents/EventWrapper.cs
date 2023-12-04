@@ -22,16 +22,16 @@ namespace Crash.Handlers.InternalEvents
 		}
 
 		/// <summary>Invoked when an Object is added to the Rhino Doc And the Crash Doc is not busy</summary>
-		private event AsyncEventHandler<CrashObjectEventArgs>? AddCrashObject;
+		internal event AsyncEventHandler<CrashObjectEventArgs>? AddCrashObject;
 
-		private event AsyncEventHandler<CrashObjectEventArgs>? DeleteCrashObject;
-		private event AsyncEventHandler<CrashTransformEventArgs>? TransformCrashObject;
-		private event AsyncEventHandler<CrashSelectionEventArgs>? SelectCrashObjects;
-		private event AsyncEventHandler<CrashSelectionEventArgs>? DeSelectCrashObjects;
-		private event AsyncEventHandler<CrashUpdateArgs>? UpdateCrashObject;
+		internal event AsyncEventHandler<CrashObjectEventArgs>? DeleteCrashObject;
+		internal event AsyncEventHandler<CrashTransformEventArgs>? TransformCrashObject;
+		internal event AsyncEventHandler<CrashSelectionEventArgs>? SelectCrashObjects;
+		internal event AsyncEventHandler<CrashSelectionEventArgs>? DeSelectCrashObjects;
+		internal event AsyncEventHandler<CrashUpdateArgs>? UpdateCrashObject;
 
 		/// <summary>Is invoked when the Rhino View is modified and the Crash Document is not busy</summary>
-		private event AsyncEventHandler<CrashViewArgs>? CrashViewModified;
+		internal event AsyncEventHandler<CrashViewArgs>? CrashViewModified;
 
 		private async void CaptureAddOrUndeleteRhinoObject(object sender, RhinoObjectEventArgs args, bool undelete)
 		{
@@ -41,19 +41,13 @@ namespace Crash.Handlers.InternalEvents
 
 				var crashDoc =
 					CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
-				if (crashDoc is null)
+
+				if (crashDoc is null || crashDoc.DocumentIsBusy)
 				{
 					return;
 				}
 
-				// object HAS a Crash ID
-
-				if (crashDoc.DocumentIsBusy)
-				{
-					return;
-				}
-
-				var crashArgs = new CrashObjectEventArgs(args.TheObject, unDelete: undelete);
+				var crashArgs = new CrashObjectEventArgs(crashDoc, args.TheObject, unDelete: undelete);
 				if (AddCrashObject is not null)
 				{
 					await AddCrashObject.Invoke(sender, crashArgs);
@@ -96,7 +90,7 @@ namespace Crash.Handlers.InternalEvents
 					return;
 				}
 
-				var crashArgs = new CrashObjectEventArgs(args.TheObject);
+				var crashArgs = new CrashObjectEventArgs(crashDoc, args.TheObject);
 				if (DeleteCrashObject is not null)
 				{
 					await DeleteCrashObject.Invoke(sender, crashArgs);
@@ -109,7 +103,37 @@ namespace Crash.Handlers.InternalEvents
 			}
 		}
 
-		private async void CaptureTransformRhinoObject(object sender, RhinoTransformObjectsEventArgs args) { }
+		private async void CaptureTransformRhinoObject(object sender, RhinoTransformObjectsEventArgs args)
+		{
+			if (TransformCrashObject is null)
+			{
+				return;
+			}
+
+			if (args.GripCount > 0)
+			{
+				return;
+			}
+
+			CrashApp.Log($"{nameof(CaptureTransformRhinoObject)} event fired.", LogLevel.Trace);
+
+			var rhinoDoc = args.Objects
+			                   .FirstOrDefault(o => o.Document is not null)
+			                   .Document;
+
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
+			if (crashDoc is null || crashDoc is { CopyIsActive: false, DocumentIsBusy: true })
+			{
+				return;
+			}
+
+			var crashArgs =
+				new CrashTransformEventArgs(crashDoc, args.Transform.ToCrash(),
+				                            args.Objects.Select(o => new CrashObject(o)),
+				                            args.ObjectsWillBeCopied);
+
+			await TransformCrashObject.Invoke(sender, crashArgs);
+		}
 
 		private async void CaptureSelectRhinoObjects(object sender, RhinoObjectSelectionEventArgs args)
 		{
@@ -136,14 +160,71 @@ namespace Crash.Handlers.InternalEvents
 				crashDoc.RealisedChangeTable.AddSelected(changeId);
 			}
 
-			var crashArgs = CrashSelectionEventArgs.CreateSelectionEvent(args.RhinoObjects
-			                                                                 .Select(o => new CrashObject(o)));
-			SelectCrashObjects.Invoke(sender, crashArgs);
+			var crashArgs = CrashSelectionEventArgs.CreateSelectionEvent(crashDoc, args.RhinoObjects
+				                                                             .Select(o => new CrashObject(o)));
+			await SelectCrashObjects.Invoke(sender, crashArgs);
 		}
 
-		private async void CaptureDeselectRhinoObjects(object sender, RhinoObjectSelectionEventArgs args) { }
+		private async void CaptureDeselectRhinoObjects(object sender, RhinoObjectSelectionEventArgs args)
+		{
+			if (SelectCrashObjects is null)
+			{
+				return;
+			}
 
-		private async void CaptureDeselectAllRhinoObjects(object sender, RhinoDeselectAllObjectsEventArgs args) { }
+			CrashApp.Log($"{nameof(CaptureDeselectRhinoObjects)} event fired.", LogLevel.Trace);
+
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
+
+			if (crashDoc is null || crashDoc.DocumentIsBusy)
+			{
+				return;
+			}
+
+			foreach (var rhinoObject in args.RhinoObjects)
+			{
+				if (!rhinoObject.TryGetChangeId(out var changeId))
+				{
+					continue;
+				}
+
+				crashDoc.RealisedChangeTable.RemoveSelected(changeId);
+			}
+
+			var crashArgs =
+				CrashSelectionEventArgs.CreateDeSelectionEvent(crashDoc, args.RhinoObjects
+				                                                             .Select(o => new CrashObject(o)));
+
+			await SelectCrashObjects.Invoke(sender, crashArgs);
+		}
+
+		private async void CaptureDeselectAllRhinoObjects(object sender, RhinoDeselectAllObjectsEventArgs args)
+		{
+			if (DeSelectCrashObjects is null)
+			{
+				return;
+			}
+
+			CrashApp.Log($"{nameof(CaptureDeselectAllRhinoObjects)} event fired.", LogLevel.Trace);
+
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
+
+			if (crashDoc is null)
+			{
+				return;
+			}
+
+			if (crashDoc.DocumentIsBusy)
+			{
+				return;
+			}
+
+			var currentlySelected = crashDoc.RealisedChangeTable.GetSelected();
+			var crashObjects = currentlySelected.Select(cs => new CrashObject(cs, Guid.Empty));
+			var crashArgs = CrashSelectionEventArgs.CreateDeSelectionEvent(crashDoc, crashObjects);
+
+			await DeSelectCrashObjects.Invoke(sender, crashArgs);
+		}
 
 		private async void CaptureModifyRhinoObjectAttributes(object sender, RhinoModifyObjectAttributesEventArgs args)
 		{
@@ -177,9 +258,9 @@ namespace Crash.Handlers.InternalEvents
 				// Adding this allows us to quickly check if we need to loop through all the Rhino Object Attributes.
 				updates.Add("HasRhinoObjectAttributes", bool.TrueString);
 
-				var crashObject = new CrashObject(crashDoc.Id, args.RhinoObject.Id);
+				var crashObject = new CrashObject(change.Id, args.RhinoObject.Id);
 
-				var updateArgs = new CrashUpdateArgs(crashObject, updates);
+				var updateArgs = new CrashUpdateArgs(crashDoc, crashObject, updates);
 				await UpdateCrashObject.Invoke(sender, updateArgs);
 			}
 			catch (Exception e)
@@ -197,7 +278,8 @@ namespace Crash.Handlers.InternalEvents
 					return;
 				}
 
-				var viewArgs = new CrashViewArgs(args.View);
+				var crashDoc = CrashDocRegistry.GetRelatedDocument(args.View.Document);
+				var viewArgs = new CrashViewArgs(crashDoc, args.View);
 				await CrashViewModified.Invoke(sender, viewArgs);
 			}
 			catch (Exception e)
@@ -237,7 +319,6 @@ namespace Crash.Handlers.InternalEvents
 			RhinoDoc.DeselectAllObjects -= CaptureDeselectAllRhinoObjects;
 			RhinoDoc.SelectObjects -= CaptureSelectRhinoObjects;
 			RhinoDoc.ModifyObjectAttributes -= CaptureModifyRhinoObjectAttributes;
-			RhinoDoc.UserStringChanged -= CaptureUserStringChanged;
 
 			// Doc Events
 			// TODO : Implement
@@ -247,6 +328,6 @@ namespace Crash.Handlers.InternalEvents
 			RhinoView.Modified -= CaptureRhinoViewModified;
 		}
 
-		private delegate Task AsyncEventHandler<TEventArgs>(object? sender, TEventArgs e);
+		internal delegate Task AsyncEventHandler<TEventArgs>(object? sender, TEventArgs e);
 	}
 }

@@ -1,7 +1,5 @@
 ﻿using Crash.Common.Document;
 
-using Rhino;
-
 namespace Crash.Handlers.Plugins
 {
 	/// <summary>A wrapper for Crash Args</summary>
@@ -22,12 +20,6 @@ namespace Crash.Handlers.Plugins
 			Action = action;
 			Args = args ?? throw new ArgumentNullException(nameof(args));
 			Doc = doc ?? throw new ArgumentNullException(nameof(doc));
-		}
-
-		/// <summary>Constructor with Rhino Doc</summary>
-		public CreateRecieveArgs(ChangeAction action, EventArgs args, RhinoDoc doc)
-			: this(action, args, CrashDocRegistry.GetRelatedDocument(doc))
-		{
 		}
 	}
 }
