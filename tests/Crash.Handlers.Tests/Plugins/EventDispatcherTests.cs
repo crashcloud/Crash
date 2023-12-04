@@ -28,22 +28,22 @@ namespace Crash.Handlers.Tests.Plugins
 				var point = new Point(Point3d.Origin);
 				var rhinoId = rhinoDoc.Objects.Add(point);
 
-				var addArgs = new CrashObjectEventArgs(point, rhinoId, Guid.NewGuid());
+				var addArgs = new CrashObjectEventArgs(null, point, rhinoId, Guid.NewGuid());
 				yield return new object[]
 				             {
 					             nameof(ICrashClient.PushChangeAsync), ChangeAction.Add | ChangeAction.Temporary,
 					             addArgs
 				             };
 
-				var deleteArgs = new CrashObjectEventArgs(null, Guid.NewGuid(), Guid.NewGuid());
+				var deleteArgs = new CrashObjectEventArgs(null, null, Guid.NewGuid(), Guid.NewGuid());
 				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Remove, deleteArgs };
 
 				var crashObject = new CrashObject(Guid.NewGuid(), Guid.NewGuid());
-				var selectArgs = CrashSelectionEventArgs.CreateSelectionEvent(new[] { crashObject });
+				var selectArgs = CrashSelectionEventArgs.CreateSelectionEvent(null, new[] { crashObject });
 				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Locked, selectArgs };
 
 
-				var deSelectArgs = CrashSelectionEventArgs.CreateDeSelectionEvent(new[] { crashObject });
+				var deSelectArgs = CrashSelectionEventArgs.CreateDeSelectionEvent(null, new[] { crashObject });
 				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Unlocked, deSelectArgs };
 
 				// Where do Transforms go?
@@ -98,7 +98,7 @@ namespace Crash.Handlers.Tests.Plugins
 		[TestCaseSource(nameof(DispatchEvents))]
 		public async Task TestAddDispatch(string callName, ChangeAction action, EventArgs args)
 		{
-			await eventDispatcher.NotifyServerAsync(action, this, args, rhinoDoc);
+			await eventDispatcher.NotifyServerAsync(action, this, args, crashDoc);
 			AssertCallCount(callName, 1);
 		}
 

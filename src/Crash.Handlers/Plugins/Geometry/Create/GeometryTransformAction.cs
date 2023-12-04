@@ -44,7 +44,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 
 					var changeId = Guid.NewGuid();
 					var createArgs = new CreateRecieveArgs(ChangeAction.Add | ChangeAction.Temporary,
-					                                       new CrashObjectEventArgs(geometry,
+					                                       new CrashObjectEventArgs(crashArgs.Doc, geometry,
 							                                        crashObject.RhinoId, changeId),
 					                                       crashArgs.Doc);
 
