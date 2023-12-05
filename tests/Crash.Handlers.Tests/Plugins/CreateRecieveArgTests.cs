@@ -3,8 +3,6 @@ using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Handlers.Plugins;
 
-using Rhino;
-
 namespace Crash.Handlers.Tests.Plugins
 {
 	[RhinoFixture]
@@ -21,8 +19,7 @@ namespace Crash.Handlers.Tests.Plugins
 		[Test]
 		public void Creation_BadInputs()
 		{
-			Assert.Throws<ArgumentNullException>(() => new CreateRecieveArgs((ChangeAction)(-1), null, (CrashDoc)null));
-			Assert.Throws<ArgumentNullException>(() => new CreateRecieveArgs((ChangeAction)(-1), null, (RhinoDoc)null));
+			Assert.Throws<ArgumentNullException>(() => new CreateRecieveArgs((ChangeAction)(-1), null, null));
 		}
 	}
 }

@@ -1,75 +1,33 @@
 ﻿using Crash.Common.App;
+using Crash.Common.Communications;
 using Crash.Common.Document;
 using Crash.Common.Logging;
 using Crash.Handlers.InternalEvents;
-using Crash.Utils;
 
 using Microsoft.Extensions.Logging;
 
 using Rhino;
-using Rhino.Display;
 using Rhino.DocObjects;
 
 namespace Crash.Handlers.Plugins
 {
 	/// <summary>Handles all events that should be communicated through the server</summary>
-	public sealed class EventDispatcher
+	public sealed class EventDispatcher : IEventDispatcher
 	{
-		/// <summary>The current Dispatcher. This is used across Docs</summary>
-		public static EventDispatcher Instance;
-
 		private readonly Dictionary<ChangeAction, List<IChangeCreateAction>> _createActions;
 		private readonly Dictionary<string, List<IChangeRecieveAction>> _recieveActions;
+
+		private EventWrapper _eventWrapper;
 
 		/// <summary>Default Constructor</summary>
 		public EventDispatcher()
 		{
-			Instance = this;
-
 			_createActions = new Dictionary<ChangeAction, List<IChangeCreateAction>>();
 			_recieveActions = new Dictionary<string, List<IChangeRecieveAction>>();
 		}
 
-		/// <summary>Registers a Definition and all of the Create and recieve actions within</summary>
-		public void RegisterDefinition(IChangeDefinition definition)
-		{
-			// TODO : Test this! Are we sure this stack stuff is working?
-			foreach (var create in definition.CreateActions)
-			{
-				if (_createActions.TryGetValue(create.Action, out var actions))
-				{
-					actions.Add(create);
-				}
-				else
-				{
-					_createActions.Add(create.Action, new List<IChangeCreateAction> { create });
-				}
-			}
-
-			foreach (var recieve in definition.RecieveActions)
-			{
-				if (_recieveActions.TryGetValue(definition.ChangeName, out var recievers))
-				{
-					recievers.Add(recieve);
-				}
-				else
-				{
-					_recieveActions.Add(definition.ChangeName, new List<IChangeRecieveAction> { recieve });
-				}
-			}
-		}
-
 		// TODO : How can we prevent the same events being subscribed multiple times?
-		/// <summary>
-		///     Notifies the Dispatcher of any Events that should notify the server
-		///     Avoid Subscribing to events and pinging the server yourself
-		///     Wrap any related events with this method.
-		/// </summary>
-		/// <param name="changeAction">The ChangeAction</param>
-		/// <param name="sender">The sender of the Event</param>
-		/// <param name="args">The EventArgs</param>
-		/// <param name="doc">The associated RhinoDoc</param>
-		public async Task NotifyServerAsync(ChangeAction changeAction, object sender, EventArgs args, RhinoDoc doc)
+		public async Task NotifyServerAsync(ChangeAction changeAction, object sender, EventArgs args, CrashDoc crashDoc)
 		{
 			if (!_createActions.TryGetValue(changeAction, out var actionChain))
 			{
@@ -81,14 +39,7 @@ namespace Crash.Handlers.Plugins
 				return;
 			}
 
-			var crashArgs = new CreateRecieveArgs(changeAction, args, doc);
-
-			var crashDoc = CrashDocRegistry.GetRelatedDocument(doc);
-			if (null == crashDoc)
-			{
-				CrashApp.Log("CrashDoc was null", LogLevel.Trace);
-				return;
-			}
+			var crashArgs = new CreateRecieveArgs(changeAction, args, crashDoc);
 
 			var changes = Enumerable.Empty<Change>();
 			foreach (var action in actionChain)
@@ -128,6 +79,35 @@ namespace Crash.Handlers.Plugins
 #endif
 		}
 
+		/// <summary>Registers a Definition and all of the Create and recieve actions within</summary>
+		public void RegisterDefinition(IChangeDefinition definition)
+		{
+			// TODO : Test this! Are we sure this stack stuff is working?
+			foreach (var create in definition.CreateActions)
+			{
+				if (_createActions.TryGetValue(create.Action, out var actions))
+				{
+					actions.Add(create);
+				}
+				else
+				{
+					_createActions.Add(create.Action, new List<IChangeCreateAction> { create });
+				}
+			}
+
+			foreach (var recieve in definition.RecieveActions)
+			{
+				if (_recieveActions.TryGetValue(definition.ChangeName, out var recievers))
+				{
+					recievers.Add(recieve);
+				}
+				else
+				{
+					_recieveActions.Add(definition.ChangeName, new List<IChangeRecieveAction> { recieve });
+				}
+			}
+		}
+
 		/// <summary>
 		///     Captures Calls from the Server
 		/// </summary>
@@ -142,7 +122,7 @@ namespace Crash.Handlers.Plugins
 				return;
 			}
 
-			await RegisterUserAsync(doc, change);
+			RegisterUser(doc, change);
 
 			foreach (var recieveAction in recievers)
 			{
@@ -160,7 +140,7 @@ namespace Crash.Handlers.Plugins
 			}
 		}
 
-		private async Task RegisterUserAsync(CrashDoc doc, Change change)
+		private static void RegisterUser(CrashDoc doc, Change change)
 		{
 			if (!doc.Users.Add(change.Owner))
 			{
@@ -170,244 +150,47 @@ namespace Crash.Handlers.Plugins
 			CrashApp.Log($"User {change.Owner} registered.", LogLevel.Trace);
 		}
 
-		private void AddRhinoObject(object sender, RhinoObjectEventArgs args)
+		private async Task NotifyServerOfAddCrashObject(object sender, CrashObjectEventArgs args)
 		{
-			CrashApp.Log($"{nameof(AddRhinoObject)} event fired.", LogLevel.Trace);
-
-			var crashDoc =
-				CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
-			if (crashDoc is null)
-			{
-				return;
-			}
-
-			// object HAS a Crash ID
-
-			if (crashDoc.DocumentIsBusy)
-			{
-				return;
-			}
-
-			// TODO : This needs to be used carefully
-			if (!crashDoc.RealisedChangeTable.TryGetChangeId(args.TheObject.Id, out _))
-			{
-				args.TheObject.Geometry.UserDictionary.Clear();
-			}
-
-			var crashArgs = new CrashObjectEventArgs(args.TheObject);
-			NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary, sender,
-			                  crashArgs, args.TheObject.Document);
-
-			CrashApp.Log($"{nameof(AddRhinoObject)} notified server.", LogLevel.Trace);
+			// TODO : Include Update?
+			await NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary, sender,
+			                        args, args.Doc);
+			CrashApp.Log($"{nameof(NotifyServerOfAddCrashObject)} notified server.", LogLevel.Trace);
 		}
 
-		private void DeleteRhinoObject(object sender, RhinoObjectEventArgs args)
+		private async Task NotifyServerOfDeleteCrashObject(object sender, CrashObjectEventArgs crashArgs)
 		{
-			CrashApp.Log($"{nameof(DeleteRhinoObject)} event fired.", LogLevel.Trace);
-
-			var crashDoc =
-				CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
-			if (crashDoc is null)
-			{
-				return;
-			}
-
-			if (crashDoc.DocumentIsBusy)
-			{
-				return;
-			}
-
-			// Add check for IS Transforming
-
-			args.TheObject.TryGetChangeId(out var changeId);
-			if (changeId == Guid.Empty)
-			{
-				return;
-			}
-
-			var crashArgs = new CrashObjectEventArgs(args.TheObject, changeId);
-			NotifyServerAsync(ChangeAction.Remove, sender, crashArgs,
-			                  args.TheObject.Document);
-			crashDoc.RealisedChangeTable.RemoveChange(changeId);
-
-			CrashApp.Log($"{nameof(DeleteRhinoObject)} notified server.", LogLevel.Trace);
+			await NotifyServerAsync(ChangeAction.Remove, sender, crashArgs, crashArgs.Doc);
+			CrashApp.Log($"{nameof(NotifyServerOfDeleteCrashObject)} notified server.", LogLevel.Trace);
 		}
 
-		private void TransformRhinoObject(object sender, RhinoTransformObjectsEventArgs args)
+		private async Task NotifyServerOfTransformCrashObject(object sender, CrashTransformEventArgs crashArgs)
 		{
-			if (args.GripCount > 0)
-			{
-				return;
-			}
-
-			CrashApp.Log($"{nameof(TransformRhinoObject)} event fired.", LogLevel.Trace);
-
-			var rhinoDoc = args.Objects
-			                   .FirstOrDefault(o => o.Document is not null)
-			                   .Document;
-
-			var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
-			if (crashDoc is null)
-			{
-				return;
-			}
-
-			if (crashDoc is { CopyIsActive: false, DocumentIsBusy: true })
-			{
-				return;
-			}
-
-			var crashArgs =
-				new CrashTransformEventArgs(args.Transform.ToCrash(),
-				                            args.Objects.Select(o => new CrashObject(o)),
-				                            args.ObjectsWillBeCopied);
-
-			NotifyServerAsync(ChangeAction.Transform, sender, crashArgs, rhinoDoc);
-
-			CrashApp.Log($"{nameof(TransformRhinoObject)} notified server.", LogLevel.Trace);
+			await NotifyServerAsync(ChangeAction.Transform, sender, crashArgs, crashArgs.Doc);
+			CrashApp.Log($"{nameof(NotifyServerOfTransformCrashObject)} notified server.", LogLevel.Trace);
 		}
 
-		private void DeselectRhinoObjects(object sender, RhinoObjectSelectionEventArgs args)
+		private async Task NotifyServerOfSelectCrashObjects(object sender, CrashSelectionEventArgs crashArgs)
 		{
-			CrashApp.Log($"{nameof(DeselectRhinoObjects)} event fired.", LogLevel.Trace);
-
-			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-
-			if (crashDoc is null)
-			{
-				return;
-			}
-
-			if (crashDoc.DocumentIsBusy)
-			{
-				return;
-			}
-
-			foreach (var rhinoObject in args.RhinoObjects)
-			{
-				if (!rhinoObject.TryGetChangeId(out var changeId))
-				{
-					continue;
-				}
-
-				crashDoc.RealisedChangeTable.RemoveSelected(changeId);
-			}
-
-			var crashArgs =
-				CrashSelectionEventArgs.CreateDeSelectionEvent(args.RhinoObjects
-				                                                   .Select(o => new CrashObject(o)));
-			NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs, args.Document);
-
-			CrashApp.Log($"{nameof(DeselectRhinoObjects)} notified server.", LogLevel.Trace);
+			await NotifyServerAsync(ChangeAction.Locked, sender, crashArgs, crashArgs.Doc);
+			CrashApp.Log($"{nameof(NotifyServerOfSelectCrashObjects)} notified server.", LogLevel.Trace);
 		}
 
-		private void DeselectAllRhinoObjects(object sender, RhinoDeselectAllObjectsEventArgs args)
+		private async Task NotifyServerOfDeSelectCrashObjects(object sender, CrashSelectionEventArgs crashArgs)
 		{
-			CrashApp.Log($"{nameof(DeselectAllRhinoObjects)} event fired.", LogLevel.Trace);
-
-			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-
-			if (crashDoc is null)
-			{
-				return;
-			}
-
-			if (crashDoc.DocumentIsBusy)
-			{
-				return;
-			}
-
-			var currentlySelected = crashDoc.RealisedChangeTable.GetSelected();
-			var crashArgs = CrashSelectionEventArgs.CreateDeSelectionEvent(
-			                                                               currentlySelected
-				                                                               .Select(cs =>
-					                                                               new CrashObject(cs,
-						                                                               Guid.Empty)));
-			NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs,
-			                  args.Document);
-
-			crashDoc.RealisedChangeTable.ClearSelected();
-
-			CrashApp.Log($"{nameof(DeselectAllRhinoObjects)} notified server.", LogLevel.Trace);
+			await NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs, crashArgs.Doc);
+			CrashApp.Log($"{nameof(NotifyServerOfDeSelectCrashObjects)} notified server.", LogLevel.Trace);
 		}
 
-		private void SelectRhinoObjects(object sender, RhinoObjectSelectionEventArgs args)
+		private async Task NotifyServerOfUpdateCrashObject(object sender, CrashUpdateArgs args)
 		{
-			CrashApp.Log($"{nameof(SelectRhinoObjects)} event fired.", LogLevel.Trace);
-
-			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-
-			if (crashDoc is null)
-			{
-				return;
-			}
-
-			if (crashDoc.DocumentIsBusy)
-			{
-				return;
-			}
-
-			foreach (var rhinoObject in args.RhinoObjects)
-			{
-				if (!rhinoObject.TryGetChangeId(out var changeId))
-				{
-					continue;
-				}
-
-				crashDoc.RealisedChangeTable.AddSelected(changeId);
-			}
-
-			var crashArgs = CrashSelectionEventArgs.CreateSelectionEvent(args.RhinoObjects
-			                                                                 .Select(o => new CrashObject(o)));
-			NotifyServerAsync(ChangeAction.Locked, sender, crashArgs, args.Document);
-
-			CrashApp.Log($"{nameof(SelectRhinoObjects)} notified server.", LogLevel.Trace);
+			await NotifyServerAsync(ChangeAction.Update, sender, args, args.Doc);
+			CrashApp.Log($"{nameof(NotifyServerOfUpdateCrashObject)} notified server.", LogLevel.Trace);
 		}
 
-		private void ModifyRhinoObjectAttributes(object sender, RhinoModifyObjectAttributesEventArgs args)
+		private async Task NotifyServerOfCrashViewModified(object sender, CrashViewArgs crashArgs)
 		{
-			CrashApp.Log($"{nameof(ModifyRhinoObjectAttributes)} event fired.", LogLevel.Trace);
-
-			// TODO : Create Wrapper
-			NotifyServerAsync(ChangeAction.Update, sender, args, args.Document);
-
-			CrashApp.Log($"{nameof(ModifyRhinoObjectAttributes)} notified server.", LogLevel.Trace);
-		}
-
-		private void UserStringChanged(object sender, RhinoDoc.UserStringChangedArgs args)
-		{
-			CrashApp.Log($"{nameof(UserStringChanged)} event fired.", LogLevel.Trace);
-
-			// TODO : Create Wrapper
-			NotifyServerAsync(ChangeAction.Update, sender, args, args.Document);
-
-			CrashApp.Log($"{nameof(UserStringChanged)} notified server.", LogLevel.Trace);
-		}
-
-		private void RhinoViewModified(object sender, ViewEventArgs args)
-		{
-			var crashArgs = new CrashViewArgs(args.View);
-			NotifyServerAsync(ChangeAction.Add, sender, crashArgs, args.View.Document);
-		}
-
-		public void RegisterDefaultEvents()
-		{
-			// Object Events
-			RhinoDoc.AddRhinoObject += AddRhinoObject;
-			RhinoDoc.UndeleteRhinoObject += AddRhinoObject;
-			RhinoDoc.DeleteRhinoObject += DeleteRhinoObject;
-			RhinoDoc.BeforeTransformObjects += TransformRhinoObject;
-			RhinoDoc.DeselectObjects += DeselectRhinoObjects;
-			RhinoDoc.DeselectAllObjects += DeselectAllRhinoObjects;
-			RhinoDoc.SelectObjects += SelectRhinoObjects;
-			RhinoDoc.ModifyObjectAttributes += ModifyRhinoObjectAttributes;
-			RhinoDoc.UserStringChanged += UserStringChanged;
-
-			// Doc Events
-			RhinoDoc.BeginOpenDocument += RhinoDocOnBeginOpenDocument;
-
-			// View Events
-			RhinoView.Modified += RhinoViewModified;
+			await NotifyServerAsync(ChangeAction.Add, sender, crashArgs, crashArgs.Doc);
 		}
 
 		// TODO : Use End?
@@ -426,27 +209,24 @@ namespace Crash.Handlers.Plugins
 			}
 		}
 
-		public void DeRegisterDefaultEvents()
+		public void RegisterDefaultServerNotifiers()
 		{
-			// Object Events
-			RhinoDoc.AddRhinoObject -= AddRhinoObject;
-			RhinoDoc.UndeleteRhinoObject -= AddRhinoObject;
-			RhinoDoc.DeleteRhinoObject -= DeleteRhinoObject;
-			RhinoDoc.BeforeTransformObjects -= TransformRhinoObject;
-			RhinoDoc.DeselectObjects -= DeselectRhinoObjects;
-			RhinoDoc.DeselectAllObjects -= DeselectAllRhinoObjects;
-			RhinoDoc.SelectObjects -= SelectRhinoObjects;
-			RhinoDoc.ModifyObjectAttributes -= ModifyRhinoObjectAttributes;
-			RhinoDoc.UserStringChanged -= UserStringChanged;
-
-			// Doc Events
-			RhinoDoc.BeginOpenDocument -= RhinoDocOnBeginOpenDocument;
-
-			// View Events
-			RhinoView.Modified -= RhinoViewModified;
+			_eventWrapper = new EventWrapper();
+			_eventWrapper.AddCrashObject += NotifyServerOfAddCrashObject;
+			_eventWrapper.DeleteCrashObject += NotifyServerOfDeleteCrashObject;
+			_eventWrapper.TransformCrashObject += NotifyServerOfTransformCrashObject;
+			_eventWrapper.SelectCrashObjects += NotifyServerOfSelectCrashObjects;
+			_eventWrapper.DeSelectCrashObjects += NotifyServerOfDeSelectCrashObjects;
+			_eventWrapper.UpdateCrashObject += NotifyServerOfUpdateCrashObject;
+			_eventWrapper.CrashViewModified += NotifyServerOfCrashViewModified;
 		}
 
-#pragma warning disable VSTHRD101 // Avoid unsupported async delegates
+		public void DeregisterDefaultServerCalls()
+		{
+			_eventWrapper.Dispose();
+		}
+
+
 		/// <summary>
 		///     Registers all default server calls.
 		///     If you need to create custom calls do this elsewhere.
@@ -486,6 +266,5 @@ namespace Crash.Handlers.Plugins
 			                                       };
 			;
 		}
-#pragma warning restore VSTHRD101 // Avoid unsupported async delegates
 	}
 }
