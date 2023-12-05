@@ -42,6 +42,16 @@ namespace Crash.Common.Tables
 			Selected = new HashSet<Guid>();
 		}
 
+		public IEnumerable<RhinoGuid> GetRhinoIds()
+		{
+			return _rhinoChangeMap.Forward.Keys;
+		}
+
+		public IEnumerable<ChangeGuid> GetChangeIds()
+		{
+			return _rhinoChangeMap.Reverse.Keys;
+		}
+
 		/// <summary>Adds a synced pair of Change and Rhino Id</summary>
 		/// <param name="change">The Change to Add</param>
 		/// <param name="rhinoId">The Rhino Id to Add</param>
