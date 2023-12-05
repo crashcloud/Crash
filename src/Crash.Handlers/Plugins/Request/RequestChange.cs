@@ -5,7 +5,9 @@ namespace Crash.Handlers.Plugins.Request
 	public sealed class RequestChange : IChange
 	{
 		public const string ChangeType = "Request.Temporary";
-		public Guid RequestedId { get; private set; }
+
+		public const string RequestedNameKey = "RequestedName";
+		public string RequestedName { get; private set; }
 
 		public DateTime Stamp { get; private set; }
 		public Guid Id { get; private set; }
@@ -19,8 +21,7 @@ namespace Crash.Handlers.Plugins.Request
 			change = default;
 			var payload = JsonSerializer.Deserialize<PayloadPacket>(recievedChange.Payload);
 
-			if (!payload.Updates.TryGetValue("RequestedChangeId", out var requestedChangeIdString) ||
-			    Guid.TryParse(requestedChangeIdString, out var requestedId))
+			if (!payload.Updates.TryGetValue(RequestedNameKey, out var requestName))
 			{
 				return false;
 			}
@@ -28,7 +29,7 @@ namespace Crash.Handlers.Plugins.Request
 			change = new RequestChange
 			         {
 				         Id = recievedChange.Id,
-				         RequestedId = requestedId,
+				         RequestedName = requestName,
 				         Action = ChangeAction.Add,
 				         Owner = recievedChange.Owner,
 				         Payload = null,

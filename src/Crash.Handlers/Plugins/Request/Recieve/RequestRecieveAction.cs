@@ -1,7 +1,9 @@
 using Crash.Changes.Extensions;
 using Crash.Common.Document;
+using Crash.Handlers.Plugins;
+using Crash.Handlers.Plugins.Request;
 
-namespace Crash.Handlers.Plugins.Request.Recieve
+namespace CrashDefinitions.Recieve
 {
 	public class RequestRecieveAction : IChangeRecieveAction
 	{
@@ -16,6 +18,8 @@ namespace Crash.Handlers.Plugins.Request.Recieve
 			{
 				return Task.CompletedTask;
 			}
+
+			crashDoc.TemporaryChangeTable.UpdateChange(requestChange);
 
 			return Task.CompletedTask;
 		}

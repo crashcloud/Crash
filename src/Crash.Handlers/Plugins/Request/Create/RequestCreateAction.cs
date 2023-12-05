@@ -1,6 +1,9 @@
 using System.Text.Json;
 
-namespace Crash.Handlers.Plugins.Request.Create
+using Crash.Handlers.Plugins;
+using Crash.Handlers.Plugins.Request;
+
+namespace CrashDefinitions.Create
 {
 	public class RequestCreateAction : IChangeCreateAction
 	{
@@ -8,8 +11,14 @@ namespace Crash.Handlers.Plugins.Request.Create
 
 		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
 		{
+			if (crashArgs.Args is not RequestEventArgs requestArgs)
+			{
+				changes = Array.Empty<Change>();
+				return false;
+			}
+
 			var packet = new PayloadPacket();
-			// packet.Updates.Add("RequestedChangeId",)
+			packet.Updates.Add(RequestChange.RequestedNameKey, requestArgs.RequestedName);
 			var requestChange = new Change
 			                    {
 				                    Id = Guid.NewGuid(),
@@ -17,12 +26,15 @@ namespace Crash.Handlers.Plugins.Request.Create
 				                    Payload = JsonSerializer.Serialize(packet),
 				                    Stamp = DateTime.UtcNow
 			                    };
-			throw new NotImplementedException();
+
+			changes = new List<Change> { requestChange };
+
+			return true;
 		}
 
 		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
 		{
-			return false;
+			return crashArgs is RequestEventArgs;
 		}
 	}
 }
