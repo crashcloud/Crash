@@ -74,18 +74,20 @@ namespace Crash.Common.Document
 
 		#endregion
 
+		public void Dispose()
+		{
+			LocalClient?.StopAsync();
+		}
+
 		#region Connectivity
 
 		/// <summary>The Local Client for the Crash Doc</summary>
 		public ICrashClient LocalClient { get; set; }
 
+		/// <summary>The current Documents Dispatcher</summary>
+		public IEventDispatcher Dispatcher { get; set; }
+
 		#endregion
-
-
-		public void Dispose()
-		{
-			LocalClient?.StopAsync();
-		}
 
 		#region Tables
 

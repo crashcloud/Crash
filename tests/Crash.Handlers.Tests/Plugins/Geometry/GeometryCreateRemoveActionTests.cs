@@ -35,7 +35,7 @@ namespace Crash.Handlers.Tests.Plugins
 					                                            {
 						                                            var id = rdoc.Objects.Add(geom);
 						                                            var rhinoObject = rdoc.Objects.FindId(id);
-						                                            return new CrashObjectEventArgs(rhinoObject,
+						                                            return new CrashObjectEventArgs(null, rhinoObject,
 								                                             Guid.NewGuid());
 					                                            };
 					yield return func;
@@ -54,7 +54,7 @@ namespace Crash.Handlers.Tests.Plugins
 					                                            {
 						                                            var id = rdoc.Objects.Add(geom);
 						                                            var rhinoObject = rdoc.Objects.FindId(id);
-						                                            return new CrashObjectEventArgs(rhinoObject,
+						                                            return new CrashObjectEventArgs(null, rhinoObject,
 								                                             Guid.NewGuid());
 					                                            };
 					yield return func;

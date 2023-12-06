@@ -59,35 +59,35 @@ namespace Crash
 
 		#region Crash Plugin Specifics
 
-		private EventDispatcher _dispatcher;
-
 		private void CrashDocRegistryOnDocumentDisposed(object sender, CrashEventArgs e)
 		{
-			_dispatcher.DeRegisterDefaultEvents();
-			_dispatcher = null;
+			var dispatcher = e.CrashDoc.Dispatcher as EventDispatcher;
+			dispatcher?.DeregisterDefaultServerCalls();
+			e.CrashDoc.Dispatcher = null;
 			InteractivePipe.Active.Enabled = false;
 			InteractivePipe.ClearChangeDefinitions();
 		}
 
 		private void CrashDocRegistryOnDocumentRegistered(object sender, CrashEventArgs e)
 		{
-			_dispatcher = new EventDispatcher();
-			_dispatcher.RegisterDefaultEvents();
-			RegisterDefinitions();
-			_dispatcher.RegisterDefaultServerCalls(e.CrashDoc);
+			var dispatcher = new EventDispatcher();
+			dispatcher.RegisterDefaultServerNotifiers();
+			RegisterDefinitions(dispatcher);
+			dispatcher.RegisterDefaultServerCalls(e.CrashDoc);
+			e.CrashDoc.Dispatcher = dispatcher;
 			InteractivePipe.Active.Enabled = true;
 
 			e.CrashDoc.LocalClient.OnInit += LocalClientOnOnInit;
 		}
 
-		private void RegisterDefinitions()
+		private void RegisterDefinitions(EventDispatcher dispatcher)
 		{
 			var changeEnuner = Changes.GetEnumerator();
 
 			while (changeEnuner.MoveNext())
 			{
 				var changeDefinition = changeEnuner.Current;
-				_dispatcher.RegisterDefinition(changeDefinition);
+				dispatcher.RegisterDefinition(changeDefinition);
 				InteractivePipe.RegisterChangeDefinition(changeDefinition);
 			}
 		}
@@ -95,8 +95,8 @@ namespace Crash
 		private void LocalClientOnOnInit(object sender, CrashClient.CrashInitArgs e)
 		{
 			e.CrashDoc.LocalClient.OnInit -= LocalClientOnOnInit;
-
-			if (_dispatcher is null)
+			var dispatcher = e.CrashDoc.Dispatcher as EventDispatcher;
+			if (dispatcher is null)
 			{
 				return;
 			}
@@ -104,10 +104,15 @@ namespace Crash
 			e.CrashDoc.DocumentIsBusy = true;
 			try
 			{
-				// TODO : Handle Async! Make event async?
 				foreach (var change in e.Changes)
 				{
-					_dispatcher.NotifyClientAsync(e.CrashDoc, change);
+					// TODO : Implement Async
+					dispatcher.NotifyClientAsync(e.CrashDoc, change);
+				}
+				finally
+
+				{
+					e.CrashDoc.DocumentIsBusy = false;
 				}
 			}
 			finally
