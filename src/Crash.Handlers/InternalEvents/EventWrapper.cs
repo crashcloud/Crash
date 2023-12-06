@@ -1,9 +1,11 @@
 ﻿using Crash.Common.App;
+using Crash.Geometry;
 using Crash.Utils;
 
 using Microsoft.Extensions.Logging;
 
 using Rhino;
+using Rhino.Commands;
 using Rhino.Display;
 using Rhino.DocObjects;
 
@@ -11,8 +13,15 @@ namespace Crash.Handlers.InternalEvents
 {
 	internal class EventWrapper : IDisposable
 	{
+		private readonly record struct TransformRecord(string Name, CrashTransformEventArgs TransformArgs);
+
+		private readonly Stack<TransformRecord> UndoTransformRecords;
+		private readonly Stack<TransformRecord> RedoTransformRecords;
+
 		internal EventWrapper()
 		{
+			UndoTransformRecords = new();
+			RedoTransformRecords = new();
 			RegisterDefaultEvents();
 		}
 
@@ -120,8 +129,8 @@ namespace Crash.Handlers.InternalEvents
 			CrashApp.Log($"{nameof(CaptureTransformRhinoObject)} event fired.", LogLevel.Trace);
 
 			var rhinoDoc = args.Objects
-			                   ?.FirstOrDefault(o => o.Document is not null)
-			                   ?.Document;
+							   ?.FirstOrDefault(o => o.Document is not null)
+							   ?.Document;
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
 			if (crashDoc is null or { CopyIsActive: false, DocumentIsBusy: true })
 			{
@@ -132,12 +141,19 @@ namespace Crash.Handlers.InternalEvents
 
 			try
 			{
+				var transform = args.Transform.ToCrash();
 				var crashArgs =
-					new CrashTransformEventArgs(crashDoc, args.Transform.ToCrash(),
-					                            args.Objects.Select(o => new CrashObject(o)),
-					                            args.ObjectsWillBeCopied);
+					new CrashTransformEventArgs(crashDoc, transform,
+												args.Objects.Select(o => new CrashObject(o)),
+												args.ObjectsWillBeCopied);
 
 				await TransformCrashObject.Invoke(sender, crashArgs);
+
+				var recentCommands = Command.GetMostRecentCommands();
+				var mostRecentCommand = recentCommands.Last();
+				string commandName = mostRecentCommand.DisplayString;
+
+				UndoTransformRecords.Push(new(commandName, crashArgs));
 			}
 			catch (Exception e)
 			{
@@ -179,7 +195,7 @@ namespace Crash.Handlers.InternalEvents
 				}
 
 				var crashArgs = CrashSelectionEventArgs.CreateSelectionEvent(crashDoc, args.RhinoObjects
-					                                                             .Select(o => new CrashObject(o)));
+																				 .Select(o => new CrashObject(o)));
 				await SelectCrashObjects.Invoke(sender, crashArgs);
 			}
 			catch (Exception e)
@@ -218,7 +234,7 @@ namespace Crash.Handlers.InternalEvents
 
 				var crashArgs =
 					CrashSelectionEventArgs.CreateDeSelectionEvent(crashDoc, args.RhinoObjects
-						                                               .Select(o => new CrashObject(o)));
+																	   .Select(o => new CrashObject(o)));
 
 				await SelectCrashObjects.Invoke(sender, crashArgs);
 			}
@@ -303,6 +319,67 @@ namespace Crash.Handlers.InternalEvents
 			}
 		}
 
+		private async void CaptureUndoRedo(object sender, UndoRedoEventArgs args)
+		{
+			var commandId = args.CommandId;
+			var commandName = Command.LookupCommandName(commandId, true);
+			if (!IsTransformCommand(commandName))
+				return;
+
+			var isEndRedo = args.IsEndRedo;
+
+			if (args.IsEndUndo)
+			{
+				var transformRecord = UndoTransformRecords.Pop();
+				await TransformCrashObject.Invoke(sender, transformRecord.TransformArgs);
+				
+				RedoTransformRecords.Push(transformRecord);
+			}
+			else if (args.IsEndRedo)
+			{
+				var transformRecord = RedoTransformRecords.Pop();
+				await TransformCrashObject.Invoke(sender, transformRecord.TransformArgs);
+
+				UndoTransformRecords.Push(transformRecord);
+			}
+		}
+
+		private static bool IsTransformCommand(string commandName)
+		{
+			switch (commandName.ToUpperInvariant())
+			{
+				case "DRAG":
+				case "MOVE":
+				case "SCALE":
+				case "SCALE2D":
+				case "SCALE3D":
+					return true;
+			}
+
+			return false;
+		}
+
+		private async void CaptureBeginCommand(object sender, CommandEventArgs args)
+		{
+			var commandName = args.CommandEnglishName.ToUpperInvariant();
+
+			/*
+			var val = commandName switch
+			{
+				"UNDO" => 
+				_ => Task.CompletedTask
+			};
+
+			await val;
+			*/
+		}
+
+		private async void CaptureEndCommand(object sender, CommandEventArgs args)
+		{
+			var commandName = args.CommandEnglishName;
+
+		}
+
 		private async void CaptureRhinoViewModified(object sender, ViewEventArgs args)
 		{
 			if (CrashViewModified is null)
@@ -338,6 +415,12 @@ namespace Crash.Handlers.InternalEvents
 			RhinoDoc.DeselectAllObjects += CaptureDeselectAllRhinoObjects;
 			RhinoDoc.SelectObjects += CaptureSelectRhinoObjects;
 			RhinoDoc.ModifyObjectAttributes += CaptureModifyRhinoObjectAttributes;
+			// RhinoDoc.ReplaceRhinoObject
+
+			// Command Events
+			Command.UndoRedo += CaptureUndoRedo;
+			Command.BeginCommand += CaptureBeginCommand;
+			Command.EndCommand += CaptureEndCommand;
 
 			// Doc Events
 			// TODO : Implement
@@ -358,6 +441,11 @@ namespace Crash.Handlers.InternalEvents
 			RhinoDoc.DeselectAllObjects -= CaptureDeselectAllRhinoObjects;
 			RhinoDoc.SelectObjects -= CaptureSelectRhinoObjects;
 			RhinoDoc.ModifyObjectAttributes -= CaptureModifyRhinoObjectAttributes;
+
+			// Command Events
+			Command.UndoRedo -= CaptureUndoRedo;
+			Command.BeginCommand -= CaptureBeginCommand;
+			Command.EndCommand -= CaptureEndCommand;
 
 			// Doc Events
 			// TODO : Implement
