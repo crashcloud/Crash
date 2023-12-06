@@ -137,6 +137,11 @@ namespace Crash.Handlers.InternalEvents
 				return;
 			}
 
+
+			var recentCommands = Command.GetMostRecentCommands();
+			var mostRecentCommand = recentCommands.Last();
+			string commandName = mostRecentCommand.DisplayString;
+
 			crashDoc.TransformIsActive = true;
 
 			try
@@ -149,11 +154,9 @@ namespace Crash.Handlers.InternalEvents
 
 				await TransformCrashObject.Invoke(sender, crashArgs);
 
-				var recentCommands = Command.GetMostRecentCommands();
-				var mostRecentCommand = recentCommands.Last();
-				string commandName = mostRecentCommand.DisplayString;
-
 				UndoTransformRecords.Push(new(commandName, crashArgs));
+
+				TransformCommands.Add(commandName);
 			}
 			catch (Exception e)
 			{
@@ -344,20 +347,9 @@ namespace Crash.Handlers.InternalEvents
 			}
 		}
 
+		private static HashSet<string> TransformCommands = new();
 		private static bool IsTransformCommand(string commandName)
-		{
-			switch (commandName.ToUpperInvariant())
-			{
-				case "DRAG":
-				case "MOVE":
-				case "SCALE":
-				case "SCALE2D":
-				case "SCALE3D":
-					return true;
-			}
-
-			return false;
-		}
+			=> TransformCommands.Contains(commandName.ToUpperInvariant());
 
 		private async void CaptureBeginCommand(object sender, CommandEventArgs args)
 		{
