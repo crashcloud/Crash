@@ -11,8 +11,16 @@ using Rhino.PlugIns;
 namespace Crash
 {
 	///<summary>The crash plugin for multi user rhino collaboration</summary>
-	public sealed class CrashPlugin : CrashPluginBase
+	public sealed class CrashRhinoPlugIn : PlugIn
 	{
+		private const string CrashPluginExtension = ".mup";
+
+		/// <summary>The Id of the Crash Plugin. DO NOT reuse this!</summary>
+		private const string CrashPluginId = "53CB2393-C71F-4079-9CEC-97464FF9D14E";
+
+		/// <summary>Contains all of the Change Definitions of this PlugIn</summary>
+		private readonly Stack<IChangeDefinition> Changes;
+
 		#region Crash Plugins
 
 		private void LoadCrashPlugins()
@@ -21,20 +29,29 @@ namespace Crash
 			foreach (var pluginId in pluginIds)
 			{
 				var plugin = Find(pluginId);
-
-				// Skip non Crash Plugin
-				if (plugin is not CrashPluginBase pluginBase ||
-				    plugin is CrashPlugin)
+				var pluginDirection = Path.GetDirectoryName(plugin.Assembly.Location);
+				var crashPluginExtensions = Directory.EnumerateFiles(pluginDirection, $"*.{CrashPluginExtension}");
+				if (!crashPluginExtensions?.Any() != true)
 				{
 					continue;
 				}
 
-				LoadPlugIn(pluginId);
-
-				foreach (var change in pluginBase.Changes)
+				foreach (var crashAssembly in crashPluginExtensions)
 				{
-					RegisterChangeSchema(change);
+					LoadCrashPlugin(crashAssembly);
 				}
+			}
+		}
+
+		private void LoadCrashPlugin(string crashAssembly)
+		{
+			var assembly = AppDomain.CurrentDomain.Load(crashAssembly);
+
+			var changeDefinitionTypes = assembly.ExportedTypes.Where(et => et.IsSubclassOf(typeof(CrashPlugIn)));
+			foreach (var changeDefinitionType in changeDefinitionTypes)
+			{
+				var changeDefinition = Activator.CreateInstance(changeDefinitionType) as IChangeDefinition;
+				Changes.Push(changeDefinition);
 			}
 		}
 
@@ -78,29 +95,32 @@ namespace Crash
 		private void LocalClientOnOnInit(object sender, CrashClient.CrashInitArgs e)
 		{
 			e.CrashDoc.LocalClient.OnInit -= LocalClientOnOnInit;
-
 			var dispatcher = e.CrashDoc.Dispatcher as EventDispatcher;
-			if (dispatcher is not null)
+			if (dispatcher is null)
 			{
-				e.CrashDoc.DocumentIsBusy = true;
-				try
+				return;
+			}
+
+			e.CrashDoc.DocumentIsBusy = true;
+			try
+			{
+				foreach (var change in e.Changes)
 				{
-					// TODO : Handle Async!
-					foreach (var change in e.Changes)
-					{
-						dispatcher.NotifyClientAsync(e.CrashDoc, change);
-					}
+					// TODO : Implement Async
+					dispatcher.NotifyClientAsync(e.CrashDoc, change);
 				}
-				finally
-				{
-					e.CrashDoc.DocumentIsBusy = false;
-				}
+			}
+			finally
+			{
+				e.CrashDoc.DocumentIsBusy = false;
 			}
 		}
 
 		#endregion
 
 		#region Rhino Plugin Overrides
+
+		public override PlugInLoadTime LoadTime => PlugInLoadTime.AtStartup;
 
 		protected override void OnShutdown()
 		{
@@ -110,14 +130,15 @@ namespace Crash
 			}
 		}
 
-		public CrashPlugin()
+		public CrashRhinoPlugIn()
 		{
 			Instance = this;
+			Changes = new Stack<IChangeDefinition>();
 
 			// Register the Defaults!
-			RegisterChangeSchema(new GeometryChangeDefinition());
-			RegisterChangeSchema(new CameraChangeDefinition());
-			RegisterChangeSchema(new DoneDefinition());
+			Changes.Push(new GeometryChangeDefinition());
+			Changes.Push(new CameraChangeDefinition());
+			Changes.Push(new DoneDefinition());
 
 			CrashDocRegistry.DocumentRegistered += CrashDocRegistryOnDocumentRegistered;
 			CrashDocRegistry.DocumentDisposed += CrashDocRegistryOnDocumentDisposed;
@@ -128,7 +149,7 @@ namespace Crash
 		protected override string LocalPlugInName => "Crash";
 
 		///<summary>Gets the only instance of the CrashPlugin plug-in.</summary>
-		public static CrashPlugin Instance { get; private set; }
+		public static CrashRhinoPlugIn Instance { get; private set; }
 
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
