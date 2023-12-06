@@ -30,7 +30,7 @@ namespace Crash.Common.Tests
 			var queue = new IdleQueue(new CrashDoc());
 			for (var i = 0; i < expectedCount; i++)
 			{
-				queue.AddAction(new IdleAction(args => { }, new IdleArgs(null, null)));
+				queue.AddAction(new IdleAction(args => { }, new IdleArgs(null, null), i.ToString()));
 			}
 
 			// Act
@@ -80,7 +80,7 @@ namespace Crash.Common.Tests
 			var queue = new IdleQueue(new CrashDoc());
 			for (var i = 0; i < expectedCount; i++)
 			{
-				queue.AddAction(new IdleAction(DisposableCrashEvent, new IdleArgs(null, null)));
+				queue.AddAction(new IdleAction(DisposableCrashEvent, new IdleArgs(null, null), i.ToString()));
 			}
 
 			// Act

@@ -89,7 +89,12 @@ namespace Crash.Common.Tests.Tables
 			userTable.Remove(user);
 
 			// Assert
-			Assert.That(default(User), Is.EqualTo(userTable.Get("user1")));
+			var result = userTable.Get("user1");
+
+			Assert.That(new User().Name, Is.EqualTo(result.Name));
+			Assert.That(new User().Visible, Is.EqualTo(result.Visible));
+			Assert.That(new User().Camera, Is.EqualTo(result.Camera));
+			Assert.That(new User().Color, Is.EqualTo(result.Color));
 		}
 
 		[Test]
@@ -140,7 +145,10 @@ namespace Crash.Common.Tests.Tables
 			var result = userTable.Get("user1");
 
 			// Assert
-			Assert.That(default(User), Is.EqualTo(result));
+			Assert.That(new User().Name, Is.EqualTo(result.Name));
+			Assert.That(new User().Visible, Is.EqualTo(result.Visible));
+			Assert.That(new User().Camera, Is.EqualTo(result.Camera));
+			Assert.That(new User().Color, Is.EqualTo(result.Color));
 		}
 	}
 }

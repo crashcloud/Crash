@@ -42,7 +42,7 @@ namespace Crash.Common.View
 		
 		public override int GetHashCode()
 		{
-			return Location.GetHashCode() ^ Target.GetHashCode();
+			return HashCode.Combine(Location.GetHashCode(), Target.GetHashCode());
 		}
 
 		/// <summary>Equality Comparison</summary>

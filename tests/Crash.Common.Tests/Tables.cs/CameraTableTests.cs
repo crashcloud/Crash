@@ -13,8 +13,9 @@ namespace Crash.Common.Tables.Tests
 		{
 			// Arrange
 			var crashDoc = new CrashDoc();
-			var cameraTable = new CameraTable(crashDoc);
-			cameraTable.TryAddCamera(change);
+			crashDoc.Users.Add(change.Owner);
+			var cameraTable = crashDoc.Cameras;
+			Assert.That(cameraTable.TryAddCamera(change), Is.True);
 
 			// Act
 			var users = cameraTable.GetActiveCameras().Keys.ToArray();
@@ -72,8 +73,10 @@ namespace Crash.Common.Tables.Tests
 		[Parallelizable]
 		public void TestGetActiveCameras()
 		{
-			var cameraTable = new CameraTable(new CrashDoc());
 			var userName = "Jeff";
+			var crashDoc = new CrashDoc();
+			crashDoc.Users.Add(userName);
+			var cameraTable = crashDoc.Cameras;
 
 			// Act
 			for (var i = 0; i < 5; i++)

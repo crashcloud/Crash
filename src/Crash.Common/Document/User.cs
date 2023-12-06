@@ -78,6 +78,9 @@ namespace Crash.Common.Document
 
 		public bool Equals(User other)
 		{
+			if (string.IsNullOrEmpty(Name))
+				return false;
+
 			return Name.Equals(other.Name, StringComparison.InvariantCultureIgnoreCase);
 		}
 
