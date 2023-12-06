@@ -78,7 +78,6 @@ namespace Crash
 			var dispatcher = new EventDispatcher();
 			dispatcher.RegisterDefaultServerNotifiers();
 			RegisterDefinitions(dispatcher);
-			dispatcher.RegisterDefaultServerCalls(e.CrashDoc);
 			e.CrashDoc.Dispatcher = dispatcher;
 			InteractivePipe.Active.Enabled = true;
 

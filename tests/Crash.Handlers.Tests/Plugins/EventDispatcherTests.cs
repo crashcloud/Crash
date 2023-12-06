@@ -128,7 +128,7 @@ namespace Crash.Handlers.Tests.Plugins
 		internal DispatcherTestClient()
 		{
 			// On InitialiseChanges
-			OnInitializeUsers += args => { IncrementCallCount(nameof(ICrashClient.OnInitializeUsers)); };
+			OnInitializeUsers += async args => { IncrementCallCount(nameof(ICrashClient.OnInitializeUsers)); };
 		}
 
 		public bool IsConnected { get; } = true;
@@ -169,23 +169,11 @@ namespace Crash.Handlers.Tests.Plugins
 			await Task.CompletedTask;
 		}
 
-		public event Action<IEnumerable<string>>? OnInitializeUsers;
-		public event Action<IEnumerable<Guid>, Change> OnPushIdentical;
-		public event Action<Change> OnPushChange;
-		public event Action<IEnumerable<Change>> OnPushChanges;
-		public event Action<IEnumerable<Change>> OnInitializeChanges;
-
-		public async Task InitializeChangesAsync(IEnumerable<Change> changes)
-		{
-			IncrementCallCount(nameof(ICrashClient.InitializeChangesAsync));
-			await Task.CompletedTask;
-		}
-
-		public async Task InitializeUsersAsync(IEnumerable<string> users)
-		{
-			IncrementCallCount(nameof(ICrashClient.InitializeUsersAsync));
-			await Task.CompletedTask;
-		}
+		public event Func<IEnumerable<string>, Task>? OnInitializeUsers;
+		public event Func<IEnumerable<Guid>, Change, Task> OnRecieveIdentical;
+		public event Func<Change, Task> OnRecieveChange;
+		public event Func<IEnumerable<Change>, Task> OnRecieveChanges;
+		public event Func<IEnumerable<Change>, Task> OnInitializeChanges;
 
 		public event Action<string>? OnDone;
 		public event Action<IEnumerable<Guid>>? OnDoneRange;
@@ -202,7 +190,6 @@ namespace Crash.Handlers.Tests.Plugins
 			var count = CallCount[name];
 			count += 1;
 			CallCount[name] = count;
-			;
 		}
 	}
 }
