@@ -42,6 +42,16 @@ namespace Crash.Handlers.InternalEvents
 		/// <summary>Is invoked when the Rhino View is modified</summary>
 		internal event AsyncEventHandler<CrashViewArgs>? CrashViewModified;
 
+		private async void CaptureAddRhinoObject(object sender, RhinoObjectEventArgs args)
+		{
+			await CaptureAddOrUndeleteRhinoObject(sender, args, false);
+		}
+
+		private async void CaptureUnDeleteRhinoObject(object sender, RhinoObjectEventArgs args)
+		{
+			await CaptureAddOrUndeleteRhinoObject(sender, args, true);
+		}
+
 		private async Task CaptureAddOrUndeleteRhinoObject(object sender, RhinoObjectEventArgs args, bool undelete)
 		{
 			CrashApp.Log($"{nameof(CaptureAddRhinoObject)} event fired.", LogLevel.Trace);
@@ -50,6 +60,11 @@ namespace Crash.Handlers.InternalEvents
 				CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
 
 			if (crashDoc is null || crashDoc.DocumentIsBusy)
+			{
+				return;
+			}
+
+			if (crashDoc.TransformIsActive)
 			{
 				return;
 			}
@@ -69,23 +84,13 @@ namespace Crash.Handlers.InternalEvents
 			}
 		}
 
-		private async void CaptureAddRhinoObject(object sender, RhinoObjectEventArgs args)
-		{
-			await CaptureAddOrUndeleteRhinoObject(sender, args, false);
-		}
-
-		private async void CaptureUnDeleteRhinoObject(object sender, RhinoObjectEventArgs args)
-		{
-			await CaptureAddOrUndeleteRhinoObject(sender, args, true);
-		}
-
 		private async void CaptureDeleteRhinoObject(object sender, RhinoObjectEventArgs args)
 		{
 			CrashApp.Log($"{nameof(CaptureDeleteRhinoObject)} event fired.", LogLevel.Trace);
 
 			var crashDoc =
 				CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
-			if (crashDoc is null || crashDoc.DocumentIsBusy)
+			if (crashDoc is null || crashDoc.DocumentIsBusy || crashDoc.TransformIsActive)
 			{
 				return;
 			}
@@ -128,6 +133,8 @@ namespace Crash.Handlers.InternalEvents
 				return;
 			}
 
+			crashDoc.TransformIsActive = true;
+
 			try
 			{
 				var crashArgs =
@@ -155,6 +162,12 @@ namespace Crash.Handlers.InternalEvents
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
 			if (crashDoc is null || crashDoc.DocumentIsBusy)
 			{
+				return;
+			}
+
+			if (crashDoc.TransformIsActive)
+			{
+				crashDoc.TransformIsActive = false;
 				return;
 			}
 

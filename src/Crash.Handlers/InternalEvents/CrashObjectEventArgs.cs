@@ -1,4 +1,5 @@
 ﻿using Crash.Common.Document;
+using Crash.Common.Tables;
 
 using Rhino.DocObjects;
 using Rhino.Geometry;
@@ -28,9 +29,17 @@ namespace Crash.Handlers.InternalEvents
 			bool unDelete = false)
 		{
 			Doc = crashDoc;
-			ChangeId = changeId;
 			RhinoId = rhinoId;
 			Geometry = geometry;
+			if (changeId == default)
+			{
+				geometry.UserDictionary.TryGetGuid(RealisedChangeTable.ChangeIdKey, out ChangeId);
+			}
+			else
+			{
+				ChangeId = changeId;
+			}
+
 			UnDelete = unDelete;
 		}
 
