@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 
 using Crash.Handlers.Plugins;
 using Crash.Handlers.Plugins.Request;
@@ -23,8 +23,10 @@ namespace CrashDefinitions.Create
 			                    {
 				                    Id = Guid.NewGuid(),
 				                    Action = ChangeAction.Add,
+				                    Owner = crashArgs.Doc.Users.CurrentUser.Name,
 				                    Payload = JsonSerializer.Serialize(packet),
-				                    Stamp = DateTime.UtcNow
+				                    Stamp = DateTime.UtcNow,
+				                    Type = RequestChange.ChangeType
 			                    };
 
 			changes = new List<Change> { requestChange };
@@ -34,7 +36,7 @@ namespace CrashDefinitions.Create
 
 		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
 		{
-			return crashArgs is RequestEventArgs;
+			return crashArgs.Args is RequestEventArgs;
 		}
 	}
 }

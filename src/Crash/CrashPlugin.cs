@@ -5,6 +5,7 @@ using Crash.Handlers.Plugins;
 using Crash.Handlers.Plugins.Camera;
 using Crash.Handlers.Plugins.Geometry;
 using Crash.Handlers.Plugins.Initializers;
+using Crash.Handlers.Plugins.Request;
 
 using Rhino.PlugIns;
 
@@ -118,6 +119,7 @@ namespace Crash
 			RegisterChangeSchema(new GeometryChangeDefinition());
 			RegisterChangeSchema(new CameraChangeDefinition());
 			RegisterChangeSchema(new DoneDefinition());
+			RegisterChangeSchema(new RequestChangeDefinition());
 
 			CrashDocRegistry.DocumentRegistered += CrashDocRegistryOnDocumentRegistered;
 			CrashDocRegistry.DocumentDisposed += CrashDocRegistryOnDocumentDisposed;
