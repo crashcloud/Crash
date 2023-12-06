@@ -11,14 +11,16 @@ namespace Crash.Handlers.Plugins
 	/// <summary>Handles all events that should be communicated through the server</summary>
 	public sealed class EventDispatcher : IEventDispatcher
 	{
+		private readonly CrashDoc _crashDoc;
 		private readonly Dictionary<ChangeAction, List<IChangeCreateAction>> _createActions;
 		private readonly Dictionary<string, List<IChangeRecieveAction>> _recieveActions;
 
 		private EventWrapper _eventWrapper;
 
 		/// <summary>Default Constructor</summary>
-		public EventDispatcher()
+		public EventDispatcher(CrashDoc crashDoc)
 		{
+			_crashDoc = crashDoc;
 			_createActions = new Dictionary<ChangeAction, List<IChangeCreateAction>>();
 			_recieveActions = new Dictionary<string, List<IChangeRecieveAction>>();
 		}
@@ -207,6 +209,45 @@ namespace Crash.Handlers.Plugins
 		public void DeregisterDefaultServerCalls()
 		{
 			_eventWrapper.Dispose();
+		}
+
+		/// <summary>
+		///     Registers all default server calls.
+		///     If you need to create custom calls do this elsewhere.
+		///     These calls cannot currently be overriden or switched off
+		/// </summary>
+		public void RegisterDefaultServerCalls(CrashDoc doc)
+		{
+			doc.LocalClient.OnRecieveChange += RecieveChangeAsync;
+			doc.LocalClient.OnRecieveChanges += RecieveChangesAsync;
+			doc.LocalClient.OnRecieveIdentical += RecieveIdenticalChangeAsync;
+
+			// OnInit is called on reconnect as well
+			doc.LocalClient.OnInitializeChanges += InitializeChangesAsync;
+		}
+
+		private async Task RecieveChangeAsync(Change change)
+		{
+			await NotifyClientAsync(_crashDoc, change);
+		}
+
+		private async Task RecieveChangesAsync(IEnumerable<Change> changes)
+		{
+			await Task.WhenAll(changes.Select(c => NotifyClientAsync(_crashDoc, c)));
+		}
+
+		private async Task RecieveIdenticalChangeAsync(IEnumerable<Guid> ids, Change change)
+		{
+			await Task.WhenAll(ids.Select(c => NotifyClientAsync(_crashDoc, new Change(change) { Id = c })));
+		}
+
+		private async Task InitializeChangesAsync(IEnumerable<Change> changes)
+		{
+			_crashDoc.LocalClient.OnInitializeChanges -= InitializeChangesAsync;
+
+			CrashLogger.Logger.LogDebug($"{nameof(_crashDoc.LocalClient.OnInitializeChanges)}");
+
+			await Task.WhenAll(changes.Select(c => NotifyClientAsync(_crashDoc, c)));
 		}
 	}
 }
