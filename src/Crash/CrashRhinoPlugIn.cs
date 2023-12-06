@@ -109,11 +109,6 @@ namespace Crash
 					// TODO : Implement Async
 					dispatcher.NotifyClientAsync(e.CrashDoc, change);
 				}
-				finally
-
-				{
-					e.CrashDoc.DocumentIsBusy = false;
-				}
 			}
 			finally
 			{
