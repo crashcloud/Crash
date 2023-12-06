@@ -51,9 +51,9 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 
 			// For unDelete
 			var currentOrNewId = Guid.NewGuid();
-			if (crashDoc.TemporaryChangeTable.TryGetChangeOfType(rhinoId, out IChange foundChange))
+			if (crashDoc.RealisedChangeTable.TryGetChangeId(rhinoId, out var changeId))
 			{
-				currentOrNewId = foundChange.Id;
+				currentOrNewId = changeId;
 			}
 
 			CrashApp.Log($"Created Change : {currentOrNewId}", LogLevel.Trace);
