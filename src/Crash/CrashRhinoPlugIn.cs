@@ -29,6 +29,11 @@ namespace Crash
 			foreach (var pluginId in pluginIds)
 			{
 				var plugin = Find(pluginId);
+				if (plugin is null)
+				{
+					continue;
+				}
+
 				var pluginDirection = Path.GetDirectoryName(plugin.Assembly.Location);
 				var crashPluginExtensions = Directory.EnumerateFiles(pluginDirection, $"*.{CrashPluginExtension}");
 				if (!crashPluginExtensions?.Any() != true)
