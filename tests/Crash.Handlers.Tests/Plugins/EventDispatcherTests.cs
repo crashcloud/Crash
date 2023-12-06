@@ -72,7 +72,7 @@ namespace Crash.Handlers.Tests.Plugins
 			crashDoc = CrashDocRegistry.CreateAndRegisterDocument(rhinoDoc);
 			crashDoc.LocalClient = new DispatcherTestClient();
 
-			eventDispatcher = new EventDispatcher();
+			eventDispatcher = new EventDispatcher(crashDoc);
 			eventDispatcher.RegisterDefinition(new GeometryChangeDefinition());
 			eventDispatcher.RegisterDefinition(new CameraChangeDefinition());
 			eventDispatcher.RegisterDefinition(new DoneDefinition());
