@@ -335,8 +335,15 @@ namespace Crash.Handlers.InternalEvents
 
 			// TODO : Check for Doc is busy etc?
 
+			if (args.IsBeginUndo || args.IsBeginRedo)
+			{
+				CrashDocRegistry.ActiveDoc.TransformIsActive = true;
+			}	
+
 			if (args.IsEndUndo)
 			{
+				CrashDocRegistry.ActiveDoc.TransformIsActive = false;
+
 				var transformRecord = UndoTransformRecords.Pop();
 
 				await TransformCrashObject.Invoke(sender, transformRecord.TransformArgs);
@@ -345,6 +352,8 @@ namespace Crash.Handlers.InternalEvents
 			}
 			else if (args.IsEndRedo)
 			{
+				CrashDocRegistry.ActiveDoc.TransformIsActive = false;
+
 				var transformRecord = RedoTransformRecords.Pop();
 
 				await TransformCrashObject.Invoke(sender, transformRecord.TransformArgs);
