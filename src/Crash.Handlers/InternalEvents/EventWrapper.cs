@@ -8,12 +8,13 @@ using Rhino;
 using Rhino.Commands;
 using Rhino.Display;
 using Rhino.DocObjects;
+using Rhino.Geometry;
 
 namespace Crash.Handlers.InternalEvents
 {
 	internal class EventWrapper : IDisposable
 	{
-		private readonly record struct TransformRecord(string Name, CrashTransformEventArgs TransformArgs);
+		private record struct TransformRecord(string Name, CrashTransformEventArgs TransformArgs);
 
 		private readonly Stack<TransformRecord> UndoTransformRecords;
 		private readonly Stack<TransformRecord> RedoTransformRecords;
@@ -137,12 +138,15 @@ namespace Crash.Handlers.InternalEvents
 				return;
 			}
 
-
-			var recentCommands = Command.GetMostRecentCommands();
-			var mostRecentCommand = recentCommands.Last();
-			string commandName = mostRecentCommand.DisplayString;
-
 			crashDoc.TransformIsActive = true;
+
+			string commandName = string.Empty;
+			var stack = Command.GetCommandStack();
+			if (stack is not null && stack.Any())
+			{
+				commandName = Command.LookupCommandName(stack.Last(), true);
+				TransformCommands.Add(commandName.ToUpperInvariant());
+			}
 
 			try
 			{
@@ -329,22 +333,37 @@ namespace Crash.Handlers.InternalEvents
 			if (!IsTransformCommand(commandName))
 				return;
 
-			var isEndRedo = args.IsEndRedo;
+			// TODO : Check for Doc is busy etc?
 
 			if (args.IsEndUndo)
 			{
 				var transformRecord = UndoTransformRecords.Pop();
+
 				await TransformCrashObject.Invoke(sender, transformRecord.TransformArgs);
 				
-				RedoTransformRecords.Push(transformRecord);
+				RedoTransformRecords.Push(GetInvertedRecord(transformRecord));
 			}
 			else if (args.IsEndRedo)
 			{
 				var transformRecord = RedoTransformRecords.Pop();
+
 				await TransformCrashObject.Invoke(sender, transformRecord.TransformArgs);
 
-				UndoTransformRecords.Push(transformRecord);
+				UndoTransformRecords.Push(GetInvertedRecord(transformRecord));
 			}
+		}
+
+		private TransformRecord GetInvertedRecord(TransformRecord transformRecord)
+		{
+			var name = transformRecord.Name;
+			var args = transformRecord.TransformArgs;
+
+			var rhinoTransform = args.Transform.ToRhino();
+			rhinoTransform.TryGetInverse(out Transform invertedRhinoTransform);
+			var invertedCrashTransform = invertedRhinoTransform.ToCrash();
+
+			return new TransformRecord(name,
+				new CrashTransformEventArgs(args.Doc, invertedCrashTransform, args.Objects, args.ObjectsWillBeCopied));
 		}
 
 		private static HashSet<string> TransformCommands = new();
@@ -354,22 +373,11 @@ namespace Crash.Handlers.InternalEvents
 		private async void CaptureBeginCommand(object sender, CommandEventArgs args)
 		{
 			var commandName = args.CommandEnglishName.ToUpperInvariant();
-
-			/*
-			var val = commandName switch
-			{
-				"UNDO" => 
-				_ => Task.CompletedTask
-			};
-
-			await val;
-			*/
 		}
 
 		private async void CaptureEndCommand(object sender, CommandEventArgs args)
 		{
-			var commandName = args.CommandEnglishName;
-
+			var commandName = args.CommandEnglishName.ToUpperInvariant();
 		}
 
 		private async void CaptureRhinoViewModified(object sender, ViewEventArgs args)
