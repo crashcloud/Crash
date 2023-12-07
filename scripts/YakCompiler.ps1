@@ -11,18 +11,15 @@ param (
     [Alias("Config")]
     [string]$configuration="Debug",
 
-    [Parameter(Mandatory=$false, HelpMessage="What OS is current running")]
-    [string]$os="win",
-
-    [Parameter(Mandatory=$false, HelpMessage="Minimum required version of Rhino")]
-    [Alias("Yak")]
-    [string]$yakExe="C:\Program Files\Rhino 7\System\Yak.exe",
-
     [Parameter(Mandatory=$false, HelpMessage="Push to yak server?")]
     [bool]$publish=$false
 )
 
-$crashVersion = "1.0.0"
+$yakExe = "C:\Program Files\Rhino 7\System\Yak.exe"
+if (!$IsWindows)
+{
+    $yakExe = "/Applications/Rhino 8.app/Contents/Resources/bin/yak"
+}
 
 foreach($yakFile in Get-ChildItem "$outputDir\*.yak")
 {
@@ -32,17 +29,11 @@ foreach($yakFile in Get-ChildItem "$outputDir\*.yak")
 $originalLocation = Get-Location
 Set-Location $inputDir
 
-& $yakExe build --platform $os
+& $yakExe build
 
 if ($inputDir -ne $outputDir)
 {
     Copy-Item -Path "$inputDir\*.yak" -DestinationPath $outputDir
 }
-
-<#
-Compress-Archive -Path "$inputDir\*.*" -DestinationPath $zipFile -CompressionLevel Optimal
-Compress-Archive -Path "$inputDir\Server" -DestinationPath $zipFile -CompressionLevel Optimal -Update
-Rename-Item $zipFile $yakFile
-#>
 
 Set-Location $originalLocation
