@@ -1,4 +1,5 @@
 ﻿using Crash.Common.App;
+using Crash.Common.Document;
 using Crash.Geometry;
 using Crash.Utils;
 
@@ -14,13 +15,15 @@ namespace Crash.Handlers.InternalEvents
 {
 	internal class EventWrapper : IDisposable
 	{
+		private readonly CrashDoc ContextDocument;
 		private record struct TransformRecord(string Name, CrashTransformEventArgs TransformArgs);
 
 		private readonly Stack<TransformRecord> UndoTransformRecords;
 		private readonly Stack<TransformRecord> RedoTransformRecords;
 
-		internal EventWrapper()
+		internal EventWrapper(CrashDoc _crashDoc)
 		{
+			ContextDocument = _crashDoc;
 			UndoTransformRecords = new();
 			RedoTransformRecords = new();
 			RegisterDefaultEvents();
@@ -29,6 +32,19 @@ namespace Crash.Handlers.InternalEvents
 		public void Dispose()
 		{
 			DeRegisterDefaultEvents();
+		}
+
+		private bool EventShouldFire(CrashDoc comparisonDoc)
+		{
+			if (comparisonDoc != ContextDocument)
+				return false;
+
+			if (comparisonDoc is null or { CopyIsActive: false, DocumentIsBusy: true, TransformIsActive: true })
+			{
+				return false;
+			}
+
+			return true;
 		}
 
 		/// <summary>Invoked when a Crash Object is added and the Crash Doc is not busy</summary>
@@ -133,7 +149,7 @@ namespace Crash.Handlers.InternalEvents
 							   ?.FirstOrDefault(o => o.Document is not null)
 							   ?.Document;
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
-			if (crashDoc is null or { CopyIsActive: false, DocumentIsBusy: true })
+			if (!EventShouldFire(crashDoc))
 			{
 				return;
 			}
@@ -178,14 +194,8 @@ namespace Crash.Handlers.InternalEvents
 			CrashApp.Log($"{nameof(CaptureSelectRhinoObjects)} event fired.", LogLevel.Trace);
 
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-			if (crashDoc is null || crashDoc.DocumentIsBusy)
+			if (!EventShouldFire(crashDoc))
 			{
-				return;
-			}
-
-			if (crashDoc.TransformIsActive)
-			{
-				crashDoc.TransformIsActive = false;
 				return;
 			}
 
@@ -221,8 +231,7 @@ namespace Crash.Handlers.InternalEvents
 			CrashApp.Log($"{nameof(CaptureDeselectRhinoObjects)} event fired.", LogLevel.Trace);
 
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-
-			if (crashDoc is null || crashDoc.DocumentIsBusy)
+			if (!EventShouldFire(crashDoc))
 			{
 				return;
 			}
@@ -261,7 +270,7 @@ namespace Crash.Handlers.InternalEvents
 			CrashApp.Log($"{nameof(CaptureDeselectAllRhinoObjects)} event fired.", LogLevel.Trace);
 
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-			if (crashDoc is null || crashDoc.DocumentIsBusy)
+			if (!EventShouldFire(crashDoc))
 			{
 				return;
 			}
@@ -290,7 +299,7 @@ namespace Crash.Handlers.InternalEvents
 			CrashApp.Log($"{nameof(CaptureModifyRhinoObjectAttributes)} event fired.", LogLevel.Trace);
 
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-			if (crashDoc is null || crashDoc.DocumentIsBusy)
+			if (!EventShouldFire(crashDoc))
 			{
 				return;
 			}
@@ -331,6 +340,11 @@ namespace Crash.Handlers.InternalEvents
 			if (TransformCrashObject is null)
 				return;
 
+			var rhinoDoc = RhinoDoc.FromRuntimeSerialNumber(args.UndoSerialNumber);
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
+			if (crashDoc != ContextDocument)
+				return;
+
 			var commandId = args.CommandId;
 			var commandName = Command.LookupCommandName(commandId, true);
 			if (!IsTransformCommand(commandName))
@@ -345,14 +359,11 @@ namespace Crash.Handlers.InternalEvents
 
 			if (args.IsEndUndo)
 			{
-				CrashDocRegistry.ActiveDoc.TransformIsActive = false;
-
 				// If the name is not equal then the Transform was enacted, but not sent to the server
 				var peekResult = UndoTransformRecords.Peek();
 
 				if (!peekResult.Name.Equals(commandName))
 				{
-					CrashDocRegistry.ActiveDoc.TransformIsActive = true;
 					return;
 				}
 
@@ -362,14 +373,12 @@ namespace Crash.Handlers.InternalEvents
 			}
 			else if (args.IsEndRedo)
 			{
-				CrashDocRegistry.ActiveDoc.TransformIsActive = false;
 
 				// If the name is not equal then the Transform was enacted, but not sent to the server
 				var peekResult = UndoTransformRecords.Peek();
 
 				if (!peekResult.Name.Equals(commandName))
 				{
-					CrashDocRegistry.ActiveDoc.TransformIsActive = true;
 					return;
 				}
 
@@ -432,6 +441,17 @@ namespace Crash.Handlers.InternalEvents
 			}
 		}
 
+		private void CaptureIdle(object sender, EventArgs e)
+		{
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(RhinoDoc.ActiveDoc);
+			if (crashDoc != ContextDocument)
+				return;
+
+			ContextDocument.DocumentIsBusy = false;
+			ContextDocument.TransformIsActive = false;
+			ContextDocument.CopyIsActive = false;
+		}
+
 		private void RegisterDefaultEvents()
 		{
 			// Object Events
@@ -449,6 +469,9 @@ namespace Crash.Handlers.InternalEvents
 			Command.UndoRedo += CaptureUndoRedo;
 			Command.BeginCommand += CaptureBeginCommand;
 			Command.EndCommand += CaptureEndCommand;
+
+			// App Events
+			RhinoApp.Idle += CaptureIdle;
 
 			// Doc Events
 			// TODO : Implement

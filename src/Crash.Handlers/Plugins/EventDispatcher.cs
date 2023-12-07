@@ -195,7 +195,7 @@ namespace Crash.Handlers.Plugins
 		/// <summary>Registers the default server notifiers</summary>
 		public void RegisterDefaultServerNotifiers()
 		{
-			_eventWrapper = new EventWrapper();
+			_eventWrapper = new EventWrapper(_crashDoc);
 			_eventWrapper.AddCrashObject += NotifyServerOfAddCrashObject;
 			_eventWrapper.DeleteCrashObject += NotifyServerOfDeleteCrashObject;
 			_eventWrapper.TransformCrashObject += NotifyServerOfTransformCrashObject;
