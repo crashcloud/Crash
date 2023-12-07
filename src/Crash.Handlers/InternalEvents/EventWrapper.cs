@@ -328,6 +328,9 @@ namespace Crash.Handlers.InternalEvents
 
 		private async void CaptureUndoRedo(object sender, UndoRedoEventArgs args)
 		{
+			if (TransformCrashObject is null)
+				return;
+
 			var commandId = args.CommandId;
 			var commandName = Command.LookupCommandName(commandId, true);
 			if (!IsTransformCommand(commandName))
@@ -344,15 +347,41 @@ namespace Crash.Handlers.InternalEvents
 			{
 				CrashDocRegistry.ActiveDoc.TransformIsActive = false;
 
-				var transformRecord = UndoTransformRecords.Pop();
+				// If the name is not equal or we have a non existant record
+				// Then the Transform was enacted, but not sent to the server
+				if (!UndoTransformRecords.TryPeek(out TransformRecord peekResult))
+				{
+					CrashDocRegistry.ActiveDoc.TransformIsActive = true;
+					return;
+				}
 
+				if (!peekResult.Name.Equals(commandName))
+				{
+					CrashDocRegistry.ActiveDoc.TransformIsActive = true;
+					return;
+				}
+
+				var transformRecord = UndoTransformRecords.Pop();
 				await TransformCrashObject.Invoke(sender, transformRecord.TransformArgs);
-				
 				RedoTransformRecords.Push(GetInvertedRecord(transformRecord));
 			}
 			else if (args.IsEndRedo)
 			{
 				CrashDocRegistry.ActiveDoc.TransformIsActive = false;
+
+				// If the name is not equal or we have a non existant record
+				// Then the Transform was enacted, but not sent to the server
+				if (!UndoTransformRecords.TryPeek(out TransformRecord peekResult))
+				{
+					CrashDocRegistry.ActiveDoc.TransformIsActive = true;
+					return;
+				}
+
+				if (!peekResult.Name.Equals(commandName))
+				{
+					CrashDocRegistry.ActiveDoc.TransformIsActive = true;
+					return;
+				}
 
 				var transformRecord = RedoTransformRecords.Pop();
 
