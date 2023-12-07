@@ -36,8 +36,8 @@ namespace Crash.Common.Tables.Tests
 			cameraTable.TryAddCamera(change);
 
 			// Act
-			Assert.IsTrue(cameraTable.TryGetCamera(new User(change.Owner),
-			                                       out var cameras));
+			Assert.That(cameraTable.TryGetCamera(new User(change.Owner),
+			                                       out var cameras), Is.True);
 
 			// Assert
 			Assert.That(cameras.Count, Is.GreaterThanOrEqualTo(1));
@@ -59,13 +59,13 @@ namespace Crash.Common.Tables.Tests
 			{
 				var camera = new Camera(CPoint.Origin, new CPoint(1, 2, 3));
 				var change = CameraChange.CreateNew(camera, userName);
-				Assert.IsTrue(cameraTable.TryAddCamera(change));
+				Assert.That(cameraTable.TryAddCamera(change), Is.True);
 			}
 
-			Assert.IsNotEmpty(cameraTable);
+			Assert.That(cameraTable, Is.Not.Empty);
 
 			// Assert
-			Assert.IsTrue(cameraTable.TryGetCamera(user, out var cameras));
+			Assert.That(cameraTable.TryGetCamera(user, out var cameras), Is.True);
 			Assert.That(cameras.Count, Is.EqualTo(CameraTable.MAX_CAMERAS_IN_QUEUE));
 		}
 
@@ -83,11 +83,11 @@ namespace Crash.Common.Tables.Tests
 			{
 				var camera = new Camera(CPoint.Origin, new CPoint(1, 2, 3));
 				var change = CameraChange.CreateNew(camera, userName);
-				Assert.IsTrue(cameraTable.TryAddCamera(change));
+				Assert.That(cameraTable.TryAddCamera(change), Is.True);
 			}
 
 			// Assert
-			Assert.IsNotEmpty(cameraTable);
+			Assert.That(cameraTable, Is.Not.Empty);
 			Assert.That(cameraTable.GetActiveCameras().Count, Is.EqualTo(1));
 		}
 

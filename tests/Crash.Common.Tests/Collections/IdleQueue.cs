@@ -67,7 +67,7 @@ namespace Crash.Common.Tests
 			queue.RunNextAction();
 
 			// Assert
-			Assert.IsTrue(action.Invoked);
+			Assert.That(action.Invoked, Is.True);
 		}
 
 		[Test]
@@ -106,7 +106,7 @@ namespace Crash.Common.Tests
 			queue.RunNextAction();
 
 			// Assert
-			Assert.IsFalse(eventRaised);
+			Assert.That(eventRaised, Is.False);
 		}
 
 		[Test]
@@ -124,7 +124,7 @@ namespace Crash.Common.Tests
 			queue.RunNextAction();
 
 			// Assert
-			Assert.IsTrue(eventRaised);
+			Assert.That(eventRaised, Is.True);
 		}
 
 

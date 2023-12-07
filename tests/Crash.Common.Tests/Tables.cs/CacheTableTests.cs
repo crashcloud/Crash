@@ -52,7 +52,7 @@ namespace Crash.Common.Tests.Tables
 
 			// Assert
 			Assert.That(result, Is.True);
-			Assert.AreEqual("Everyone", retrievedChange.NewValue);
+			Assert.That("Everyone", Is.EqualTo(retrievedChange.NewValue));
 		}
 
 		[Test]
@@ -68,7 +68,7 @@ namespace Crash.Common.Tests.Tables
 
 			// Assert
 			Assert.That(result, Is.True);
-			Assert.AreEqual("World", retrievedChange.NewValue);
+			Assert.That("World", Is.EqualTo(retrievedChange.NewValue));
 		}
 
 		[Test]
@@ -84,8 +84,8 @@ namespace Crash.Common.Tests.Tables
 			var result = _temporaryChangeTable.TryGetChangeOfType<TextChange>(id, out var retrievedChange);
 
 			// Assert
-			Assert.IsFalse(result);
-			Assert.IsNull(retrievedChange);
+			Assert.That(result, Is.False);
+			Assert.That(retrievedChange, Is.Null);
 		}
 
 		[Test]
@@ -105,10 +105,10 @@ namespace Crash.Common.Tests.Tables
 			var result2 = _temporaryChangeTable.TryGetChangeOfType<TextChange>(id2, out var retrievedChange2);
 
 			// Assert
-			Assert.IsFalse(result1);
-			Assert.IsNull(retrievedChange1);
-			Assert.IsFalse(result2);
-			Assert.IsNull(retrievedChange2);
+			Assert.That(result1, Is.False);
+			Assert.That(retrievedChange1, Is.Null);
+			Assert.That(result2, Is.False);
+			Assert.That(retrievedChange2, Is.Null);
 		}
 	}
 }
