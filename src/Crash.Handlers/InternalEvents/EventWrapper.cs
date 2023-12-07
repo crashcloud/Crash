@@ -340,7 +340,7 @@ namespace Crash.Handlers.InternalEvents
 			if (TransformCrashObject is null)
 				return;
 
-			var rhinoDoc = RhinoDoc.FromRuntimeSerialNumber(args.UndoSerialNumber);
+			var rhinoDoc = RhinoDoc.ActiveDoc;
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
 			if (crashDoc != ContextDocument)
 				return;
