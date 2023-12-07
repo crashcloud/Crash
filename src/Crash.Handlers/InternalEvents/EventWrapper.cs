@@ -447,9 +447,14 @@ namespace Crash.Handlers.InternalEvents
 			if (crashDoc != ContextDocument)
 				return;
 
-			ContextDocument.DocumentIsBusy = false;
-			ContextDocument.TransformIsActive = false;
-			ContextDocument.CopyIsActive = false;
+			if (ContextDocument.DocumentIsBusy)
+				ContextDocument.DocumentIsBusy = false;
+			
+			if (ContextDocument.TransformIsActive)
+				ContextDocument.TransformIsActive = false;
+			
+			if (ContextDocument.CopyIsActive)
+				ContextDocument.CopyIsActive = false;
 		}
 
 		private void RegisterDefaultEvents()
