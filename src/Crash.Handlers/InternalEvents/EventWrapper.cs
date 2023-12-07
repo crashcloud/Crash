@@ -347,13 +347,8 @@ namespace Crash.Handlers.InternalEvents
 			{
 				CrashDocRegistry.ActiveDoc.TransformIsActive = false;
 
-				// If the name is not equal or we have a non existant record
-				// Then the Transform was enacted, but not sent to the server
-				if (!UndoTransformRecords.TryPeek(out TransformRecord peekResult))
-				{
-					CrashDocRegistry.ActiveDoc.TransformIsActive = true;
-					return;
-				}
+				// If the name is not equal then the Transform was enacted, but not sent to the server
+				var peekResult = UndoTransformRecords.Peek();
 
 				if (!peekResult.Name.Equals(commandName))
 				{
@@ -369,13 +364,8 @@ namespace Crash.Handlers.InternalEvents
 			{
 				CrashDocRegistry.ActiveDoc.TransformIsActive = false;
 
-				// If the name is not equal or we have a non existant record
-				// Then the Transform was enacted, but not sent to the server
-				if (!UndoTransformRecords.TryPeek(out TransformRecord peekResult))
-				{
-					CrashDocRegistry.ActiveDoc.TransformIsActive = true;
-					return;
-				}
+				// If the name is not equal then the Transform was enacted, but not sent to the server
+				var peekResult = UndoTransformRecords.Peek();
 
 				if (!peekResult.Name.Equals(commandName))
 				{
