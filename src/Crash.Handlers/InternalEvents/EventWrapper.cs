@@ -282,6 +282,7 @@ namespace Crash.Handlers.InternalEvents
 				var crashArgs = CrashSelectionEventArgs.CreateDeSelectionEvent(crashDoc, crashObjects);
 
 				await DeSelectCrashObjects.Invoke(sender, crashArgs);
+				crashDoc.RealisedChangeTable.ClearSelected();
 			}
 			catch (Exception e)
 			{
