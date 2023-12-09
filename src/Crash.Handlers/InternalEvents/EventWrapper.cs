@@ -187,8 +187,6 @@ namespace Crash.Handlers.InternalEvents
 
 		#region Capturers
 
-#pragma warning disable VSTHRD100 // Cannot avoid async void methods here
-
 		private void CaptureAddRhinoObject(object? sender, RhinoObjectEventArgs args)
 		{
 			try
@@ -494,6 +492,7 @@ namespace Crash.Handlers.InternalEvents
 			}
 		}
 
+#pragma warning disable VSTHRD100 // Cannot avoid async void methods here
 		// TODO : Use Queue?
 		private async void CaptureRhinoViewModified(object? sender, ViewEventArgs args)
 		{
@@ -518,6 +517,7 @@ namespace Crash.Handlers.InternalEvents
 				CrashApp.Log(e.Message);
 			}
 		}
+#pragma warning restore VSTHRD100 // Avoid async void methods
 
 		private void Push(IUndoRedoCache add, bool forward = true)
 		{
@@ -529,6 +529,7 @@ namespace Crash.Handlers.InternalEvents
 				RedoRecords.Push(add.GetInverse());
 		}
 
+#pragma warning disable VSTHRD100 // Cannot avoid async void methods here
 		private async void CaptureIdle(object? _, EventArgs __)
 		{
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(RhinoDoc.ActiveDoc);
