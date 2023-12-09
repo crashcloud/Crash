@@ -39,13 +39,10 @@ namespace Crash.Handlers.InternalEvents
 		// TODO : Include Plane Cache or otherwise
 		private record TransformRecord : IUndoRedoCache
 		{
-			public readonly string Name;
-
 			public readonly CrashTransformEventArgs TransformArgs;
 
-			internal TransformRecord(string name, CrashTransformEventArgs args)
+			internal TransformRecord(CrashTransformEventArgs args)
 			{
-				Name = name;
 				TransformArgs = args;
 			}
 
@@ -56,7 +53,7 @@ namespace Crash.Handlers.InternalEvents
 															inverseTransform,
 															TransformArgs.Objects,
 															TransformArgs.ObjectsWillBeCopied);
-				return new TransformRecord(Name, newArgs);
+				return new TransformRecord(newArgs);
 			}
 		}
 
@@ -188,28 +185,10 @@ namespace Crash.Handlers.InternalEvents
 		#region Capturers
 
 		private void CaptureAddRhinoObject(object? sender, RhinoObjectEventArgs args)
-		{
-			try
-			{
-				await CaptureAddOrUndeleteRhinoObject(sender, args, false);
-			}
-			catch (Exception e)
-			{
-				CrashApp.Log(e.Message);
-			}
-		}
+			=> CaptureAddOrUndeleteRhinoObject(sender, args, false);
 
 		private void CaptureUnDeleteRhinoObject(object? sender, RhinoObjectEventArgs args)
-		{
-			try
-			{
-				await CaptureAddOrUndeleteRhinoObject(sender, args, true);
-			}
-			catch (Exception e)
-			{
-				CrashApp.Log(e.Message);
-			}
-		}
+			=> CaptureAddOrUndeleteRhinoObject(sender, args, true);
 
 		private void CaptureAddOrUndeleteRhinoObject(object? sender, RhinoObjectEventArgs args, bool undelete)
 		{
@@ -285,20 +264,13 @@ namespace Crash.Handlers.InternalEvents
 
 				TransformIsActive = true;
 
-				string commandName = string.Empty;
-				var stack = Command.GetCommandStack();
-				if (stack is not null && stack.Any())
-				{
-					commandName = Command.LookupCommandName(stack.Last(), true);
-					TransformCommands.Add(commandName.ToUpperInvariant());
-				}
 				var transform = args.Transform.ToCrash();
 				var transformArgs =
 					new CrashTransformEventArgs(crashDoc, transform,
 												args.Objects.Select(o => new CrashObject(o)),
 												args.ObjectsWillBeCopied);
 
-				var transformRecord = new TransformRecord(commandName, transformArgs);
+				var transformRecord = new TransformRecord(transformArgs);
 				Push(transformRecord);
 			}
 			catch (Exception e)
