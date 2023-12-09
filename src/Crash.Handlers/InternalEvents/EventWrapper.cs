@@ -133,25 +133,25 @@ namespace Crash.Handlers.InternalEvents
 			bool ignoreIfUndoActive = true,
 			bool ignoreIfRedoActive = true)
 		{
-			if (comparisonDoc != ContextDocument)
-				return true;
-
 			if (comparisonDoc is null)
 				return true;
 
-			if (!ignoreIfCopy && CopyIsActive)
+			if (comparisonDoc != ContextDocument)
 				return true;
 
-			if (!ignoreIfBusy && comparisonDoc.DocumentIsBusy)
+			if (ignoreIfCopy && CopyIsActive)
 				return true;
 
-			if (!ignoreIfTransform && TransformIsActive)
+			if (ignoreIfBusy && comparisonDoc.DocumentIsBusy)
 				return true;
 
-			if (!ignoreIfUndoActive && UndoIsActive)
+			if (ignoreIfTransform && TransformIsActive)
 				return true;
 
-			if (!ignoreIfRedoActive && RedoIsActive)
+			if (ignoreIfUndoActive && UndoIsActive)
+				return true;
+
+			if (ignoreIfRedoActive && RedoIsActive)
 				return true;
 
 			return false;
@@ -216,7 +216,7 @@ namespace Crash.Handlers.InternalEvents
 				var crashDoc =
 					CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
 
-				if (IgnoreEvent(crashDoc, false, true, true))
+				if (IgnoreEvent(crashDoc))
 				{
 					return;
 				}
@@ -251,7 +251,7 @@ namespace Crash.Handlers.InternalEvents
 								   ?.FirstOrDefault(o => o.Document is not null)
 								   ?.Document;
 				var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
-				if (!IgnoreEvent(crashDoc, ignoreIfCopy:false))
+				if (IgnoreEvent(crashDoc, ignoreIfCopy:false))
 				{
 					return;
 				}
@@ -322,10 +322,6 @@ namespace Crash.Handlers.InternalEvents
 				CrashApp.Log($"{nameof(CaptureDeselectRhinoObjects)} event fired.", LogLevel.Trace);
 
 				var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-				if (!IgnoreEvent(crashDoc))
-				{
-					return;
-				}
 
 				foreach (var rhinoObject in args.RhinoObjects)
 				{
@@ -356,10 +352,6 @@ namespace Crash.Handlers.InternalEvents
 				CrashApp.Log($"{nameof(CaptureDeselectAllRhinoObjects)} event fired.", LogLevel.Trace);
 
 				var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-				if (!IgnoreEvent(crashDoc))
-				{
-					return;
-				}
 
 				var currentlySelected = crashDoc.RealisedChangeTable.GetSelected();
 				var crashObjects = currentlySelected.Select(cs => new CrashObject(cs, Guid.Empty));
@@ -395,7 +387,7 @@ namespace Crash.Handlers.InternalEvents
 			CrashApp.Log($"{nameof(CaptureModifyRhinoObjectAttributes)} event fired.", LogLevel.Trace);
 
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-			if (!IgnoreEvent(crashDoc))
+			if (IgnoreEvent(crashDoc))
 			{
 				return;
 			}
@@ -533,7 +525,7 @@ namespace Crash.Handlers.InternalEvents
 					await cacheAction;
 				}
 
-				foreach(var queueItem in SelectionQueue)
+				foreach(var queueItem in SelectionQueue.ToArray())
 				{
 					bool isSelected = queueItem.Value;
 					var theObject = queueItem.Key;
