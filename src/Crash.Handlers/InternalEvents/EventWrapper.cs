@@ -634,10 +634,6 @@ namespace Crash.Handlers.InternalEvents
 
 		#endregion
 
-		private static HashSet<string> TransformCommands = new();
-		private static bool IsTransformCommand(string commandName)
-			=> TransformCommands.Contains(commandName.ToUpperInvariant());
-
 		#region Register Events
 
 		private void RegisterDefaultEvents()
