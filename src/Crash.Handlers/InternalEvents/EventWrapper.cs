@@ -542,6 +542,8 @@ namespace Crash.Handlers.InternalEvents
 					else
 						await SendDeselectionAsync(theObject);
 				}
+
+				SelectionQueue.Clear();
 			}
 			catch (Exception e)
 			{
