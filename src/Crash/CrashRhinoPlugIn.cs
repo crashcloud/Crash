@@ -7,6 +7,7 @@ using Crash.Handlers.Plugins.Geometry;
 using Crash.Handlers.Plugins.Initializers;
 
 using Rhino.PlugIns;
+using Rhino.UI.Controls;
 
 namespace Crash
 {
@@ -97,7 +98,7 @@ namespace Crash
 			}
 		}
 
-		private void LocalClientOnOnInit(object sender, CrashClient.CrashInitArgs e)
+		private async void LocalClientOnOnInit(object? sender, CrashClient.CrashInitArgs e)
 		{
 			e.CrashDoc.LocalClient.OnInit -= LocalClientOnOnInit;
 			var dispatcher = e.CrashDoc.Dispatcher as EventDispatcher;
@@ -112,8 +113,13 @@ namespace Crash
 				foreach (var change in e.Changes)
 				{
 					// TODO : Implement Async
-					dispatcher.NotifyClientAsync(e.CrashDoc, change);
+					await dispatcher.NotifyClientAsync(e.CrashDoc, change);
 				}
+			}
+			catch(Exception ex)
+			{
+				;
+				RhinoApp.WriteLine(ex.Message);
 			}
 			finally
 			{

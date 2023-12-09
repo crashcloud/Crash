@@ -49,9 +49,11 @@ namespace Crash.Handlers.InternalEvents
 
 			public IUndoRedoCache GetInverse()
 			{
-				var inverseTransform = CTransform.Unset;
+				var transformCache = TransformArgs.Transform.ToRhino();
+				transformCache.TryGetInverse(out var inverseTransform);
+
 				var newArgs = new CrashTransformEventArgs(TransformArgs.Doc,
-															inverseTransform,
+															inverseTransform.ToCrash(),
 															TransformArgs.Objects,
 															TransformArgs.ObjectsWillBeCopied);
 				return new TransformRecord(newArgs);
@@ -280,7 +282,6 @@ namespace Crash.Handlers.InternalEvents
 			}
 		}
 
-		// TODO : Not using Queue for Select will result in them being sent first!
 		private void CaptureSelectRhinoObjects(object? sender, RhinoObjectSelectionEventArgs args)
 		{
 			if (SelectCrashObjects is null)
@@ -461,7 +462,8 @@ namespace Crash.Handlers.InternalEvents
 		}
 
 #pragma warning disable VSTHRD100 // Cannot avoid async void methods here
-		// TODO : Use Queue?
+		// TODO : Use Queue to prevent > 60fps being sent
+		// TODO : Use Stream?
 		private async void CaptureRhinoViewModified(object? sender, ViewEventArgs args)
 		{
 			if (CrashViewModified is null)
