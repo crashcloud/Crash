@@ -1,4 +1,5 @@
-﻿using Crash.Common.App;
+﻿using Crash.Changes;
+using Crash.Common.App;
 using Crash.Common.Document;
 using Crash.Geometry;
 using Crash.Utils;
@@ -105,7 +106,7 @@ namespace Crash.Handlers.InternalEvents
 		private readonly Stack<IUndoRedoCache> UndoRecords;
 		private readonly Stack<IUndoRedoCache> RedoRecords;
 		private readonly AsyncQueue<IUndoRedoCache> EventQueue;
-		private readonly Dictionary<CrashObject, bool> SelectionQueue;
+		private readonly Dictionary<Guid, bool> SelectionQueue;
 
 		#endregion
 
@@ -293,6 +294,7 @@ namespace Crash.Handlers.InternalEvents
 
 				var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
 
+				List<Guid> changeIds = new List<Guid>(args.RhinoObjects.Length);
 				foreach (var rhinoObject in args.RhinoObjects)
 				{
 					if (!rhinoObject.TryGetChangeId(out var changeId))
@@ -301,9 +303,10 @@ namespace Crash.Handlers.InternalEvents
 					}
 
 					crashDoc.RealisedChangeTable.AddSelected(changeId);
+					changeIds.Add(changeId);
 				}
 
-				PushSelections(args.RhinoObjects.Select(o => new CrashObject(o)), true);
+				PushSelections(changeIds, true);
 			}
 			catch (Exception e)
 			{
@@ -323,6 +326,7 @@ namespace Crash.Handlers.InternalEvents
 
 				var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
 
+				List<Guid> changeIds = new List<Guid>(args.RhinoObjects.Length);
 				foreach (var rhinoObject in args.RhinoObjects)
 				{
 					if (!rhinoObject.TryGetChangeId(out var changeId))
@@ -331,9 +335,10 @@ namespace Crash.Handlers.InternalEvents
 					}
 
 					crashDoc.RealisedChangeTable.RemoveSelected(changeId);
+					changeIds.Add(changeId);
 				}
 
-				PushSelections(args.RhinoObjects.Select(o => new CrashObject(o)), false);
+				PushSelections(changeIds, false);
 			}
 			catch (Exception e)
 			{
@@ -354,8 +359,7 @@ namespace Crash.Handlers.InternalEvents
 				var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
 
 				var currentlySelected = crashDoc.RealisedChangeTable.GetSelected();
-				var crashObjects = currentlySelected.Select(cs => new CrashObject(cs, Guid.Empty));
-				PushSelections(crashObjects, false);
+				PushSelections(currentlySelected, false);
 
 				crashDoc.RealisedChangeTable.ClearSelected();
 			}
@@ -365,7 +369,7 @@ namespace Crash.Handlers.InternalEvents
 			}
 		}
 
-		private void PushSelections(IEnumerable<CrashObject> selection, bool select)
+		private void PushSelections(IEnumerable<Guid> selection, bool select)
 		{
 			foreach (var selected in selection)
 			{
@@ -528,7 +532,13 @@ namespace Crash.Handlers.InternalEvents
 				foreach(var queueItem in SelectionQueue.ToArray())
 				{
 					bool isSelected = queueItem.Value;
-					var theObject = queueItem.Key;
+					Guid changeId = queueItem.Key;
+
+					if (!crashDoc.RealisedChangeTable.TryGetRhinoId(changeId, out Guid rhinoId))
+						continue;
+
+					var theObject = new CrashObject(changeId, rhinoId);
+
 					if (isSelected)
 						await SendSelectionAsync(theObject);
 					else
