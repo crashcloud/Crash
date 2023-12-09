@@ -4,28 +4,123 @@ using Crash.Geometry;
 using Crash.Utils;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualStudio.Threading;
 
 using Rhino;
 using Rhino.Commands;
 using Rhino.Display;
 using Rhino.DocObjects;
-using Rhino.Geometry;
+using Rhino.UI.Controls;
 
 namespace Crash.Handlers.InternalEvents
 {
 	internal class EventWrapper : IDisposable
 	{
-		private readonly CrashDoc ContextDocument;
-		private record struct TransformRecord(string Name, CrashTransformEventArgs TransformArgs);
 
-		private readonly Stack<TransformRecord> UndoTransformRecords;
-		private readonly Stack<TransformRecord> RedoTransformRecords;
+		#region Flags
+
+		private bool CopyIsActive { get; set; }
+		private bool TransformIsActive { get; set; }
+		private bool UndoIsActive { get; set; }
+		private bool RedoIsActive { get; set; }
+
+		#endregion
+
+		#region UndoRedo Records
+
+		private interface IUndoRedoCache
+		{
+
+			IUndoRedoCache GetInverse();
+		}
+
+		private record struct SelectionState(CrashObject TheObject, bool IsSelected);
+
+		// TODO : Include Plane Cache or otherwise
+		private record TransformRecord : IUndoRedoCache
+		{
+			public readonly string Name;
+
+			public readonly CrashTransformEventArgs TransformArgs;
+
+			internal TransformRecord(string name, CrashTransformEventArgs args)
+			{
+				Name = name;
+				TransformArgs = args;
+			}
+
+			public IUndoRedoCache GetInverse()
+			{
+				var inverseTransform = CTransform.Unset;
+				var newArgs = new CrashTransformEventArgs(TransformArgs.Doc,
+															inverseTransform,
+															TransformArgs.Objects,
+															TransformArgs.ObjectsWillBeCopied);
+				return new TransformRecord(Name, newArgs);
+			}
+		}
+
+		private record AddRecord : IUndoRedoCache
+		{
+			internal readonly CrashObjectEventArgs AddArgs;
+			internal AddRecord(CrashObjectEventArgs addArgs)
+			{
+				AddArgs = addArgs;
+			}
+
+			public IUndoRedoCache GetInverse()
+			{
+				var deleteRecord = new DeleteRecord(new CrashObjectEventArgs(AddArgs.Doc, AddArgs.Geometry, AddArgs.RhinoId, AddArgs.ChangeId, false));
+				return deleteRecord;
+			}
+		}
+
+		private record DeleteRecord : IUndoRedoCache
+		{
+			internal readonly CrashObjectEventArgs DeleteArgs;
+
+			internal DeleteRecord(CrashObjectEventArgs args)
+			{
+				DeleteArgs = args;
+			}
+
+			public IUndoRedoCache GetInverse()
+			{
+				var addRecord = new AddRecord(new CrashObjectEventArgs(DeleteArgs.Doc, DeleteArgs.Geometry, DeleteArgs.RhinoId, DeleteArgs.ChangeId, true));
+				return addRecord;
+			}
+		}
+
+		private record UpdateRecord : IUndoRedoCache
+		{
+			internal readonly CrashUpdateArgs UpdateArgs;
+			internal UpdateRecord(CrashUpdateArgs args)
+			{
+				UpdateArgs = args;
+			}
+
+			public IUndoRedoCache GetInverse()
+			{
+				throw new NotImplementedException("Not enough data here to implement a reset call");
+			}
+		}
+
+		private readonly Stack<IUndoRedoCache> UndoRecords;
+		private readonly Stack<IUndoRedoCache> RedoRecords;
+		private readonly AsyncQueue<IUndoRedoCache> EventQueue;
+		private readonly Dictionary<CrashObject, bool> SelectionQueue;
+
+		#endregion
+
+		private readonly CrashDoc ContextDocument;
 
 		internal EventWrapper(CrashDoc _crashDoc)
 		{
 			ContextDocument = _crashDoc;
-			UndoTransformRecords = new();
-			RedoTransformRecords = new();
+			UndoRecords = new();
+			RedoRecords = new();
+			EventQueue = new();
+			SelectionQueue = new();
 			RegisterDefaultEvents();
 		}
 
@@ -34,18 +129,38 @@ namespace Crash.Handlers.InternalEvents
 			DeRegisterDefaultEvents();
 		}
 
-		private bool EventShouldFire(CrashDoc comparisonDoc)
+		private bool IgnoreEvent(CrashDoc comparisonDoc,
+			bool ignoreIfCopy = true,
+			bool ignoreIfBusy = true,
+			bool ignoreIfTransform = true,
+			bool ignoreIfUndoActive = true,
+			bool ignoreIfRedoActive = true)
 		{
 			if (comparisonDoc != ContextDocument)
-				return false;
+				return true;
 
-			if (comparisonDoc is null or { CopyIsActive: false, DocumentIsBusy: true, TransformIsActive: true })
-			{
-				return false;
-			}
+			if (comparisonDoc is null)
+				return true;
 
-			return true;
+			if (!ignoreIfCopy && CopyIsActive)
+				return true;
+
+			if (!ignoreIfBusy && comparisonDoc.DocumentIsBusy)
+				return true;
+
+			if (!ignoreIfTransform && TransformIsActive)
+				return true;
+
+			if (!ignoreIfUndoActive && UndoIsActive)
+				return true;
+
+			if (!ignoreIfRedoActive && RedoIsActive)
+				return true;
+
+			return false;
 		}
+
+		#region Published Events
 
 		/// <summary>Invoked when a Crash Object is added and the Crash Doc is not busy</summary>
 		internal event AsyncEventHandler<CrashObjectEventArgs>? AddCrashObject;
@@ -68,72 +183,80 @@ namespace Crash.Handlers.InternalEvents
 		/// <summary>Is invoked when the Rhino View is modified</summary>
 		internal event AsyncEventHandler<CrashViewArgs>? CrashViewModified;
 
-		private async void CaptureAddRhinoObject(object sender, RhinoObjectEventArgs args)
+		#endregion
+
+		#region Capturers
+
+#pragma warning disable VSTHRD100 // Cannot avoid async void methods here
+
+		private void CaptureAddRhinoObject(object? sender, RhinoObjectEventArgs args)
 		{
-			await CaptureAddOrUndeleteRhinoObject(sender, args, false);
+			try
+			{
+				await CaptureAddOrUndeleteRhinoObject(sender, args, false);
+			}
+			catch (Exception e)
+			{
+				CrashApp.Log(e.Message);
+			}
 		}
 
-		private async void CaptureUnDeleteRhinoObject(object sender, RhinoObjectEventArgs args)
+		private void CaptureUnDeleteRhinoObject(object? sender, RhinoObjectEventArgs args)
 		{
-			await CaptureAddOrUndeleteRhinoObject(sender, args, true);
+			try
+			{
+				await CaptureAddOrUndeleteRhinoObject(sender, args, true);
+			}
+			catch (Exception e)
+			{
+				CrashApp.Log(e.Message);
+			}
 		}
 
-		private async Task CaptureAddOrUndeleteRhinoObject(object sender, RhinoObjectEventArgs args, bool undelete)
+		private void CaptureAddOrUndeleteRhinoObject(object? sender, RhinoObjectEventArgs args, bool undelete)
 		{
 			CrashApp.Log($"{nameof(CaptureAddRhinoObject)} event fired.", LogLevel.Trace);
 
 			var crashDoc =
 				CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
 
-			if (crashDoc is null || crashDoc.DocumentIsBusy || crashDoc.TransformIsActive)
+			if (IgnoreEvent(crashDoc, ignoreIfCopy: false))
 			{
 				return;
 			}
 
-			try
-			{
-				var crashArgs = new CrashObjectEventArgs(crashDoc, args.TheObject, unDelete: undelete);
-				if (AddCrashObject is not null)
-				{
-					await AddCrashObject.Invoke(sender, crashArgs);
-				}
-			}
-			catch (Exception e)
-			{
-				CrashApp.Log(e.Message);
-				Console.WriteLine(e);
-			}
+			var crashArgs = new CrashObjectEventArgs(crashDoc, args.TheObject, unDelete: undelete);
+			AddRecord add = new AddRecord(crashArgs);
+			Push(add);
 		}
 
-		private async void CaptureDeleteRhinoObject(object sender, RhinoObjectEventArgs args)
+		private void CaptureDeleteRhinoObject(object? sender, RhinoObjectEventArgs args)
 		{
-			CrashApp.Log($"{nameof(CaptureDeleteRhinoObject)} event fired.", LogLevel.Trace);
-
-			var crashDoc =
-				CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
-			if (crashDoc is null || crashDoc.DocumentIsBusy || crashDoc.TransformIsActive)
-			{
-				return;
-			}
-
 			try
 			{
+				CrashApp.Log($"{nameof(CaptureDeleteRhinoObject)} event fired.", LogLevel.Trace);
+
+				var crashDoc =
+					CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
+
+				if (IgnoreEvent(crashDoc, false, true, true))
+				{
+					return;
+				}
+
 				var crashArgs = new CrashObjectEventArgs(crashDoc, args.TheObject);
-				if (DeleteCrashObject is not null)
-				{
-					await DeleteCrashObject.Invoke(sender, crashArgs);
-				}
+				var deleteRecord = new DeleteRecord(crashArgs);
+				Push(deleteRecord);
 			}
 			catch (Exception e)
 			{
 				CrashApp.Log(e.Message);
-				Console.WriteLine(e);
 			}
 		}
 
-		private async void CaptureTransformRhinoObject(object sender, RhinoTransformObjectsEventArgs args)
+		private void CaptureTransformRhinoObject(object? sender, RhinoTransformObjectsEventArgs args)
 		{
-			if (TransformCrashObject is null)
+			if (TransformCrashObject is null || args is null)
 			{
 				return;
 			}
@@ -143,40 +266,42 @@ namespace Crash.Handlers.InternalEvents
 				return;
 			}
 
-			CrashApp.Log($"{nameof(CaptureTransformRhinoObject)} event fired.", LogLevel.Trace);
-
-			var rhinoDoc = args.Objects
-							   ?.FirstOrDefault(o => o.Document is not null)
-							   ?.Document;
-			var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
-			if (!EventShouldFire(crashDoc))
-			{
-				return;
-			}
-
-			crashDoc.TransformIsActive = true;
-
-			string commandName = string.Empty;
-			var stack = Command.GetCommandStack();
-			if (stack is not null && stack.Any())
-			{
-				commandName = Command.LookupCommandName(stack.Last(), true);
-				TransformCommands.Add(commandName.ToUpperInvariant());
-			}
-
 			try
 			{
+				CrashApp.Log($"{nameof(CaptureTransformRhinoObject)} event fired.", LogLevel.Trace);
+
+				var rhinoDoc = args.Objects
+								   ?.FirstOrDefault(o => o.Document is not null)
+								   ?.Document;
+				var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
+				if (!IgnoreEvent(crashDoc, ignoreIfCopy:false))
+				{
+					return;
+				}
+
+				if (args.ObjectsWillBeCopied)
+				{
+					CopyIsActive = true;
+					return;
+				}
+
+				TransformIsActive = true;
+
+				string commandName = string.Empty;
+				var stack = Command.GetCommandStack();
+				if (stack is not null && stack.Any())
+				{
+					commandName = Command.LookupCommandName(stack.Last(), true);
+					TransformCommands.Add(commandName.ToUpperInvariant());
+				}
 				var transform = args.Transform.ToCrash();
-				var crashArgs =
+				var transformArgs =
 					new CrashTransformEventArgs(crashDoc, transform,
 												args.Objects.Select(o => new CrashObject(o)),
 												args.ObjectsWillBeCopied);
 
-				await TransformCrashObject.Invoke(sender, crashArgs);
-
-				UndoTransformRecords.Push(new(commandName, crashArgs));
-
-				TransformCommands.Add(commandName);
+				var transformRecord = new TransformRecord(commandName, transformArgs);
+				Push(transformRecord);
 			}
 			catch (Exception e)
 			{
@@ -184,23 +309,20 @@ namespace Crash.Handlers.InternalEvents
 			}
 		}
 
-		private async void CaptureSelectRhinoObjects(object sender, RhinoObjectSelectionEventArgs args)
+		// TODO : Not using Queue for Select will result in them being sent first!
+		private void CaptureSelectRhinoObjects(object? sender, RhinoObjectSelectionEventArgs args)
 		{
 			if (SelectCrashObjects is null)
 			{
 				return;
 			}
 
-			CrashApp.Log($"{nameof(CaptureSelectRhinoObjects)} event fired.", LogLevel.Trace);
-
-			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-			if (!EventShouldFire(crashDoc))
-			{
-				return;
-			}
-
 			try
 			{
+				CrashApp.Log($"{nameof(CaptureSelectRhinoObjects)} event fired.", LogLevel.Trace);
+
+				var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
+
 				foreach (var rhinoObject in args.RhinoObjects)
 				{
 					if (!rhinoObject.TryGetChangeId(out var changeId))
@@ -211,33 +333,30 @@ namespace Crash.Handlers.InternalEvents
 					crashDoc.RealisedChangeTable.AddSelected(changeId);
 				}
 
-				var crashArgs = CrashSelectionEventArgs.CreateSelectionEvent(crashDoc, args.RhinoObjects
-																				 .Select(o => new CrashObject(o)));
-				await SelectCrashObjects.Invoke(sender, crashArgs);
+				PushSelections(args.RhinoObjects.Select(o => new CrashObject(o)), true);
 			}
 			catch (Exception e)
 			{
 				CrashApp.Log(e.Message);
 			}
 		}
-
-		private async void CaptureDeselectRhinoObjects(object sender, RhinoObjectSelectionEventArgs args)
+		private void CaptureDeselectRhinoObjects(object? sender, RhinoObjectSelectionEventArgs args)
 		{
 			if (SelectCrashObjects is null)
 			{
 				return;
 			}
 
-			CrashApp.Log($"{nameof(CaptureDeselectRhinoObjects)} event fired.", LogLevel.Trace);
-
-			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-			if (!EventShouldFire(crashDoc))
-			{
-				return;
-			}
-
 			try
 			{
+				CrashApp.Log($"{nameof(CaptureDeselectRhinoObjects)} event fired.", LogLevel.Trace);
+
+				var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
+				if (!IgnoreEvent(crashDoc))
+				{
+					return;
+				}
+
 				foreach (var rhinoObject in args.RhinoObjects)
 				{
 					if (!rhinoObject.TryGetChangeId(out var changeId))
@@ -248,40 +367,34 @@ namespace Crash.Handlers.InternalEvents
 					crashDoc.RealisedChangeTable.RemoveSelected(changeId);
 				}
 
-				var crashArgs =
-					CrashSelectionEventArgs.CreateDeSelectionEvent(crashDoc, args.RhinoObjects
-																	   .Select(o => new CrashObject(o)));
-
-				await SelectCrashObjects.Invoke(sender, crashArgs);
+				PushSelections(args.RhinoObjects.Select(o => new CrashObject(o)), false);
 			}
 			catch (Exception e)
 			{
 				CrashApp.Log(e.Message);
 			}
 		}
-
-		private async void CaptureDeselectAllRhinoObjects(object sender, RhinoDeselectAllObjectsEventArgs args)
+		private void CaptureDeselectAllRhinoObjects(object? sender, RhinoDeselectAllObjectsEventArgs args)
 		{
 			if (DeSelectCrashObjects is null)
 			{
 				return;
 			}
 
-			CrashApp.Log($"{nameof(CaptureDeselectAllRhinoObjects)} event fired.", LogLevel.Trace);
-
-			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-			if (!EventShouldFire(crashDoc))
-			{
-				return;
-			}
-
 			try
 			{
+				CrashApp.Log($"{nameof(CaptureDeselectAllRhinoObjects)} event fired.", LogLevel.Trace);
+
+				var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
+				if (!IgnoreEvent(crashDoc))
+				{
+					return;
+				}
+
 				var currentlySelected = crashDoc.RealisedChangeTable.GetSelected();
 				var crashObjects = currentlySelected.Select(cs => new CrashObject(cs, Guid.Empty));
-				var crashArgs = CrashSelectionEventArgs.CreateDeSelectionEvent(crashDoc, crashObjects);
+				PushSelections(crashObjects, false);
 
-				await DeSelectCrashObjects.Invoke(sender, crashArgs);
 				crashDoc.RealisedChangeTable.ClearSelected();
 			}
 			catch (Exception e)
@@ -290,7 +403,19 @@ namespace Crash.Handlers.InternalEvents
 			}
 		}
 
-		private async void CaptureModifyRhinoObjectAttributes(object sender, RhinoModifyObjectAttributesEventArgs args)
+		private void PushSelections(IEnumerable<CrashObject> selection, bool select)
+		{
+			foreach (var selected in selection)
+			{
+				if (SelectionQueue.TryGetValue(selected, out bool isSelected) && isSelected != select)
+					SelectionQueue.Remove(selected);
+
+				else
+					SelectionQueue.Add(selected, select);
+			}
+		}
+
+		private void CaptureModifyRhinoObjectAttributes(object? sender, RhinoModifyObjectAttributesEventArgs args)
 		{
 			if (UpdateCrashObject is null)
 			{
@@ -300,7 +425,7 @@ namespace Crash.Handlers.InternalEvents
 			CrashApp.Log($"{nameof(CaptureModifyRhinoObjectAttributes)} event fired.", LogLevel.Trace);
 
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-			if (!EventShouldFire(crashDoc))
+			if (!IgnoreEvent(crashDoc))
 			{
 				return;
 			}
@@ -328,7 +453,7 @@ namespace Crash.Handlers.InternalEvents
 				var crashObject = new CrashObject(change.Id, args.RhinoObject.Id);
 
 				var updateArgs = new CrashUpdateArgs(crashDoc, crashObject, updates);
-				await UpdateCrashObject.Invoke(sender, updateArgs);
+				Push(new UpdateRecord(updateArgs));
 			}
 			catch (Exception e)
 			{
@@ -336,89 +461,41 @@ namespace Crash.Handlers.InternalEvents
 			}
 		}
 
-		private async void CaptureUndoRedo(object sender, UndoRedoEventArgs args)
+		// TODO : Does this fire if redo cannot be done in Rhino?
+		private void CaptureUndoRedo(object? sender, UndoRedoEventArgs args)
 		{
-			if (TransformCrashObject is null)
-				return;
-
 			var rhinoDoc = RhinoDoc.ActiveDoc;
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
 			if (crashDoc != ContextDocument)
 				return;
 
-			var commandId = args.CommandId;
-			var commandName = Command.LookupCommandName(commandId, true);
-			if (!IsTransformCommand(commandName))
+			if (crashDoc.DocumentIsBusy)
 				return;
 
-			// TODO : Check for Doc is busy etc?
+			if ((args.IsBeginUndo && UndoRecords.Count == 0) ||
+				(args.IsBeginRedo && RedoRecords.Count == 0))
+				return;
 
-			if (args.IsBeginUndo || args.IsBeginRedo)
+			UndoIsActive = args.IsBeginUndo;
+			RedoIsActive = args.IsBeginRedo;
+
+			// TODO : Certain scenarios empty the redo queue.
+			// A new Add for example should empty it.
+			// Maybe we can check Rhino to see if Redo is possible
+			if (args.IsEndUndo && UndoRecords.Count > 0)
 			{
-				CrashDocRegistry.ActiveDoc.TransformIsActive = true;
-			}	
-
-			if (args.IsEndUndo)
-			{
-				// If the name is not equal then the Transform was enacted, but not sent to the server
-				var peekResult = UndoTransformRecords.Peek();
-
-				if (!peekResult.Name.Equals(commandName))
-				{
-					return;
-				}
-
-				var transformRecord = UndoTransformRecords.Pop();
-				await TransformCrashObject.Invoke(sender, transformRecord.TransformArgs);
-				RedoTransformRecords.Push(GetInvertedRecord(transformRecord));
+				var record = UndoRecords.Pop();
+				Push(record, false); // We went backwards
 			}
-			else if (args.IsEndRedo)
+			else if (args.IsEndRedo && RedoRecords.Count > 0)
 			{
-
-				// If the name is not equal then the Transform was enacted, but not sent to the server
-				var peekResult = UndoTransformRecords.Peek();
-
-				if (!peekResult.Name.Equals(commandName))
-				{
-					return;
-				}
-
-				var transformRecord = RedoTransformRecords.Pop();
-
-				await TransformCrashObject.Invoke(sender, transformRecord.TransformArgs);
-
-				UndoTransformRecords.Push(GetInvertedRecord(transformRecord));
+				var record = RedoRecords.Pop();
+				Push(record);
 			}
 		}
 
-		private TransformRecord GetInvertedRecord(TransformRecord transformRecord)
-		{
-			var name = transformRecord.Name;
-			var args = transformRecord.TransformArgs;
-
-			var rhinoTransform = args.Transform.ToRhino();
-			rhinoTransform.TryGetInverse(out Transform invertedRhinoTransform);
-			var invertedCrashTransform = invertedRhinoTransform.ToCrash();
-
-			return new TransformRecord(name,
-				new CrashTransformEventArgs(args.Doc, invertedCrashTransform, args.Objects, args.ObjectsWillBeCopied));
-		}
-
-		private static HashSet<string> TransformCommands = new();
-		private static bool IsTransformCommand(string commandName)
-			=> TransformCommands.Contains(commandName.ToUpperInvariant());
-
-		private async void CaptureBeginCommand(object sender, CommandEventArgs args)
-		{
-			var commandName = args.CommandEnglishName.ToUpperInvariant();
-		}
-
-		private async void CaptureEndCommand(object sender, CommandEventArgs args)
-		{
-			var commandName = args.CommandEnglishName.ToUpperInvariant();
-		}
-
-		private async void CaptureRhinoViewModified(object sender, ViewEventArgs args)
+		// TODO : Use Queue?
+		private async void CaptureRhinoViewModified(object? sender, ViewEventArgs args)
 		{
 			if (CrashViewModified is null)
 			{
@@ -442,21 +519,126 @@ namespace Crash.Handlers.InternalEvents
 			}
 		}
 
-		private void CaptureIdle(object sender, EventArgs e)
+		private void Push(IUndoRedoCache add, bool forward = true)
+		{
+			EventQueue.Enqueue(add);
+
+			if (forward)
+				UndoRecords.Push(add.GetInverse());
+			else
+				RedoRecords.Push(add.GetInverse());
+		}
+
+		private async void CaptureIdle(object? _, EventArgs __)
 		{
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(RhinoDoc.ActiveDoc);
 			if (crashDoc != ContextDocument)
 				return;
 
-			if (ContextDocument.DocumentIsBusy)
-				ContextDocument.DocumentIsBusy = false;
-			
-			if (ContextDocument.TransformIsActive)
-				ContextDocument.TransformIsActive = false;
-			
-			if (ContextDocument.CopyIsActive)
-				ContextDocument.CopyIsActive = false;
+			TransformIsActive = false;
+			CopyIsActive = false;
+			RedoIsActive = false;
+			UndoIsActive = false;
+
+			if (EventQueue.Count <= 0 && SelectionQueue.Count <= 0)
+				return;
+
+			try
+			{
+				while (EventQueue.Count > 0)
+				{
+					var cache = await EventQueue.DequeueAsync();
+					var cacheAction = cache switch
+					{
+						AddRecord add => SendAddAsync(add),
+						TransformRecord transform => SendTransformAsync(transform),
+						DeleteRecord delete => SendDeleteAsync(delete),
+						UpdateRecord update => SendUpdateAsync(update),
+						_ => Task.CompletedTask
+					};
+
+					await cacheAction;
+				}
+
+				foreach(var queueItem in SelectionQueue)
+				{
+					bool isSelected = queueItem.Value;
+					var theObject = queueItem.Key;
+					if (isSelected)
+						await SendSelectionAsync(theObject);
+					else
+						await SendDeselectionAsync(theObject);
+				}
+			}
+			catch (Exception e)
+			{
+				CrashApp.Log(e.Message);
+				Console.WriteLine(e);
+			}
 		}
+#pragma warning restore VSTHRD100 // Avoid async void methods
+
+		#region Idle Push
+
+		private async Task SendDeselectionAsync(CrashObject theObject)
+		{
+			if (DeSelectCrashObjects is not null)
+			{
+				var crashArgs = CrashSelectionEventArgs.CreateDeSelectionEvent(ContextDocument, new CrashObject[] { theObject });
+				await DeSelectCrashObjects.Invoke(this, crashArgs);
+			}
+		}
+
+		private async Task SendSelectionAsync(CrashObject theObject)
+		{
+			if (SelectCrashObjects is not null)
+			{
+				var crashArgs = CrashSelectionEventArgs.CreateSelectionEvent(ContextDocument, new CrashObject[] { theObject });
+				await SelectCrashObjects.Invoke(this, crashArgs);
+			}
+		}
+
+		private async Task SendUpdateAsync(UpdateRecord update)
+		{
+			if (UpdateCrashObject is not null)
+			{
+				await UpdateCrashObject.Invoke(this, update.UpdateArgs);
+			}
+		}
+
+		private async Task SendDeleteAsync(DeleteRecord delete)
+		{
+			if (DeleteCrashObject is not null)
+			{
+				await DeleteCrashObject.Invoke(this, delete.DeleteArgs);
+			}
+		}
+
+		private async Task SendTransformAsync(TransformRecord transform)
+		{
+			if (TransformCrashObject is not null)
+			{
+				await TransformCrashObject.Invoke(this, transform.TransformArgs);
+			}
+		}
+
+		private async Task SendAddAsync(AddRecord addRecord)
+		{
+			if (AddCrashObject is not null)
+			{
+				await AddCrashObject.Invoke(this, addRecord.AddArgs);
+			}
+		}
+
+		#endregion
+
+		#endregion
+
+		private static HashSet<string> TransformCommands = new();
+		private static bool IsTransformCommand(string commandName)
+			=> TransformCommands.Contains(commandName.ToUpperInvariant());
+
+		#region Register Events
 
 		private void RegisterDefaultEvents()
 		{
@@ -473,8 +655,8 @@ namespace Crash.Handlers.InternalEvents
 
 			// Command Events
 			Command.UndoRedo += CaptureUndoRedo;
-			Command.BeginCommand += CaptureBeginCommand;
-			Command.EndCommand += CaptureEndCommand;
+			// Command.BeginCommand += CaptureBeginCommand;
+			// Command.EndCommand += CaptureEndCommand;
 
 			// App Events
 			RhinoApp.Idle += CaptureIdle;
@@ -501,8 +683,8 @@ namespace Crash.Handlers.InternalEvents
 
 			// Command Events
 			Command.UndoRedo -= CaptureUndoRedo;
-			Command.BeginCommand -= CaptureBeginCommand;
-			Command.EndCommand -= CaptureEndCommand;
+			// Command.BeginCommand -= CaptureBeginCommand;
+			// Command.EndCommand -= CaptureEndCommand;
 
 			// Doc Events
 			// TODO : Implement
@@ -511,6 +693,8 @@ namespace Crash.Handlers.InternalEvents
 			// View Events
 			RhinoView.Modified -= CaptureRhinoViewModified;
 		}
+
+		#endregion
 
 		// TODO : Read up on Covariants again
 		internal delegate Task AsyncEventHandler<in TEventArgs>(object? sender, TEventArgs e);
