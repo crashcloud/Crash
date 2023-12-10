@@ -511,12 +511,12 @@ namespace Crash.Handlers.InternalEvents
 			RedoIsActive = false;
 			UndoIsActive = false;
 
-			if (EventQueue.Count <= 0 && SelectionQueue.Count <= 0)
+			if (EventQueue.IsEmpty && SelectionQueue.Count <= 0)
 				return;
 
 			try
 			{
-				while (EventQueue.Count > 0)
+				while (!EventQueue.IsEmpty)
 				{
 					var cache = await EventQueue.DequeueAsync();
 					var cacheAction = cache switch
@@ -531,7 +531,9 @@ namespace Crash.Handlers.InternalEvents
 					await cacheAction;
 				}
 
-				foreach(var queueItem in SelectionQueue.ToArray())
+				var selectionQueue = SelectionQueue.ToArray();
+				SelectionQueue.Clear();
+				foreach (var queueItem in selectionQueue)
 				{
 					bool isSelected = queueItem.Value;
 					Guid changeId = queueItem.Key;
@@ -547,7 +549,6 @@ namespace Crash.Handlers.InternalEvents
 						await SendDeselectionAsync(theObject);
 				}
 
-				SelectionQueue.Clear();
 			}
 			catch (Exception e)
 			{
