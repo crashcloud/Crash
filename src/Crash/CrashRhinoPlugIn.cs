@@ -65,7 +65,7 @@ namespace Crash
 
 		#region Crash Plugin Specifics
 
-		private void CrashDocRegistryOnDocumentDisposed(object sender, CrashEventArgs e)
+		private void CrashDocRegistryOnDocumentDisposed(object? sender, CrashEventArgs e)
 		{
 			var dispatcher = e.CrashDoc.Dispatcher as EventDispatcher;
 			dispatcher?.DeregisterDefaultServerCalls();
@@ -74,7 +74,7 @@ namespace Crash
 			InteractivePipe.ClearChangeDefinitions();
 		}
 
-		private void CrashDocRegistryOnDocumentRegistered(object sender, CrashEventArgs e)
+		private void CrashDocRegistryOnDocumentRegistered(object? sender, CrashEventArgs e)
 		{
 			var dispatcher = new EventDispatcher(e.CrashDoc);
 			dispatcher.RegisterDefaultServerNotifiers();
@@ -82,8 +82,6 @@ namespace Crash
 			RegisterDefinitions(dispatcher);
 			e.CrashDoc.Dispatcher = dispatcher;
 			InteractivePipe.Active.Enabled = true;
-
-			e.CrashDoc.LocalClient.OnInit += LocalClientOnOnInit;
 		}
 
 		private void RegisterDefinitions(EventDispatcher dispatcher)
@@ -95,35 +93,6 @@ namespace Crash
 				var changeDefinition = changeEnuner.Current;
 				dispatcher.RegisterDefinition(changeDefinition);
 				InteractivePipe.RegisterChangeDefinition(changeDefinition);
-			}
-		}
-
-		private async void LocalClientOnOnInit(object? sender, CrashClient.CrashInitArgs e)
-		{
-			e.CrashDoc.LocalClient.OnInit -= LocalClientOnOnInit;
-			var dispatcher = e.CrashDoc.Dispatcher as EventDispatcher;
-			if (dispatcher is null)
-			{
-				return;
-			}
-
-			e.CrashDoc.DocumentIsBusy = true;
-			try
-			{
-				foreach (var change in e.Changes)
-				{
-					// TODO : Implement Async
-					await dispatcher.NotifyClientAsync(e.CrashDoc, change);
-				}
-			}
-			catch(Exception ex)
-			{
-				;
-				RhinoApp.WriteLine(ex.Message);
-			}
-			finally
-			{
-				e.CrashDoc.DocumentIsBusy = false;
 			}
 		}
 

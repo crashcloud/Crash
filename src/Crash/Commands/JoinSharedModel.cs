@@ -102,13 +102,12 @@ namespace Crash.Commands
 			}
 		}
 
-		private void QueueOnOnCompleted(object sender, CrashEventArgs e)
+		private void QueueOnOnCompleted(object? sender, CrashEventArgs e)
 		{
 			e.CrashDoc.Queue.OnCompletedQueue -= QueueOnOnCompleted;
 			UsersForm.CloseActiveForm();
 			UsersForm.ShowForm();
 		}
-
 
 		private static bool _GetServerURL(ref string url)
 		{

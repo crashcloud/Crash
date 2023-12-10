@@ -77,7 +77,7 @@ namespace Crash.Handlers
 			return crashDoc;
 		}
 
-		private static void RegisterQueue(object sender, CrashClient.CrashInitArgs e)
+		private static void RegisterQueue(object? sender, CrashClient.CrashInitArgs e)
 		{
 			RhinoApp.WriteLine("Loading Changes ...");
 
@@ -88,7 +88,7 @@ namespace Crash.Handlers
 			                 };
 		}
 
-		private static void RedrawOncompleted(object sender, CrashEventArgs e)
+		private static void RedrawOncompleted(object? sender, CrashEventArgs e)
 		{
 			var rhinoDoc = GetRelatedDocument(e.CrashDoc);
 			rhinoDoc.Views.Redraw();
