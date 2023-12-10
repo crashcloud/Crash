@@ -40,7 +40,7 @@ namespace Crash.UI.JoinModel
 
 		public event EventHandler OnLoaded;
 
-		internal void SaveSharedModels(object sender, DocumentSaveEventArgs args)
+		internal void SaveSharedModels(object? sender, DocumentSaveEventArgs args)
 		{
 			var json = JsonSerializer.Serialize(SharedModels, opts);
 

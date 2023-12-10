@@ -5,7 +5,7 @@ using Rhino.DocObjects;
 namespace Crash.Handlers.InternalEvents
 {
 	/// <summary>Wraps a Rhino Object and Change</summary>
-	public struct CrashObject
+	public readonly struct CrashObject
 	{
 		/// <summary>The Change Id</summary>
 		public readonly Guid ChangeId;
@@ -24,5 +24,8 @@ namespace Crash.Handlers.InternalEvents
 			ChangeId = changeId;
 			RhinoId = rhinoId;
 		}
+
+		public override int GetHashCode() => HashCode.Combine(ChangeId, RhinoId);
+
 	}
 }

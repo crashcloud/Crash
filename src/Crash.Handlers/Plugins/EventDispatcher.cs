@@ -149,7 +149,7 @@ namespace Crash.Handlers.Plugins
 			CrashApp.Log($"User {change.Owner} registered.", LogLevel.Trace);
 		}
 
-		private async Task NotifyServerOfAddCrashObject(object sender, CrashObjectEventArgs args)
+		private async Task NotifyServerOfAddCrashObject(object? sender, CrashObjectEventArgs args)
 		{
 			// TODO : Include Update?
 			await NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary, sender,
@@ -157,37 +157,37 @@ namespace Crash.Handlers.Plugins
 			CrashApp.Log($"{nameof(NotifyServerOfAddCrashObject)} notified server.", LogLevel.Trace);
 		}
 
-		private async Task NotifyServerOfDeleteCrashObject(object sender, CrashObjectEventArgs crashArgs)
+		private async Task NotifyServerOfDeleteCrashObject(object? sender, CrashObjectEventArgs crashArgs)
 		{
 			await NotifyServerAsync(ChangeAction.Remove, sender, crashArgs, crashArgs.Doc);
 			CrashApp.Log($"{nameof(NotifyServerOfDeleteCrashObject)} notified server.", LogLevel.Trace);
 		}
 
-		private async Task NotifyServerOfTransformCrashObject(object sender, CrashTransformEventArgs crashArgs)
+		private async Task NotifyServerOfTransformCrashObject(object? sender, CrashTransformEventArgs crashArgs)
 		{
 			await NotifyServerAsync(ChangeAction.Transform, sender, crashArgs, crashArgs.Doc);
 			CrashApp.Log($"{nameof(NotifyServerOfTransformCrashObject)} notified server.", LogLevel.Trace);
 		}
 
-		private async Task NotifyServerOfSelectCrashObjects(object sender, CrashSelectionEventArgs crashArgs)
+		private async Task NotifyServerOfSelectCrashObjects(object? sender, CrashSelectionEventArgs crashArgs)
 		{
 			await NotifyServerAsync(ChangeAction.Locked, sender, crashArgs, crashArgs.Doc);
 			CrashApp.Log($"{nameof(NotifyServerOfSelectCrashObjects)} notified server.", LogLevel.Trace);
 		}
 
-		private async Task NotifyServerOfDeSelectCrashObjects(object sender, CrashSelectionEventArgs crashArgs)
+		private async Task NotifyServerOfDeSelectCrashObjects(object? sender, CrashSelectionEventArgs crashArgs)
 		{
 			await NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs, crashArgs.Doc);
 			CrashApp.Log($"{nameof(NotifyServerOfDeSelectCrashObjects)} notified server.", LogLevel.Trace);
 		}
 
-		private async Task NotifyServerOfUpdateCrashObject(object sender, CrashUpdateArgs args)
+		private async Task NotifyServerOfUpdateCrashObject(object? sender, CrashUpdateArgs args)
 		{
 			await NotifyServerAsync(ChangeAction.Update, sender, args, args.Doc);
 			CrashApp.Log($"{nameof(NotifyServerOfUpdateCrashObject)} notified server.", LogLevel.Trace);
 		}
 
-		private async Task NotifyServerOfCrashViewModified(object sender, CrashViewArgs crashArgs)
+		private async Task NotifyServerOfCrashViewModified(object? sender, CrashViewArgs crashArgs)
 		{
 			await NotifyServerAsync(ChangeAction.Add, sender, crashArgs, crashArgs.Doc);
 		}
@@ -195,7 +195,7 @@ namespace Crash.Handlers.Plugins
 		/// <summary>Registers the default server notifiers</summary>
 		public void RegisterDefaultServerNotifiers()
 		{
-			_eventWrapper = new EventWrapper();
+			_eventWrapper = new EventWrapper(_crashDoc);
 			_eventWrapper.AddCrashObject += NotifyServerOfAddCrashObject;
 			_eventWrapper.DeleteCrashObject += NotifyServerOfDeleteCrashObject;
 			_eventWrapper.TransformCrashObject += NotifyServerOfTransformCrashObject;
