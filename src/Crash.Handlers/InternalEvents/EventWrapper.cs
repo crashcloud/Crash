@@ -1,7 +1,5 @@
-﻿using Crash.Changes;
-using Crash.Common.App;
+﻿using Crash.Common.App;
 using Crash.Common.Document;
-using Crash.Geometry;
 using Crash.Utils;
 
 using Microsoft.Extensions.Logging;
@@ -11,19 +9,25 @@ using Rhino;
 using Rhino.Commands;
 using Rhino.Display;
 using Rhino.DocObjects;
-using Rhino.UI.Controls;
 
 namespace Crash.Handlers.InternalEvents
 {
+
 	internal class EventWrapper : IDisposable
 	{
-
 		#region Flags
 
 		private bool CopyIsActive { get; set; }
 		private bool TransformIsActive { get; set; }
 		private bool UndoIsActive { get; set; }
 		private bool RedoIsActive { get; set; }
+		private bool CustomActionIsActive { get; set; }
+
+		#endregion
+
+		#region Captured Data
+		private List<RhinoObject> Created { get; set; } = new();
+		private List<RhinoObject> Deleted { get; set; } = new();
 
 		#endregion
 
@@ -31,11 +35,8 @@ namespace Crash.Handlers.InternalEvents
 
 		private interface IUndoRedoCache
 		{
-
 			IUndoRedoCache GetInverse();
 		}
-
-		private record struct SelectionState(CrashObject TheObject, bool IsSelected);
 
 		// TODO : Include Plane Cache or otherwise
 		private record TransformRecord : IUndoRedoCache
@@ -73,6 +74,31 @@ namespace Crash.Handlers.InternalEvents
 				var deleteRecord = new DeleteRecord(new CrashObjectEventArgs(AddArgs.Doc, AddArgs.Geometry, AddArgs.RhinoId, AddArgs.ChangeId, false));
 				return deleteRecord;
 			}
+		}
+
+		/// <summary>Records an Event that converts one or more change(s) into one or more change(s)
+		/// A good example is Explode or BooleanUnion</summary>
+		private record ModifyGeometryRecord : IUndoRedoCache
+		{
+			internal readonly CrashObjectEventArgs[] AddArgs;
+			internal readonly CrashObjectEventArgs[] RemoveArgs;
+
+			internal ModifyGeometryRecord(CrashDoc doc,
+											IEnumerable<RhinoObject> addedObjects,
+											IEnumerable<RhinoObject> removedObjects)
+			{
+
+			}
+
+			private ModifyGeometryRecord(CrashObjectEventArgs[] addedArgs,
+										CrashObjectEventArgs[] removedArgs)
+			{
+				AddArgs = addedArgs;
+				RemoveArgs = removedArgs;
+			}
+
+			public IUndoRedoCache GetInverse()
+				=> new ModifyGeometryRecord(RemoveArgs, AddArgs);
 		}
 
 		private record DeleteRecord : IUndoRedoCache
@@ -134,7 +160,8 @@ namespace Crash.Handlers.InternalEvents
 			bool ignoreIfBusy = true,
 			bool ignoreIfTransform = true,
 			bool ignoreIfUndoActive = true,
-			bool ignoreIfRedoActive = true)
+			bool ignoreIfRedoActive = true,
+			bool ignoreIfCustomActionIsActive = true)
 		{
 			if (comparisonDoc is null)
 				return true;
@@ -155,6 +182,9 @@ namespace Crash.Handlers.InternalEvents
 				return true;
 
 			if (ignoreIfRedoActive && RedoIsActive)
+				return true;
+
+			if (ignoreIfCustomActionIsActive && CustomActionIsActive)
 				return true;
 
 			return false;
@@ -200,6 +230,8 @@ namespace Crash.Handlers.InternalEvents
 			var crashDoc =
 				CrashDocRegistry.GetRelatedDocument(args.TheObject.Document);
 
+			Created.Add(args.TheObject);
+
 			if (IgnoreEvent(crashDoc, ignoreIfCopy: false))
 			{
 				return;
@@ -214,6 +246,8 @@ namespace Crash.Handlers.InternalEvents
 		{
 			try
 			{
+				Deleted.Add(args.TheObject);
+
 				CrashApp.Log($"{nameof(CaptureDeleteRhinoObject)} event fired.", LogLevel.Trace);
 
 				var crashDoc =
@@ -254,7 +288,7 @@ namespace Crash.Handlers.InternalEvents
 								   ?.FirstOrDefault(o => o.Document is not null)
 								   ?.Document;
 				var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
-				if (IgnoreEvent(crashDoc, ignoreIfCopy:false))
+				if (IgnoreEvent(crashDoc, ignoreIfCopy: false))
 				{
 					return;
 				}
@@ -367,6 +401,40 @@ namespace Crash.Handlers.InternalEvents
 			catch (Exception e)
 			{
 				CrashApp.Log(e.Message);
+			}
+		}
+
+		private void CaptureBeginCommand(object? sender, CommandEventArgs e)
+		{
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(e.Document);
+			if (crashDoc != ContextDocument)
+				return;
+
+			if (Deleted.Count > 0 && Created.Count > 0)
+			{
+				CustomActionIsActive = true;
+			}
+		}
+
+		// Fires after all other Events
+		private void CaptureEndCommand(object? sender, CommandEventArgs e)
+		{
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(e.Document);
+			if (crashDoc != ContextDocument)
+				return;
+
+			// Reset
+			TransformIsActive = false;
+			CopyIsActive = false;
+			RedoIsActive = false;
+			UndoIsActive = false;
+			CustomActionIsActive = false;
+			Created.Clear();
+			Deleted.Clear();
+
+			if (Deleted.Count > 0 && Created.Count > 0)
+			{
+				Push(new ModifyGeometryRecord(crashDoc, Created, Deleted));
 			}
 		}
 
@@ -510,6 +578,7 @@ namespace Crash.Handlers.InternalEvents
 			CopyIsActive = false;
 			RedoIsActive = false;
 			UndoIsActive = false;
+			CustomActionIsActive = false;
 
 			if (EventQueue.IsEmpty && SelectionQueue.Count <= 0)
 				return;
@@ -525,6 +594,7 @@ namespace Crash.Handlers.InternalEvents
 						TransformRecord transform => SendTransformAsync(transform),
 						DeleteRecord delete => SendDeleteAsync(delete),
 						UpdateRecord update => SendUpdateAsync(update),
+						ModifyGeometryRecord modify => SendModifyAsync(modify),
 						_ => Task.CompletedTask
 					};
 
@@ -610,6 +680,25 @@ namespace Crash.Handlers.InternalEvents
 			}
 		}
 
+		private async Task SendModifyAsync(ModifyGeometryRecord modifyRecord)
+		{
+			if (AddCrashObject is not null)
+			{
+				foreach (var addArgs in modifyRecord.AddArgs)
+				{
+					await AddCrashObject.Invoke(this, addArgs);
+				}
+			}
+
+			if (DeleteCrashObject is not null)
+			{
+				foreach (var removeArgs in modifyRecord.RemoveArgs)
+				{
+					await DeleteCrashObject.Invoke(this, removeArgs);
+				}
+			}
+		}
+
 		#endregion
 
 		#endregion
@@ -631,8 +720,8 @@ namespace Crash.Handlers.InternalEvents
 
 			// Command Events
 			Command.UndoRedo += CaptureUndoRedo;
-			// Command.BeginCommand += CaptureBeginCommand;
-			// Command.EndCommand += CaptureEndCommand;
+			Command.BeginCommand += CaptureBeginCommand;
+			Command.EndCommand += CaptureEndCommand;
 
 			// App Events
 			RhinoApp.Idle += CaptureIdle;
@@ -659,8 +748,8 @@ namespace Crash.Handlers.InternalEvents
 
 			// Command Events
 			Command.UndoRedo -= CaptureUndoRedo;
-			// Command.BeginCommand -= CaptureBeginCommand;
-			// Command.EndCommand -= CaptureEndCommand;
+			Command.BeginCommand -= CaptureBeginCommand;
+			Command.EndCommand -= CaptureEndCommand;
 
 			// Doc Events
 			// TODO : Implement
