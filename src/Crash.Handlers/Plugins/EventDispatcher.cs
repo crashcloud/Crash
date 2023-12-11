@@ -3,6 +3,7 @@ using Crash.Common.Communications;
 using Crash.Common.Document;
 using Crash.Common.Logging;
 using Crash.Handlers.InternalEvents;
+using Crash.Handlers.InternalEvents.Wrapping;
 
 using Microsoft.Extensions.Logging;
 
