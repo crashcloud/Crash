@@ -123,11 +123,11 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 
 			if (forward)
 			{
-				UndoRecords.Push(add.GetInverse());
+				UndoRecords.Push(add);
 			}
 			else
 			{
-				RedoRecords.Push(add.GetInverse());
+				RedoRecords.Push(add);
 			}
 		}
 
@@ -178,16 +178,14 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 
 					var theObject = new CrashObject(changeId, rhinoId);
 
+					var crashArgs =
+						CrashSelectionEventArgs.CreateDeSelectionEvent(ContextDocument, new[] { theObject });
 					if (isSelected)
 					{
-						var crashArgs =
-							CrashSelectionEventArgs.CreateSelectionEvent(ContextDocument, new[] { theObject });
 						await SelectCrashObjects.Invoke(this, crashArgs);
 					}
 					else
 					{
-						var crashArgs =
-							CrashSelectionEventArgs.CreateDeSelectionEvent(ContextDocument, new[] { theObject });
 						await DeSelectCrashObjects.Invoke(this, crashArgs);
 					}
 				}
@@ -202,9 +200,9 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 
 		private async Task SendModifyAsync(ModifyGeometryRecord modifyRecord)
 		{
-			foreach (var removeArgs in modifyRecord.RemoveArgs)
+			foreach (var addArgs in modifyRecord.AddArgs)
 			{
-				await DeleteCrashObject.Invoke(this, removeArgs);
+				await AddCrashObject.Invoke(this, addArgs);
 			}
 
 			foreach (var removeArgs in modifyRecord.RemoveArgs)
@@ -291,7 +289,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 		private void CaptureSelectRhinoObjects(object? sender, RhinoObjectSelectionEventArgs args)
 		{
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-			if (IgnoreEvent(crashDoc, false, ignoreIfUndoActive: true, ignoreIfRedoActive: true))
+			if (IgnoreEvent(crashDoc, false, ignoreIfUndoActive: false, ignoreIfRedoActive: false))
 			{
 				return;
 			}
@@ -313,7 +311,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 		private void CaptureDeselectRhinoObjects(object? sender, RhinoObjectSelectionEventArgs args)
 		{
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-			if (IgnoreEvent(crashDoc, false, ignoreIfUndoActive: true, ignoreIfRedoActive: true))
+			if (IgnoreEvent(crashDoc, false, ignoreIfUndoActive: false, ignoreIfRedoActive: false))
 			{
 				return;
 			}
@@ -335,7 +333,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 		private void CaptureDeselectAllRhinoObjects(object? sender, RhinoDeselectAllObjectsEventArgs args)
 		{
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-			if (IgnoreEvent(crashDoc, false, ignoreIfUndoActive: true, ignoreIfRedoActive: true))
+			if (IgnoreEvent(crashDoc, false, ignoreIfUndoActive: false, ignoreIfRedoActive: false))
 			{
 				return;
 			}
@@ -353,19 +351,18 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 				return;
 			}
 
-			if (Deleted.Count > 0 && Created.Count > 0)
+			if (!UndoIsActive && !RedoIsActive)
 			{
-				// On the initial creation we need to remove the adds/removes created by the initial events
-				var modifyGeometryRecord = new ModifyGeometryRecord(crashDoc, Created, Deleted);
-				if (!UndoIsActive && !RedoIsActive)
+				if (Deleted.Count > 0 && Created.Count > 0)
 				{
 					for (var i = 0; i < Created.Count + Deleted.Count; i++)
 					{
 						UndoRecords.Pop();
 					}
-				}
 
-				Push(modifyGeometryRecord, !UndoIsActive);
+					var modifyGeometryRecord = new ModifyGeometryRecord(crashDoc, Created, Deleted);
+					Push(modifyGeometryRecord);
+				}
 			}
 
 			// Reset
@@ -477,12 +474,12 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			if (args.IsEndUndo && UndoRecords.Count > 0)
 			{
 				var record = UndoRecords.Pop();
-				Push(record, false); // We went backwards
+				Push(record.GetInverse(), false); // We went backwards
 			}
 			else if (args.IsEndRedo && RedoRecords.Count > 0)
 			{
 				var record = RedoRecords.Pop();
-				Push(record);
+				Push(record.GetInverse());
 			}
 		}
 

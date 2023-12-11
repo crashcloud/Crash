@@ -18,7 +18,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			IEnumerable<RhinoObject> removedObjects)
 		{
 			AddArgs = addedObjects.Select(ao => new CrashObjectEventArgs(doc, ao)).ToArray();
-			RemoveArgs = removedObjects.Select(ao => new CrashObjectEventArgs(doc, ao)).ToArray();
+			RemoveArgs = removedObjects.Select(ro => new CrashObjectEventArgs(doc, ro)).ToArray();
 		}
 
 		private ModifyGeometryRecord(CrashObjectEventArgs[] addedArgs,
