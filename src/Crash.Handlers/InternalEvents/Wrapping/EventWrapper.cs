@@ -1,5 +1,6 @@
 ﻿using Crash.Common.App;
 using Crash.Common.Document;
+using Crash.Handlers.Changes;
 using Crash.Utils;
 
 using Microsoft.Extensions.Logging;
@@ -233,6 +234,14 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 
 			Created.Add(args.TheObject);
 
+			if (!args.TheObject.TryGetChangeId(out _))
+			{
+				var newChange = GeometryChange.CreateChange(Guid.NewGuid(), crashDoc.Users.CurrentUser.Name,
+				                                            ChangeAction.Add | ChangeAction.Temporary,
+				                                            args.TheObject.Geometry);
+				args.TheObject.SyncHost(newChange, crashDoc);
+			}
+
 			var crashArgs = new CrashObjectEventArgs(crashDoc, args.TheObject, unDelete: undelete);
 			var add = new AddRecord(crashArgs);
 			Push(add);
@@ -358,6 +367,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 					for (var i = 0; i < Created.Count + Deleted.Count; i++)
 					{
 						UndoRecords.Pop();
+						EventQueue.Dequeue();
 					}
 
 					var modifyGeometryRecord = new ModifyGeometryRecord(crashDoc, Created, Deleted);
