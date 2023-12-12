@@ -161,23 +161,25 @@ namespace Crash.Common.Communications
 
 		private async Task ServerClosedUnexpectidly()
 		{
-			
+			OnServerClosed?.Invoke(this, EventArgs.Empty);
 		}
 
 		private async Task ServerIndicatedPossibleClosure()
 		{
-			
 		}
 
 		private async Task ChangesCouldNotBeSent()
 		{
-			
+			OnPushChangeFailed?.Invoke(this, EventArgs.Empty);
 		}
 
 		private Task ConnectionReconnectedAsync(string? arg)
 		{
 			return Task.CompletedTask;
 		}
+
+		public event EventHandler OnServerClosed;
+		public event EventHandler OnPushChangeFailed;
 
 		#endregion
 

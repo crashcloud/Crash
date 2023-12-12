@@ -6,8 +6,9 @@ using Crash.Handlers.Plugins.Camera;
 using Crash.Handlers.Plugins.Geometry;
 using Crash.Handlers.Plugins.Initializers;
 
+using Eto.Forms;
+
 using Rhino.PlugIns;
-using Rhino.UI.Controls;
 
 namespace Crash
 {
@@ -81,7 +82,21 @@ namespace Crash
 			dispatcher.RegisterDefaultServerCalls(e.CrashDoc);
 			RegisterDefinitions(dispatcher);
 			e.CrashDoc.Dispatcher = dispatcher;
+			RegisterExceptions(e.CrashDoc.LocalClient as CrashClient);
 			InteractivePipe.Active.Enabled = true;
+		}
+
+		private void RegisterExceptions(CrashClient client)
+		{
+			client.OnServerClosed += (sender, args) =>
+			                         {
+				                         MessageBox.Show("The server connection has been lost", MessageBoxButtons.OK);
+			                         };
+
+			client.OnPushChangeFailed += (sender, args) =>
+			                             {
+				                             MessageBox.Show("A change failed to send", MessageBoxButtons.OK);
+			                             };
 		}
 
 		private void RegisterDefinitions(EventDispatcher dispatcher)
