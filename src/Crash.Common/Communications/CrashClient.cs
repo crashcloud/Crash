@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net.WebSockets;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -141,39 +142,40 @@ namespace Crash.Common.Communications
 
 		#region Connection Watchers
 
-		private Task ConnectionReconnectingAsync(Exception? arg)
+		private async Task ConnectionReconnectingAsync(Exception? arg)
 		{
-			if (arg is null)
-			{
-				return Task.CompletedTask;
-			}
-
-			// TODO : Inform the user!
-			CrashLogger.Logger.LogError(arg.Message);
-			return Task.CompletedTask;
 		}
 
-		private Task ConnectionClosedAsync(Exception? arg)
+		private async Task ConnectionClosedAsync(Exception? arg)
 		{
-			if (arg is null)
-			{
-				return Task.CompletedTask;
-			}
+			var closedTask = arg switch
+			                 {
+				                 HubException               => ChangesCouldNotBeSent(),
+				                 WebSocketException         => ServerIndicatedPossibleClosure(),
+				                 OperationCanceledException => ServerClosedUnexpectidly(),
+				                 _                          => Task.CompletedTask
+			                 };
 
-			// TODO : Inform the user!
-			CrashLogger.Logger.LogError(arg.Message);
-			return Task.CompletedTask;
+			await closedTask;
+		}
+
+		private async Task ServerClosedUnexpectidly()
+		{
+			
+		}
+
+		private async Task ServerIndicatedPossibleClosure()
+		{
+			
+		}
+
+		private async Task ChangesCouldNotBeSent()
+		{
+			
 		}
 
 		private Task ConnectionReconnectedAsync(string? arg)
 		{
-			if (string.IsNullOrEmpty(arg))
-			{
-				return Task.CompletedTask;
-			}
-
-			// TODO : Inform the user!
-			CrashLogger.Logger.LogError(arg);
 			return Task.CompletedTask;
 		}
 
