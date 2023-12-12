@@ -1,8 +1,10 @@
 ﻿using Crash.Common.App;
+using Crash.Common.Changes;
 using Crash.Common.Communications;
 using Crash.Common.Document;
 using Crash.Common.Logging;
 using Crash.Handlers.InternalEvents;
+using Crash.Handlers.InternalEvents.Wrapping;
 
 using Microsoft.Extensions.Logging;
 
@@ -70,10 +72,12 @@ namespace Crash.Handlers.Plugins
 
 #if DEBUG
 			// This logic is a bit slow and I'd rather it wasn't compiled unless necessary
-			CrashApp.Log($"{changes.Count()} Changes sent.", LogLevel.Trace);
 			foreach (var change in changes)
 			{
-				CrashApp.Log($"Sent Change : {change.Type} | {change.Action} | {change.Id}", LogLevel.Trace);
+				if (change.Type != CameraChange.ChangeType)
+				{
+					CrashApp.Log($"Sent Change : {change.Type} | {change.Action} | {change.Id}", LogLevel.Trace);
+				}
 			}
 #endif
 		}
@@ -154,37 +158,31 @@ namespace Crash.Handlers.Plugins
 			// TODO : Include Update?
 			await NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary, sender,
 			                        args, args.Doc);
-			CrashApp.Log($"{nameof(NotifyServerOfAddCrashObject)} notified server.", LogLevel.Trace);
 		}
 
 		private async Task NotifyServerOfDeleteCrashObject(object? sender, CrashObjectEventArgs crashArgs)
 		{
 			await NotifyServerAsync(ChangeAction.Remove, sender, crashArgs, crashArgs.Doc);
-			CrashApp.Log($"{nameof(NotifyServerOfDeleteCrashObject)} notified server.", LogLevel.Trace);
 		}
 
 		private async Task NotifyServerOfTransformCrashObject(object? sender, CrashTransformEventArgs crashArgs)
 		{
 			await NotifyServerAsync(ChangeAction.Transform, sender, crashArgs, crashArgs.Doc);
-			CrashApp.Log($"{nameof(NotifyServerOfTransformCrashObject)} notified server.", LogLevel.Trace);
 		}
 
 		private async Task NotifyServerOfSelectCrashObjects(object? sender, CrashSelectionEventArgs crashArgs)
 		{
 			await NotifyServerAsync(ChangeAction.Locked, sender, crashArgs, crashArgs.Doc);
-			CrashApp.Log($"{nameof(NotifyServerOfSelectCrashObjects)} notified server.", LogLevel.Trace);
 		}
 
 		private async Task NotifyServerOfDeSelectCrashObjects(object? sender, CrashSelectionEventArgs crashArgs)
 		{
 			await NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs, crashArgs.Doc);
-			CrashApp.Log($"{nameof(NotifyServerOfDeSelectCrashObjects)} notified server.", LogLevel.Trace);
 		}
 
 		private async Task NotifyServerOfUpdateCrashObject(object? sender, CrashUpdateArgs args)
 		{
 			await NotifyServerAsync(ChangeAction.Update, sender, args, args.Doc);
-			CrashApp.Log($"{nameof(NotifyServerOfUpdateCrashObject)} notified server.", LogLevel.Trace);
 		}
 
 		private async Task NotifyServerOfCrashViewModified(object? sender, CrashViewArgs crashArgs)
