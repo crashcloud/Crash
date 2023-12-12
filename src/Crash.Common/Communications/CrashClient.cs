@@ -143,19 +143,37 @@ namespace Crash.Common.Communications
 
 		private Task ConnectionReconnectingAsync(Exception? arg)
 		{
-			Console.WriteLine(arg);
+			if (arg is null)
+			{
+				return Task.CompletedTask;
+			}
+
+			// TODO : Inform the user!
+			CrashLogger.Logger.LogError(arg.Message);
 			return Task.CompletedTask;
 		}
 
 		private Task ConnectionClosedAsync(Exception? arg)
 		{
-			Console.WriteLine(arg);
+			if (arg is null)
+			{
+				return Task.CompletedTask;
+			}
+
+			// TODO : Inform the user!
+			CrashLogger.Logger.LogError(arg.Message);
 			return Task.CompletedTask;
 		}
 
 		private Task ConnectionReconnectedAsync(string? arg)
 		{
-			Console.WriteLine(arg);
+			if (string.IsNullOrEmpty(arg))
+			{
+				return Task.CompletedTask;
+			}
+
+			// TODO : Inform the user!
+			CrashLogger.Logger.LogError(arg);
 			return Task.CompletedTask;
 		}
 
