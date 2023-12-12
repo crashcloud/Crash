@@ -5,6 +5,9 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 	/// </summary>
 	internal interface IUndoRedoCache
 	{
+		/// <summary>
+		///     Calculates the inverse of the current Cache
+		/// </summary>
 		IUndoRedoCache GetInverse();
 	}
 }

@@ -1,5 +1,8 @@
 namespace Crash.Handlers.InternalEvents.Wrapping
 {
+	/// <summary>
+	///     Records the delete of a single item
+	/// </summary>
 	internal record DeleteRecord : IUndoRedoCache
 	{
 		internal readonly CrashObjectEventArgs DeleteArgs;

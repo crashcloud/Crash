@@ -1,5 +1,8 @@
 namespace Crash.Handlers.InternalEvents.Wrapping
 {
+	/// <summary>
+	///     Records a single added item
+	/// </summary>
 	internal record AddRecord : IUndoRedoCache
 	{
 		internal readonly CrashObjectEventArgs AddArgs;

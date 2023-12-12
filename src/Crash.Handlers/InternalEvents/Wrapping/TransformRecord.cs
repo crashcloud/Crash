@@ -1,6 +1,9 @@
 namespace Crash.Handlers.InternalEvents.Wrapping
 {
 	// TODO : Include Plane Cache or otherwise
+	/// <summary>
+	///     Records a single Object Transform
+	/// </summary>
 	internal record TransformRecord : IUndoRedoCache
 	{
 		public readonly CrashTransformEventArgs TransformArgs;
