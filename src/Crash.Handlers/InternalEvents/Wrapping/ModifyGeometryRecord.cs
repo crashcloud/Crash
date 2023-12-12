@@ -28,9 +28,10 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			RemoveArgs = removedArgs;
 		}
 
-		public IUndoRedoCache TryGetInverse()
+		public bool TryGetInverse(out IUndoRedoCache cache)
 		{
-			return new ModifyGeometryRecord(RemoveArgs, AddArgs);
+			cache = new ModifyGeometryRecord(RemoveArgs, AddArgs);
+			return true;
 		}
 	}
 }
