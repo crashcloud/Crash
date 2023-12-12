@@ -13,7 +13,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			TransformArgs = args;
 		}
 
-		public IUndoRedoCache GetInverse()
+		public bool TryGetInverse(out IUndoRedoCache cache)
 		{
 			var transformCache = TransformArgs.Transform.ToRhino();
 			transformCache.TryGetInverse(out var inverseTransform);
@@ -22,7 +22,8 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			                                          inverseTransform.ToCrash(),
 			                                          TransformArgs.Objects,
 			                                          TransformArgs.ObjectsWillBeCopied);
-			return new TransformRecord(newArgs);
+			cache = new TransformRecord(newArgs);
+			return true;
 		}
 	}
 }

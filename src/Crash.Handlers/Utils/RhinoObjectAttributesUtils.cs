@@ -20,12 +20,12 @@ namespace Crash.Handlers
 				            newAttributes.Visible ? bool.TrueString : bool.FalseString);
 			}
 
-			if (!oldAttributes.Name.Equals(newAttributes.Name))
+			if (oldAttributes.Name?.Equals(newAttributes.Name) == false)
 			{
 				results.Add(nameof(ObjectAttributes.Name), newAttributes.Name);
 			}
 
-			if (!oldAttributes.Url.Equals(newAttributes.Url))
+			if (oldAttributes.Url?.Equals(newAttributes.Url) == false)
 			{
 				results.Add(nameof(ObjectAttributes.Url), newAttributes.Url);
 			}

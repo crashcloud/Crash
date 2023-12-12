@@ -12,9 +12,10 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			UpdateArgs = args;
 		}
 
-		public IUndoRedoCache GetInverse()
+		public bool TryGetInverse(out IUndoRedoCache cache)
 		{
-			throw new NotImplementedException("Not enough data here to implement a reset call");
+			cache = null;
+			return false;
 		}
 	}
 }

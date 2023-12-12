@@ -12,12 +12,12 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			AddArgs = addArgs;
 		}
 
-		public IUndoRedoCache GetInverse()
+		public bool TryGetInverse(out IUndoRedoCache cache)
 		{
-			var deleteRecord =
+			cache =
 				new DeleteRecord(new CrashObjectEventArgs(AddArgs.Doc, AddArgs.Geometry, AddArgs.RhinoId,
 				                                          AddArgs.ChangeId));
-			return deleteRecord;
+			return true;
 		}
 	}
 }

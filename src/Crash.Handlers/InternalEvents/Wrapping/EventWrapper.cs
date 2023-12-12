@@ -3,8 +3,6 @@ using Crash.Common.Document;
 using Crash.Handlers.Changes;
 using Crash.Utils;
 
-using Microsoft.Extensions.Logging;
-
 using Rhino;
 using Rhino.Commands;
 using Rhino.Display;
@@ -403,22 +401,15 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 
 		private void CaptureModifyRhinoObjectAttributes(object? sender, RhinoModifyObjectAttributesEventArgs args)
 		{
-			if (UpdateCrashObject is null)
-			{
-				return;
-			}
-
-			CrashApp.Log($"{nameof(CaptureModifyRhinoObjectAttributes)} event fired.", LogLevel.Trace);
-
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
-			if (IgnoreEvent(crashDoc))
+			if (IgnoreEvent(crashDoc, ignoreIfRedoActive: false, ignoreIfUndoActive: false))
 			{
 				return;
 			}
 
 			try
 			{
-				if (!crashDoc.TemporaryChangeTable.TryGetChangeOfType(args.RhinoObject.Id, out IChange change))
+				if (!args.RhinoObject.TryGetChangeId(out var changeId))
 				{
 					return;
 				}
@@ -436,7 +427,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 				// Adding this allows us to quickly check if we need to loop through all the Rhino Object Attributes.
 				updates.Add("HasRhinoObjectAttributes", bool.TrueString);
 
-				var crashObject = new CrashObject(change.Id, args.RhinoObject.Id);
+				var crashObject = new CrashObject(changeId, args.RhinoObject.Id);
 
 				var updateArgs = new CrashUpdateArgs(crashDoc, crashObject, updates);
 				Push(new UpdateRecord(updateArgs));
@@ -484,12 +475,18 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			if (args.IsEndUndo && UndoRecords.Count > 0)
 			{
 				var record = UndoRecords.Pop();
-				Push(record.GetInverse(), false); // We went backwards
+				if (record.TryGetInverse(out var cache))
+				{
+					Push(cache, false); // We went backwards
+				}
 			}
 			else if (args.IsEndRedo && RedoRecords.Count > 0)
 			{
 				var record = RedoRecords.Pop();
-				Push(record.GetInverse());
+				if (record.TryGetInverse(out var cache))
+				{
+					Push(cache);
+				}
 			}
 		}
 
