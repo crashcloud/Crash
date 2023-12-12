@@ -31,14 +31,13 @@ namespace Crash.Handlers.InternalEvents
 			Doc = crashDoc;
 			RhinoId = rhinoId;
 			Geometry = geometry;
-			if (changeId != default)
+			if (changeId == default)
 			{
-				ChangeId = changeId;
+				geometry.UserDictionary.TryGetGuid(RealisedChangeTable.ChangeIdKey, out ChangeId);
 			}
 			else
 			{
-				geometry.UserDictionary.TryGetGuid(RealisedChangeTable.ChangeIdKey, out var foundChangeId);
-				ChangeId = foundChangeId;
+				ChangeId = changeId;
 			}
 
 			UnDelete = unDelete;
