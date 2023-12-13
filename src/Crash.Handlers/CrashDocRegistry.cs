@@ -1,6 +1,5 @@
 ﻿using BidirectionalMap;
 
-using Crash.Common.Communications;
 using Crash.Common.Document;
 using Crash.Common.Events;
 
@@ -77,7 +76,7 @@ namespace Crash.Handlers
 			return crashDoc;
 		}
 
-		private static void RegisterQueue(object? sender, CrashClient.CrashInitArgs e)
+		private static void RegisterQueue(object? sender, CrashInitArgs e)
 		{
 			RhinoApp.WriteLine("Loading Changes ...");
 
