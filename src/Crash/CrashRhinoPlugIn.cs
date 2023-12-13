@@ -90,12 +90,21 @@ namespace Crash
 		{
 			client.OnServerClosed += (sender, args) =>
 			                         {
-				                         MessageBox.Show("The server connection has been lost", MessageBoxButtons.OK);
+				                         RhinoApp.InvokeOnUiThread(() =>
+				                                                   {
+					                                                   MessageBox
+						                                                   .Show("The server connection has been lost",
+							                                                   MessageBoxButtons.OK);
+				                                                   });
 			                         };
 
 			client.OnPushChangeFailed += (sender, args) =>
 			                             {
-				                             MessageBox.Show("A change failed to send", MessageBoxButtons.OK);
+				                             RhinoApp.InvokeOnUiThread(() =>
+				                                                       {
+					                                                       MessageBox.Show("A change failed to send",
+						                                                       MessageBoxButtons.OK);
+				                                                       });
 			                             };
 		}
 

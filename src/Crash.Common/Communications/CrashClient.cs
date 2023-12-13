@@ -144,6 +144,13 @@ namespace Crash.Common.Communications
 
 		private async Task ConnectionReconnectingAsync(Exception? arg)
 		{
+			var closedTask = arg switch
+			                 {
+				                 HubException => ChangesCouldNotBeSent(),
+				                 _            => Task.CompletedTask
+			                 };
+
+			await closedTask;
 		}
 
 		private async Task ConnectionClosedAsync(Exception? arg)
