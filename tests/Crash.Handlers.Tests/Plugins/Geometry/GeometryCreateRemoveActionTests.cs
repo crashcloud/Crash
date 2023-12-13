@@ -114,5 +114,11 @@ namespace Crash.Handlers.Tests.Plugins
 				Assert.That(change is Change, Is.True);
 			}
 		}
+
+		[OneTimeTearDown]
+		public void TearDown()
+		{
+			_cdoc.Dispose();
+		}
 	}
 }

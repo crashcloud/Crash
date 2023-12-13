@@ -40,6 +40,12 @@ namespace Crash.Handlers.Tests.Plugins
 			}
 		}
 
+		[OneTimeTearDown]
+		public void TearDown()
+		{
+			_cdoc.Dispose();
+		}
+
 		[TestCaseSource(nameof(TransformArgs))]
 		public void GeometrySelectAction_CanConvert(CrashTransformEventArgs transformArgs)
 		{
