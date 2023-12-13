@@ -1,4 +1,6 @@
-﻿namespace Crash.Common.Communications
+﻿using Crash.Common.Events;
+
+namespace Crash.Common.Communications
 {
 	public interface ICrashClient
 	{
@@ -51,6 +53,6 @@
 		public event Func<IEnumerable<string>, Task> OnInitializeUsers;
 
 		/// <summary>Local event wrapping Crash Args with Initialization</summary>
-		public event EventHandler<CrashClient.CrashInitArgs> OnInit;
+		public event EventHandler<CrashInitArgs> OnInit;
 	}
 }

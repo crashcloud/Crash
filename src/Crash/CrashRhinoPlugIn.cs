@@ -5,6 +5,7 @@ using Crash.Handlers.Plugins;
 using Crash.Handlers.Plugins.Camera;
 using Crash.Handlers.Plugins.Geometry;
 using Crash.Handlers.Plugins.Initializers;
+using Crash.UI.ExceptionsAndErrors;
 
 using Eto.Forms;
 
@@ -86,6 +87,8 @@ namespace Crash
 			InteractivePipe.Active.Enabled = true;
 		}
 
+		private BadChangePipeline badPipe;
+
 		private void RegisterExceptions(CrashClient client)
 		{
 			client.OnServerClosed += (sender, args) =>
@@ -93,8 +96,8 @@ namespace Crash
 				                         RhinoApp.InvokeOnUiThread(() =>
 				                                                   {
 					                                                   MessageBox
-						                                                   .Show("The server connection has been lost",
-							                                                   MessageBoxButtons.OK);
+						                                                   .Show("The server connection has been lost. Nothing can currently be done about this",
+								                                                    MessageBoxButtons.OK);
 				                                                   });
 			                         };
 
@@ -102,8 +105,10 @@ namespace Crash
 			                             {
 				                             RhinoApp.InvokeOnUiThread(() =>
 				                                                       {
-					                                                       MessageBox.Show("A change failed to send",
-						                                                       MessageBoxButtons.OK);
+					                                                       badPipe = new BadChangePipeline(args);
+					                                                       MessageBox
+						                                                       .Show("A change failed to send. Any changes highlighted in red will not be communicated",
+								                                                        MessageBoxButtons.OK);
 				                                                       });
 			                             };
 		}
