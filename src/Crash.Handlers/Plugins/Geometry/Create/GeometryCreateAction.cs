@@ -1,10 +1,7 @@
-﻿using Crash.Common.App;
-using Crash.Common.Document;
+﻿using Crash.Common.Document;
 using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
 using Crash.Utils;
-
-using Microsoft.Extensions.Logging;
 
 using Rhino.Geometry;
 
@@ -57,7 +54,6 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 				currentOrNewId = changeId;
 			}
 
-			CrashApp.Log($"Created Change : {currentOrNewId}", LogLevel.Trace);
 			crashDoc.RealisedChangeTable.AddPair(currentOrNewId, rhinoId);
 
 			Change change = null;

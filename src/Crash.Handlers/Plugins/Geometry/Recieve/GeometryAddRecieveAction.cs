@@ -6,6 +6,8 @@ using Crash.Events;
 using Crash.Handlers.Changes;
 using Crash.Utils;
 
+using Rhino;
+
 namespace Crash.Handlers.Plugins.Geometry.Recieve
 {
 	/// <summary>Handles recieving of Geometry</summary>
@@ -79,6 +81,10 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				{
 					rhinoDoc.Objects.Select(rhinoId, true, true);
 				}
+			}
+			catch(Exception ex)
+			{
+				RhinoApp.WriteLine(ex.Message);
 			}
 			finally
 			{

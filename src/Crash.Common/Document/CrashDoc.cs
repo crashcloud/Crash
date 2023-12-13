@@ -50,38 +50,6 @@ namespace Crash.Common.Document
 			}
 		}
 
-		private bool _copyIsActive { get; set; }
-
-		// TODO : What if someone DOES something when we're adding stuff?
-		/// <summary>
-		///     Marks the Document as in a "Busy State" state which means
-		///     Nothing can be sent to the server
-		/// </summary>
-		public bool CopyIsActive
-		{
-			get => _copyIsActive;
-			set
-			{
-				_copyIsActive = value;
-				CrashApp.Log($"{nameof(CopyIsActive)} was set to {value}");
-			}
-		}
-
-		private bool _transformIsActive { get; set; }
-
-		/// <summary>
-		///     Marks the Document as in a "Transformation Active State" state which means
-		/// </summary>
-		public bool TransformIsActive
-		{
-			get => _transformIsActive;
-			set
-			{
-				_transformIsActive = value;
-				CrashApp.Log($"{nameof(TransformIsActive)} was set to {value}");
-			}
-		}
-
 		#region Queue
 
 		/// <summary>The Idle Queue for the Crash Document</summary>

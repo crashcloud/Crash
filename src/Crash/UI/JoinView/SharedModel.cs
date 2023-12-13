@@ -5,9 +5,6 @@ using Crash.Properties;
 
 using Eto.Drawing;
 
-using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.DependencyInjection;
-
 using Rhino.UI;
 
 namespace Crash.UI
@@ -32,7 +29,8 @@ namespace Crash.UI
 		                        {
 			                        true  => (Palette.DarkMode ? Icons.Wifi_Light : Icons.Wifi_Dark).ToEto(),
 			                        false => (Palette.DarkMode ? Icons.WifiOff_Light : Icons.WifiOff_Dark).ToEto(),
-			                        null  => (Palette.DarkMode ? Icons.WifiUnstable_Light : Icons.WifiUnstable_Dark).ToEto()
+			                        null => (Palette.DarkMode ? Icons.WifiUnstable_Light : Icons.WifiUnstable_Dark)
+				                        .ToEto()
 		                        };
 
 		[JsonIgnore] public Bitmap UserIcon => (Palette.DarkMode ? Icons.User_Light : Icons.User_Dark).ToEto();
@@ -73,6 +71,5 @@ namespace Crash.UI
 		}
 
 		internal event EventHandler OnAddressChanged;
-
 	}
 }

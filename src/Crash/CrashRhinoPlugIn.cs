@@ -5,6 +5,9 @@ using Crash.Handlers.Plugins;
 using Crash.Handlers.Plugins.Camera;
 using Crash.Handlers.Plugins.Geometry;
 using Crash.Handlers.Plugins.Initializers;
+using Crash.UI.ExceptionsAndErrors;
+
+using Eto.Forms;
 
 using Rhino.PlugIns;
 
@@ -64,7 +67,7 @@ namespace Crash
 
 		#region Crash Plugin Specifics
 
-		private void CrashDocRegistryOnDocumentDisposed(object sender, CrashEventArgs e)
+		private void CrashDocRegistryOnDocumentDisposed(object? sender, CrashEventArgs e)
 		{
 			var dispatcher = e.CrashDoc.Dispatcher as EventDispatcher;
 			dispatcher?.DeregisterDefaultServerCalls();
@@ -73,16 +76,41 @@ namespace Crash
 			InteractivePipe.ClearChangeDefinitions();
 		}
 
-		private void CrashDocRegistryOnDocumentRegistered(object sender, CrashEventArgs e)
+		private void CrashDocRegistryOnDocumentRegistered(object? sender, CrashEventArgs e)
 		{
 			var dispatcher = new EventDispatcher(e.CrashDoc);
 			dispatcher.RegisterDefaultServerNotifiers();
 			dispatcher.RegisterDefaultServerCalls(e.CrashDoc);
 			RegisterDefinitions(dispatcher);
 			e.CrashDoc.Dispatcher = dispatcher;
+			RegisterExceptions(e.CrashDoc.LocalClient as CrashClient);
 			InteractivePipe.Active.Enabled = true;
+		}
 
-			e.CrashDoc.LocalClient.OnInit += LocalClientOnOnInit;
+		private BadChangePipeline badPipe;
+
+		private void RegisterExceptions(CrashClient client)
+		{
+			client.OnServerClosed += (sender, args) =>
+			                         {
+				                         RhinoApp.InvokeOnUiThread(() =>
+				                                                   {
+					                                                   MessageBox
+						                                                   .Show("The server connection has been lost. Nothing can currently be done about this",
+								                                                    MessageBoxButtons.OK);
+				                                                   });
+			                         };
+
+			client.OnPushChangeFailed += (sender, args) =>
+			                             {
+				                             RhinoApp.InvokeOnUiThread(() =>
+				                                                       {
+					                                                       badPipe = new BadChangePipeline(args);
+					                                                       MessageBox
+						                                                       .Show("A change failed to send. Any changes highlighted in red will not be communicated",
+								                                                        MessageBoxButtons.OK);
+				                                                       });
+			                             };
 		}
 
 		private void RegisterDefinitions(EventDispatcher dispatcher)
@@ -94,30 +122,6 @@ namespace Crash
 				var changeDefinition = changeEnuner.Current;
 				dispatcher.RegisterDefinition(changeDefinition);
 				InteractivePipe.RegisterChangeDefinition(changeDefinition);
-			}
-		}
-
-		private void LocalClientOnOnInit(object sender, CrashClient.CrashInitArgs e)
-		{
-			e.CrashDoc.LocalClient.OnInit -= LocalClientOnOnInit;
-			var dispatcher = e.CrashDoc.Dispatcher as EventDispatcher;
-			if (dispatcher is null)
-			{
-				return;
-			}
-
-			e.CrashDoc.DocumentIsBusy = true;
-			try
-			{
-				foreach (var change in e.Changes)
-				{
-					// TODO : Implement Async
-					dispatcher.NotifyClientAsync(e.CrashDoc, change);
-				}
-			}
-			finally
-			{
-				e.CrashDoc.DocumentIsBusy = false;
 			}
 		}
 

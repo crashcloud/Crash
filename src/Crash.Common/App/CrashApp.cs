@@ -22,6 +22,27 @@ namespace Crash.Common.App
 			// Add Log logic here
 		}
 
+		public static void LogError(string message)
+		{
+			Log(message, LogLevel.Error);
+		}
+
+		public static void LogInformation(string message)
+		{
+			Log(message);
+		}
+
+		public static void LogCritical(string message)
+		{
+			Log(message, LogLevel.Critical);
+		}
+
+		public static void LogWarning(string message)
+		{
+			Log(message, LogLevel.Warning);
+		}
+
+
 		/// <summary>Fired every time a Log is called</summary>
 		public static event EventHandler<CrashLog> LogMessage;
 
