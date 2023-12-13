@@ -3,6 +3,7 @@
 using Crash.Changes;
 using Crash.Common.Communications;
 using Crash.Common.Document;
+using Crash.Common.Events;
 using Crash.Handlers.InternalEvents;
 using Crash.Handlers.Plugins;
 using Crash.Handlers.Plugins.Camera;
@@ -95,6 +96,13 @@ namespace Crash.Handlers.Tests.Plugins
 			crashDoc.LocalClient = null;
 		}
 
+		[OneTimeTearDown]
+		public void OneTimeTearDown()
+		{
+			rhinoDoc.Dispose();
+			crashDoc.Dispose();
+		}
+
 		[TestCaseSource(nameof(DispatchEvents))]
 		public async Task TestAddDispatch(string callName, ChangeAction action, EventArgs args)
 		{
@@ -132,7 +140,7 @@ namespace Crash.Handlers.Tests.Plugins
 		}
 
 		public bool IsConnected { get; } = true;
-		public event EventHandler<CrashClient.CrashInitArgs>? OnInit;
+		public event EventHandler<CrashInitArgs>? OnInit;
 
 		public void RegisterConnection(string userName, Uri url)
 		{

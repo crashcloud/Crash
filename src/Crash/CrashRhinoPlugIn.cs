@@ -1,4 +1,5 @@
-﻿using Crash.Common.Communications;
+﻿using Crash.Commands;
+using Crash.Common.Communications;
 using Crash.Common.Events;
 using Crash.Handlers;
 using Crash.Handlers.Plugins;
@@ -96,8 +97,12 @@ namespace Crash
 				                         RhinoApp.InvokeOnUiThread(() =>
 				                                                   {
 					                                                   MessageBox
-						                                                   .Show("The server connection has been lost. Nothing can currently be done about this",
+						                                                   .Show("The server connection has been lost. Nothing can currently be done about this. Your model will be closed.",
 								                                                    MessageBoxButtons.OK);
+
+					                                                   RhinoApp
+						                                                   .RunScript(LeaveSharedModel.Instance.EnglishName,
+								                                                    true);
 				                                                   });
 			                         };
 

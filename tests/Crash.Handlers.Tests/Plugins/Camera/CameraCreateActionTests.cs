@@ -57,5 +57,11 @@ namespace Crash.Handlers.Tests.Plugins
 				JsonSerializer.Deserialize<Common.View.Camera>(change.Payload);
 			}
 		}
+
+		[OneTimeTearDown]
+		public void TearDown()
+		{
+			_cdoc.Dispose();
+		}
 	}
 }

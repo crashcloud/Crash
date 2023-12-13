@@ -85,5 +85,12 @@ namespace Crash.Handlers.Tests.Plugins
 				Assert.That(change.Action, Is.EqualTo(selectArgs.Action));
 			}
 		}
+
+
+		[OneTimeTearDown]
+		public void TearDown()
+		{
+			_cdoc.Dispose();
+		}
 	}
 }
