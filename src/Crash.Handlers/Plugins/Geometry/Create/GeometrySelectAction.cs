@@ -27,6 +27,11 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			var userName = crashArgs.Doc.Users.CurrentUser.Name;
 			changes = GetChanges(crashArgs.Doc, cargs.CrashObjects, userName);
 
+			foreach (var change in changes)
+			{
+				crashArgs.Doc.RealisedChangeTable.AddSelected(change.Id);
+			}
+
 			return true;
 		}
 

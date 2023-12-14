@@ -27,6 +27,11 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 
 			changes = getChanges(cargs.CrashObjects, userName);
 
+			foreach (var change in changes)
+			{
+				crashArgs.Doc.RealisedChangeTable.RemoveSelected(change.Id);
+			}
+
 			return true;
 		}
 
