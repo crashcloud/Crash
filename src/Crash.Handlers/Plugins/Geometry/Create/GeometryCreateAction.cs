@@ -59,7 +59,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			Change change = null;
 			if (unDelete)
 			{
-				change = GeometryChange.CreateChange(currentOrNewId, user, ChangeAction.Add);
+				change = GeometryChange.CreateChange(currentOrNewId, user, ChangeAction.Add | ChangeAction.Temporary);
 			}
 			else
 			{
