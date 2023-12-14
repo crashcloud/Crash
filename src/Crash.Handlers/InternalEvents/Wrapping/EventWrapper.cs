@@ -1,12 +1,6 @@
 ﻿using Crash.Common.App;
 using Crash.Common.Document;
 using Crash.Handlers.Changes;
-using Crash.Utils;
-
-using Rhino;
-using Rhino.Commands;
-using Rhino.Display;
-using Rhino.DocObjects;
 
 namespace Crash.Handlers.InternalEvents.Wrapping
 {
@@ -177,14 +171,16 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 
 					var theObject = new CrashObject(changeId, rhinoId);
 
-					var crashArgs =
-						CrashSelectionEventArgs.CreateDeSelectionEvent(ContextDocument, new[] { theObject });
 					if (isSelected)
 					{
+						var crashArgs =
+							CrashSelectionEventArgs.CreateSelectionEvent(ContextDocument, new[] { theObject });
 						await SelectCrashObjects.Invoke(this, crashArgs);
 					}
 					else
 					{
+						var crashArgs =
+							CrashSelectionEventArgs.CreateDeSelectionEvent(ContextDocument, new[] { theObject });
 						await DeSelectCrashObjects.Invoke(this, crashArgs);
 					}
 				}
