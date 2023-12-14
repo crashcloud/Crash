@@ -31,7 +31,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 
 			var _user = crashArgs.Doc.Users.CurrentUser.Name;
 			var removeChange =
-				GeometryChange.CreateChange(rargs.ChangeId, _user, ChangeAction.Remove | ChangeAction.Unlocked);
+				GeometryChange.CreateChange(rargs.ChangeId, _user, ChangeAction.Remove);
 
 			changes = new List<Change> { removeChange };
 
