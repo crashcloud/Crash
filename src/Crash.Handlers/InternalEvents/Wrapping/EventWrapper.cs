@@ -1,6 +1,12 @@
 ﻿using Crash.Common.App;
 using Crash.Common.Document;
 using Crash.Handlers.Changes;
+using Crash.Utils;
+
+using Rhino;
+using Rhino.Commands;
+using Rhino.Display;
+using Rhino.DocObjects;
 
 namespace Crash.Handlers.InternalEvents.Wrapping
 {
