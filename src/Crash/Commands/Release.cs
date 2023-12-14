@@ -30,6 +30,9 @@ namespace Crash.Commands
 
 			await crashDoc.LocalClient.PushChangeAsync(doneChange);
 
+			doc.Objects.UnselectAll();
+			doc.Views.Redraw();
+
 			return Result.Success;
 		}
 	}
