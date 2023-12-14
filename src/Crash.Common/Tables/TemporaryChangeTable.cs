@@ -15,6 +15,7 @@ namespace Crash.Common.Tables
 	{
 		private readonly ConcurrentDictionary<Guid, IChange> _cache;
 		private readonly CrashDoc _crashDoc;
+		private readonly ConcurrentDictionary<Guid, IChange> _deleted;
 
 		/// <summary>
 		///     Local cache constructor
@@ -22,6 +23,7 @@ namespace Crash.Common.Tables
 		public TemporaryChangeTable(CrashDoc hostDoc)
 		{
 			_cache = new ConcurrentDictionary<Guid, IChange>();
+			_deleted = new ConcurrentDictionary<Guid, IChange>();
 			_crashDoc = hostDoc;
 		}
 
@@ -74,6 +76,33 @@ namespace Crash.Common.Tables
 		public void RemoveChange(Guid changeId)
 		{
 			_cache.TryRemove(changeId, out _);
+		}
+
+		/// <summary>
+		///     Deletes a Change from the Cache temporarily, hiding it
+		/// </summary>
+		/// <param name="changeId"></param>
+		public void DeleteChange(Guid changeId)
+		{
+			if (!_cache.TryRemove(changeId, out var change))
+			{
+				return;
+			}
+
+			_deleted.TryAdd(changeId, change);
+		}
+
+		/// <summary>
+		///     Restores a Deleted Change
+		/// </summary>
+		public void RestoreChange(Guid changeId)
+		{
+			if (!_deleted.TryRemove(changeId, out var change))
+			{
+				return;
+			}
+
+			_cache.TryAdd(changeId, change);
 		}
 
 		/// <summary>
