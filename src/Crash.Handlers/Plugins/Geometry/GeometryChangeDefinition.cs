@@ -128,10 +128,11 @@ namespace Crash.Handlers.Plugins.Geometry
 
 		public BoundingBox GetBoundingBox(IChange change)
 		{
-			if (change is not GeometryChange geomChange)
+			if (change is not GeometryChange geomChange || geomChange.Geometry is null)
 			{
 				return BoundingBox.Unset;
 			}
+
 
 			return geomChange.Geometry.GetBoundingBox(false);
 		}
