@@ -38,6 +38,9 @@ namespace Crash.Commands
 			await crashDoc.LocalClient.PushIdenticalChangesAsync(selectedChanges,
 			                                                     DoneChange.GetDoneChange(string.Empty));
 
+			doc.Objects.UnselectAll();
+			doc.Views.Redraw();
+
 			return Result.Success;
 		}
 
