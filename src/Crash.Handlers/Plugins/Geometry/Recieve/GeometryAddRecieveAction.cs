@@ -100,6 +100,14 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			}
 
 			var finalChange = geomChange;
+
+
+			if (args.Doc.TemporaryChangeTable.IsDeleted(geomChange.Id))
+			{
+				args.Doc.TemporaryChangeTable.RestoreChange(geomChange.Id);
+				return;
+			}
+			
 			if (args.Doc.TemporaryChangeTable.TryGetChangeOfType(geomChange.Id, out GeometryChange existingChange))
 			{
 				var combinedChange = ChangeUtils.CombineChanges(existingChange, geomChange);

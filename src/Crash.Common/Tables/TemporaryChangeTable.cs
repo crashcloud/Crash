@@ -93,6 +93,14 @@ namespace Crash.Common.Tables
 		}
 
 		/// <summary>
+		/// Checks to see if a Change is Deleted
+		/// </summary>
+		public bool IsDeleted(Guid changeId)
+		{
+			return _deleted.ContainsKey(changeId);
+		}
+
+		/// <summary>
 		///     Restores a Deleted Change
 		/// </summary>
 		public void RestoreChange(Guid changeId)
