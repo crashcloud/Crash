@@ -63,7 +63,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 
 		private void RemoveFromCache(IdleArgs args)
 		{
-			args.Doc.TemporaryChangeTable.RemoveChange(args.Change.Id);
+			args.Doc.TemporaryChangeTable.DeleteChange(args.Change.Id);
 		}
 	}
 }
