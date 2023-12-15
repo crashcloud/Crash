@@ -16,7 +16,9 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 		public bool CanRecieve(IChange change)
 		{
 			if (change is null)
+			{
 				return false;
+			}
 
 			if (!change.Action.HasFlag(ChangeAction.Add))
 			{
@@ -40,7 +42,9 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 		public async Task OnRecieveAsync(CrashDoc crashDoc, GeometryChange geomChange)
 		{
 			if (crashDoc is null || geomChange is null)
+			{
 				return;
+			}
 
 			var changeArgs = new IdleArgs(crashDoc, geomChange);
 			IdleAction resultingAction = null;
@@ -50,7 +54,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				resultingAction = new IdleAction(AddToDocument, changeArgs);
 			}
 			else if (geomChange.Owner?.Equals(crashDoc.Users.CurrentUser.Name,
-			                                 StringComparison.InvariantCultureIgnoreCase) == true)
+			                                  StringComparison.InvariantCultureIgnoreCase) == true)
 			{
 				resultingAction = new IdleAction(AddToDocument, changeArgs);
 			}
@@ -79,10 +83,18 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 
 				if (args.Change.HasFlag(ChangeAction.Locked))
 				{
-					rhinoDoc.Objects.Select(rhinoId, true, true);
+					if (string.Equals(args.Change.Owner, args.Doc.Users.CurrentUser.Name,
+					                  StringComparison.InvariantCultureIgnoreCase))
+					{
+						rhinoDoc.Objects.Select(rhinoId, true, true);
+					}
+					else
+					{
+						rhinoDoc.Objects.Lock(rhinoObject, true);
+					}
 				}
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				RhinoApp.WriteLine(ex.Message);
 			}
