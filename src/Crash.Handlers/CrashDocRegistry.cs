@@ -101,6 +101,7 @@ namespace Crash.Handlers
 
 		public static async Task DisposeOfDocumentAsync(CrashDoc crashDoc)
 		{
+			crashDoc.Queue.ForceCycleQueue();
 			DocumentDisposed?.Invoke(null, new CrashEventArgs(crashDoc));
 			// DeRegister Events
 			crashDoc.Queue.OnCompletedQueue -= RedrawOncompleted;
