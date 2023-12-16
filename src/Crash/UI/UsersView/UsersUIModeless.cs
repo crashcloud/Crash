@@ -22,6 +22,11 @@ namespace Crash.UI.UsersView
 		internal UsersForm()
 		{
 			Owner = RhinoEtoApp.MainWindow;
+
+#if NET7_0
+			this.UseRhinoStyle();
+#endif
+
 			ViewModel = new UsersViewModel();
 			CreateForm();
 			Icon = Icons.crashlogo.ToEto();

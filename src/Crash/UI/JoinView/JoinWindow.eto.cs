@@ -52,7 +52,7 @@ namespace Crash.UI.JoinModel
 				          MinimumSize = new Size(WindowWidth, WindowHeight),
 				          HorizontalContentAlignment = HorizontalAlignment.Stretch,
 				          VerticalContentAlignment = VerticalAlignment.Stretch,
-				          BackgroundColor = Palette.BackgroundColour,
+				          // BackgroundColor = Palette.BackgroundColour,
 				          Enabled = true,
 				          Items = { ActiveModels, DrawHorizonalCell(), NewModel }
 			          };
