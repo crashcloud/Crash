@@ -20,7 +20,6 @@ namespace Crash.UI.JoinModel
 			Title = "Join Shared Model";
 			Resizable = false;
 			Minimizable = false;
-			// BackgroundColor = Palette.BackgroundColour;
 			AutoSize = true;
 			Icon = Icons.crashlogo.ToEto();
 #if NET7_0
@@ -35,6 +34,7 @@ namespace Crash.UI.JoinModel
 			InitializeComponent();
 			ActiveForm = this;
 			Closed += JoinWindow_Closed;
+			
 		}
 
 		internal string ChosenAddress { get; set; }
@@ -106,7 +106,6 @@ namespace Crash.UI.JoinModel
 				                       {
 					                       DataContext = modelContext, ToolTip = "Join Shared Model"
 				                       },
-				             TextColor = Palette.TextColour,
 				             Enabled = true
 			             };
 
@@ -125,8 +124,7 @@ namespace Crash.UI.JoinModel
 				                       {
 					                       DataContext = modelContext, ToolTip = "Add Model to List"
 				                       },
-				             Enabled = false,
-				             TextColor = Palette.TextColour
+				             Enabled = false
 			             };
 
 			modelContext.OnAddressChanged += (sender, args) =>

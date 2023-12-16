@@ -1,16 +1,14 @@
 ﻿using System.ComponentModel;
-using System.Drawing;
 using System.Runtime.InteropServices;
 
 using Crash.Properties;
 
+using Eto.Drawing;
 using Eto.Forms;
 
 using Rhino.UI;
 
-using Pen = Eto.Drawing.Pen;
-using RectangleF = Eto.Drawing.RectangleF;
-using Size = Eto.Drawing.Size;
+using Color = System.Drawing.Color;
 
 namespace Crash.UI.UsersView
 {
@@ -30,7 +28,6 @@ namespace Crash.UI.UsersView
 			ViewModel = new UsersViewModel();
 			CreateForm();
 			Icon = Icons.crashlogo.ToEto();
-			BackgroundColor = Color.White.ToEto();
 			Padding = 0;
 			MinimumSize = new Size(120, 40);
 			// Size = new Size(240, 80); // Required to make UI smaller on windows, but prevents resizing later
