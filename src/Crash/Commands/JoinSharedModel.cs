@@ -14,11 +14,9 @@ namespace Crash.Commands
 	[CommandStyle(Style.ScriptRunner)]
 	public sealed class JoinSharedModel : AsyncCommand
 	{
-		private CrashDoc? CrashDoc;
+		private CrashDoc? _crashDoc;
 
-		private string LastURL = $"{CrashClient.DefaultURL}:{CrashClient.DefaultPort}";
-
-		private RhinoDoc rhinoDoc;
+		private string? _lastUrl = $"{CrashClient.DefaultURL}:{CrashClient.DefaultPort}";
 
 		/// <summary>Default Constructor</summary>
 		public JoinSharedModel()
@@ -35,8 +33,7 @@ namespace Crash.Commands
 
 		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
 		{
-			rhinoDoc = doc;
-			CrashDoc = null;
+			_crashDoc = null;
 
 			if (!CommandUtils.CheckAlreadyConnected(crashDoc))
 			{
@@ -60,7 +57,7 @@ namespace Crash.Commands
 					return Result.Cancel;
 				}
 
-				LastURL = chosenModel?.ModelAddress;
+				_lastUrl = chosenModel?.ModelAddress;
 			}
 			else
 			{
@@ -70,19 +67,16 @@ namespace Crash.Commands
 					return Result.Cancel;
 				}
 
-				if (!_GetServerURL(ref LastURL))
+				if (!_GetServerURL(ref _lastUrl))
 				{
 					RhinoApp.WriteLine("Invalid URL Input");
 					return Result.Nothing;
 				}
 			}
 
-			if (CrashDoc is null)
-			{
-				CrashDoc = CrashDocRegistry.CreateAndRegisterDocument(doc);
-			}
+			_crashDoc ??= CrashDocRegistry.CreateAndRegisterDocument(doc);
 
-			_CreateCurrentUser(CrashDoc, name);
+			_CreateCurrentUser(_crashDoc, name);
 
 			await StartServer();
 
@@ -91,14 +85,14 @@ namespace Crash.Commands
 
 		private async Task StartServer()
 		{
-			if (await CommandUtils.StartLocalClient(CrashDoc, LastURL))
+			if (await CommandUtils.StartLocalClient(_crashDoc, _lastUrl))
 			{
 				InteractivePipe.Active.Enabled = true;
-				CrashDoc.Queue.OnCompletedQueue += QueueOnOnCompleted;
+				_crashDoc.Queue.OnCompletedQueue += QueueOnOnCompleted;
 			}
-			else if (CrashDoc?.LocalClient is not null)
+			else if (_crashDoc?.LocalClient is not null)
 			{
-				await CrashDoc.LocalClient.StopAsync();
+				await _crashDoc.LocalClient.StopAsync();
 			}
 		}
 
@@ -106,15 +100,15 @@ namespace Crash.Commands
 		{
 			e.CrashDoc.Queue.OnCompletedQueue -= QueueOnOnCompleted;
 			UsersForm.CloseActiveForm();
-			UsersForm.ShowForm();
+			UsersForm.ShowForm(e.CrashDoc);
 		}
 
-		private static bool _GetServerURL(ref string url)
+		private bool _GetServerURL(ref string url)
 		{
 			return SelectionUtils.GetValidString("Server URL", ref url);
 		}
 
-		private static void _CreateCurrentUser(CrashDoc crashDoc, string name)
+		private void _CreateCurrentUser(CrashDoc crashDoc, string name)
 		{
 			var user = new User(name);
 			crashDoc.Users.CurrentUser = user;

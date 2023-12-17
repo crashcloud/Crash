@@ -90,7 +90,7 @@ namespace Crash.UI
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		internal void CalculateBoundingBox(object sender, CalculateBoundingBoxEventArgs e)
+		private void CalculateBoundingBox(object sender, CalculateBoundingBoxEventArgs e)
 		{
 			e.IncludeBoundingBox(bbox);
 		}

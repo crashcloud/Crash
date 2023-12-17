@@ -1,4 +1,5 @@
-﻿using Crash.UI.UsersView;
+﻿using Crash.Handlers;
+using Crash.UI.UsersView;
 
 using Rhino.Commands;
 
@@ -11,7 +12,13 @@ namespace Crash.Commands
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			UsersForm.ShowForm();
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(doc);
+			if (crashDoc is null)
+			{
+				return Result.Failure;
+			}
+
+			UsersForm.ShowForm(crashDoc);
 			return Result.Success;
 		}
 	}

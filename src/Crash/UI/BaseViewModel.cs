@@ -7,7 +7,7 @@ namespace Crash.UI
 	{
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+		protected void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
 		{
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
@@ -17,7 +17,7 @@ namespace Crash.UI
 			if (!Equals(t, val))
 			{
 				t = val;
-				OnPropertyChanged(propertyName);
+				NotifyPropertyChanged(propertyName);
 				return true;
 			}
 

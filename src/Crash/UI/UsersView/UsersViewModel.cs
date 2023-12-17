@@ -1,91 +1,92 @@
 ﻿using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Drawing;
-using System.Runtime.CompilerServices;
 
 using Crash.Common.Document;
 using Crash.Common.Tables;
+using Crash.Handlers;
 using Crash.Properties;
 
+using Eto.Drawing;
 using Eto.Forms;
 
 using Rhino.UI;
 
-using Image = Eto.Drawing.Image;
-
 namespace Crash.UI.UsersView
 {
-	internal sealed class UsersViewModel : INotifyPropertyChanged
+	internal sealed class UsersViewModel : BaseViewModel
 	{
+		private static readonly Dictionary<CameraState, Image> s_cameras = new()
+		                                                                   {
+			                                                                   {
+				                                                                   CameraState.None, (Palette.DarkMode
+							                                                                   ? Icons
+								                                                                   .CameraNone_Light
+							                                                                   : Icons
+								                                                                   .CameraNone_Dark)
+				                                                                   .ToEto()
+			                                                                   },
+			                                                                   {
+				                                                                   CameraState.Visible,
+				                                                                   (Palette.DarkMode
+						                                                                   ? Icons
+							                                                                   .CameraVisible_Light
+						                                                                   : Icons
+							                                                                   .CameraVisible_Dark)
+				                                                                   .ToEto()
+			                                                                   },
+			                                                                   {
+				                                                                   CameraState.Follow, (Palette.DarkMode
+							                                                                   ? Icons
+								                                                                   .CameraFollow_Light
+							                                                                   : Icons
+								                                                                   .CameraFollow_Dark)
+				                                                                   .ToEto()
+			                                                                   }
+		                                                                   };
+
 		private readonly CrashDoc _crashDoc;
-		internal GridView _view;
 
 		internal UsersViewModel(CrashDoc crashDoc)
 		{
 			_crashDoc = crashDoc;
-			SetUsers();
+			var userObjects = _crashDoc.Users.Select(u =>
+			                                         {
+				                                         var user = new UserObject(_crashDoc, u);
+				                                         user.OnPropertyChanged += RedrawView;
+				                                         return user;
+			                                         });
+			Users = new ObservableCollection<UserObject>(userObjects);
 
-			PropertyChanged += ViewModel_PropertyChanged;
-			UserTable.OnUserRemoved += UserTable_OnUserChanged;
-			UserTable.OnUserAdded += UserTable_OnUserChanged;
+			UserTable.OnUserRemoved += UserRemoved;
+			UserTable.OnUserAdded += AddUsers;
 		}
 
 		internal ObservableCollection<UserObject> Users { get; set; }
 
-		public event PropertyChangedEventHandler PropertyChanged;
-
-		private void SetUsers()
+		private void RedrawView(object? sender, UserObject e)
 		{
-			Users = new ObservableCollection<UserObject>(_crashDoc.Users.Select(u => new UserObject(u)));
+			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(_crashDoc);
+			rhinoDoc?.Views.Redraw();
 		}
 
-		private void UserTable_OnUserChanged(object sender, UserEventArgs e)
+		private void AddUsers(object? sender, UserEventArgs e)
 		{
 			Application.Instance.Invoke(() =>
 			                            {
-				                            try
-				                            {
-					                            SetUsers();
-					                            UsersForm.ReDraw();
-				                            }
-				                            catch { }
+				                            Users.Add(new UserObject(_crashDoc, e.User));
+				                            UsersForm.ReDraw();
 			                            });
 		}
 
-		private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+		private void UserRemoved(object? sender, UserEventArgs e)
 		{
-			if (e.PropertyName != nameof(Users))
-			{
-				return;
-			}
-
-			UpdateCrashUserTable();
+			Application.Instance.Invoke(() =>
+			                            {
+				                            Users.Remove(new UserObject(_crashDoc, e.User));
+				                            UsersForm.ReDraw();
+			                            });
 		}
 
-		private void UpdateCrashUserTable()
-		{
-			foreach (var user in Users)
-			{
-				_crashDoc.Users.Update(user.CUser);
-			}
-
-			SetUsers();
-
-			RhinoDoc.ActiveDoc.Views.Redraw();
-			UsersForm.ReDraw();
-		}
-
-		private void VisibleCellBinding_Changed(object sender, BindingChangedEventArgs e)
-		{
-			NotifyPropertyChanged(nameof(Users));
-		}
-
-		private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
-		{
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-		}
-
-		internal void CycleCameraSetting(object sender, GridCellMouseEventArgs e)
+		internal void CycleCameraSetting(object? sender, GridCellMouseEventArgs e)
 		{
 			var row = e.Row;
 			var col = e.Column;
@@ -106,25 +107,21 @@ namespace Crash.UI.UsersView
 
 				if (state == CameraState.Follow)
 				{
-					for (var i = 0; i < Users.Count; i++)
+					foreach (var currUser in Users)
 					{
-						var currUser = Users[i];
-						if (CameraState.Follow == currUser.Camera)
+						if (CameraState.Follow != currUser.Camera)
 						{
-							currUser.Camera = CameraState.Visible;
-							_crashDoc.Users.Update(currUser.CUser);
+							continue;
 						}
-					}
 
-					user.Camera = state;
-					UpdateCrashUserTable();
+						currUser.Camera = CameraState.Visible;
+					}
 				}
 
 				user.Camera = state;
-				UpdateCrashUserTable();
+				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(_crashDoc);
+				rhinoDoc?.Views.Redraw();
 			}
-
-			NotifyPropertyChanged(nameof(Users));
 		}
 
 		private static CameraState CycleState(CameraState state)
@@ -140,57 +137,9 @@ namespace Crash.UI.UsersView
 			return (CameraState)stateCount;
 		}
 
-		internal sealed class UserObject
+		internal static Image GetCameraImage(UserObject user)
 		{
-			internal UserObject(User user)
-			{
-				Name = user.Name;
-				Colour = user.Color;
-				Camera = user.Camera;
-				Visible = user.Visible;
-			}
-
-			public string Name { get; }
-			public Color Colour { get; private set; }
-			public CameraState Camera { get; set; }
-			public bool Visible { get; set; }
-
-			internal User CUser => new(Name) { Camera = Camera, Visible = Visible };
-
-			public override string ToString()
-			{
-				return Name;
-			}
-		}
-
-
-		internal static class UserUIExtensions
-		{
-			private static readonly Dictionary<CameraState, Image> s_cameras;
-
-			static UserUIExtensions()
-			{
-				s_cameras = new Dictionary<CameraState, Image>
-				            {
-					            {
-						            CameraState.None,
-						            (Palette.DarkMode ? Icons.CameraNone_Light : Icons.CameraNone_Dark).ToEto()
-					            },
-					            {
-						            CameraState.Visible,
-						            (Palette.DarkMode ? Icons.CameraVisible_Light : Icons.CameraVisible_Dark).ToEto()
-					            },
-					            {
-						            CameraState.Follow,
-						            (Palette.DarkMode ? Icons.CameraFollow_Light : Icons.CameraFollow_Dark).ToEto()
-					            }
-				            };
-			}
-
-			internal static Image GetCameraImage(UserObject user)
-			{
-				return s_cameras[user?.Camera ?? CameraState.None];
-			}
+			return s_cameras[user?.Camera ?? CameraState.None];
 		}
 	}
 }
