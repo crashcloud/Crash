@@ -45,6 +45,8 @@ namespace Crash.UI.UsersView
 
 		private readonly CrashDoc _crashDoc;
 
+		internal EventHandler OnInvalidate;
+
 		internal UsersViewModel(CrashDoc crashDoc)
 		{
 			_crashDoc = crashDoc;
@@ -109,16 +111,15 @@ namespace Crash.UI.UsersView
 				{
 					foreach (var currUser in Users)
 					{
-						if (CameraState.Follow != currUser.Camera)
+						if (currUser.Camera == CameraState.Follow)
 						{
-							continue;
+							currUser.Camera = CameraState.Visible;
 						}
-
-						currUser.Camera = CameraState.Visible;
 					}
 				}
 
 				user.Camera = state;
+				OnInvalidate?.Invoke(this, EventArgs.Empty);
 				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(_crashDoc);
 				rhinoDoc?.Views.Redraw();
 			}

@@ -22,6 +22,10 @@ namespace Crash.UI.UsersView
 		{
 			_crashDoc = crashDoc;
 			_viewModel = new UsersViewModel(crashDoc);
+			_viewModel.OnInvalidate += (sender, args) =>
+			                           {
+				                           Invalidate(true);
+			                           };
 			CreateForm();
 
 			RhinoDoc.ActiveDocumentChanged += (_, _) => { Close(); };
@@ -64,7 +68,7 @@ namespace Crash.UI.UsersView
 		private void CreateForm()
 		{
 			Icon = Icons.crashlogo.ToEto();
-			Size = new Size(200, -1);
+			Size = new Size(240, -1);
 			Title = "Collaborators";
 			Owner = RhinoEtoApp.MainWindow;
 			Padding = 0;
@@ -111,7 +115,6 @@ namespace Crash.UI.UsersView
 						                  Binding.Property<UserObject, string>(u => u.Name)
 				                  },
 				       AutoSize = true,
-				       MinWidth = 120,
 				       Editable = false,
 				       HeaderText = "Name",
 				       Resizable = false
@@ -125,7 +128,7 @@ namespace Crash.UI.UsersView
 			var colourColumn = new GridColumn
 			                   {
 				                   DataCell = cell,
-				                   AutoSize = true,
+				                   AutoSize = false,
 				                   Editable = false,
 				                   HeaderText = "",
 				                   Resizable = false,
@@ -140,7 +143,7 @@ namespace Crash.UI.UsersView
 			return new GridColumn
 			       {
 				       DataCell = new CheckBoxCell { Binding = Binding.Property<UserObject, bool?>(uo => uo.Visible) },
-				       AutoSize = true,
+				       AutoSize = false,
 				       Editable = true,
 				       HeaderText = "",
 				       Resizable = false,
@@ -158,6 +161,7 @@ namespace Crash.UI.UsersView
 						                  Binding.Property<UserObject, Image>(u =>
 							                                                      UsersViewModel.GetCameraImage(u))
 				                  },
+				       AutoSize = false,
 				       Editable = false,
 				       HeaderText = "",
 				       Resizable = false,
