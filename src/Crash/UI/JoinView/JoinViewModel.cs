@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 [assembly: InternalsVisibleTo("Crash.UI.Tests")]
 
@@ -92,14 +93,12 @@ namespace Crash.UI.JoinModel
 			return true;
 		}
 
-		internal async Task AddSharedModel(SharedModel model)
+		internal void AddSharedModel(SharedModel model)
 		{
 			if (ModelIsNew(model))
 			{
 				SharedModels.Add(new SharedModel(model));
 				SetAddModel();
-
-				await model.Connect();
 			}
 		}
 

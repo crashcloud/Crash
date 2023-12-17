@@ -27,13 +27,13 @@ namespace Crash.UI
 		[JsonIgnore]
 		public Bitmap Signal => Loaded switch
 		                        {
-			                        true  => (Palette.DarkMode ? Icons.Wifi_Light : Icons.Wifi_Dark).ToEto(),
-			                        false => (Palette.DarkMode ? Icons.WifiOff_Light : Icons.WifiOff_Dark).ToEto(),
-			                        null => (Palette.DarkMode ? Icons.WifiUnstable_Light : Icons.WifiUnstable_Dark)
+			                        true  => (Crash.UI.Palette.DarkMode ? Icons.Wifi_Light : Icons.Wifi_Dark).ToEto(),
+			                        false => (Crash.UI.Palette.DarkMode ? Icons.WifiOff_Light : Icons.WifiOff_Dark).ToEto(),
+			                        null => (Crash.UI.Palette.DarkMode ? Icons.WifiUnstable_Light : Icons.WifiUnstable_Dark)
 				                        .ToEto()
 		                        };
 
-		[JsonIgnore] public Bitmap UserIcon => (Palette.DarkMode ? Icons.User_Light : Icons.User_Dark).ToEto();
+		[JsonIgnore] public Bitmap UserIcon => (Crash.UI.Palette.DarkMode ? Icons.User_Light : Icons.User_Dark).ToEto();
 
 		[JsonIgnore] public string UserCount => Users?.Length.ToString() ?? "0";
 
@@ -47,7 +47,6 @@ namespace Crash.UI
 			set
 			{
 				modelAddress = value;
-				OnAddressChanged?.Invoke(this, EventArgs.Empty);
 			}
 		}
 
@@ -55,21 +54,5 @@ namespace Crash.UI
 
 		public event Action<Change[]> OnInitialize;
 
-		public async Task<bool> Connect()
-		{
-			var hubConnection = CrashClient.GetHubConnection(new Uri($"{ModelAddress}/Crash"));
-
-			try
-			{
-				await hubConnection.StartAsync();
-				return true;
-			}
-			catch (Exception ex)
-			{
-				return false;
-			}
-		}
-
-		internal event EventHandler OnAddressChanged;
 	}
 }

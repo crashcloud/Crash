@@ -29,8 +29,8 @@ namespace Crash.UI.UsersView
 			CreateForm();
 			Icon = Icons.crashlogo.ToEto();
 			Padding = 0;
-			MinimumSize = new Size(120, 40);
-			// Size = new Size(240, 80); // Required to make UI smaller on windows, but prevents resizing later
+			// MinimumSize = new Size(100, -1);
+			Size = new Size(200, -1);
 		}
 
 		internal static UsersForm? ActiveForm { get; set; }
@@ -103,10 +103,11 @@ namespace Crash.UI.UsersView
 			Minimizable = false;
 			Padding = 0;
 			Resizable = false;
+			AutoSize = true;
 			ShowInTaskbar = false;
 			Title = "Collaborators";
 			WindowStyle = WindowStyle.Default;
-			MinimumSize = new Size(20, 50);
+			Size = new Size(120, -1);
 
 			m_grid = new GridView
 			         {

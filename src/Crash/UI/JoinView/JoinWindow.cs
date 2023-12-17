@@ -80,18 +80,6 @@ namespace Crash.UI.JoinModel
 				               Model.SharedModels.Remove(model);
 				               ActiveModels.Invalidate(true);
 			               };
-
-			RefreshModels += (sender, args) =>
-			                 {
-				                 if (CurrentSelection is not SharedModel model)
-				                 {
-					                 return;
-				                 }
-
-				                 model.Connect();
-
-				                 ActiveModels.Invalidate(true);
-			                 };
 		}
 
 		private Control CreateOpenButtonContents(CellEventArgs args)
@@ -126,19 +114,6 @@ namespace Crash.UI.JoinModel
 				                       },
 				             Enabled = false
 			             };
-
-			modelContext.OnAddressChanged += (sender, args) =>
-			                                 {
-				                                 if (sender is not SharedModel model)
-				                                 {
-					                                 return;
-				                                 }
-
-				                                 if (URLIsValid(modelContext.ModelAddress))
-				                                 {
-					                                 button.Enabled = true;
-				                                 }
-			                                 };
 
 			return button;
 		}
