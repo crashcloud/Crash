@@ -100,50 +100,57 @@ namespace Crash.UI
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		internal void PostDrawObjects(object sender, DrawEventArgs e)
+		private void PostDrawObjects(object sender, DrawEventArgs e)
 		{
-			if (CrashDocRegistry.ActiveDoc?.TemporaryChangeTable is null)
+			var rhinoDoc = RhinoDoc.ActiveDoc;
+			if (rhinoDoc is null)
 			{
 				return;
 			}
 
-			if (CrashDocRegistry.ActiveDoc?.Users is null)
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
+			if (crashDoc?.TemporaryChangeTable is null)
 			{
 				return;
 			}
 
-			var caches = CrashDocRegistry.ActiveDoc.TemporaryChangeTable.GetChanges().ToList();
-			foreach (var Change in caches)
+			if (crashDoc?.Users is null)
+			{
+				return;
+			}
+
+			var caches = crashDoc.TemporaryChangeTable.GetChanges().ToList();
+			foreach (var change in caches)
 			{
 				if (e.Display.InterruptDrawing())
 				{
 					return;
 				}
 
-				if (!definitionRegistry.TryGetValue(Change.Type, out var definition))
+				if (!definitionRegistry.TryGetValue(change.Type, out var definition))
 				{
 					continue;
 				}
 
-				if (!CrashDocRegistry.ActiveDoc.Users.Get(Change.Owner).Visible)
+				if (!crashDoc.Users.Get(change.Owner).Visible)
 				{
 					continue;
 				}
 
-				UpdateCachedMaterial(Change);
+				UpdateCachedMaterial(change);
 
-				definition.Draw(e, cachedMaterial, Change);
-				var box = definition.GetBoundingBox(Change);
+				definition.Draw(e, cachedMaterial, change);
+				var box = definition.GetBoundingBox(change);
 				UpdateBoundingBox(box);
 			}
 
-			if (CrashDocRegistry.ActiveDoc?.Cameras is null)
+			if (crashDoc?.Cameras is null)
 			{
 				return;
 			}
 
-			var ActiveCameras = CrashDocRegistry.ActiveDoc.Cameras.GetActiveCameras();
-			foreach (var activeCamera in ActiveCameras)
+			var activeCameras = crashDoc.Cameras.GetActiveCameras();
+			foreach (var activeCamera in activeCameras)
 			{
 				if (e.Display.InterruptDrawing())
 				{
@@ -189,11 +196,10 @@ namespace Crash.UI
 		/// <summary>
 		///     Updates the BoundingBox of the Pipeline
 		/// </summary>
-		/// <param name="Change"></param>
-		private void UpdateBoundingBox(BoundingBox ChangeBox)
+		private void UpdateBoundingBox(BoundingBox changeBox)
 		{
-			ChangeBox.Inflate(1.25);
-			bbox.Union(ChangeBox);
+			changeBox.Inflate(1.25);
+			bbox.Union(changeBox);
 		}
 
 		internal static void RegisterChangeDefinition(IChangeDefinition changeDefinition)

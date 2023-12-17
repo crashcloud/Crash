@@ -2,7 +2,6 @@ using System.Drawing;
 
 using Crash.Common.Document;
 using Crash.Common.Events;
-using Crash.Handlers;
 using Crash.Utils;
 
 using Rhino.Display;
@@ -12,17 +11,17 @@ namespace Crash.UI.ExceptionsAndErrors
 {
 	public class BadChangePipeline : IDisposable
 	{
-		private readonly IEnumerable<Change> changes;
+		private readonly IEnumerable<Change> _changes;
 
-		private readonly CrashDoc crashDoc;
+		private readonly CrashDoc _crashDoc;
 
 		/// <summary>
 		///     Empty constructor
 		/// </summary>
 		internal BadChangePipeline(CrashChangeArgs args)
 		{
-			crashDoc = args.CrashDoc;
-			changes = args.Changes;
+			_crashDoc = args.CrashDoc;
+			_changes = args.Changes;
 			Enabled = true;
 		}
 
@@ -60,22 +59,22 @@ namespace Crash.UI.ExceptionsAndErrors
 		{
 		}
 
-		internal void DrawOverlay(object sender, DrawEventArgs e)
+		private void DrawOverlay(object sender, DrawEventArgs e)
 		{
-			if (CrashDocRegistry.ActiveDoc?.TemporaryChangeTable is null)
+			if (_crashDoc?.TemporaryChangeTable is null)
 			{
 				return;
 			}
 
-			if (CrashDocRegistry.ActiveDoc?.Users is null)
+			if (_crashDoc?.Users is null)
 			{
 				return;
 			}
 
 			var count = 0;
-			foreach (var change in changes)
+			foreach (var change in _changes)
 			{
-				if (!change.TryGetRhinoObject(crashDoc, out var rhinoObject))
+				if (!change.TryGetRhinoObject(_crashDoc, out var rhinoObject))
 				{
 					continue;
 				}
@@ -100,19 +99,19 @@ namespace Crash.UI.ExceptionsAndErrors
 
 		private void DisplayPipelineOnCalculateBoundingBox(object? sender, CalculateBoundingBoxEventArgs e)
 		{
-			if (CrashDocRegistry.ActiveDoc?.TemporaryChangeTable is null)
+			if (_crashDoc?.TemporaryChangeTable is null)
 			{
 				return;
 			}
 
-			if (CrashDocRegistry.ActiveDoc?.Users is null)
+			if (_crashDoc?.Users is null)
 			{
 				return;
 			}
 
-			foreach (var change in changes)
+			foreach (var change in _changes)
 			{
-				if (!change.TryGetRhinoObject(crashDoc, out var rhinoObject))
+				if (!change.TryGetRhinoObject(_crashDoc, out var rhinoObject))
 				{
 					continue;
 				}

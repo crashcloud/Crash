@@ -8,23 +8,16 @@ using Rhino.DocObjects;
 
 namespace Crash.Handlers
 {
-	// TODO : Is this needed?
+	/// <summary>
+	///     Contains pairings of RhinoDocs and CrashDocs
+	/// </summary>
 	public static class CrashDocRegistry
 	{
-		private static readonly BiMap<RhinoDoc, CrashDoc> DocumentRelationship;
+		private static readonly BiMap<RhinoDoc, CrashDoc> s_documentRelationship;
 
 		static CrashDocRegistry()
 		{
-			DocumentRelationship = new BiMap<RhinoDoc, CrashDoc>();
-			RhinoDoc.ActiveDocumentChanged += RhinoDoc_ActiveDocumentChanged;
-		}
-
-		/// <summary>The Active Crash Document.</summary>
-		public static CrashDoc? ActiveDoc => GetRelatedDocument(RhinoDoc.ActiveDoc);
-
-		private static void RhinoDoc_ActiveDocumentChanged(object sender, DocumentEventArgs e)
-		{
-			// ... 
+			s_documentRelationship = new BiMap<RhinoDoc, CrashDoc>();
 		}
 
 		public static CrashDoc? GetRelatedDocument(RhinoDoc doc)
@@ -34,9 +27,9 @@ namespace Crash.Handlers
 				return null;
 			}
 
-			if (DocumentRelationship.Forward.ContainsKey(doc))
+			if (s_documentRelationship.Forward.ContainsKey(doc))
 			{
-				return DocumentRelationship.Forward[doc];
+				return s_documentRelationship.Forward[doc];
 			}
 
 			return null;
@@ -44,7 +37,7 @@ namespace Crash.Handlers
 
 		public static RhinoDoc? GetRelatedDocument(CrashDoc doc)
 		{
-			foreach (var kvp in DocumentRelationship.Reverse)
+			foreach (var kvp in s_documentRelationship.Reverse)
 			{
 				if (kvp.Key.Equals(doc))
 				{
@@ -57,14 +50,14 @@ namespace Crash.Handlers
 
 		public static IEnumerable<CrashDoc> GetOpenDocuments()
 		{
-			return DocumentRelationship.Forward.Values;
+			return s_documentRelationship.Forward.Values;
 		}
 
 		public static CrashDoc CreateAndRegisterDocument(RhinoDoc rhinoDoc)
 		{
-			if (DocumentRelationship.Forward.ContainsKey(rhinoDoc))
+			if (s_documentRelationship.Forward.ContainsKey(rhinoDoc))
 			{
-				return DocumentRelationship.Forward[rhinoDoc];
+				return s_documentRelationship.Forward[rhinoDoc];
 			}
 
 			var crashDoc = new CrashDoc();
@@ -79,13 +72,28 @@ namespace Crash.Handlers
 
 		private static void RegisterQueue(object? sender, CrashInitArgs e)
 		{
+			e.CrashDoc.LocalClient.OnInit -= RegisterQueue;
 			RhinoApp.WriteLine("Loading Changes ...");
 
-			// TODO : How to deregister?
-			RhinoApp.Idle += (o, args) =>
-			                 {
-				                 e.CrashDoc.Queue.RunNextAction();
-			                 };
+			EventHandler cycleQueueDelegate = null;
+			cycleQueueDelegate = (o, args) =>
+			                     {
+				                     e.CrashDoc.Queue.RunNextAction();
+			                     };
+			RhinoApp.Idle += cycleQueueDelegate;
+
+			EventHandler<CrashEventArgs> deRegisterQueueCycle = null;
+			deRegisterQueueCycle = (o, args) =>
+			                       {
+				                       DocumentDisposed -= deRegisterQueueCycle;
+				                       RhinoApp.Idle -= cycleQueueDelegate;
+			                       };
+			
+			DocumentDisposed += deRegisterQueueCycle;
+		}
+
+		private static void CycleQueue(object sender, EventArgs e)
+		{
 		}
 
 		private static void RedrawOncompleted(object? sender, CrashEventArgs e)
@@ -97,7 +105,7 @@ namespace Crash.Handlers
 		private static void Register(CrashDoc crashDoc,
 			RhinoDoc rhinoDoc)
 		{
-			DocumentRelationship.Add(rhinoDoc, crashDoc);
+			s_documentRelationship.Add(rhinoDoc, crashDoc);
 		}
 
 		public static async Task DisposeOfDocumentAsync(CrashDoc crashDoc)
@@ -108,13 +116,12 @@ namespace Crash.Handlers
 			crashDoc.Queue.OnCompletedQueue -= RedrawOncompleted;
 			if (crashDoc.LocalClient is not null)
 			{
-				crashDoc.LocalClient.OnInit -= RegisterQueue;
 				await crashDoc.LocalClient?.StopAsync();
 			}
 
 			// Remove Geometry
 			var rhinoDoc = GetRelatedDocument(crashDoc);
-			DocumentRelationship.Remove(rhinoDoc);
+			s_documentRelationship.Remove(rhinoDoc);
 
 			var settings = new ObjectEnumeratorSettings
 			               {

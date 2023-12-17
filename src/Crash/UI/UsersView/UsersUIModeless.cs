@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.InteropServices;
 
+using Crash.Common.Document;
 using Crash.Properties;
 
 using Eto.Drawing;
@@ -14,18 +15,19 @@ namespace Crash.UI.UsersView
 {
 	internal sealed class UsersForm : Form
 	{
-		private readonly UsersViewModel ViewModel;
-		private GridView m_grid;
+		private readonly UsersViewModel _viewModel;
+		private GridView _mGrid;
 
-		internal UsersForm()
+		private UsersForm(CrashDoc crashDoc)
 		{
 			Owner = RhinoEtoApp.MainWindow;
+			RhinoDoc.ActiveDocumentChanged += (sender, args) => { Close(); };
 
 #if NET7_0
 			this.UseRhinoStyle();
 #endif
 
-			ViewModel = new UsersViewModel();
+			_viewModel = new UsersViewModel(crashDoc);
 			CreateForm();
 			Icon = Icons.crashlogo.ToEto();
 			Padding = 0;
@@ -33,7 +35,7 @@ namespace Crash.UI.UsersView
 			Size = new Size(200, -1);
 		}
 
-		internal static UsersForm? ActiveForm { get; set; }
+		private static UsersForm? ActiveForm { get; set; }
 
 		internal static void ShowForm()
 		{
@@ -50,18 +52,6 @@ namespace Crash.UI.UsersView
 			ActiveForm = form;
 		}
 
-		internal static void ToggleFormVisibility()
-		{
-			if (ActiveForm is null)
-			{
-				ShowForm();
-			}
-			else
-			{
-				ActiveForm = null;
-			}
-		}
-
 		internal static void CloseActiveForm()
 		{
 			ActiveForm?.Close();
@@ -70,14 +60,11 @@ namespace Crash.UI.UsersView
 
 		internal static void ReDraw()
 		{
-			if (ActiveForm is null)
-			{
-				ActiveForm = new UsersForm();
-			}
+			ActiveForm ??= new UsersForm();
 
 			try
 			{
-				ActiveForm.m_grid.Invalidate(true);
+				ActiveForm._mGrid.Invalidate(true);
 				ActiveForm.Invalidate(true);
 			}
 			catch { }
@@ -92,11 +79,6 @@ namespace Crash.UI.UsersView
 			ActiveForm = null;
 		}
 
-		private void ReDrawEvent(object sender, EventArgs e)
-		{
-			ReDraw();
-		}
-
 		private void CreateForm()
 		{
 			Maximizable = false;
@@ -109,96 +91,86 @@ namespace Crash.UI.UsersView
 			WindowStyle = WindowStyle.Default;
 			Size = new Size(120, -1);
 
-			m_grid = new GridView
+			var rowHeight = 24;
+
+			_mGrid = new GridView
 			         {
 				         AllowMultipleSelection = false,
-				         DataStore = ViewModel.Users,
+				         DataStore = _viewModel.Users,
 				         ShowHeader = false,
 				         Border = BorderType.None,
 				         AllowEmptySelection = true,
-				         RowHeight = 24
+				         RowHeight = rowHeight
 			         };
 
-			ViewModel.View = m_grid;
-			m_grid.CellClick += ViewModel.CycleCameraSetting;
-			m_grid.DataContextChanged += M_grid_DataContextChanged;
-
-			// TODO : Implement Sorting
-			// m_grid.ColumnHeaderClick += M_grid_ColumnHeaderClick;
+			_viewModel._view = _mGrid;
+			_mGrid.CellClick += _viewModel.CycleCameraSetting;
 
 			// Camera
-			var ivc = new ImageViewCell();
-
-			m_grid.Columns.Add(new GridColumn
+			_mGrid.Columns.Add(new GridColumn
 			                   {
-				                   DataCell = new ImageViewCell { Binding = ViewModel.ImageCellBinding },
+				                   DataCell = new ImageViewCell
+				                              {
+					                              Binding =
+						                              Binding.Property<UsersViewModel.UserObject, Image>(u =>
+							                              UsersViewModel.UserUIExtensions
+							                                            .GetCameraImage(u));
+				                              },
 				                   Editable = false,
 				                   HeaderText = "",
 				                   Resizable = false,
-				                   Sortable = false,
-				                   Width = 30
+				                   Width = rowHeight + 6
 			                   });
 
 			// Visible
-			m_grid.Columns.Add(new GridColumn
+			_mGrid.Columns.Add(new GridColumn
 			                   {
-				                   DataCell = new CheckBoxCell { Binding = ViewModel.VisibleCellBinding },
+				                   DataCell = new CheckBoxCell
+				                              {
+					                              Binding =
+						                              Binding.Property<UsersViewModel.UserObject, bool?>(u => u.Visible)
+				                              },
 				                   AutoSize = true,
 				                   Editable = true,
 				                   HeaderText = "",
 				                   Resizable = false,
-				                   Sortable = false,
-				                   Width = 24
+				                   Width = rowHeight
 			                   });
 
 			var cell = new DrawableCell();
-			cell.Paint += Cell_Paint;
+			cell.Paint += DrawColourCircle;
 
 			// Colours
-			m_grid.Columns.Add(new GridColumn
+			_mGrid.Columns.Add(new GridColumn
 			                   {
 				                   DataCell = cell,
 				                   AutoSize = true,
 				                   Editable = false,
 				                   HeaderText = "",
 				                   Resizable = false,
-				                   Sortable = false,
-				                   Width = 24
+				                   Width = rowHeight
 			                   });
 
 			// User
-			m_grid.Columns.Add(new GridColumn
+			_mGrid.Columns.Add(new GridColumn
 			                   {
-				                   DataCell = new TextBoxCell { Binding = ViewModel.TextCellBinding },
+				                   DataCell = new TextBoxCell
+				                              {
+					                              Binding =
+						                              Binding.Property<UsersViewModel.UserObject, string>(u => u.Name)
+				                              },
 				                   AutoSize = true,
 				                   MinWidth = 120,
 				                   Editable = false,
 				                   HeaderText = "Name",
-				                   Resizable = false,
-				                   Sortable = true
+				                   Resizable = false
 			                   });
 
-			var user_layout = new TableLayout
-			                  {
-				                  // Padding = new Padding(5, 10, 5, 5),
-				                  // Spacing = new Size(5, 5),
-				                  Rows = { new TableRow(null, m_grid, null) }
-			                  };
-
-			Content = new TableLayout
-			          {
-				          // Padding = new Padding(5),
-				          // Spacing = new Size(5, 5),
-				          Rows = { new TableRow(user_layout) }
-			          };
+			var userLayout = new TableLayout { Rows = { new TableRow(null, _mGrid, null) } };
+			Content = new TableLayout { Rows = { new TableRow(userLayout) } };
 		}
 
-		private void M_grid_DataContextChanged(object sender, EventArgs e)
-		{
-			;
-		}
-
-		private void Cell_Paint(object sender, CellPaintEventArgs e)
+		private static void DrawColourCircle(object sender, CellPaintEventArgs e)
 		{
 			if (e.Item is not UsersViewModel.UserObject user)
 			{
