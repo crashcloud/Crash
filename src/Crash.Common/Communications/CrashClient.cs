@@ -157,7 +157,7 @@ namespace Crash.Common.Communications
 
 		private async Task ServerClosedUnexpectidly()
 		{
-			OnServerClosed?.Invoke(this, EventArgs.Empty);
+			OnServerClosed?.Invoke(this, new CrashEventArgs(_crashDoc));
 		}
 
 		private async Task ServerIndicatedPossibleClosure()
@@ -175,7 +175,7 @@ namespace Crash.Common.Communications
 			return Task.CompletedTask;
 		}
 
-		public event EventHandler OnServerClosed;
+		public event EventHandler<CrashEventArgs> OnServerClosed;
 		public event EventHandler<CrashChangeArgs> OnPushChangeFailed;
 
 		#endregion
