@@ -158,8 +158,7 @@ namespace Crash.UI.UsersView
 				       DataCell = new ImageViewCell
 				                  {
 					                  Binding =
-						                  Binding.Property<UserObject, Image>(u =>
-							                                                      UsersViewModel.GetCameraImage(u))
+						                  Binding.Property<UserObject, Image>(u => u.Image)
 				                  },
 				       AutoSize = false,
 				       Editable = false,

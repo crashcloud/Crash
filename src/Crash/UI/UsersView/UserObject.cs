@@ -1,6 +1,11 @@
 using System.Drawing;
 
 using Crash.Common.Document;
+using Crash.Properties;
+
+using Rhino.UI;
+
+using Image = Eto.Drawing.Image;
 
 namespace Crash.UI.UsersView
 {
@@ -36,6 +41,18 @@ namespace Crash.UI.UsersView
 				OnPropertyChanged?.Invoke(null, this);
 			}
 		}
+
+		public Image Image => ((Camera, Palette.DarkMode) switch
+		                       {
+			                       (CameraState.Follow, true)   => Icons.CameraFollow_Light,
+			                       (CameraState.Follow, false)  => Icons.CameraFollow_Dark,
+			                       (CameraState.Visible, true)  => Icons.CameraVisible_Light,
+			                       (CameraState.Visible, false) => Icons.CameraVisible_Dark,
+			                       (CameraState.None, true)     => Icons.CameraNone_Light,
+			                       (CameraState.None, false)    => Icons.CameraNone_Dark,
+
+			                       _ => Icons.CameraNone_Dark
+		                       }).ToEto();
 
 		public bool Visible
 		{

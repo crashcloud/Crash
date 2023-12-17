@@ -3,46 +3,13 @@
 using Crash.Common.Document;
 using Crash.Common.Tables;
 using Crash.Handlers;
-using Crash.Properties;
 
-using Eto.Drawing;
 using Eto.Forms;
-
-using Rhino.UI;
 
 namespace Crash.UI.UsersView
 {
 	internal sealed class UsersViewModel : BaseViewModel
 	{
-		private static readonly Dictionary<CameraState, Image> s_cameras = new()
-		                                                                   {
-			                                                                   {
-				                                                                   CameraState.None, (Palette.DarkMode
-							                                                                   ? Icons
-								                                                                   .CameraNone_Light
-							                                                                   : Icons
-								                                                                   .CameraNone_Dark)
-				                                                                   .ToEto()
-			                                                                   },
-			                                                                   {
-				                                                                   CameraState.Visible,
-				                                                                   (Palette.DarkMode
-						                                                                   ? Icons
-							                                                                   .CameraVisible_Light
-						                                                                   : Icons
-							                                                                   .CameraVisible_Dark)
-				                                                                   .ToEto()
-			                                                                   },
-			                                                                   {
-				                                                                   CameraState.Follow, (Palette.DarkMode
-							                                                                   ? Icons
-								                                                                   .CameraFollow_Light
-							                                                                   : Icons
-								                                                                   .CameraFollow_Dark)
-				                                                                   .ToEto()
-			                                                                   }
-		                                                                   };
-
 		private readonly CrashDoc _crashDoc;
 
 		internal EventHandler OnInvalidate;
@@ -103,26 +70,27 @@ namespace Crash.UI.UsersView
 				return;
 			}
 
-			if (e.Item is UserObject user)
+			if (e.Item is not UserObject user)
 			{
-				var state = CycleState(user.Camera);
+				return;
+			}
 
-				if (state == CameraState.Follow)
+			var state = CycleState(user.Camera);
+			if (state == CameraState.Follow)
+			{
+				foreach (var currUser in Users)
 				{
-					foreach (var currUser in Users)
+					if (currUser.Camera == CameraState.Follow)
 					{
-						if (currUser.Camera == CameraState.Follow)
-						{
-							currUser.Camera = CameraState.Visible;
-						}
+						currUser.Camera = CameraState.Visible;
 					}
 				}
-
-				user.Camera = state;
-				OnInvalidate?.Invoke(this, EventArgs.Empty);
-				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(_crashDoc);
-				rhinoDoc?.Views.Redraw();
 			}
+
+			user.Camera = state;
+			OnInvalidate?.Invoke(this, EventArgs.Empty);
+			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(_crashDoc);
+			rhinoDoc?.Views.Redraw();
 		}
 
 		private static CameraState CycleState(CameraState state)
@@ -136,11 +104,6 @@ namespace Crash.UI.UsersView
 			}
 
 			return (CameraState)stateCount;
-		}
-
-		internal static Image GetCameraImage(UserObject user)
-		{
-			return s_cameras[user?.Camera ?? CameraState.None];
 		}
 	}
 }
