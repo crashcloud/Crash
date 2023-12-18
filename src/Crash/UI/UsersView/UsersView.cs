@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 
 using Crash.Common.Document;
+using Crash.Handlers;
 using Crash.Properties;
 
 using Eto.Drawing;
@@ -58,6 +59,9 @@ namespace Crash.UI.UsersView
 			try
 			{
 				ActiveForm?.Invalidate(true);
+
+				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(ActiveForm._crashDoc);
+				rhinoDoc?.Views.Redraw();
 			}
 			catch
 			{

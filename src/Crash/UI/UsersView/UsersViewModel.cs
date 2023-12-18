@@ -2,7 +2,6 @@
 
 using Crash.Common.Document;
 using Crash.Common.Tables;
-using Crash.Handlers;
 
 using Eto.Forms;
 
@@ -20,7 +19,7 @@ namespace Crash.UI.UsersView
 			var userObjects = _crashDoc.Users.Select(u =>
 			                                         {
 				                                         var user = new UserObject(_crashDoc, u);
-				                                         user.OnPropertyChanged += RedrawView;
+				                                         user.OnPropertyChanged += (sender, o) => UsersForm.ReDraw();
 				                                         return user;
 			                                         });
 			Users = new ObservableCollection<UserObject>(userObjects);
@@ -30,12 +29,6 @@ namespace Crash.UI.UsersView
 		}
 
 		internal ObservableCollection<UserObject> Users { get; set; }
-
-		private void RedrawView(object? sender, UserObject e)
-		{
-			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(_crashDoc);
-			rhinoDoc?.Views.Redraw();
-		}
 
 		private void AddUsers(object? sender, UserEventArgs e)
 		{
@@ -88,9 +81,7 @@ namespace Crash.UI.UsersView
 			}
 
 			user.Camera = state;
-			OnInvalidate?.Invoke(this, EventArgs.Empty);
-			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(_crashDoc);
-			rhinoDoc?.Views.Redraw();
+			UsersForm.ReDraw();
 		}
 
 		private static CameraState CycleState(CameraState state)
