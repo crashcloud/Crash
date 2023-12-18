@@ -62,6 +62,7 @@ namespace Crash.UI.UsersView
 			{
 				_visible = value;
 				_crashDoc.Users.Update(Convert(this));
+				Camera = value ? CameraState.Visible : CameraState.None;
 				OnPropertyChanged?.Invoke(null, this);
 			}
 		}
