@@ -34,7 +34,6 @@ namespace Crash.UI.JoinModel
 			InitializeComponent();
 			ActiveForm = this;
 			Closed += JoinWindow_Closed;
-			
 		}
 
 		internal string ChosenAddress { get; set; }
@@ -62,7 +61,7 @@ namespace Crash.UI.JoinModel
 
 			JoinModel += (sender, args) =>
 			             {
-				             if (CurrentSelection is not SharedModel model)
+				             if (sender is not Command { DataContext: SharedModel model })
 				             {
 					             return;
 				             }
@@ -72,7 +71,7 @@ namespace Crash.UI.JoinModel
 
 			RemoveModel += (sender, args) =>
 			               {
-				               if (CurrentSelection is not SharedModel model)
+				               if (sender is not Command { DataContext: SharedModel model })
 				               {
 					               return;
 				               }
