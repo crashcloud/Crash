@@ -189,6 +189,8 @@ namespace Crash.UI.UsersView
 		{
 			this.SavePosition();
 			base.OnClosing(e);
+			ActiveForm?.Dispose();
+			ActiveForm = null;
 		}
 	}
 }
