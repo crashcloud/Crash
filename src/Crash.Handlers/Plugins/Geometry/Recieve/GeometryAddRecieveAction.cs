@@ -3,7 +3,6 @@ using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
 using Crash.Handlers.Changes;
-using Crash.Utils;
 
 using Rhino;
 
@@ -85,7 +84,6 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				}
 
 				var rhinoObject = rhinoDoc.Objects.FindId(rhinoId);
-				rhinoObject.SyncHost(geomChange, args.Doc);
 				if (args.Change.HasFlag(ChangeAction.Locked))
 				{
 					rhinoDoc.Objects.Select(rhinoId, true, true);

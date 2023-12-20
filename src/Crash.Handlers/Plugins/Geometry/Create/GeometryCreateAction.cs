@@ -1,7 +1,6 @@
 ﻿using Crash.Common.Document;
 using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
-using Crash.Utils;
 
 using Rhino.Geometry;
 
@@ -65,8 +64,6 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			{
 				change = GeometryChange.CreateChange(currentOrNewId, user, Action, geometry);
 			}
-
-			rhinoObject.SyncHost(change, crashDoc);
 
 			return new[] { change };
 		}
