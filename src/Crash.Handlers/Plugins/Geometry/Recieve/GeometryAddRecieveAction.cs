@@ -84,6 +84,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				}
 
 				var rhinoObject = rhinoDoc.Objects.FindId(rhinoId);
+				args.Doc.RealisedChangeTable.AddPair(args.Change.Id, rhinoObject.Id);
 				if (args.Change.HasFlag(ChangeAction.Locked))
 				{
 					rhinoDoc.Objects.Select(rhinoId, true, true);
@@ -110,9 +111,6 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			if (args.Doc.RealisedChangeTable.IsDeleted(geomChange.Id))
 			{
 				args.Doc.RealisedChangeTable.PurgeChange(geomChange.Id);
-				args.Doc.TemporaryChangeTable.UpdateChange(geomChange);
-
-				return;
 			}
 
 			// Undo Delete Temporary
