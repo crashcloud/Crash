@@ -87,7 +87,15 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				args.Doc.RealisedChangeTable.AddPair(args.Change.Id, rhinoObject.Id);
 				if (args.Change.HasFlag(ChangeAction.Locked))
 				{
-					rhinoDoc.Objects.Select(rhinoId, true, true);
+					if (string.Equals(args.Change.Owner, args.Doc.Users.CurrentUser.Name,
+					                  StringComparison.InvariantCultureIgnoreCase))
+					{
+						rhinoDoc.Objects.Select(rhinoId, true, true);
+					}
+					else
+					{
+						rhinoDoc.Objects.Lock(rhinoObject, true);
+					}
 				}
 			}
 			catch (Exception ex)

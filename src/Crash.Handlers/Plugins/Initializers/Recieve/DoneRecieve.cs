@@ -34,7 +34,11 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 				{
 					foreach (var change in crashDoc.TemporaryChangeTable.GetChanges())
 					{
-						await ReleaseChange(crashDoc, change);
+						if (string.Equals(change.Owner, recievedChange.Owner,
+						                  StringComparison.InvariantCultureIgnoreCase))
+						{
+							await ReleaseChange(crashDoc, change);
+						}
 					}
 				}
 			}

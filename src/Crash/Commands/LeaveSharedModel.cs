@@ -44,6 +44,7 @@ namespace Crash.Commands
 			}
 
 			doc.Objects.UnselectAll();
+
 			await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 			InteractivePipe.Active.Enabled = false;
 

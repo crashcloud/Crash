@@ -60,6 +60,15 @@ namespace Crash.Events
 			}
 		}
 
+		/// <summary>Forces the Queue to run until empty</summary>
+		public void ForceCycleQueue()
+		{
+			while (!_idleQueue.IsEmpty)
+			{
+				RunNextAction();
+			}
+		}
+
 		/// <summary>Fires when the queue has finished parsing more than 1 item.</summary>
 		public event EventHandler<CrashEventArgs> OnCompletedQueue;
 	}
