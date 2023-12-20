@@ -121,5 +121,12 @@ namespace Crash.Handlers.Changes
 
 			return geometry?.ToJSON(new SerializationOptions { RhinoVersion = 70, WriteUserData = false });
 		}
+
+		/// <summary>Sets the Geometry of the Change</summary>
+		public void SetGeometry(GeometryBase geometry)
+		{
+			Geometry = geometry;
+		}
+
 	}
 }

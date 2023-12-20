@@ -1,5 +1,4 @@
-﻿using Crash.Commands;
-using Crash.Common.Communications;
+﻿using Crash.Common.Communications;
 using Crash.Common.Events;
 using Crash.Handlers;
 using Crash.Handlers.Plugins;
@@ -11,6 +10,8 @@ using Crash.UI.ExceptionsAndErrors;
 using Eto.Forms;
 
 using Rhino.PlugIns;
+
+using System.Linq;
 
 namespace Crash
 {
@@ -92,25 +93,24 @@ namespace Crash
 
 		private void RegisterExceptions(CrashClient client)
 		{
-			client.OnServerClosed += (sender, args) =>
+			client.OnServerClosed += async (sender, args) =>
 			                         {
 				                         RhinoApp.InvokeOnUiThread(() =>
 				                                                   {
 					                                                   MessageBox
 						                                                   .Show("The server connection has been lost. Nothing can currently be done about this. Your model will be closed.",
 								                                                    MessageBoxButtons.OK);
-
-					                                                   RhinoApp
-						                                                   .RunScript(LeaveSharedModel.Instance.EnglishName,
-								                                                    true);
 				                                                   });
+
+				                         await CrashDocRegistry
+					                         .DisposeOfDocumentAsync(args.CrashDoc);
 			                         };
 
 			client.OnPushChangeFailed += (sender, args) =>
 			                             {
+				                             badPipe = new BadChangePipeline(args);
 				                             RhinoApp.InvokeOnUiThread(() =>
 				                                                       {
-					                                                       badPipe = new BadChangePipeline(args);
 					                                                       MessageBox
 						                                                       .Show("A change failed to send. Any changes highlighted in red will not be communicated",
 								                                                        MessageBoxButtons.OK);
@@ -138,7 +138,8 @@ namespace Crash
 
 		protected override void OnShutdown()
 		{
-			foreach (var crashDoc in CrashDocRegistry.GetOpenDocuments())
+			var openCrashDocs = CrashDocRegistry.GetOpenDocuments().ToArray();
+			foreach (var crashDoc in openCrashDocs)
 			{
 				CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 			}

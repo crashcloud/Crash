@@ -15,6 +15,7 @@ namespace Crash.Common.Tables
 	{
 		private readonly ConcurrentDictionary<Guid, IChange> _cache;
 		private readonly CrashDoc _crashDoc;
+		private readonly ConcurrentDictionary<Guid, IChange> _deleted;
 
 		/// <summary>
 		///     Local cache constructor
@@ -22,6 +23,7 @@ namespace Crash.Common.Tables
 		public TemporaryChangeTable(CrashDoc hostDoc)
 		{
 			_cache = new ConcurrentDictionary<Guid, IChange>();
+			_deleted = new ConcurrentDictionary<Guid, IChange>();
 			_crashDoc = hostDoc;
 		}
 
@@ -65,6 +67,7 @@ namespace Crash.Common.Tables
 		{
 			_cache.TryRemove(cache.Id, out _);
 			_cache.TryAdd(cache.Id, cache);
+			_deleted.TryRemove(cache.Id, out _);
 		}
 
 		/// <summary>
@@ -74,6 +77,57 @@ namespace Crash.Common.Tables
 		public void RemoveChange(Guid changeId)
 		{
 			_cache.TryRemove(changeId, out _);
+		}
+
+		/// <summary>
+		///     Deletes a Change from the Cache temporarily, hiding it
+		/// </summary>
+		/// <param name="changeId"></param>
+		public void DeleteChange(Guid changeId)
+		{
+			if (!_cache.TryRemove(changeId, out var change))
+			{
+				return;
+			}
+
+			_deleted.TryAdd(changeId, change);
+		}
+
+		/// <summary>
+		///     Checks to see if a Change is Deleted
+		/// </summary>
+		public bool IsDeleted(Guid changeId)
+		{
+			return _deleted.ContainsKey(changeId);
+		}
+
+		/// <summary>
+		/// Checks that a pairing with this RhinoId exists.
+		/// </summary>
+		public bool HasPairing(Guid rhinoId)
+		{
+			return _cache.ContainsKey(rhinoId);
+		}
+
+		/// <summary>
+		/// Attempts to find the Change associated to this RhinoId 
+		/// </summary>
+		public bool TryGetChange(Guid rhinoId, out IChange change)
+		{
+			return _cache.TryGetValue(rhinoId, out change);
+		}
+
+		/// <summary>
+		///     Restores a Deleted Change
+		/// </summary>
+		public void RestoreChange(Guid changeId)
+		{
+			if (!_deleted.TryRemove(changeId, out var change))
+			{
+				return;
+			}
+
+			_cache.TryAdd(changeId, change);
 		}
 
 		/// <summary>
