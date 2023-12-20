@@ -1,6 +1,7 @@
 ﻿using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
+using Crash.Handlers.Changes;
 using Crash.Utils;
 
 namespace Crash.Handlers.Plugins.Geometry.Recieve
@@ -49,11 +50,15 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 					return;
 				}
 
+				var geomChange = GeometryChange.CreateFrom(args.Change);
+				geomChange.SetGeometry(rhinoObject.Geometry.Duplicate());
+
 				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
 				rhinoDoc.Objects.Delete(rhinoObject, true, true);
 
-				args.Doc.RealisedChangeTable.RemoveSelected(args.Change.Id);
-				args.Doc.RealisedChangeTable.RemoveChange(args.Change.Id);
+				args.Doc.TemporaryChangeTable.UpdateChange(geomChange);
+				args.Doc.TemporaryChangeTable.DeleteChange(geomChange.Id);
+				args.Doc.RealisedChangeTable.PurgeChange(args.Change.Id);
 			}
 			finally
 			{
@@ -63,7 +68,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 
 		private void RemoveFromCache(IdleArgs args)
 		{
-			args.Doc.TemporaryChangeTable.RemoveChange(args.Change.Id);
+			args.Doc.TemporaryChangeTable.DeleteChange(args.Change.Id);
 		}
 	}
 }

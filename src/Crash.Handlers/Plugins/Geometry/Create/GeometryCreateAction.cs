@@ -1,7 +1,6 @@
 ﻿using Crash.Common.Document;
 using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
-using Crash.Utils;
 
 using Rhino.Geometry;
 
@@ -59,14 +58,12 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			Change change = null;
 			if (unDelete)
 			{
-				change = GeometryChange.CreateChange(currentOrNewId, user, ChangeAction.Add);
+				change = GeometryChange.CreateChange(currentOrNewId, user, ChangeAction.Add | ChangeAction.Temporary);
 			}
 			else
 			{
 				change = GeometryChange.CreateChange(currentOrNewId, user, Action, geometry);
 			}
-
-			rhinoObject.SyncHost(change, crashDoc);
 
 			return new[] { change };
 		}

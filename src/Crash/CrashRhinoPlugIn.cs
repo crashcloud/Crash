@@ -11,6 +11,8 @@ using Eto.Forms;
 
 using Rhino.PlugIns;
 
+using System.Linq;
+
 namespace Crash
 {
 	///<summary>The crash plugin for multi user rhino collaboration</summary>
@@ -136,7 +138,8 @@ namespace Crash
 
 		protected override void OnShutdown()
 		{
-			foreach (var crashDoc in CrashDocRegistry.GetOpenDocuments())
+			var openCrashDocs = CrashDocRegistry.GetOpenDocuments().ToArray();
+			foreach (var crashDoc in openCrashDocs)
 			{
 				CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 			}

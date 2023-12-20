@@ -1,7 +1,5 @@
 ﻿using Crash.Common.App;
 using Crash.Common.Document;
-using Crash.Handlers.Changes;
-using Crash.Utils;
 
 using Rhino;
 using Rhino.Commands;
@@ -234,14 +232,6 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 
 			Created.Add(args.TheObject);
 
-			if (!args.TheObject.TryGetChangeId(out _))
-			{
-				var newChange = GeometryChange.CreateChange(Guid.NewGuid(), crashDoc.Users.CurrentUser.Name,
-				                                            ChangeAction.Add | ChangeAction.Temporary,
-				                                            args.TheObject.Geometry);
-				args.TheObject.SyncHost(newChange, crashDoc);
-			}
-
 			var crashArgs = new CrashObjectEventArgs(crashDoc, args.TheObject, unDelete: undelete);
 			var add = new AddRecord(crashArgs);
 			Push(add);
@@ -288,7 +278,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			var transform = args.Transform.ToCrash();
 			var transformArgs =
 				new CrashTransformEventArgs(crashDoc, transform,
-				                            args.Objects.Select(o => new CrashObject(o)),
+				                            args.Objects.Select(o => new CrashObject(crashDoc, o)),
 				                            args.ObjectsWillBeCopied);
 
 			var transformRecord = new TransformRecord(transformArgs);
@@ -306,7 +296,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			var changeIds = new List<Guid>(args.RhinoObjects.Length);
 			foreach (var rhinoObject in args.RhinoObjects)
 			{
-				if (!rhinoObject.TryGetChangeId(out var changeId))
+				if (!crashDoc.RealisedChangeTable.TryGetChangeId(rhinoObject.Id, out var changeId))
 				{
 					continue;
 				}
@@ -328,7 +318,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			var changeIds = new List<Guid>(args.RhinoObjects.Length);
 			foreach (var rhinoObject in args.RhinoObjects)
 			{
-				if (!rhinoObject.TryGetChangeId(out var changeId))
+				if (!crashDoc.RealisedChangeTable.TryGetChangeId(rhinoObject.Id, out var changeId))
 				{
 					continue;
 				}
@@ -411,7 +401,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 
 			try
 			{
-				if (!args.RhinoObject.TryGetChangeId(out var changeId))
+				if (!crashDoc.RealisedChangeTable.TryGetChangeId(args.RhinoObject.Id, out var changeId))
 				{
 					return;
 				}

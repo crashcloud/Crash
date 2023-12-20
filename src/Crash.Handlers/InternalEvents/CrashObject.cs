@@ -1,4 +1,4 @@
-﻿using Crash.Utils;
+﻿using Crash.Common.Document;
 
 using Rhino.DocObjects;
 
@@ -13,10 +13,10 @@ namespace Crash.Handlers.InternalEvents
 		/// <summary>The Rhino Id</summary>
 		public readonly Guid RhinoId;
 
-		public CrashObject(RhinoObject rhinoObject)
+		public CrashObject(CrashDoc crashDoc, RhinoObject rhinoObject)
 		{
 			RhinoId = rhinoObject.Id;
-			rhinoObject.TryGetChangeId(out ChangeId);
+			crashDoc.RealisedChangeTable.TryGetChangeId(rhinoObject.Id, out ChangeId);
 		}
 
 		internal CrashObject(Guid changeId, Guid rhinoId)
@@ -25,7 +25,9 @@ namespace Crash.Handlers.InternalEvents
 			RhinoId = rhinoId;
 		}
 
-		public override int GetHashCode() => HashCode.Combine(ChangeId, RhinoId);
-
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(ChangeId, RhinoId);
+		}
 	}
 }
