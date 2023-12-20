@@ -1,7 +1,7 @@
 ﻿using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
-using Crash.Utils;
+using Crash.Handlers.Changes;
 
 namespace Crash.Handlers.Plugins.Geometry.Recieve
 {
@@ -49,10 +49,15 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 					return;
 				}
 
+				var geomChange = GeometryChange.CreateFrom(args.Change);
+				geomChange.SetGeometry(rhinoObject.Geometry.Duplicate());
+
 				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
 				rhinoDoc.Objects.Delete(rhinoObject, true, true);
 
-				args.Doc.RealisedChangeTable.DeleteChange(args.Change.Id);
+				args.Doc.TemporaryChangeTable.UpdateChange(geomChange);
+				args.Doc.TemporaryChangeTable.DeleteChange(geomChange.Id);
+				args.Doc.RealisedChangeTable.PurgeChange(args.Change.Id);
 			}
 			finally
 			{

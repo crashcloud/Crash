@@ -1,6 +1,4 @@
-﻿using System.Reflection.Metadata.Ecma335;
-
-using Crash.Changes.Extensions;
+﻿using Crash.Changes.Extensions;
 using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
@@ -8,7 +6,6 @@ using Crash.Handlers.Changes;
 using Crash.Utils;
 
 using Rhino;
-using Rhino.DocObjects;
 
 namespace Crash.Handlers.Plugins.Geometry.Recieve
 {
@@ -114,30 +111,6 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			// Undo Delete Realised
 			if (args.Doc.RealisedChangeTable.IsDeleted(geomChange.Id))
 			{
-
-				// Move to Temporary!
-				if (!args.Doc.RealisedChangeTable.TryGetRhinoId(geomChange.Id, out Guid rhinoId))
-					return;
-
-				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
-
-				var deletedSettings = new ObjectEnumeratorSettings()
-				{
-					ActiveObjects = true,
-					DeletedObjects = true,
-					HiddenObjects = true,
-					LockedObjects = true,
-					NormalObjects = true,
-				};
-				var deleteds = rhinoDoc.Objects.GetObjectList(deletedSettings);
-				foreach(var deleted in deleteds)
-				{
-					if (deleted.Id != rhinoId)
-						continue;
-
-					geomChange.SetGeometry(deleted.Geometry.Duplicate());
-				}
-
 				args.Doc.RealisedChangeTable.PurgeChange(geomChange.Id);
 				args.Doc.TemporaryChangeTable.UpdateChange(geomChange);
 

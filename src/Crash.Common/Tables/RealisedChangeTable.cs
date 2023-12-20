@@ -1,4 +1,6 @@
-﻿using Crash.Common.Document;
+﻿using BidirectionalMap;
+
+using Crash.Common.Document;
 
 namespace Crash.Common.Tables
 {
