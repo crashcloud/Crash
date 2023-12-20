@@ -22,9 +22,6 @@ namespace Crash.Common.Tables
 	/// </summary>
 	public sealed class RealisedChangeTable
 	{
-		/// <summary>The stored Id Key</summary>
-		public const string ChangeIdKey = "ChangeID";
-
 		/// <summary>The current Crash Document</summary>
 		private readonly CrashDoc _crashDoc;
 

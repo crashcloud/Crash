@@ -102,6 +102,22 @@ namespace Crash.Common.Tables
 		}
 
 		/// <summary>
+		/// Checks that a pairing with this RhinoId exists.
+		/// </summary>
+		public bool HasPairing(Guid rhinoId)
+		{
+			return _cache.ContainsKey(rhinoId);
+		}
+
+		/// <summary>
+		/// Attempts to find the Change associated to this RhinoId 
+		/// </summary>
+		public bool TryGetChange(Guid rhinoId, out IChange change)
+		{
+			return _cache.TryGetValue(rhinoId, out change);
+		}
+
+		/// <summary>
 		///     Restores a Deleted Change
 		/// </summary>
 		public void RestoreChange(Guid changeId)
