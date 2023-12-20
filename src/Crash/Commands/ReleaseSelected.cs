@@ -1,5 +1,6 @@
 ﻿using Crash.Common.Changes;
 using Crash.Common.Document;
+using Crash.Handlers;
 using Crash.Utils;
 
 using Rhino.Commands;
@@ -46,15 +47,16 @@ namespace Crash.Commands
 
 		private static IEnumerable<Guid> GetSelectedChanges(RhinoDoc doc)
 		{
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(doc);
 			var selected = new List<Guid>();
 			foreach (var rhinoObj in doc.Objects.GetSelectedObjects(false, false))
 			{
-				if (!rhinoObj.TryGetChangeId(out var id))
+				if (!crashDoc.RealisedChangeTable.TryGetChangeId(rhinoObj.Id, out var changeId))
 				{
 					continue;
 				}
 
-				selected.Add(id);
+				selected.Add(changeId);
 			}
 
 			return selected;
