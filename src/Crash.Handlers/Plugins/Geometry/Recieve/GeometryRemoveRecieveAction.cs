@@ -52,8 +52,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
 				rhinoDoc.Objects.Delete(rhinoObject, true, true);
 
-				args.Doc.RealisedChangeTable.RemoveSelected(args.Change.Id);
-				args.Doc.RealisedChangeTable.PurgeChange(args.Change.Id);
+				args.Doc.RealisedChangeTable.DeleteChange(args.Change.Id);
 			}
 			finally
 			{

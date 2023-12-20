@@ -1,6 +1,4 @@
-﻿using BidirectionalMap;
-
-using Crash.Common.Document;
+﻿using Crash.Common.Document;
 
 namespace Crash.Common.Tables
 {
@@ -22,11 +20,6 @@ namespace Crash.Common.Tables
 	/// </summary>
 	public sealed class RealisedChangeTable
 	{
-
-		private record struct RhinoGuid(Guid RhinoId);
-
-		private record struct ChangeGuid(Guid ChangeId);
-		
 		/// <summary>The stored Id Key</summary>
 		public const string ChangeIdKey = "ChangeID";
 
@@ -37,11 +30,14 @@ namespace Crash.Common.Tables
 		private readonly BiMap<RhinoGuid, ChangeGuid> _rhinoChangeMap;
 		private readonly HashSet<ChangeGuid> _selected;
 
+		/// <summary>
+		///     Creates a new Realised Change Table
+		/// </summary>
 		public RealisedChangeTable(CrashDoc crashDoc)
 		{
 			_crashDoc = crashDoc;
-			_deletedRhinoChangeMap = new();
-			_rhinoChangeMap = new();
+			_deletedRhinoChangeMap = new BiMap<RhinoGuid, ChangeGuid>();
+			_rhinoChangeMap = new BiMap<RhinoGuid, ChangeGuid>();
 			_selected = new HashSet<ChangeGuid>();
 		}
 
@@ -102,6 +98,70 @@ namespace Crash.Common.Tables
 			return ContainsChangeId(change.Id);
 		}
 
+		/// <summary>
+		///     Checks to see if a Change is marked as Deleted
+		/// </summary>
+		/// <returns>True if Marked as Deleted</returns>
+		public bool IsDeleted(Guid changeId)
+		{
+			return _deletedRhinoChangeMap.Reverse.ContainsKey(new ChangeGuid(changeId));
+		}
+
+		/// <summary>
+		///     Removes the change from Realised, and stashes it in deleted.
+		///     It also removes it from selected
+		/// </summary>
+		public void DeleteChange(Guid changeId)
+		{
+			if (!TryGetRhinoId(changeId, out var rhinoId))
+			{
+				return;
+			}
+
+			var rhinoGuid = new RhinoGuid(rhinoId);
+			var changeGuid = new ChangeGuid(changeId);
+			_rhinoChangeMap.Remove(rhinoGuid);
+			_deletedRhinoChangeMap.Add(rhinoGuid, changeGuid);
+			_selected.Remove(changeGuid);
+		}
+
+		/// <summary>Removes a Pair via the Change Id from the table</summary>
+		public void PurgeChange(Guid changeId)
+		{
+			var changeGuid = new ChangeGuid(changeId);
+			_selected.Remove(changeGuid);
+
+			if (!_rhinoChangeMap.Reverse.ContainsKey(changeGuid))
+			{
+				return;
+			}
+
+			var rhinoId = _rhinoChangeMap.Reverse[changeGuid];
+
+			_deletedRhinoChangeMap.Remove(rhinoId);
+			_rhinoChangeMap.Remove(rhinoId);
+		}
+
+		/// <summary>
+		///     Restores a Change. Removes from deleted and moves to added
+		/// </summary>
+		public void RestoreChange(Guid changeId)
+		{
+			var changeGuid = new ChangeGuid(changeId);
+			if (!_deletedRhinoChangeMap.Reverse.ContainsKey(changeGuid))
+			{
+				return;
+			}
+
+			var rhinoGuid = _deletedRhinoChangeMap.Reverse[changeGuid];
+			_deletedRhinoChangeMap.Remove(rhinoGuid);
+			_rhinoChangeMap.Add(rhinoGuid, changeGuid);
+		}
+
+		private record struct RhinoGuid(Guid RhinoId);
+
+		private record struct ChangeGuid(Guid ChangeId);
+
 		#region Get Ids
 
 		/// <summary>Returns a Rhino Id</summary>
@@ -111,13 +171,20 @@ namespace Crash.Common.Tables
 		public bool TryGetRhinoId(Guid changeId, out Guid rhinoId)
 		{
 			rhinoId = Guid.Empty;
-			if (!ContainsChangeId(changeId))
+			var changeGuid = new ChangeGuid(changeId);
+			if (ContainsChangeId(changeId))
 			{
-				return false;
+				rhinoId = _rhinoChangeMap.Reverse[changeGuid].RhinoId;
+				return true;
 			}
 
-			rhinoId = _rhinoChangeMap.Reverse[new ChangeGuid(changeId)].RhinoId;
-			return true;
+			if (IsDeleted(changeId))
+			{
+				rhinoId = _deletedRhinoChangeMap.Reverse[changeGuid].RhinoId;
+				return true;
+			}
+
+			return false;
 		}
 
 		/// <summary>Returns a Rhino Id</summary>
@@ -144,47 +211,11 @@ namespace Crash.Common.Tables
 			changeId = _rhinoChangeMap.Forward[new RhinoGuid(rhinoId)].ChangeId;
 			return true;
 		}
-		
+
 		#endregion
 
-		public void DeleteChange(Guid changeId)
-		{
-			if (!TryGetRhinoId(changeId, out Guid rhinoId))
-				return;
-
-			var rhinoGuid = new RhinoGuid(rhinoId);
-			var changeGuid = new ChangeGuid(changeId);
-			_rhinoChangeMap.Remove(rhinoGuid);
-			_deletedRhinoChangeMap.Add(rhinoGuid, changeGuid);
-			_selected.Remove(changeGuid);
-		}
-
-		/// <summary>Removes a Pair via the Change Id from the table</summary>
-		public void PurgeChange(Guid changeId)
-		{
-			var changeGuid = new ChangeGuid(changeId);
-			var rhinoId = _rhinoChangeMap.Reverse[changeGuid];
-
-			_deletedRhinoChangeMap.Remove(rhinoId);
-			_rhinoChangeMap.Remove(rhinoId);
-			_selected.Remove(changeGuid);
-		}
-
-		public void RestoreChange(Guid changeId)
-		{
-			var changeGuid = new ChangeGuid(changeId);
-			if (!_deletedRhinoChangeMap.Reverse.ContainsKey(changeGuid))
-			{
-				return;
-			}
-
-			var rhinoGuid = _deletedRhinoChangeMap.Reverse[changeGuid];
-			_deletedRhinoChangeMap.Remove(rhinoGuid);
-			_rhinoChangeMap.Add(rhinoGuid, changeGuid);
-		}
-
 		#region Selected
-		
+
 		/// <summary>Adds an Id to the Selection</summary>
 		/// <param name="changeId"></param>
 		public void AddSelected(Guid changeId)
@@ -198,7 +229,7 @@ namespace Crash.Common.Tables
 		{
 			_selected.Remove(new ChangeGuid(changeId));
 		}
-		
+
 		/// <summary>Clears all Selected Ids</summary>
 		/// <exception cref="NotImplementedException"></exception>
 		public void ClearSelected()
@@ -217,7 +248,7 @@ namespace Crash.Common.Tables
 		{
 			return _selected.Contains(new ChangeGuid(changeId));
 		}
-		
+
 		#endregion
 	}
 }

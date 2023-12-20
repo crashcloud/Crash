@@ -43,6 +43,7 @@ namespace Crash.Commands
 					break;
 			}
 
+			doc.Objects.UnselectAll();
 			await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 			InteractivePipe.Active.Enabled = false;
 

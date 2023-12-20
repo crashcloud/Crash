@@ -67,6 +67,7 @@ namespace Crash.Common.Tables
 		{
 			_cache.TryRemove(cache.Id, out _);
 			_cache.TryAdd(cache.Id, cache);
+			_deleted.TryRemove(cache.Id, out _);
 		}
 
 		/// <summary>
@@ -93,7 +94,7 @@ namespace Crash.Common.Tables
 		}
 
 		/// <summary>
-		/// Checks to see if a Change is Deleted
+		///     Checks to see if a Change is Deleted
 		/// </summary>
 		public bool IsDeleted(Guid changeId)
 		{
