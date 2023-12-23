@@ -73,6 +73,11 @@ namespace Crash.UI.JoinModel
 					AddSharedModel(sharedModel);
 				}
 			}
+			else
+			{
+				// Default if empty
+				AddSharedModel(new SharedModel { ModelAddress = "http://localhost:8080" });
+			}
 		}
 
 		internal bool ModelIsNew(SharedModel model)
