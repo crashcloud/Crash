@@ -30,9 +30,9 @@ namespace Crash
 			Instance = this;
 
 			// Register the Defaults!
-			//RegisterChangeSchema(new GeometryChangeDefinition());
-			//RegisterChangeSchema(new CameraChangeDefinition());
-			//RegisterChangeSchema(new DoneDefinition());
+			RegisterChangeSchema(new GeometryChangeDefinition());
+			RegisterChangeSchema(new CameraChangeDefinition());
+			RegisterChangeSchema(new DoneDefinition());
 		}
 
 		/// <inheritdoc />
