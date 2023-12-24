@@ -10,7 +10,7 @@ jobs:
   build-win:
     strategy:
       matrix:
-        os: [ 'windows' ]
+        os: [ 'windows-latest' ]
     runs-on: ${{ matrix.os }}
 
     name: Yak Build & Publish
