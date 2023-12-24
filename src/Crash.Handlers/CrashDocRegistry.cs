@@ -1,10 +1,10 @@
 ﻿using BidirectionalMap;
 
-using Crash.Common.Communications;
 using Crash.Common.Document;
 using Crash.Common.Events;
 
 using Rhino;
+using Rhino.DocObjects;
 
 namespace Crash.Handlers
 {
@@ -77,7 +77,7 @@ namespace Crash.Handlers
 			return crashDoc;
 		}
 
-		private static void RegisterQueue(object sender, CrashClient.CrashInitArgs e)
+		private static void RegisterQueue(object? sender, CrashInitArgs e)
 		{
 			RhinoApp.WriteLine("Loading Changes ...");
 
@@ -88,7 +88,7 @@ namespace Crash.Handlers
 			                 };
 		}
 
-		private static void RedrawOncompleted(object sender, CrashEventArgs e)
+		private static void RedrawOncompleted(object? sender, CrashEventArgs e)
 		{
 			var rhinoDoc = GetRelatedDocument(e.CrashDoc);
 			rhinoDoc.Views.Redraw();
@@ -102,6 +102,7 @@ namespace Crash.Handlers
 
 		public static async Task DisposeOfDocumentAsync(CrashDoc crashDoc)
 		{
+			crashDoc.Queue.ForceCycleQueue();
 			DocumentDisposed?.Invoke(null, new CrashEventArgs(crashDoc));
 			// DeRegister Events
 			crashDoc.Queue.OnCompletedQueue -= RedrawOncompleted;
@@ -114,6 +115,18 @@ namespace Crash.Handlers
 			// Remove Geometry
 			var rhinoDoc = GetRelatedDocument(crashDoc);
 			DocumentRelationship.Remove(rhinoDoc);
+
+			var settings = new ObjectEnumeratorSettings
+			               {
+				               ActiveObjects = false, LockedObjects = true, HiddenObjects = true
+			               };
+			var rhinoObjects = rhinoDoc.Objects.GetObjectList(settings);
+			foreach (var rhinoObject in rhinoObjects)
+			{
+				rhinoDoc.Objects.Unlock(rhinoObject, true);
+				rhinoDoc.Objects.Show(rhinoObject, true);
+			}
+
 			rhinoDoc.Objects.Clear();
 
 			// Dispose

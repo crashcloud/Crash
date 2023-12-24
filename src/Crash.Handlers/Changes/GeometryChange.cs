@@ -35,9 +35,15 @@ namespace Crash.Handlers.Changes
 			try
 			{
 				var packet = PayloadSerialization.GetPayloadPacket(change.Payload);
-				var geometry = CommonObject.FromJSON(packet.Data) as GeometryBase;
+				GeometryBase geometry = null;
+				if (!string.IsNullOrEmpty(change.Payload))
+				{
+					geometry = CommonObject.FromJSON(packet.Data) as GeometryBase;
+				}
 
-				if (packet.Transform.IsValid() && !packet.Transform.Equals(CTransform.Unset))
+				if (packet.Transform.IsValid() &&
+				    !packet.Transform.Equals(CTransform.Unset) &&
+				    geometry is not null)
 				{
 					var transform = packet.Transform.ToRhino();
 					if (transform.IsValid)
@@ -115,5 +121,12 @@ namespace Crash.Handlers.Changes
 
 			return geometry?.ToJSON(new SerializationOptions { RhinoVersion = 70, WriteUserData = false });
 		}
+
+		/// <summary>Sets the Geometry of the Change</summary>
+		public void SetGeometry(GeometryBase geometry)
+		{
+			Geometry = geometry;
+		}
+
 	}
 }

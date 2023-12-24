@@ -1,6 +1,5 @@
 ﻿using Crash.Changes.Extensions;
 using Crash.Common.Document;
-using Crash.Common.Events;
 using Crash.Handlers.Changes;
 using Crash.Handlers.Plugins.Geometry.Recieve;
 
@@ -34,7 +33,11 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 				{
 					foreach (var change in crashDoc.TemporaryChangeTable.GetChanges())
 					{
-						await ReleaseChange(crashDoc, change);
+						if (string.Equals(change.Owner, recievedChange.Owner,
+						                  StringComparison.InvariantCultureIgnoreCase))
+						{
+							await ReleaseChange(crashDoc, change);
+						}
 					}
 				}
 			}
@@ -42,18 +45,6 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 			{
 				Console.WriteLine(e);
 				throw;
-			}
-			finally
-			{
-				EventHandler<CrashEventArgs>? _event = null;
-				_event = (sender, args) =>
-				         {
-					         crashDoc.DocumentIsBusy = false;
-					         crashDoc.Queue.OnCompletedQueue -= _event;
-				         };
-
-				// TODO : What about things in the existing queue etc? <<< --- YES ABOUT THIS
-				crashDoc.Queue.OnCompletedQueue += _event;
 			}
 		}
 
@@ -68,7 +59,6 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 			crashDoc.TemporaryChangeTable.RemoveChange(change.Id);
 
 			geomChange.RemoveAction(ChangeAction.Temporary);
-			geomChange.RemoveAction(ChangeAction.Locked);
 
 			var add = new GeometryAddRecieveAction();
 			await add.OnRecieveAsync(crashDoc, geomChange);

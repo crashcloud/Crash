@@ -52,5 +52,11 @@ namespace Crash.Handlers.Tests.Plugins.Geometry
 			Assert.That(_rdoc.Objects, Is.Not.Empty);
 			Assert.That(_cdoc.TemporaryChangeTable, Is.Empty);
 		}
+
+		[OneTimeTearDown]
+		public void TearDown()
+		{
+			_cdoc.Dispose();
+		}
 	}
 }

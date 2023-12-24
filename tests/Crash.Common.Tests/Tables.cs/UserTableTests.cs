@@ -18,7 +18,7 @@ namespace Crash.Common.Tests.Tables
 			var result = userTable.Add(user);
 
 			// Assert
-			Assert.IsTrue(result);
+			Assert.That(result, Is.True);
 		}
 
 		[Test]
@@ -36,8 +36,8 @@ namespace Crash.Common.Tests.Tables
 			var result2 = userTable.Add(user2);
 
 			// Assert
-			Assert.IsTrue(result1);
-			Assert.IsFalse(result2);
+			Assert.That(result1, Is.True);
+			Assert.That(result2, Is.False);
 		}
 
 		[Test]
@@ -54,7 +54,7 @@ namespace Crash.Common.Tests.Tables
 			var result = userTable.Add(user);
 
 			// Assert
-			Assert.IsFalse(result);
+			Assert.That(result, Is.False);
 		}
 
 		[Test]
@@ -72,7 +72,7 @@ namespace Crash.Common.Tests.Tables
 			var result = userTable.Add(user);
 
 			// Assert
-			Assert.IsTrue(eventRaised);
+			Assert.That(eventRaised, Is.True);
 		}
 
 		[Test]
@@ -113,7 +113,7 @@ namespace Crash.Common.Tests.Tables
 			userTable.Remove(user);
 
 			// Assert
-			Assert.IsTrue(eventRaised);
+			Assert.That(eventRaised, Is.True);
 		}
 
 		[Test]

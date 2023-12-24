@@ -1,10 +1,10 @@
 ﻿using Crash.Changes.Extensions;
-using Crash.Changes.Utils;
 using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
 using Crash.Handlers.Changes;
-using Crash.Utils;
+
+using Rhino;
 
 namespace Crash.Handlers.Plugins.Geometry.Recieve
 {
@@ -14,7 +14,9 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 		public bool CanRecieve(IChange change)
 		{
 			if (change is null)
+			{
 				return false;
+			}
 
 			if (!change.Action.HasFlag(ChangeAction.Add))
 			{
@@ -38,17 +40,16 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 		public async Task OnRecieveAsync(CrashDoc crashDoc, GeometryChange geomChange)
 		{
 			if (crashDoc is null || geomChange is null)
+			{
 				return;
+			}
 
 			var changeArgs = new IdleArgs(crashDoc, geomChange);
 			IdleAction resultingAction = null;
 
-			if (!geomChange.HasFlag(ChangeAction.Temporary))
-			{
-				resultingAction = new IdleAction(AddToDocument, changeArgs);
-			}
-			else if (geomChange.Owner?.Equals(crashDoc.Users.CurrentUser.Name,
-			                                 StringComparison.InvariantCultureIgnoreCase) == true)
+			if (!geomChange.HasFlag(ChangeAction.Temporary) ||
+			    geomChange.Owner?.Equals(crashDoc.Users.CurrentUser.Name,
+			                             StringComparison.InvariantCultureIgnoreCase) == true)
 			{
 				resultingAction = new IdleAction(AddToDocument, changeArgs);
 			}
@@ -71,14 +72,35 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			args.Doc.DocumentIsBusy = true;
 			try
 			{
-				var rhinoId = rhinoDoc.Objects.Add(geomChange.Geometry);
-				var rhinoObject = rhinoDoc.Objects.FindId(rhinoId);
-				rhinoObject.SyncHost(geomChange, args.Doc);
+				var rhinoId = Guid.Empty;
+				if (geomChange.Geometry is null)
+				{
+					args.Doc.RealisedChangeTable.RestoreChange(args.Change.Id);
+					args.Doc.RealisedChangeTable.TryGetRhinoId(args.Change.Id, out rhinoId);
+				}
+				else
+				{
+					rhinoId = rhinoDoc.Objects.Add(geomChange.Geometry);
+				}
 
+				var rhinoObject = rhinoDoc.Objects.FindId(rhinoId);
+				args.Doc.RealisedChangeTable.AddPair(args.Change.Id, rhinoObject.Id);
 				if (args.Change.HasFlag(ChangeAction.Locked))
 				{
-					rhinoDoc.Objects.Select(rhinoId, true, true);
+					if (string.Equals(args.Change.Owner, args.Doc.Users.CurrentUser.Name,
+					                  StringComparison.InvariantCultureIgnoreCase))
+					{
+						rhinoDoc.Objects.Select(rhinoId, true, true);
+					}
+					else
+					{
+						rhinoDoc.Objects.Lock(rhinoObject, true);
+					}
 				}
+			}
+			catch (Exception ex)
+			{
+				RhinoApp.WriteLine(ex.Message);
 			}
 			finally
 			{
@@ -93,14 +115,23 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				return;
 			}
 
-			var finalChange = geomChange;
-			if (args.Doc.TemporaryChangeTable.TryGetChangeOfType(geomChange.Id, out GeometryChange existingChange))
+			// Undo Delete Realised
+			if (args.Doc.RealisedChangeTable.IsDeleted(geomChange.Id))
 			{
-				var combinedChange = ChangeUtils.CombineChanges(existingChange, geomChange);
-				finalChange = GeometryChange.CreateFrom(combinedChange);
+				args.Doc.RealisedChangeTable.PurgeChange(geomChange.Id);
 			}
 
-			args.Doc.TemporaryChangeTable.UpdateChange(finalChange);
+			// Undo Delete Temporary
+			if (args.Doc.TemporaryChangeTable.IsDeleted(geomChange.Id))
+			{
+				// Restore!
+				args.Doc.TemporaryChangeTable.RestoreChange(geomChange.Id);
+
+				return;
+			}
+
+			// Add Temporary
+			args.Doc.TemporaryChangeTable.UpdateChange(geomChange);
 		}
 	}
 }

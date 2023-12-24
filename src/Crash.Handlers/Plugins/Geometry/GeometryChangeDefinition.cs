@@ -115,6 +115,15 @@ namespace Crash.Handlers.Plugins.Geometry
 
 				// TODO : Cache
 			}
+			else if (geom is SubD subD)
+			{
+				if (!drawWireframe)
+				{
+					drawArgs.Display.DrawSubDShaded(subD, material);
+				}
+
+				drawArgs.Display.DrawSubDWires(subD, material.Diffuse, 1);
+			}
 			else if (geom is Point pnt)
 			{
 				drawArgs.Display.DrawPoint(pnt.Location, material.Diffuse);
@@ -128,10 +137,11 @@ namespace Crash.Handlers.Plugins.Geometry
 
 		public BoundingBox GetBoundingBox(IChange change)
 		{
-			if (change is not GeometryChange geomChange)
+			if (change is not GeometryChange geomChange || geomChange.Geometry is null)
 			{
 				return BoundingBox.Unset;
 			}
+
 
 			return geomChange.Geometry.GetBoundingBox(false);
 		}

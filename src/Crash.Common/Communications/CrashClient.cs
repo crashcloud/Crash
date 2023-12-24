@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net.WebSockets;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -127,37 +128,55 @@ namespace Crash.Common.Communications
 			return _connection.StartAsync();
 		}
 
-		public sealed class CrashInitArgs : CrashEventArgs
-		{
-			public readonly IEnumerable<Change> Changes;
-
-			public CrashInitArgs(CrashDoc crashDoc, IEnumerable<Change> changes)
-				: base(crashDoc)
-			{
-				Changes = changes;
-			}
-		}
-
 
 		#region Connection Watchers
 
-		private Task ConnectionReconnectingAsync(Exception? arg)
+		private async Task ConnectionReconnectingAsync(Exception? arg)
 		{
-			Console.WriteLine(arg);
-			return Task.CompletedTask;
+			var closedTask = arg switch
+			                 {
+				                 HubException => ChangesCouldNotBeSent(),
+				                 _            => Task.CompletedTask
+			                 };
+
+			await closedTask;
 		}
 
-		private Task ConnectionClosedAsync(Exception? arg)
+		private async Task ConnectionClosedAsync(Exception? arg)
 		{
-			Console.WriteLine(arg);
-			return Task.CompletedTask;
+			var closedTask = arg switch
+			                 {
+				                 HubException               => ChangesCouldNotBeSent(),
+				                 WebSocketException         => ServerIndicatedPossibleClosure(),
+				                 OperationCanceledException => ServerClosedUnexpectidly(),
+				                 _                          => Task.CompletedTask
+			                 };
+
+			await closedTask;
+		}
+
+		private async Task ServerClosedUnexpectidly()
+		{
+			OnServerClosed?.Invoke(this, new CrashEventArgs(_crashDoc));
+		}
+
+		private async Task ServerIndicatedPossibleClosure()
+		{
+		}
+
+		private async Task ChangesCouldNotBeSent()
+		{
+			OnPushChangeFailed?.Invoke(this,
+			                           new CrashChangeArgs(_crashDoc, LastAttemptedChangeCommunication.ToArray()));
 		}
 
 		private Task ConnectionReconnectedAsync(string? arg)
 		{
-			Console.WriteLine(arg);
 			return Task.CompletedTask;
 		}
+
+		public event EventHandler<CrashEventArgs> OnServerClosed;
+		public event EventHandler<CrashChangeArgs> OnPushChangeFailed;
 
 		#endregion
 
@@ -193,6 +212,8 @@ namespace Crash.Common.Communications
 
 		#region Push to Server
 
+		private readonly List<Change> LastAttemptedChangeCommunication = new();
+
 		/// <summary>
 		///     Pushes an Update/Transform/Payload which applies to many Changes
 		///     An example of this is arraying the same item or deleting many items at once
@@ -201,12 +222,16 @@ namespace Crash.Common.Communications
 		/// <param name="change">The newest changes</param>
 		public async Task PushIdenticalChangesAsync(IEnumerable<Guid> ids, Change change)
 		{
+			LastAttemptedChangeCommunication.Clear();
+			LastAttemptedChangeCommunication.Add(change);
 			await _connection.InvokeAsync(PUSH_IDENTICAL, ids, change);
 		}
 
 		/// <summary>Pushes a single Change</summary>
 		public async Task PushChangeAsync(Change change)
 		{
+			LastAttemptedChangeCommunication.Clear();
+			LastAttemptedChangeCommunication.Add(change);
 			await _connection.InvokeAsync(PUSH_SINGLE, change);
 		}
 
@@ -216,6 +241,8 @@ namespace Crash.Common.Communications
 		/// </summary>
 		public async Task PushChangesAsync(IEnumerable<Change> changes)
 		{
+			LastAttemptedChangeCommunication.Clear();
+			LastAttemptedChangeCommunication.AddRange(changes);
 			await _connection.InvokeAsync(PUSH_MANY, changes);
 		}
 

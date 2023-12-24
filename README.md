@@ -13,7 +13,6 @@
   <a href="https://github.com/crashcloud/Crash">
     <img src="art\crash-logo.jpg" alt="Logo">
   </a>
-
   <p align="center">
     A multi-user collaborative environment for Rhino
     <br />
@@ -25,31 +24,52 @@
   </p>
 </div>
 
-<!-- TABLE OF CONTENTS -->
+# :rocket: Poweruser Getting Started
 
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-    </li>
-    <li>
-      <a href="#baby-poweruser-getting-started">Poweruser Getting Started</a>
-    </li>
-    <li>
-      <a href="#man_technologist-woman_technologist-developer-getting-started">Developer Getting Started</a>
-    </li>
-    <li><a href="#workflow-overview">Workflow Overview</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
+Thanks for checking out Crash! Please follow the steps below to get started in no time! Please make sure you have all the <a href="#prerequisites">Prerequisites</a> to ensure a smooth building experience.
 
-<!-- ABOUT THE PROJECT -->
+### Installing Crash from within Rhino (Yak)
+1. Launch Rhino 7 or 8
+2. Type in PackageManager or go to Tools --> Package Manager
+3. Search for Crash and press Install.
+4. Close and Re-launch Rhino 7 (or 8).
+5. Or Press here
 
-## About The Project
+### Using Crash
+
+To host a new shared mode visit the [Crash.Server](https://github.com/crashcloud/crash.server) repo and checkout the README.
+
+### To Join a shared model:
+
+1. Type `OpenSharedModel` command in Rhino.
+2. Enter your name when prompted.
+3. Enter the server URL from step 4 above.
+
+You're now connected in a collaborative session. To commit your changes to the central model use the `Release` command.
+
+# :man_technologist: :woman_technologist: Get Hacking
+
+Thanks again for checking out CRASH! Please follow the steps below to get started and diving into the code in no time!
+
+##  Prerequisites
+* [.NET Framework 4.8](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net48) and [.NET Core 7.0](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
+* [Rider](https://www.jetbrains.com/rider/) or [Visual Studio 2022](https://visualstudio.microsoft.com/vs/) or [Visual Studio Code](https://code.visualstudio.com/)
+* [crash.server](https://github.com/crashcloud/crash.server)
+* [Rhino 7.21+](https://www.rhino3d.com/download/) (win/mac) or [Rhino 8.3+](https://www.rhino3d.com/download/) (mac)
+
+
+### Building and Running
+1. Clone the repo https://github.com/crashcloud/crash.git
+2. Open your IDE of choice and run using Debug
+3. The IDE should launch Rhino
+
+
+# Contributing
+
+See the [open issues](https://github.com/crashcloud/Crash/issues) for a full list of proposed features (and known
+issues). There is also the [contribution guide](CONTRIBUTING.md) for more info.
+
+# About The Project
 
 This project has been completed as part of the TT AEC Hackathon 2022 - New York. This plugin/application allows users to
 collaborate on a single central Rhino model. The Team Members for this awesome project are (in alphabetical order):
@@ -62,139 +82,16 @@ collaborate on a single central Rhino model. The Team Members for this awesome p
 * [Moustafa El-Sawy](https://www.linkedin.com/in/moustafakelsawy/)
 * [Russell Feathers](https://www.linkedin.com/in/russell-feathers/)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-### Built With
-
-* [Visual Studio 2022](https://visualstudio.microsoft.com/vs/)
-* [SignalR](https://learn.microsoft.com/en-us/aspnet/signalr/overview/getting-started/introduction-to-signalr)
-* [SQLite](https://www.sqlite.org/index.html)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- POWERUSER GETTING STARTED -->
-
-## :baby: Poweruser Getting Started
-
-Thanks for checking out CRASH! Please follow the steps below to get started in no time! Please make sure you have all
-the <a href="#prerequisites">Prerequisites</a> to have a smooth and fun experience!
-
-### Prerequisites
-
-You will need the following libraries and/or software installed before getting to the fun!
-
-* [Rhino 7.21+](https://www.rhino3d.com/download/)
-
-### Installing CRASH from YAK
-
-1. Launch Rhino 7 (or 8)
-2. Type in PackageManager or go to Tools --> Package Manager
-3. Search for Crash and press Install.
-4. Close and Re-launch Rhino 7 (or 8).
-
-### Using Crash
-
-To host a new shared model:
-
-1. Type `StartSharedModel` command in Rhino.
-2. Enter your name when prompted.
-3. Specify an open port on your machine to run the server
-4. Others can join the session using url `<your_ip_address>:<port>`
-
-![Alt Text](https://media.giphy.com/media/oNuY0wsiDV5XFmYuNw/giphy.gif)
-
-To Join a shared model:
-
-1. Type `OpenSharedModel` command in Rhino.
-2. Enter your name when prompted.
-3. Enter the server URL from step 4 above.
-
-You're now connected in a collaborative session. To commit your changes to the central model use the `Release` command.
-
-<!-- DEVELOPER GETTING STARTED -->
-
-## :man_technologist: :woman_technologist: Developer Getting Started
-
-Thanks again for checking out CRASH! Please follow the steps below to get started and diving into the code in no time!
-Please sure sure you have all the <a href="#prerequisites-1">Prerequisites</a> to have a smooth, unbuggy and fun
-experience!
-
-### Prerequisites
-
-You will need the following libraries and/or software installed before getting to the fun!
-
-* [.NET Framework 4.8](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net48)
-* [.NET Core 7](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
-* [Rhino 7.21+](https://www.rhino3d.com/download/)
-* [Visual Studio 2022](https://visualstudio.microsoft.com/vs/)
-
-### Prerequisites (MacOS)
-
-You can also build and debug on MacOS using VS Code!
-
-* [Visual Studio Code](https://code.visualstudio.com/)
-* [Rhino 8 WIP](https://www.rhino3d.com/download/rhino/wip) is required on ARM machines.
-
-### Prerequisites (Either)
-
-Crash wil automatically download crash.server, but you can also clone and run your own in debug mode.
-
-* [crash.server](https://github.com/crashcloud/crash.server)
-
-### Getting Source
-
-Clone the repo
-
-   ```sh
-   git clone https://github.com/crashcloud/crash.git
-   ```
-
-### Building
-
-#### Windows
-
-Open Crash repository in Visual Studio:
-
-1. Set Crash as startup project.
-2. Build solution.
-3. Drag and drop `Crash\Crash\bin\**\**\Crash.rhp` into an open Rhino window.
-4. Re-open Rhino.
-5. Happy debugging.
-
-#### MacOS
-
-Open Crash repository in VS Code run build tasks `⇧⌘B` in this order:
-
-1. `buid-plugin`
-2. `build-server`
-3. `publish-server`
-   From `Run and Debug` tab run `Run Rhino 8 WIP`
-
-Rhino will launch in debug mode.
-
-<!-- CONTRIBUTING -->
-
-## Contributing
-
-See the [open issues](https://github.com/crashcloud/Crash/issues) for a full list of proposed features (and known
-issues).
-
-[Please see contribution guide](CONTRIBUTING.md)
-
-<!-- LICENSE -->
-
-## License
-
-Distributed under the MIT License. See `LICENSE.txt` for more information.
-
-<!-- ACKNOWLEDGMENTS -->
-
-## Acknowledgments
+### Acknowledgments
 
 Big thanks to AEC Tech 2022 for arranging this event! Also we would like to thank McNeel for all their awesome work!
 This project has been a great collaboration of several great minds. Please check out other hackathon projects and future
 hackathon events hosted by [AECTech](https://www.aectech.us/). Original repo can be found
 at : [crashcloud/crash](https://github.com/crashcloud/crash)
+
+### License
+
+Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
