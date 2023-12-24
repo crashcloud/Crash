@@ -1,69 +1,54 @@
-﻿using Crash.Common.Changes;
+﻿using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
-using Crash.Utils;
 
 namespace Crash.Handlers.Plugins.Geometry.Create
 {
-
 	/// <summary>Handles unselction</summary>
 	internal sealed class GeometryUnSelectAction : IChangeCreateAction
 	{
-		/// <inheritdoc/>
-		public ChangeAction Action => ChangeAction.Unlock;
+		public ChangeAction Action => ChangeAction.Unlocked;
 
-		/// <inheritdoc/>
+
 		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
-			=> crashArgs.Args is CrashSelectionEventArgs cargs &&
-			!cargs.Selected;
-
-		/// <inheritdoc/>
-		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<IChange> changes)
 		{
-			changes = Array.Empty<IChange>();
-			if (crashArgs.Args is not CrashSelectionEventArgs cargs) return false;
-			string userName = crashArgs.Doc.Users.CurrentUser.Name;
+			return crashArgs.Args is CrashSelectionEventArgs cargs &&
+			       !cargs.Selected;
+		}
 
-			if (cargs.DeselectAll)
+		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
+		{
+			changes = Array.Empty<Change>();
+			if (crashArgs.Args is not CrashSelectionEventArgs cargs)
 			{
-				var guids = ChangeUtils.GetSelected().ToList();
-				ChangeUtils.ClearSelected();
-				changes = getChanges(guids, userName);
+				return false;
 			}
-			else
+
+			var userName = crashArgs.Doc.Users.CurrentUser.Name;
+
+			changes = getChanges(cargs.CrashObjects, userName);
+
+			foreach (var change in changes)
 			{
-				changes = getChanges(cargs.CrashObjects, userName);
+				crashArgs.Doc.RealisedChangeTable.RemoveSelected(change.Id);
 			}
 
 			return true;
 		}
 
-		private IEnumerable<IChange> getChanges(IEnumerable<CrashObject> crashObjects, string userName)
+		private IEnumerable<Change> getChanges(IEnumerable<CrashObject> crashObjects, string userName)
 		{
+			var changes = new List<Change>();
 			foreach (var crashObject in crashObjects)
 			{
-				yield return CreateChange(crashObject.ChangeId, userName);
+				changes.Add(CreateChange(crashObject.ChangeId, userName));
 			}
-		}
 
-		private IEnumerable<IChange> getChanges(IEnumerable<Guid> changeIds, string userName)
-		{
-			foreach (var changeId in changeIds)
-			{
-				yield return CreateChange(changeId, userName);
-			}
+			return changes;
 		}
 
 		private Change CreateChange(Guid changeId, string userName)
 		{
-			var change = new Change(changeId, userName, null)
-			{
-				Action = ChangeAction.Unlock,
-				Type = GeometryChange.ChangeType,
-			};
-
-			return change;
+			return GeometryChange.CreateChange(changeId, userName, ChangeAction.Unlocked);
 		}
-
 	}
-
 }

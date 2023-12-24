@@ -1,53 +1,56 @@
-﻿using Crash.Common.Changes;
+﻿using Crash.Common.Document;
+using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
 
 namespace Crash.Handlers.Plugins.Geometry.Create
 {
-
 	/// <summary>Handles Selection</summary>
 	internal sealed class GeometrySelectAction : IChangeCreateAction
 	{
+		public ChangeAction Action => ChangeAction.Locked;
 
-		/// <inheritdoc/>
-		public ChangeAction Action => ChangeAction.Lock;
 
-		/// <inheritdoc/>
 		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
 		{
-			if (crashArgs.Args is not CrashSelectionEventArgs cargs) return false;
-			return cargs.Selected;
+			return crashArgs.Args is CrashSelectionEventArgs cargs && cargs.Selected;
 		}
 
-		/// <inheritdoc/>
-		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<IChange> changes)
+
+		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
 		{
-			changes = Array.Empty<IChange>();
-			if (crashArgs.Args is not CrashSelectionEventArgs cargs) return false;
+			changes = Array.Empty<Change>();
+			if (crashArgs.Args is not CrashSelectionEventArgs cargs)
+			{
+				return false;
+			}
 
 			var userName = crashArgs.Doc.Users.CurrentUser.Name;
+			changes = GetChanges(crashArgs.Doc, cargs.CrashObjects, userName);
 
-			changes = getChanges(cargs.CrashObjects, userName);
+			foreach (var change in changes)
+			{
+				crashArgs.Doc.RealisedChangeTable.AddSelected(change.Id);
+			}
 
 			return true;
 		}
 
-		private IEnumerable<IChange> getChanges(IEnumerable<CrashObject> crashObjects,
-												string userName)
+		private IEnumerable<Change> GetChanges(CrashDoc crashDoc, IEnumerable<CrashObject> crashObjects,
+			string userName)
 		{
+			var changes = new List<Change>(crashObjects.Count());
 			foreach (var crashObject in crashObjects)
 			{
-				if (crashObject.ChangeId == Guid.Empty) continue;
-
-				IChange change = new Change(crashObject.ChangeId, userName, null)
+				if (crashObject.ChangeId == Guid.Empty)
 				{
-					Action = ChangeAction.Lock,
-					Type = GeometryChange.ChangeType
-				};
+					continue;
+				}
 
-				yield return change;
+				var change = GeometryChange.CreateChange(crashObject.ChangeId, userName, ChangeAction.Locked);
+				changes.Add(change);
 			}
+
+			return changes;
 		}
-
 	}
-
 }

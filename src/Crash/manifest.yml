@@ -1,18 +1,18 @@
 name: Crash
-version: 1.4.0
+version: _YakVersion_
 authors:
-  - Callum Sykes
-  - Lukas Fuhrimann
-  - Curtis Wensley
-  - Russell Feathers
-  - Erika Santos
-  - Morteza Karimi
-  - Moustafa El-Sawy
+    - Callum Sykes
+    - Lukas Fuhrimann
+    - Curtis Wensley
+    - Russell Feathers
+    - Erika Santos
+    - Morteza Karimi
+    - Moustafa El-Sawy
 
 description: >
-   Crash allows you to create shared models which can be interacted with by people within your office, or across the globe. 
+    Crash allows you to create shared models which can be interacted with by people within your office, or across the globe. 
 keywords:
-  - Multiuser
-  - Crash
+    - Multiuser
+    - Crash
 icon: icon.png
 url: "https://github.com/crashcloud/Crash"

@@ -1,47 +1,92 @@
 ﻿using Crash.Common.Changes;
+using Crash.Common.Events;
+using Crash.Events;
 using Crash.Geometry;
 using Crash.Handlers.InternalEvents;
 
 namespace Crash.Handlers.Plugins.Geometry.Create
 {
-
 	/// <summary>Handles Transform Changes</summary>
 	internal sealed class GeometryTransformAction : IChangeCreateAction
 	{
-
-		/// <inheritdoc/>
 		public ChangeAction Action => ChangeAction.Transform;
 
-		/// <inheritdoc/>
+
 		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
-			=> crashArgs.Args is CrashTransformEventArgs;
-
-		/// <inheritdoc/>
-		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<IChange> changes)
 		{
-			changes = Array.Empty<IChange>();
-			if (crashArgs.Args is not CrashTransformEventArgs cargs) return false;
+			return crashArgs.Args is CrashTransformEventArgs;
+		}
 
-			var _user = crashArgs.Doc.Users.CurrentUser.Name;
-			var transform = cargs.Transform;
 
-			changes = getTransforms(transform, _user, cargs.Objects);
+		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
+		{
+			// TODO : Transform such as stretch creates new Change!
+			changes = Array.Empty<Change>();
+			if (crashArgs.Args is not CrashTransformEventArgs transformArgs)
+			{
+				crashArgs.Doc.DocumentIsBusy = false;
+				return false;
+			}
+
+			if (transformArgs.ObjectsWillBeCopied)
+			{
+				return true;
+				var create = new GeometryCreateAction();
+				var newChanges = new List<Change>(transformArgs.Objects.Count());
+				foreach (var crashObject in transformArgs.Objects)
+				{
+					var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashArgs.Doc);
+					var rhinoObject = rhinoDoc.Objects.FindId(crashObject.RhinoId);
+					rhinoObject.Geometry.UserDictionary.Clear();
+
+					var geometry = rhinoObject.Geometry.Duplicate();
+					geometry.Transform(transformArgs.Transform.ToRhino());
+
+					var changeId = Guid.NewGuid();
+					var createArgs = new CreateRecieveArgs(ChangeAction.Add | ChangeAction.Temporary,
+					                                       new CrashObjectEventArgs(crashArgs.Doc, geometry,
+							                                        crashObject.RhinoId, changeId),
+					                                       crashArgs.Doc);
+
+					create.TryConvert(sender, createArgs, out var changesOut);
+					newChanges.AddRange(changesOut);
+				}
+
+				changes = newChanges;
+			}
+
+			var user = crashArgs.Doc.Users.CurrentUser.Name;
+			var transform = transformArgs.Transform;
+
+			changes = getTransforms(transform, user, transformArgs.Objects);
+
+			crashArgs.Doc.Queue.AddAction(new IdleAction(ResetBusy, new IdleArgs(crashArgs.Doc, null),
+			                                             nameof(ResetBusy)));
 
 			return true;
 		}
 
-		private IEnumerable<IChange> getTransforms(CTransform transform, string userName, IEnumerable<CrashObject> crashObjects)
+		private void ResetBusy(IdleArgs args)
 		{
-			foreach (var crashObject in crashObjects)
-			{
-				if (crashObject.ChangeId == Guid.Empty) continue;
-
-				var transChange = TransformChange.CreateNew(transform, userName, crashObject.ChangeId);
-				yield return transChange;
-			}
+			args.Doc.DocumentIsBusy = false;
 		}
 
+		private IEnumerable<Change> getTransforms(CTransform transform, string userName,
+			IEnumerable<CrashObject> crashObjects)
+		{
+			var transformChanges = new List<Change>(crashObjects.Count());
+			foreach (var crashObject in crashObjects)
+			{
+				if (crashObject.ChangeId == Guid.Empty)
+				{
+					continue;
+				}
+
+				var transformChange = TransformChange.CreateChange(crashObject.ChangeId, userName, transform);
+				transformChanges.Add(transformChange);
+			}
+
+			return transformChanges;
+		}
 	}
-
-
 }

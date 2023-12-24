@@ -4,10 +4,14 @@ namespace Crash.Common.Logging
 {
 	internal sealed class CrashLoggerProvider : ILoggerProvider
 	{
-		public ILogger CreateLogger(string categoryName) => CrashLogger.Logger;
+		public ILogger CreateLogger(string categoryName)
+		{
+			return CrashLogger.Logger;
+		}
 
-		public void Dispose() => CrashLogger.Logger.Dispose();
-
+		public void Dispose()
+		{
+			CrashLogger.Logger.Dispose();
+		}
 	}
-
 }

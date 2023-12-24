@@ -1,25 +1,21 @@
-﻿using System.Collections;
-
-using Crash.Common.Changes;
-using Crash.Common.Collections;
+﻿using Crash.Common.Changes;
 using Crash.Common.Document;
 using Crash.Common.View;
 using Crash.Geometry;
 
 namespace Crash.Common.Tables.Tests
 {
-
 	public class CameraTableTests
 	{
-
 		[Parallelizable]
 		[TestCaseSource(typeof(CameraChanges), nameof(CameraChanges.TestCases))]
 		public void TestAddCamera(CameraChange change)
 		{
 			// Arrange
-			CrashDoc crashDoc = new CrashDoc();
-			CameraTable cameraTable = new CameraTable(crashDoc);
-			cameraTable.TryAddCamera(change);
+			var crashDoc = new CrashDoc();
+			crashDoc.Users.Add(change.Owner);
+			var cameraTable = crashDoc.Cameras;
+			Assert.That(cameraTable.TryAddCamera(change), Is.True);
 
 			// Act
 			var users = cameraTable.GetActiveCameras().Keys.ToArray();
@@ -35,59 +31,63 @@ namespace Crash.Common.Tables.Tests
 		public void TestGetCamera(CameraChange change)
 		{
 			// Arrange
-			CrashDoc crashDoc = new CrashDoc();
-			CameraTable cameraTable = new CameraTable(crashDoc);
+			var crashDoc = new CrashDoc();
+			var cameraTable = new CameraTable(crashDoc);
 			cameraTable.TryAddCamera(change);
 
 			// Act
-			Assert.IsTrue(cameraTable.TryGetCamera(new User(change.Owner),
-						out FixedSizedQueue<Camera> cameras));
+			Assert.That(cameraTable.TryGetCamera(new User(change.Owner),
+			                                       out var cameras), Is.True);
 
 			// Assert
 			Assert.That(cameras.Count, Is.GreaterThanOrEqualTo(1));
 		}
 
-		[Test][Parallelizable]
+		[Test]
+		[Parallelizable]
 		public void TestAddMoreThanMaxCameras()
 		{
 			// Arrange
-			int overMax = (CameraTable.MAX_CAMERAS_IN_QUEUE + 5);
-			CameraTable cameraTable = new CameraTable(new CrashDoc());
+			var overMax = CameraTable.MAX_CAMERAS_IN_QUEUE + 5;
+			var cameraTable = new CameraTable(new CrashDoc());
 
-			string userName = "Jeff";
-			User user = new User(userName);
+			var userName = "Jeff";
+			var user = new User(userName);
 
 			// Act
-			for (int i = 0; i < overMax; i++)
+			for (var i = 0; i < overMax; i++)
 			{
-				Camera camera = new Camera(CPoint.Origin, new CPoint(1, 2, 3));
+				var camera = new Camera(CPoint.Origin, new CPoint(1, 2, 3));
 				var change = CameraChange.CreateNew(camera, userName);
-				Assert.IsTrue(cameraTable.TryAddCamera(change));
+				Assert.That(cameraTable.TryAddCamera(change), Is.True);
 			}
 
-			Assert.IsNotEmpty(cameraTable);
+			Assert.That(cameraTable, Is.Not.Empty);
 
 			// Assert
-			Assert.IsTrue(cameraTable.TryGetCamera(user, out FixedSizedQueue<Camera> cameras));
+			Assert.That(cameraTable.TryGetCamera(user, out var cameras), Is.True);
 			Assert.That(cameras.Count, Is.EqualTo(CameraTable.MAX_CAMERAS_IN_QUEUE));
 		}
 
-		[Test][Parallelizable]
+		[Test]
+		[Parallelizable]
 		public void TestGetActiveCameras()
 		{
-			CameraTable cameraTable = new CameraTable(new CrashDoc());
-			string userName = "Jeff";
+			var userName = "Jeff";
+			var crashDoc = new CrashDoc();
+			crashDoc.Users.Add(userName);
+			var cameraTable = crashDoc.Cameras;
 
 			// Act
-			for (int i = 0; i < 5; i++)
+			for (var i = 0; i < 5; i++)
 			{
-				Camera camera = new Camera(CPoint.Origin, new CPoint(1, 2, 3));
+				var camera = new Camera(CPoint.Origin, new CPoint(1, 2, 3));
 				var change = CameraChange.CreateNew(camera, userName);
-				Assert.IsTrue(cameraTable.TryAddCamera(change));
+				Assert.That(cameraTable.TryAddCamera(change), Is.True);
 			}
 
 			// Assert
-			Assert.IsNotEmpty(cameraTable);
+			Assert.That(cameraTable, Is.Not.Empty);
 			Assert.That(cameraTable.GetActiveCameras().Count, Is.EqualTo(1));
 		}
 
@@ -97,21 +97,19 @@ namespace Crash.Common.Tables.Tests
 			{
 				get
 				{
-					Camera camera1 = new Camera(CPoint.Origin, new CPoint(1, 2, 3));
+					var camera1 = new Camera(CPoint.Origin, new CPoint(1, 2, 3));
 					yield return CameraChange.CreateNew(camera1, "Jenny");
 
-					Camera camera2 = new Camera(CPoint.Origin, new CPoint(1, 2, 3));
+					var camera2 = new Camera(CPoint.Origin, new CPoint(1, 2, 3));
 					yield return CameraChange.CreateNew(camera2, "Jack");
 
-					Camera camera3 = new Camera(CPoint.Origin, new CPoint(1, 2, 3));
+					var camera3 = new Camera(CPoint.Origin, new CPoint(1, 2, 3));
 					yield return CameraChange.CreateNew(camera3, "Jeff");
 
-					Camera camera4 = new Camera(CPoint.Origin, new CPoint(1, 2, 3));
+					var camera4 = new Camera(CPoint.Origin, new CPoint(1, 2, 3));
 					yield return CameraChange.CreateNew(camera4, "Jerry");
 				}
 			}
 		}
-
 	}
-
 }

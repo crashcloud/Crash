@@ -1,49 +1,52 @@
-﻿using Crash.Handlers;
+﻿using Crash.Common.Changes;
+using Crash.Common.Document;
+using Crash.Handlers;
+using Crash.UI.UsersView;
 
 using Rhino.Commands;
 
 namespace Crash.Commands
 {
-
 	/// <summary>Command to Close a Shared Model</summary>
 	[CommandStyle(Style.ScriptRunner)]
-	public sealed class LeaveSharedModel : Command
+	public sealed class LeaveSharedModel : AsyncCommand
 	{
-		private bool defaultValue = false;
+		private bool defaultValue;
 
-		/// <summary>Default Constructor</summary>
 		public LeaveSharedModel()
 		{
 			Instance = this;
 		}
 
-		/// <inheritdoc />
+
 		public static LeaveSharedModel Instance { get; private set; }
 
-		/// <inheritdoc />
+
 		public override string EnglishName => "LeaveSharedModel";
 
-		/// <inheritdoc />
-		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+
+		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
 		{
-			Client.CrashClient? client = CrashDocRegistry.ActiveDoc?.LocalClient;
-			if (null == client)
+			if (crashDoc?.LocalClient?.IsConnected != true)
 			{
-				RhinoApp.WriteLine("You aren't in a shared model.");
-				return Result.Success;
+				return Result.Cancel;
 			}
 
-			bool? choice = _GetReleaseChoice();
-			if (null == choice)
-				return Result.Cancel;
+			var choice = _GetReleaseChoice();
+			switch (choice)
+			{
+				case null:
+					return Result.Cancel;
+				case true:
+					var doneChange = DoneChange.GetDoneChange(crashDoc.Users.CurrentUser.Name);
+					await crashDoc.LocalClient.PushChangeAsync(doneChange);
+					break;
+			}
 
-			if (choice.Value == true)
-				client.DoneAsync();
+			doc.Objects.UnselectAll();
 
-			CrashDocRegistry.ActiveDoc?.Dispose();
+			await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 			InteractivePipe.Active.Enabled = false;
-
-			_EmptyModel(doc);
 
 			RhinoApp.WriteLine("Model closed and saved successfully");
 
@@ -54,16 +57,11 @@ namespace Crash.Commands
 		}
 
 		private bool? _GetReleaseChoice()
-			=> SelectionUtils.GetBoolean(ref defaultValue,
-				"Would you like to Release before exiting?",
-				"JustExit",
-				"ReleaseThenExit");
-
-		private void _EmptyModel(Rhino.RhinoDoc doc)
 		{
-			doc.Objects.Clear();
+			return SelectionUtils.GetBoolean(ref defaultValue,
+			                                 "Would you like to Release before exiting?",
+			                                 "JustExit",
+			                                 "ReleaseThenExit");
 		}
-
 	}
-
 }

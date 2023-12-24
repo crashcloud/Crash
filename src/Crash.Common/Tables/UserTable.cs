@@ -1,33 +1,44 @@
-﻿
-using System.Collections;
+﻿using System.Collections;
 
 using Crash.Common.Document;
 
-
 namespace Crash.Common.Tables
 {
-
-	// Should this be async?
+	/// <summary>The Table of Users</summary>
 	public sealed class UserTable : IEnumerable<User>
 	{
+		private readonly CrashDoc _crashDoc;
 
 		private readonly Dictionary<string, User> _users;
 
-		private readonly CrashDoc _crashDoc;
-
-		// TODO : Remove set from _users
-		public User CurrentUser { get; set; }
-
+		/// <summary>Creates a new empty User Table</summary>
+		/// <param name="hostDoc">The CrashDoc this UserTable is attached to</param>
 		public UserTable(CrashDoc hostDoc)
 		{
 			_users = new Dictionary<string, User>();
 			_crashDoc = hostDoc;
 		}
 
+		/// <summary>The current User of the Document</summary>
+		public User CurrentUser { get; set; }
+
+		public IEnumerator<User> GetEnumerator()
+		{
+			return _users.Values.GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
 		/// <summary>Adds a User only if they are not the Current User</summary>
 		public bool Add(User user)
 		{
-			if (CurrentUser.Equals(user)) return false;
+			if (CurrentUser.Equals(user))
+			{
+				return false;
+			}
 
 			if (!_users.ContainsKey(user.Name))
 			{
@@ -53,25 +64,31 @@ namespace Crash.Common.Tables
 		}
 
 		/// <summary>Removes a User</summary>
-		public void Remove(User user) => Remove(user.Name);
+		public void Remove(User user)
+		{
+			Remove(user.Name);
+		}
 
 		/// <summary>Removes a User</summary>
 		public void Remove(string userName)
 		{
-			if (_users.TryGetValue(userName, out var user))
+			var cleaned = User.CleanedUserName(userName);
+			if (_users.TryGetValue(cleaned, out var user))
 			{
 				OnUserRemoved?.Invoke(this, new UserEventArgs(user));
 			}
 
-			_users.Remove(userName);
+			_users.Remove(cleaned);
 		}
 
 		/// <summary>Get a User by name</summary>
 		public User Get(string userName)
 		{
-			string cleanUserName = User.CleanedUserName(userName);
+			var cleanUserName = User.CleanedUserName(userName);
 			if (_users.ContainsKey(cleanUserName))
+			{
 				return _users[cleanUserName];
+			}
 
 			return default;
 		}
@@ -82,15 +99,11 @@ namespace Crash.Common.Tables
 			_users.Add(user.Name, user);
 		}
 
-		public IEnumerator<User> GetEnumerator() => _users.Values.GetEnumerator();
-
-		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
 		/// <summary>Fires each time a User is successfully added via Add</summary>
 		public static event EventHandler<UserEventArgs> OnUserAdded;
+
 		/// <summary>Fires each time a User is successfuly removed via Remove</summary>
 		public static event EventHandler<UserEventArgs> OnUserRemoved;
-
 	}
 
 	public sealed class UserEventArgs : EventArgs
@@ -101,7 +114,5 @@ namespace Crash.Common.Tables
 		{
 			User = user;
 		}
-
 	}
-
 }

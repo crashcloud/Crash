@@ -63,9 +63,9 @@ namespace Crash.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap CameraFollow {
+        internal static System.Drawing.Bitmap CameraFollow_Dark {
             get {
-                object obj = ResourceManager.GetObject("CameraFollow", resourceCulture);
+                object obj = ResourceManager.GetObject("CameraFollow_Dark", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace Crash.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap CameraNone {
+        internal static System.Drawing.Bitmap CameraFollow_Light {
             get {
-                object obj = ResourceManager.GetObject("CameraNone", resourceCulture);
+                object obj = ResourceManager.GetObject("CameraFollow_Light", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -83,9 +83,39 @@ namespace Crash.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap CameraVisible {
+        internal static System.Drawing.Bitmap CameraNone_Dark {
             get {
-                object obj = ResourceManager.GetObject("CameraVisible", resourceCulture);
+                object obj = ResourceManager.GetObject("CameraNone_Dark", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap CameraNone_Light {
+            get {
+                object obj = ResourceManager.GetObject("CameraNone_Light", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap CameraVisible_Dark {
+            get {
+                object obj = ResourceManager.GetObject("CameraVisible_Dark", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap CameraVisible_Light {
+            get {
+                object obj = ResourceManager.GetObject("CameraVisible_Light", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -103,9 +133,9 @@ namespace Crash.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap user {
+        internal static System.Drawing.Bitmap User_Dark {
             get {
-                object obj = ResourceManager.GetObject("user", resourceCulture);
+                object obj = ResourceManager.GetObject("User_Dark", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -113,9 +143,9 @@ namespace Crash.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap wifi {
+        internal static System.Drawing.Bitmap User_Light {
             get {
-                object obj = ResourceManager.GetObject("wifi", resourceCulture);
+                object obj = ResourceManager.GetObject("User_Light", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -123,9 +153,9 @@ namespace Crash.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap wifi_off {
+        internal static System.Drawing.Bitmap Wifi_Dark {
             get {
-                object obj = ResourceManager.GetObject("wifi_off", resourceCulture);
+                object obj = ResourceManager.GetObject("Wifi_Dark", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -133,9 +163,49 @@ namespace Crash.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap wifi_unstable {
+        internal static System.Drawing.Bitmap Wifi_Light {
             get {
-                object obj = ResourceManager.GetObject("wifi_unstable", resourceCulture);
+                object obj = ResourceManager.GetObject("Wifi_Light", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap WifiOff_Dark {
+            get {
+                object obj = ResourceManager.GetObject("WifiOff_Dark", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap WifiOff_Light {
+            get {
+                object obj = ResourceManager.GetObject("WifiOff_Light", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap WifiUnstable_Dark {
+            get {
+                object obj = ResourceManager.GetObject("WifiUnstable_Dark", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap WifiUnstable_Light {
+            get {
+                object obj = ResourceManager.GetObject("WifiUnstable_Light", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

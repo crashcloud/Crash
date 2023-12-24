@@ -1,62 +1,74 @@
-﻿using Crash.Common.Changes;
-using Crash.Common.Document;
+﻿using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
+using Crash.Handlers.Changes;
 using Crash.Utils;
-
-using Rhino.DocObjects;
 
 namespace Crash.Handlers.Plugins.Geometry.Recieve
 {
-
 	/// <summary>Handles Deleted objects from the Server</summary>
 	internal sealed class GeometryRemoveRecieveAction : IChangeRecieveAction
 	{
+		public bool CanRecieve(IChange change)
+		{
+			return change.Action.HasFlag(ChangeAction.Remove);
+		}
 
-		/// <inheritdoc/>
-		public ChangeAction Action => ChangeAction.Remove;
 
-		/// <inheritdoc/>
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
 		{
 			IdleArgs idleArgs;
 			IdleAction idleAction;
 
-			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
-			if (!ChangeUtils.TryGetRhinoObject(recievedChange, out RhinoObject rhinoObject))
-			{
-				if (crashDoc.CacheTable.TryGetValue(recievedChange.Id, out GeometryChange change))
-				{
-					idleArgs = new IdleArgs(crashDoc, recievedChange);
-					idleAction = new IdleAction(RemoveTemporaryFromDocument, idleArgs);
-					await crashDoc.Queue.AddActionAsync(idleAction);
-				}
-				else
-				{
+			var changeArgs = new IdleArgs(crashDoc, recievedChange);
+			IdleAction resultingAction = null;
 
-				}
+			if (crashDoc.TemporaryChangeTable.TryGetChangeOfType(recievedChange.Id, out IChange temporaryChange))
+			{
+				resultingAction = new IdleAction(RemoveFromCache, changeArgs);
+			}
+			else if (crashDoc.RealisedChangeTable.ContainsChangeId(recievedChange.Id))
+			{
+				resultingAction = new IdleAction(RemoveFromDocument, changeArgs);
+			}
+			else
+			{
 				return;
 			}
 
-			idleArgs = new IdleArgs(crashDoc, recievedChange);
-			idleAction = new IdleAction(RemoveFromDocument, idleArgs);
-			await crashDoc.Queue.AddActionAsync(idleAction);
+			crashDoc.Queue.AddAction(resultingAction);
 		}
 
 		private void RemoveFromDocument(IdleArgs args)
 		{
-			if (!ChangeUtils.TryGetRhinoObject(args.Change, out RhinoObject rhinoObject)) return;
-			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
+			args.Doc.DocumentIsBusy = true;
+			try
+			{
+				if (!args.Change.TryGetRhinoObject(args.Doc, out var rhinoObject))
+				{
+					args.Doc.DocumentIsBusy = false;
+					return;
+				}
 
-			rhinoDoc.Objects.Delete(rhinoObject, true);
-			args.Doc.CacheTable.RemoveChange(args.Change.Id);
+				var geomChange = GeometryChange.CreateFrom(args.Change);
+				geomChange.SetGeometry(rhinoObject.Geometry.Duplicate());
+
+				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
+				rhinoDoc.Objects.Delete(rhinoObject, true, true);
+
+				args.Doc.TemporaryChangeTable.UpdateChange(geomChange);
+				args.Doc.TemporaryChangeTable.DeleteChange(geomChange.Id);
+				args.Doc.RealisedChangeTable.PurgeChange(args.Change.Id);
+			}
+			finally
+			{
+				args.Doc.DocumentIsBusy = false;
+			}
 		}
 
-		private void RemoveTemporaryFromDocument(IdleArgs args)
+		private void RemoveFromCache(IdleArgs args)
 		{
-			args.Doc.CacheTable.RemoveChange(args.Change.Id);
+			args.Doc.TemporaryChangeTable.DeleteChange(args.Change.Id);
 		}
-
 	}
-
 }

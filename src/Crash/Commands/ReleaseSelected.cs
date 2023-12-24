@@ -1,54 +1,65 @@
-﻿using Crash.Common.Document;
+﻿using Crash.Common.Changes;
+using Crash.Common.Document;
 using Crash.Handlers;
 using Crash.Utils;
 
 using Rhino.Commands;
 
-
 namespace Crash.Commands
 {
-
 	/// <summary>Command to Release Changes</summary>
-	[CommandStyle(Style.DoNotRepeat | Style.NotUndoable | Style.Hidden)]
-	public sealed class ReleaseSelected : Command
+	[CommandStyle(Style.DoNotRepeat | Style.NotUndoable)]
+	public sealed class ReleaseSelected : AsyncCommand
 	{
-
-		/// <summary>Default Constructor</summary>
 		public ReleaseSelected()
 		{
 			Instance = this;
 		}
 
-		/// <inheritdoc />
+
 		public static ReleaseSelected Instance { get; private set; }
 
-		/// <inheritdoc />
+
 		public override string EnglishName => "ReleaseSelected";
 
-		/// <inheritdoc />
-		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
 		{
-			IEnumerable<Guid> selectedChanges = getSelectedChanges(doc);
-			if (selectedChanges.Count() <= 0)
-				return Result.Cancel;
+			if (!CommandUtils.InSharedModel(crashDoc))
+			{
+				RhinoApp.WriteLine("You aren't in a shared model.");
+				return Result.Failure;
+			}
 
-			// TODO : Wait for response for data integrity check
-			CrashDoc? crashDoc = CrashDocRegistry.GetRelatedDocument(doc);
-			crashDoc?.LocalClient?.DoneAsync(selectedChanges);
+			var selectedChanges = GetSelectedChanges(doc);
+			if (!selectedChanges.Any())
+			{
+				return Result.Cancel;
+			}
+
+			await crashDoc.LocalClient.PushIdenticalChangesAsync(selectedChanges,
+			                                                     DoneChange.GetDoneChange(string.Empty));
+
+			doc.Objects.UnselectAll();
+			doc.Views.Redraw();
 
 			return Result.Success;
 		}
 
-		private IEnumerable<Guid> getSelectedChanges(RhinoDoc doc)
+		private static IEnumerable<Guid> GetSelectedChanges(RhinoDoc doc)
 		{
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(doc);
+			var selected = new List<Guid>();
 			foreach (var rhinoObj in doc.Objects.GetSelectedObjects(false, false))
 			{
-				if (!ChangeUtils.TryGetChangeId(rhinoObj, out Guid id))
+				if (!crashDoc.RealisedChangeTable.TryGetChangeId(rhinoObj.Id, out var changeId))
+				{
 					continue;
+				}
 
-				yield return id;
+				selected.Add(changeId);
 			}
+
+			return selected;
 		}
 	}
-
 }

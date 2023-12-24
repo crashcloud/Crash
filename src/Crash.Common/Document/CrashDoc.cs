@@ -1,40 +1,18 @@
 ﻿using System.Runtime.CompilerServices;
 
-using Crash.Client;
+using Crash.Common.App;
+using Crash.Common.Communications;
 using Crash.Common.Tables;
-using Crash.Communications;
 using Crash.Events;
 
 [assembly: InternalsVisibleTo("Crash.Common.Tests")]
+
 namespace Crash.Common.Document
 {
-
 	/// <summary>The Crash Document</summary>
 	public sealed class CrashDoc : IEquatable<CrashDoc>, IDisposable
 	{
 		public readonly Guid Id;
-
-		#region Tables
-		/// <summary>The Users Table for the Crash Doc</summary>
-		public readonly UserTable Users;
-		/// <summary>The Changes Table for the Crash Doc</summary>
-		public readonly ChangeTable CacheTable;
-		/// <summary>The Camera Table for the crash Doc</summary>
-		public readonly CameraTable Cameras;
-		#endregion
-
-		#region Connectivity
-		/// <summary>The Local Client for the Crash Doc</summary>
-		public CrashClient? LocalClient { get; set; }
-		/// <summary>The Local Server for the Crash Doc</summary>
-		public CrashServer? LocalServer { get; set; }
-		#endregion
-
-		#region Queue
-		/// <summary>The Idle Queue for the Crash Document</summary>
-		public IdleQueue Queue { get; private set; }
-
-		#endregion
 
 		#region constructors
 
@@ -44,38 +22,90 @@ namespace Crash.Common.Document
 			Id = Guid.NewGuid();
 
 			Users = new UserTable(this);
-			CacheTable = new ChangeTable(this);
+			TemporaryChangeTable = new TemporaryChangeTable(this);
+			RealisedChangeTable = new RealisedChangeTable(this);
 			Cameras = new CameraTable(this);
+
+			LocalClient = new CrashClient(this);
 
 			Queue = new IdleQueue(this);
 		}
 
 		#endregion
 
-		#region Methods
-		/// <inheritdoc/>
-		public bool Equals(CrashDoc? other)
-			=> other?.GetHashCode() == GetHashCode();
+		private bool _documentIsBusy { get; set; }
 
-		/// <inheritdoc/>
-		public override bool Equals(object? obj)
+		// TODO : What if someone DOES something when we're adding stuff?
+		/// <summary>
+		///     Marks the Document as in a "Busy State" state which means
+		///     Nothing can be sent to the server
+		/// </summary>
+		public bool DocumentIsBusy
 		{
-			if (obj is not CrashDoc other) return false;
-			return Equals(other);
+			get => _documentIsBusy;
+			set
+			{
+				_documentIsBusy = value;
+				CrashApp.Log($"{nameof(DocumentIsBusy)} was set to {value}");
+			}
 		}
 
-		/// <inheritdoc/>
-		public override int GetHashCode() => Id.GetHashCode();
+		#region Queue
+
+		/// <summary>The Idle Queue for the Crash Document</summary>
+		public IdleQueue Queue { get; private set; }
 
 		#endregion
 
-		/// <inheritdoc/>
 		public void Dispose()
 		{
 			LocalClient?.StopAsync();
-			LocalServer?.Stop();
 		}
 
-	}
+		#region Connectivity
 
+		/// <summary>The Local Client for the Crash Doc</summary>
+		public ICrashClient LocalClient { get; set; }
+
+		/// <summary>The current Documents Dispatcher</summary>
+		public IEventDispatcher Dispatcher { get; set; }
+
+		#endregion
+
+		#region Tables
+
+		/// <summary>The Users Table for the Crash Doc</summary>
+		public readonly UserTable Users;
+
+		/// <summary>The Changes Table for the Crash Doc</summary>
+		public readonly TemporaryChangeTable TemporaryChangeTable;
+
+		public readonly RealisedChangeTable RealisedChangeTable;
+
+		/// <summary>The Camera Table for the crash Doc</summary>
+		public readonly CameraTable Cameras;
+
+		#endregion
+
+		#region Methods
+
+		public bool Equals(CrashDoc? other)
+		{
+			return other?.GetHashCode() == GetHashCode();
+		}
+
+
+		public override bool Equals(object? obj)
+		{
+			return obj is CrashDoc other && Equals(other);
+		}
+
+
+		public override int GetHashCode()
+		{
+			return Id.GetHashCode();
+		}
+
+		#endregion
+	}
 }

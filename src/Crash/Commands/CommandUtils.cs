@@ -1,39 +1,71 @@
-﻿using System.Threading.Tasks;
+﻿using System.Net.Http;
 
-using Crash.Client;
 using Crash.Common.Document;
+using Crash.Handlers;
 
-using Rhino.Commands;
+using Rhino.Geometry;
 
 namespace Crash.Commands
 {
-
-	public static class CommandUtils
+	/// <summary>Helpful Utilities for Commands</summary>
+	internal static class CommandUtils
 	{
+		private static readonly Dictionary<Interval, string> PortValidation = new()
+		                                                                      {
+			                                                                      {
+				                                                                      new Interval(int.MinValue, 1000),
+				                                                                      "Port number is too small!"
+			                                                                      },
+			                                                                      {
+				                                                                      new Interval(10000, int.MaxValue),
+				                                                                      "Port number is too high!"
+			                                                                      },
+			                                                                      {
+				                                                                      new Interval(5000, 5001),
+				                                                                      "Port number is already in use on Macs"
+			                                                                      }
+		                                                                      };
 
-		public static Result CheckAlreadyConnected(CrashDoc crashDoc)
+		/// <summary>Checks to see if the user is currently in a Shared Model</summary>
+		internal static bool InSharedModel(CrashDoc crashDoc)
 		{
-			if (crashDoc?.LocalClient?.IsConnected == true)
+			if (crashDoc?.LocalClient?.IsConnected != true)
 			{
-				RhinoApp.WriteLine("You are currently part of a Shared Model Session.");
-
-				if (_NewModelOrExit(false) != true)
-					return Result.Cancel;
-
-				if (RhinoApp.RunScript(LeaveSharedModel.Instance.EnglishName, true))
-					RhinoApp.RunScript(JoinSharedModel.Instance.EnglishName, true);
+				RhinoApp.WriteLine("You aren't in a shared model.");
+				return false;
 			}
 
-			return Result.Success;
+			return true;
 		}
 
-		private static bool? _NewModelOrExit(bool defaultValue)
-			=> SelectionUtils.GetBoolean(ref defaultValue,
-				"Would you like to close this model?",
-				"ExitCommand",
-				"CloseModel");
+		/// <summary>
+		///     Checks if already connected, and prompts user
+		///     to take action if connected.
+		/// </summary>
+		/// <returns>True if already connected</returns>
+		internal static bool CheckAlreadyConnected(CrashDoc crashDoc)
+		{
+			try
+			{
+				if (crashDoc?.LocalClient?.IsConnected == true)
+				{
+					RhinoApp.WriteLine("You are currently part of a Shared Model Session.");
+					return RhinoApp.RunScript(LeaveSharedModel.Instance.EnglishName, true);
+				}
 
-		public static bool GetUserName(out string name)
+				return true;
+			}
+			catch (Exception e)
+			{
+				CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
+				return true;
+			}
+		}
+
+		/// <summary>Gets the Users Name from a command line prompt</summary>
+		/// <param name="name">The User Name</param>
+		/// <returns>True if name is valid</returns>
+		internal static bool GetUserName(out string name)
 		{
 			name = Environment.UserName;
 			if (!_GetUsersName(ref name))
@@ -46,40 +78,70 @@ namespace Crash.Commands
 		}
 
 		private static bool _GetUsersName(ref string name)
-			=> SelectionUtils.GetValidString("Your Name", ref name);
-
-		public static async Task<bool> StartLocalClient(CrashDoc crashDoc, string url)
 		{
-			// TODO : Ensure Requested Server is available, and notify if not
-			string userName = crashDoc.Users.CurrentUser.Name;
-			var crashClient = new CrashClient(crashDoc, userName, new Uri($"{url}/Crash"));
-			crashDoc.LocalClient = crashClient;
+			return SelectionUtils.GetValidString("Your Name", ref name);
+		}
+
+
+		internal static async Task<bool> StartLocalClient(CrashDoc crashDoc, string url)
+		{
+			var userName = crashDoc.Users.CurrentUser.Name;
 
 			try
 			{
-				await crashClient.StartLocalClientAsync();
+				crashDoc.LocalClient.RegisterConnection(userName, new Uri($"{url}/Crash"));
+
+				await crashDoc.LocalClient.StartLocalClientAsync();
 				return true;
 			}
-			catch
+			catch (HttpRequestException)
 			{
-				return false;
+				RhinoApp.WriteLine("Server was not found! Try retyping the address.");
 			}
+			catch (UriFormatException)
+			{
+				RhinoApp.WriteLine("Address was invalid!");
+			}
+			catch (InvalidOperationException)
+			{
+				RhinoApp.WriteLine("There was an issue with the local client");
+			}
+			catch (Exception ex)
+			{
+				RhinoApp.WriteLine("An unexplained exception occured, try again.");
+				RhinoApp.WriteLine(ex.Message);
+			}
+
+			return false;
 		}
 
-		public static bool CheckForRunningServer(CrashDoc crashDoc)
+		/// <summary>Prompts the User for a Port with validatiobn</summary>
+		/// <returns>True on success</returns>
+		internal static bool GetPortFromUser(ref int port)
 		{
-			if (crashDoc?.LocalServer is object && crashDoc.LocalServer.IsRunning)
+			var portIsNotValid = true;
+			while (portIsNotValid)
 			{
-				string closeCommand = LeaveSharedModel.Instance.EnglishName;
-				RhinoApp.WriteLine("You are currently part of a Shared Model Session. " +
-					$"Please use the {closeCommand} command.");
+				if (!SelectionUtils.GetPositiveInteger("Server port", ref port))
+				{
+					return false;
+				}
 
-				return false;
+				var notValid = false;
+				foreach (var validationPair in PortValidation)
+				{
+					if (validationPair.Key.IncludesParameter(port))
+					{
+						notValid = true;
+						RhinoApp.WriteLine(validationPair.Value);
+						break;
+					}
+				}
+
+				portIsNotValid = notValid;
 			}
 
 			return true;
 		}
-
 	}
-
 }

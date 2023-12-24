@@ -1,52 +1,67 @@
 ﻿using Crash.Changes.Extensions;
-using Crash.Common.Changes;
 using Crash.Common.Document;
+using Crash.Handlers.Changes;
 using Crash.Handlers.Plugins.Geometry.Recieve;
 
 namespace Crash.Handlers.Plugins.Initializers.Recieve
 {
-
 	/// <summary>Handles 'Done' calls from the Server</summary>
 	internal class DoneRecieve : IChangeRecieveAction
 	{
+		public bool CanRecieve(IChange change)
+		{
+			return change.Action.HasFlag(ChangeAction.Release);
+		}
 
-		/// <inheritdoc/>
-		public ChangeAction Action => ChangeAction.None;
-
-		/// <inheritdoc/>
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
 		{
-			var changes = crashDoc.CacheTable.GetChanges().Where(c => c.Owner == recievedChange.Owner);
-
-			crashDoc.CacheTable.SomeoneIsDone = true;
+			crashDoc.DocumentIsBusy = true;
 			try
 			{
-				var add = new GeometryAddRecieveAction();
-				foreach (var change in changes)
+				// Done Range
+				if (string.IsNullOrEmpty(recievedChange.Owner))
 				{
-					if (!crashDoc.CacheTable.TryGetValue(change.Id,
-						out GeometryChange geomChange)) continue;
+					if (!crashDoc.TemporaryChangeTable.TryGetChangeOfType(recievedChange.Id, out IChange doneChange))
+					{
+						return;
+					}
 
-					geomChange.RemoveAction(ChangeAction.Temporary);
-					geomChange.AddAction(ChangeAction.Add);
-
-					await add.OnRecieveAsync(crashDoc, geomChange);
-					crashDoc.CacheTable.RemoveChange(change.Id);
+					await ReleaseChange(crashDoc, doneChange);
+				}
+				// Done
+				else
+				{
+					foreach (var change in crashDoc.TemporaryChangeTable.GetChanges())
+					{
+						if (string.Equals(change.Owner, recievedChange.Owner,
+						                  StringComparison.InvariantCultureIgnoreCase))
+						{
+							await ReleaseChange(crashDoc, change);
+						}
+					}
 				}
 			}
-			finally
+			catch (Exception e)
 			{
-				EventHandler? _event = null;
-				_event = (sender, args) =>
-				{
-					crashDoc.CacheTable.SomeoneIsDone = false;
-					crashDoc.Queue.OnCompletedQueue -= _event;
-				};
-
-				crashDoc.Queue.OnCompletedQueue += _event;
+				Console.WriteLine(e);
+				throw;
 			}
 		}
 
-	}
+		private async Task ReleaseChange(CrashDoc crashDoc, IChange change)
+		{
+			if (!crashDoc.TemporaryChangeTable.TryGetChangeOfType(change.Id,
+			                                                      out GeometryChange geomChange))
+			{
+				return;
+			}
 
+			crashDoc.TemporaryChangeTable.RemoveChange(change.Id);
+
+			geomChange.RemoveAction(ChangeAction.Temporary);
+
+			var add = new GeometryAddRecieveAction();
+			await add.OnRecieveAsync(crashDoc, geomChange);
+		}
+	}
 }
