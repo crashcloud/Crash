@@ -23,5 +23,4 @@
 		<ProjectReference Include="..\Crash.Common\Crash.Common.csproj"/>
 	</ItemGroup>
 
-	<!-- Nuget Packaging -->
 </Project>
