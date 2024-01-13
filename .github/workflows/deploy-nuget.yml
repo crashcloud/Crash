@@ -29,8 +29,8 @@
               id: setup-nuget
               run: |
                 dotnet nuget add source --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/crashcloud/index.json"
-    
-                dotnet pack src/Package.nuspec
+                
+                nuget pack Package.nuspec
             
             - name: Push Nuget to GitHub
               id: publish-nuget-nuget
