@@ -4,7 +4,6 @@
 		<Nullable>enable</Nullable>
 		<LangVersion>11</LangVersion>
 		<Company>Crash Cloud</Company>
-		<IsPackable>false</IsPackable>
 		<Copyright>Crash Cloud</Copyright>
 		<FileVersion>$(Version)</FileVersion>
 		<AnalysisLevel>latest</AnalysisLevel>
@@ -12,11 +11,9 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<AssemblyVersion>$(Version)</AssemblyVersion>
 		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 		<RepositoryUrl>https://github.com/crashcloud/crash</RepositoryUrl>
-		<PackageProjectUrl>https://github.com/crashcloud/crash</PackageProjectUrl>
 		<GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
 	</PropertyGroup>

@@ -3,8 +3,6 @@
 	<PropertyGroup>
 		<TargetFrameworks>net48;net7.0</TargetFrameworks>
 		<RootNamespace>Crash.Handlers</RootNamespace>
-		<IsPackable>true</IsPackable>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Title>Crash.Handlers</Title>
 		<Authors>Callum Sykes</Authors>
 		<Description>Crash.Handlers manipluates Crash.Common, Crash.Changes and handles Crash.Server requests. It is the foundation package for making Crash work, and allowing 3rd parties to consume crash.</Description>
@@ -17,7 +15,7 @@
 		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.8.0"/>
 		<PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.5.22"/>
 		<PackageReference Include="RhinoCommon" Version="7.21.22208.13001" IncludeAssets="compile;build" Condition="'$(TargetFramework)' == 'net48'"/>
-		<PackageReference Include="RhinoCommon" Version="8.0.23094.11475-wip" IncludeAssets="compile;build" Condition="'$(TargetFramework)' == 'net7.0'"/>
+		<PackageReference Include="RhinoCommon" Version="8.3.24009.15001" IncludeAssets="compile;build" Condition="'$(TargetFramework)' == 'net7.0'"/>
 		<PackageReference Include="System.Drawing.Common" Version="7.0.0"/>
 		<PackageReference Include="System.Text.Json" Version="7.0.2"/>
 		<PackageReference Include="Crash.Changes" Version="1.2.0"/>
@@ -26,23 +24,4 @@
 	</ItemGroup>
 
 	<!-- Nuget Packaging -->
-
-	<PropertyGroup>
-		<PackageTags>Crash, CrashCloud</PackageTags>
-		<PackageId>Crash</PackageId>
-		<PackageVersion>$(Version)-beta</PackageVersion>
-	</PropertyGroup>
-
-	<ItemGroup>
-		<Content Include="bin\$(Configuration)\net48\Crash.Common.dll">
-			<PackagePath>lib\net48\</PackagePath>
-			<Pack>true</Pack>
-		</Content>
-		<Content Include="bin\$(Configuration)\net7.0\Crash.Common.dll">
-			<PackagePath>lib\net7.0\</PackagePath>
-			<Pack>true</Pack>
-		</Content>
-	</ItemGroup>
-
-
 </Project>

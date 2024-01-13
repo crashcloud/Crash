@@ -6,8 +6,6 @@
 		<Title>Crash.Common</Title>
 		<Authors>Callum Sykes</Authors>
 		<Description>Crash.Common is the foundation of Crash inside Rhino</Description>
-		<PackageLicenseUrl></PackageLicenseUrl>
-		<PackageTags>Crash, Common, CrashCloud</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -18,6 +16,5 @@
 		<PackageReference Include="System.Text.Json" Version="7.0.2"/>
 		<PackageReference Include="Crash.Changes" Version="1.2.0"/>
 	</ItemGroup>
-
 
 </Project>

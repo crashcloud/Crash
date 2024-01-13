@@ -69,6 +69,9 @@ Thanks again for checking out CRASH! Please follow the steps below to get starte
 See the [open issues](https://github.com/crashcloud/Crash/issues) for a full list of proposed features (and known
 issues). There is also the [contribution guide](CONTRIBUTING.md) for more info.
 
+# Support
+For support with Crash please post  on discourse in the`Multi-user` category https://discourse.mcneel.com/c/plug-ins/multi-user/163. 
+
 # About The Project
 
 This project has been completed as part of the TT AEC Hackathon 2022 - New York. This plugin/application allows users to
