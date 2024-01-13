@@ -3,9 +3,6 @@
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;net7.0</TargetFrameworks>
 		<RootNamespace>Crash.Common</RootNamespace>
-		<IsPackable>true</IsPackable>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>1.4.0</Version>
 		<Title>Crash.Common</Title>
 		<Authors>Callum Sykes</Authors>
 		<Description>Crash.Common is the foundation of Crash inside Rhino</Description>
@@ -14,12 +11,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="BidirectionalMap" Version="1.0.0" />
-		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.3" />
-		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.8.0" />
-		<PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.5.22" />
-		<PackageReference Include="System.Text.Json" Version="7.0.2" />
-		<PackageReference Include="Crash.Changes" Version="1.2.0" />
+		<PackageReference Include="BidirectionalMap" Version="1.0.0"/>
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.3"/>
+		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.8.0"/>
+		<PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.5.22"/>
+		<PackageReference Include="System.Text.Json" Version="7.0.2"/>
+		<PackageReference Include="Crash.Changes" Version="1.2.0"/>
 	</ItemGroup>
 
 

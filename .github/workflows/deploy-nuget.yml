@@ -1,0 +1,45 @@
+---
+    name: DeployNuget
+    on:
+      push:
+        branches:
+          - main
+        paths:
+            - '.github/workflows/deploy-nuget.yml'
+            - '*.Build.Props'
+    
+    jobs:
+        build:
+            runs-on: ubuntu-latest
+            steps:
+            - uses: actions/checkout@v3
+        
+            - name: Setup NuGet
+              uses: NuGet/setup-nuget@v1
+            
+            - name: Restore Packages
+              run: nuget restore
+        
+            - uses: actions/setup-dotnet@v3
+              with:
+                dotnet-version: |
+                  7.0
+            
+            - name: Build and Setup Nuget
+              id: setup-nuget
+              run: |
+                dotnet nuget add source --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/crashcloud/index.json"
+    
+                dotnet build src/Crash.Handlers/*.csproj --configuration Release --no-restore
+                dotnet pack src/Crash.Handlers/*.csproj --configuration Release --no-build --no-restore -o ./artifacts
+            
+            - name: Push Nuget to GitHub
+              id: publish-nuget-nuget
+              run: |
+                dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source "github" --skip-duplicate
+            
+            - name: Push Nuget to Nuget
+              id: publish-nuget-github
+              run: |
+                dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_TOKEN }} --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+            
