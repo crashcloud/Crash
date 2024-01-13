@@ -22,7 +22,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\src\Crash.Common\Crash.Common.csproj"/>
 		<ProjectReference Include="..\..\src\Crash.Handlers\Crash.Handlers.csproj"/>
 	</ItemGroup>
 
