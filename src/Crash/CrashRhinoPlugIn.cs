@@ -11,8 +11,6 @@ using Eto.Forms;
 
 using Rhino.PlugIns;
 
-using System.Linq;
-
 namespace Crash
 {
 	///<summary>The crash plugin for multi user rhino collaboration</summary>

@@ -2,7 +2,7 @@
 
 namespace Crash.Handlers
 {
-	public static class RhinoObjectAttributesUtils
+	internal static class RhinoObjectAttributesUtils
 	{
 		// TODO : Move
 		internal static Dictionary<string, string> GetAttributeDifferencesAsDictionary(ObjectAttributes oldAttributes,

@@ -16,7 +16,7 @@ namespace Crash.Handlers.Plugins
 		IEnumerable<IChangeCreateAction> CreateActions { get; }
 
 		/// <summary>
-		///     These will be registered somewhere, and when Crash recieves a Change, and then perform the conversion
+		///     These will be registered somewhere, and when Crash receives a Change, and then perform the conversion
 		///     It will then be indexed by name
 		/// </summary>
 		IEnumerable<IChangeRecieveAction> RecieveActions { get; }

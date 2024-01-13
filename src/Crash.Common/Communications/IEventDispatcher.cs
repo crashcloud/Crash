@@ -1,6 +1,4 @@
-﻿using Crash.Common.Document;
-
-namespace Crash.Common.Communications
+﻿namespace Crash.Common.Communications
 {
 	/// <summary>Abstracted Server Notification Contract</summary>
 	public interface IEventDispatcher
@@ -13,7 +11,6 @@ namespace Crash.Common.Communications
 		/// <param name="changeAction">The ChangeAction</param>
 		/// <param name="sender">The sender of the Event</param>
 		/// <param name="args">The EventArgs</param>
-		/// <param name="crashDoc">The associated RhinoDoc</param>
-		Task NotifyServerAsync(ChangeAction changeAction, object sender, EventArgs args, CrashDoc crashDoc);
+		Task NotifyServerAsync(ChangeAction changeAction, object sender, EventArgs args);
 	}
 }
