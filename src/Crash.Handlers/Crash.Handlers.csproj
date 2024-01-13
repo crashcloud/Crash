@@ -30,7 +30,7 @@
 	<PropertyGroup>
 		<PackageTags>Crash, CrashCloud</PackageTags>
 		<PackageId>Crash</PackageId>
-		<PackageVersion>$(Version)</PackageVersion>
+		<PackageVersion>$(Version)-beta</PackageVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
