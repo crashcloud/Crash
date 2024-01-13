@@ -20,7 +20,7 @@ namespace Crash.Handlers.Plugins
 		private EventWrapper _eventWrapper;
 
 		/// <summary>Default Constructor</summary>
-		internal EventDispatcher(CrashDoc crashDoc)
+		public EventDispatcher(CrashDoc crashDoc)
 		{
 			_crashDoc = crashDoc;
 			_createActions = new Dictionary<ChangeAction, List<IChangeCreateAction>>();
@@ -40,7 +40,7 @@ namespace Crash.Handlers.Plugins
 				return;
 			}
 
-			var crashArgs = new CreateRecieveArgs(changeAction, args, crashDoc);
+			var crashArgs = new CreateRecieveArgs(changeAction, args, _crashDoc);
 
 			var changes = Enumerable.Empty<Change>();
 			foreach (var action in actionChain)
@@ -68,7 +68,7 @@ namespace Crash.Handlers.Plugins
 
 			// Here we are essentially streaming?
 			// We need to make sure this gets broken up better.
-			await crashDoc.LocalClient.PushChangesAsync(changes);
+			await _crashDoc.LocalClient.PushChangesAsync(changes);
 
 #if DEBUG
 			// This logic is a bit slow and I'd rather it wasn't compiled unless necessary

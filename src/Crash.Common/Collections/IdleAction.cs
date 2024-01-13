@@ -25,7 +25,7 @@ namespace Crash.Events
 		}
 
 		/// <summary>True if successfully invoked</summary>
-		public bool Invoked { get; private set; }
+		private bool Invoked { get; set; }
 
 
 		public void Dispose()
