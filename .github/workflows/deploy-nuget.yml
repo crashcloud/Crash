@@ -30,16 +30,15 @@
               run: |
                 dotnet nuget add source --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/crashcloud/index.json"
     
-                dotnet build src/Crash.Handlers/*.csproj --configuration Release --no-restore
-                dotnet pack src/Crash.Handlers/*.csproj --configuration Release --no-build --no-restore -o ./artifacts
+                dotnet pack src/Package.nuspec
             
             - name: Push Nuget to GitHub
               id: publish-nuget-nuget
               run: |
-                dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source "github" --skip-duplicate
+                dotnet nuget push src/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source "github" --skip-duplicate
             
             - name: Push Nuget to Nuget
               id: publish-nuget-github
               run: |
-                dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_TOKEN }} --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+                dotnet nuget push src/*.nupkg --api-key ${{ secrets.NUGET_TOKEN }} --source "https://api.nuget.org/v3/index.json" --skip-duplicate
             

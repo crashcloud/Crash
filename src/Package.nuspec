@@ -37,11 +37,11 @@
   </metadata>
 
   <files>
-    <file src="Crash.Handlers\bin\Debug\net7.0\Crash.*.dll" target="lib\net7.0"/>
-    <file src="Crash.Handlers\bin\Debug\net48\Crash.*.dll" target="lib\net48"/>
+    <file src="Crash.Handlers\bin\Release\net7.0\Crash.*.dll" target="lib\net7.0"/>
+    <file src="Crash.Handlers\bin\Release\net48\Crash.*.dll" target="lib\net48"/>
 
-    <file src="Crash.Handlers\bin\Debug\net7.0\*.pdb" target="lib\net7.0"/>
-    <file src="Crash.Handlers\bin\Debug\net48\*.pdb" target="lib\net48"/>
+    <file src="Crash.Handlers\bin\Release\net7.0\*.pdb" target="lib\net7.0"/>
+    <file src="Crash.Handlers\bin\Release\net48\*.pdb" target="lib\net48"/>
 
     <file src=".\README.md" target="docs\" />
   </files>
