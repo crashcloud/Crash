@@ -28,7 +28,7 @@ namespace Crash.Handlers.Plugins
 		}
 
 		// TODO : How can we prevent the same events being subscribed multiple times?
-		public async Task NotifyServerAsync(ChangeAction changeAction, object sender, EventArgs args, CrashDoc crashDoc)
+		public async Task NotifyServerAsync(ChangeAction changeAction, object sender, EventArgs args)
 		{
 			if (!_createActions.TryGetValue(changeAction, out var actionChain))
 			{
@@ -40,7 +40,7 @@ namespace Crash.Handlers.Plugins
 				return;
 			}
 
-			var crashArgs = new CreateRecieveArgs(changeAction, args, crashDoc);
+			var crashArgs = new CreateRecieveArgs(changeAction, args, _crashDoc);
 
 			var changes = Enumerable.Empty<Change>();
 			foreach (var action in actionChain)
@@ -68,7 +68,7 @@ namespace Crash.Handlers.Plugins
 
 			// Here we are essentially streaming?
 			// We need to make sure this gets broken up better.
-			await crashDoc.LocalClient.PushChangesAsync(changes);
+			await _crashDoc.LocalClient.PushChangesAsync(changes);
 
 #if DEBUG
 			// This logic is a bit slow and I'd rather it wasn't compiled unless necessary
@@ -156,38 +156,37 @@ namespace Crash.Handlers.Plugins
 		private async Task NotifyServerOfAddCrashObject(object? sender, CrashObjectEventArgs args)
 		{
 			// TODO : Include Update?
-			await NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary, sender,
-			                        args, args.Doc);
+			await NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary, sender, args);
 		}
 
 		private async Task NotifyServerOfDeleteCrashObject(object? sender, CrashObjectEventArgs crashArgs)
 		{
-			await NotifyServerAsync(ChangeAction.Remove, sender, crashArgs, crashArgs.Doc);
+			await NotifyServerAsync(ChangeAction.Remove, sender, crashArgs);
 		}
 
 		private async Task NotifyServerOfTransformCrashObject(object? sender, CrashTransformEventArgs crashArgs)
 		{
-			await NotifyServerAsync(ChangeAction.Transform, sender, crashArgs, crashArgs.Doc);
+			await NotifyServerAsync(ChangeAction.Transform, sender, crashArgs);
 		}
 
 		private async Task NotifyServerOfSelectCrashObjects(object? sender, CrashSelectionEventArgs crashArgs)
 		{
-			await NotifyServerAsync(ChangeAction.Locked, sender, crashArgs, crashArgs.Doc);
+			await NotifyServerAsync(ChangeAction.Locked, sender, crashArgs);
 		}
 
 		private async Task NotifyServerOfDeSelectCrashObjects(object? sender, CrashSelectionEventArgs crashArgs)
 		{
-			await NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs, crashArgs.Doc);
+			await NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs);
 		}
 
 		private async Task NotifyServerOfUpdateCrashObject(object? sender, CrashUpdateArgs args)
 		{
-			await NotifyServerAsync(ChangeAction.Update, sender, args, args.Doc);
+			await NotifyServerAsync(ChangeAction.Update, sender, args);
 		}
 
 		private async Task NotifyServerOfCrashViewModified(object? sender, CrashViewArgs crashArgs)
 		{
-			await NotifyServerAsync(ChangeAction.Add, sender, crashArgs, crashArgs.Doc);
+			await NotifyServerAsync(ChangeAction.Add, sender, crashArgs);
 		}
 
 		/// <summary>Registers the default server notifiers</summary>

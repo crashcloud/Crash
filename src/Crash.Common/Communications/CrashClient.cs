@@ -86,7 +86,7 @@ namespace Crash.Common.Communications
 			       .Build();
 		}
 
-		public static JsonHubProtocolOptions JsonOptions()
+		private static JsonHubProtocolOptions JsonOptions()
 		{
 			return new JsonHubProtocolOptions
 			       {
@@ -175,14 +175,19 @@ namespace Crash.Common.Communications
 			return Task.CompletedTask;
 		}
 
+		/// <summary>
+		///     Fires when the connection to the Server closes
+		/// </summary>
 		public event EventHandler<CrashEventArgs> OnServerClosed;
+
+		/// <summary>
+		///     Fires when a Change fails to be sent to the Server
+		/// </summary>
 		public event EventHandler<CrashChangeArgs> OnPushChangeFailed;
 
 		#endregion
 
 		#region Connection
-
-		public HubConnectionState State => _connection.State;
 
 		public bool IsConnected => _connection.State != HubConnectionState.Disconnected;
 
@@ -262,7 +267,7 @@ namespace Crash.Common.Communications
 
 		public event EventHandler<CrashInitArgs> OnInit;
 
-		public async Task InitializeChangesAsync(IEnumerable<Change> changes)
+		private async Task InitializeChangesAsync(IEnumerable<Change> changes)
 		{
 			if (OnInitializeChanges is null)
 			{
@@ -272,7 +277,7 @@ namespace Crash.Common.Communications
 			await OnInitializeChanges.Invoke(changes);
 		}
 
-		public async Task InitializeUsersAsync(IEnumerable<string> users)
+		private async Task InitializeUsersAsync(IEnumerable<string> users)
 		{
 			if (OnInitializeUsers is null)
 			{

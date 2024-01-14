@@ -12,14 +12,14 @@ namespace Crash.Common.Document
 	/// <summary>The Crash Document</summary>
 	public sealed class CrashDoc : IEquatable<CrashDoc>, IDisposable
 	{
-		public readonly Guid Id;
+		private readonly Guid _id;
 
 		#region constructors
 
 		/// <summary>Constructs a Crash Doc</summary>
 		public CrashDoc()
 		{
-			Id = Guid.NewGuid();
+			_id = Guid.NewGuid();
 
 			Users = new UserTable(this);
 			TemporaryChangeTable = new TemporaryChangeTable(this);
@@ -103,7 +103,7 @@ namespace Crash.Common.Document
 
 		public override int GetHashCode()
 		{
-			return Id.GetHashCode();
+			return _id.GetHashCode();
 		}
 
 		#endregion

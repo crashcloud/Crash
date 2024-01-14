@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>Crash.Plugins</id>
+    <version>1.4.0-beta</version>
+    <title>Crash SDK for Plugins</title>
+    <authors>CrashCloud</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <!-- <icon>icon.png</icon> -->
+    <projectUrl>http://github.com/crashcloud/crash</projectUrl>
+    <description>SDK for creating Crash Plugins</description>
+    <copyright>CrashCloud</copyright>
+    <tags>Crash CrashCloud Plugin Crash.Handlers Crash.Common</tags>
+    <readme>docs\README.md</readme>
+    <repository type="git" url="https://github.com/CrashCloud/Crash.git" branch="main"/>
+
+    <dependencies>
+      <group targetFramework="net48">
+        <dependency id="RhinoCommon" version="7.21.22208.13001" />
+      </group>
+      <group targetFramework="net7.0">
+        <dependency id="RhinoCommon" version="8.3.24009.15001" />
+      </group>
+
+      <group>
+        <dependency id="BidirectionalMap" version="1.0.0" />
+        <dependency id="Microsoft.CodeAnalysis.Common" version="4.8.0" />
+        <dependency id="Microsoft.VisualStudio.Threading" version="17.5.22" />
+        
+        <dependency id="System.Drawing.Common" version="7.0.0" />
+        <dependency id="System.Text.Json" version="7.0.2" />
+        <dependency id="Crash.Changes" version="1.2.0" />
+      </group>
+    </dependencies>
+
+  </metadata>
+
+  <files>
+    <file src="Crash.Handlers\bin\Release\net7.0\Crash.*.dll" target="lib\net7.0"/>
+    <file src="Crash.Handlers\bin\Release\net48\Crash.*.dll" target="lib\net48"/>
+
+    <file src="Crash.Handlers\bin\Release\net7.0\*.pdb" target="lib\net7.0"/>
+    <file src="Crash.Handlers\bin\Release\net48\*.pdb" target="lib\net48"/>
+
+    <file src=".\README.md" target="docs\" />
+  </files>
+
+</package>

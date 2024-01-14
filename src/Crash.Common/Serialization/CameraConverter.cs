@@ -11,7 +11,6 @@ namespace Crash.Common.Serialization
 	/// </summary>
 	public sealed class CameraConverter : JsonConverter<Camera>
 	{
-		
 		public override Camera Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
 			if (reader.TokenType != JsonTokenType.StartArray)
@@ -37,7 +36,6 @@ namespace Crash.Common.Serialization
 			throw new JsonException();
 		}
 
-		
 		public override void Write(Utf8JsonWriter writer, Camera value, JsonSerializerOptions options)
 		{
 			var target = value.Target;

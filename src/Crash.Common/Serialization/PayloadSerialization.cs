@@ -17,7 +17,6 @@ namespace Crash.Common.Serialization
 					return new PayloadPacket();
 				}
 
-				// TODO : This needs reworking
 				var packet = JsonSerializer.Deserialize<PayloadPacket>(payload);
 
 				if (string.IsNullOrEmpty(packet.Data))
@@ -32,12 +31,5 @@ namespace Crash.Common.Serialization
 				return new PayloadPacket { Data = payload };
 			}
 		}
-
-		/*
-		public static string SerializePayload(string payload)
-		{
-			return
-		}
-		*/
 	}
 }

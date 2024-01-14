@@ -1,6 +1,5 @@
 ﻿using Crash.Changes.Extensions;
 using Crash.Common.Document;
-using Crash.Common.Events;
 using Crash.Handlers.Changes;
 using Crash.Handlers.Plugins.Geometry.Recieve;
 
@@ -47,18 +46,6 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 				Console.WriteLine(e);
 				throw;
 			}
-			finally
-			{
-				EventHandler<CrashEventArgs>? _event = null;
-				_event = (sender, args) =>
-				         {
-					         crashDoc.DocumentIsBusy = false;
-					         crashDoc.Queue.OnCompletedQueue -= _event;
-				         };
-
-				// TODO : What about things in the existing queue etc? <<< --- YES ABOUT THIS
-				crashDoc.Queue.OnCompletedQueue += _event;
-			}
 		}
 
 		private async Task ReleaseChange(CrashDoc crashDoc, IChange change)
@@ -72,7 +59,6 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 			crashDoc.TemporaryChangeTable.RemoveChange(change.Id);
 
 			geomChange.RemoveAction(ChangeAction.Temporary);
-			geomChange.RemoveAction(ChangeAction.Locked);
 
 			var add = new GeometryAddRecieveAction();
 			await add.OnRecieveAsync(crashDoc, geomChange);

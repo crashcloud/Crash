@@ -4,11 +4,7 @@ using Crash.Common.Document;
 
 namespace Crash.Common.Tables
 {
-	// TODO : What does this thing do?
-
-
 	/// <summary>
-	///     This table holds onto
 	///     This table holds onto temporary changes
 	///     Temporary changes are changes that are baked into the Rhino Document
 	///     When they're baked we don't also keep a copy of the Change that represents it

@@ -106,7 +106,7 @@ namespace Crash.Handlers.Tests.Plugins
 		[TestCaseSource(nameof(DispatchEvents))]
 		public async Task TestAddDispatch(string callName, ChangeAction action, EventArgs args)
 		{
-			await eventDispatcher.NotifyServerAsync(action, this, args, crashDoc);
+			await eventDispatcher.NotifyServerAsync(action, this, args);
 			AssertCallCount(callName, 1);
 		}
 

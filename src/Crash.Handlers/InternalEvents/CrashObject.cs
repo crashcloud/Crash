@@ -4,7 +4,7 @@ using Rhino.DocObjects;
 
 namespace Crash.Handlers.InternalEvents
 {
-	/// <summary>Wraps a Rhino Object and Change</summary>
+	/// <summary>Wraps an <see cref="IChange" /> and <see cref="RhinoObject" /> Id </summary>
 	public readonly struct CrashObject
 	{
 		/// <summary>The Change Id</summary>
@@ -13,7 +13,10 @@ namespace Crash.Handlers.InternalEvents
 		/// <summary>The Rhino Id</summary>
 		public readonly Guid RhinoId;
 
-		public CrashObject(CrashDoc crashDoc, RhinoObject rhinoObject)
+		/// <summary>
+		///     Creates a new CrashObject
+		/// </summary>
+		internal CrashObject(CrashDoc crashDoc, RhinoObject rhinoObject)
 		{
 			RhinoId = rhinoObject.Id;
 			crashDoc.RealisedChangeTable.TryGetChangeId(rhinoObject.Id, out ChangeId);
