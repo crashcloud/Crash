@@ -1,5 +1,10 @@
-﻿using Crash.Common.Document;
+﻿using BidirectionalMap;
+
+using Crash.Common.Document;
 using Crash.Common.Events;
+
+using Rhino;
+using Rhino.DocObjects;
 
 namespace Crash.Handlers
 {
