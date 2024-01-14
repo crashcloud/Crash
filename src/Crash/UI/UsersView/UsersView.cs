@@ -83,6 +83,7 @@ namespace Crash.UI.UsersView
 			Minimizable = false;
 			WindowStyle = WindowStyle.Default;
 			ShowInTaskbar = false;
+			MinimumSize = new Size(-1, 80);
 
 #if NET7_0
 			this.UseRhinoStyle();
