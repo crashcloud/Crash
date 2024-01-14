@@ -50,7 +50,12 @@ namespace Crash.UI.UsersView
 
 		internal static void CloseActiveForm()
 		{
-			ActiveForm?.Close();
+			if (ActiveForm is null)
+			{
+				return;
+			}
+
+			ActiveForm.Close();
 			ActiveForm = null;
 		}
 
