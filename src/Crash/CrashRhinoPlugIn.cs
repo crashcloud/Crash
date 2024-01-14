@@ -24,17 +24,22 @@ namespace Crash
 		private const string CrashPluginId = "53CB2393-C71F-4079-9CEC-97464FF9D14E";
 
 		/// <summary>Contains all of the Change Definitions of this PlugIn</summary>
-		private readonly static Stack<IChangeDefinition> Changes;
+		private static readonly Stack<IChangeDefinition> Changes;
 
 		#region Crash Plugins
 
 		private static void LoadCrashPlugins()
 		{
 			IEnumerable<Guid> pluginIds = GetInstalledPlugIns().Keys;
-			var pluginInfos = pluginIds.Select(p => PlugIn.GetPlugInInfo(p));
+			var pluginInfos = pluginIds.Select(p => GetPlugInInfo(p));
 			foreach (var pluginInfo in pluginInfos)
 			{
 				var pluginDirectory = Path.GetDirectoryName(pluginInfo.FileName);
+				if (!Directory.Exists(pluginDirectory))
+				{
+					continue;
+				}
+
 				var crashPluginExtensions = Directory.EnumerateFiles(pluginDirectory, $"*{CrashPluginExtension}");
 				if (crashPluginExtensions?.Any() != true)
 				{
@@ -50,8 +55,9 @@ namespace Crash
 
 		private static void LoadCrashPlugin(string crashAssembly)
 		{
-			var assembly = System.Reflection.Assembly.LoadFrom(crashAssembly);
-			var changeDefinitionTypes = assembly.ExportedTypes.Where(et => et.GetInterfaces().Contains(typeof(IChangeDefinition)));
+			var assembly = Assembly.LoadFrom(crashAssembly);
+			var changeDefinitionTypes =
+				assembly.ExportedTypes.Where(et => et.GetInterfaces().Contains(typeof(IChangeDefinition)));
 			foreach (var changeDefinitionType in changeDefinitionTypes)
 			{
 				var changeDefinition = Activator.CreateInstance(changeDefinitionType) as IChangeDefinition;
@@ -65,7 +71,7 @@ namespace Crash
 
 		static CrashRhinoPlugIn()
 		{
-			Changes = new ();
+			Changes = new Stack<IChangeDefinition>();
 			RhinoApp.Idle += LoadCrashPlugins;
 		}
 
@@ -105,7 +111,7 @@ namespace Crash
 				                                                   {
 					                                                   MessageBox
 						                                                   .Show("The server connection has been lost. Nothing can currently be done about this. Your model will be closed.",
-								                                                    MessageBoxButtons.OK);
+							                                                   MessageBoxButtons.OK);
 				                                                   });
 
 				                         await CrashDocRegistry
@@ -119,7 +125,7 @@ namespace Crash
 				                                                       {
 					                                                       MessageBox
 						                                                       .Show("A change failed to send. Any changes highlighted in red will not be communicated",
-								                                                        MessageBoxButtons.OK);
+							                                                       MessageBoxButtons.OK);
 				                                                       });
 			                             };
 		}
