@@ -85,11 +85,11 @@ namespace Crash.UI.JoinModel
 
 				               // Styling
 				               Border = BorderType.None,
-				               GridLines = GridLines.None,
+				               GridLines = GridLines.Horizontal,
 				               ContextMenu = CreateContextMenu(isEditable),
 
 				               // Help
-				               ToolTip = "Choose a Model to Join"
+				               ToolTip = isEditable ? "Enter a model address to join" : "Choose a model to join",
 			               };
 
 			gridView.Columns.Add(isEditable ? CreateAddCell() : CreateOpenCell());
@@ -158,12 +158,14 @@ namespace Crash.UI.JoinModel
 
 		private GridColumn CreateAddCell()
 		{
+			var customCell = new CustomCell { CreateCell = CreateAddButtonContents };
+
 			return new GridColumn
 			       {
 				       Width = OpenCellWidth,
 				       Resizable = false,
-				       DataCell = new CustomCell { CreateCell = CreateAddButtonContents }
-			       };
+				       DataCell = customCell,
+			};
 		}
 
 		private GridColumn CreateOpenCell()
@@ -183,8 +185,8 @@ namespace Crash.UI.JoinModel
 				                  Binding = Binding.Property<SharedModel, string>(s => s.ModelAddress),
 				                  AutoSelectMode = isEditable ? AutoSelectMode.Always : AutoSelectMode.OnFocus,
 				                  TextAlignment = TextAlignment.Center,
-				                  VerticalAlignment = VerticalAlignment.Center
-			                  };
+				                  VerticalAlignment = VerticalAlignment.Center,
+			};
 
 			return new GridColumn
 			       {
@@ -193,7 +195,7 @@ namespace Crash.UI.JoinModel
 				       AutoSize = false,
 				       Editable = isEditable,
 				       HeaderTextAlignment = TextAlignment.Left,
-				       DataCell = addressCell
+				       DataCell = addressCell,
 			       };
 		}
 

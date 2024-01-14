@@ -56,29 +56,35 @@ namespace Crash.UI.JoinModel
 			AddNewModel += (sender, args) =>
 			               {
 				               Model.AddSharedModel(Model.AddModel);
-				               ActiveModels.Invalidate(true);
+								ActiveModels.Invalidate(true);
 			               };
 
 			JoinModel += (sender, args) =>
 			             {
-				             if (sender is not Command { DataContext: SharedModel model })
-				             {
-					             return;
-				             }
-
-				             Close(model);
+							 var model = GetModel(sender);
+							 if (model is not null)
+								Close(model);
 			             };
 
 			RemoveModel += (sender, args) =>
 			               {
-				               if (sender is not Command { DataContext: SharedModel model })
-				               {
-					               return;
-				               }
-
-				               Model.SharedModels.Remove(model);
-				               ActiveModels.Invalidate(true);
+							   var model = GetModel(sender);
+							   if (model is not null)
+							   {
+								   Model.SharedModels.Remove(model);
+								   ActiveModels.Invalidate(true);
+							   }
 			               };
+		}
+
+		private SharedModel GetModel(object sender)
+		{
+			if (sender is Command { DataContext: SharedModel model })
+			{
+				return model;
+			}
+			
+			return this.CurrentSelection;
 		}
 
 		private Control CreateOpenButtonContents(CellEventArgs args)
@@ -111,7 +117,7 @@ namespace Crash.UI.JoinModel
 				                       {
 					                       DataContext = modelContext, ToolTip = "Add Model to List"
 				                       },
-				             Enabled = false
+				             Enabled = true
 			             };
 
 			return button;
