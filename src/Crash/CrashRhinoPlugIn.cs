@@ -8,6 +8,7 @@ using Crash.Handlers.Plugins.Camera;
 using Crash.Handlers.Plugins.Geometry;
 using Crash.Handlers.Plugins.Initializers;
 using Crash.UI.ExceptionsAndErrors;
+using Crash.UI.UsersView;
 
 using Eto.Forms;
 
@@ -111,9 +112,10 @@ namespace Crash
 				                                                   {
 					                                                   MessageBox
 						                                                   .Show("The server connection has been lost. Nothing can currently be done about this. Your model will be closed.",
-							                                                   MessageBoxButtons.OK);
+								                                                    MessageBoxButtons.OK);
 				                                                   });
 
+				                         UsersForm.CloseActiveForm();
 				                         await CrashDocRegistry
 					                         .DisposeOfDocumentAsync(args.CrashDoc);
 			                         };
@@ -125,7 +127,7 @@ namespace Crash
 				                                                       {
 					                                                       MessageBox
 						                                                       .Show("A change failed to send. Any changes highlighted in red will not be communicated",
-							                                                       MessageBoxButtons.OK);
+								                                                        MessageBoxButtons.OK);
 				                                                       });
 			                             };
 		}
