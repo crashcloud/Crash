@@ -1,4 +1,6 @@
-﻿using Crash.Common.Communications;
+﻿using System.Reflection;
+
+using Crash.Common.Communications;
 using Crash.Common.Events;
 using Crash.Handlers;
 using Crash.Handlers.Plugins;
@@ -22,40 +24,34 @@ namespace Crash
 		private const string CrashPluginId = "53CB2393-C71F-4079-9CEC-97464FF9D14E";
 
 		/// <summary>Contains all of the Change Definitions of this PlugIn</summary>
-		private readonly Stack<IChangeDefinition> Changes;
+		private readonly static Stack<IChangeDefinition> Changes;
 
 		#region Crash Plugins
 
-		private void LoadCrashPlugins()
+		private static void LoadCrashPlugins()
 		{
 			IEnumerable<Guid> pluginIds = GetInstalledPlugIns().Keys;
-			foreach (var pluginId in pluginIds)
+			var pluginInfos = pluginIds.Select(p => PlugIn.GetPlugInInfo(p));
+			foreach (var pluginInfo in pluginInfos)
 			{
-				var plugin = Find(pluginId);
-				if (plugin is null)
+				var pluginDirectory = Path.GetDirectoryName(pluginInfo.FileName);
+				var crashPluginExtensions = Directory.EnumerateFiles(pluginDirectory, $"*{CrashPluginExtension}");
+				if (crashPluginExtensions?.Any() != true)
 				{
 					continue;
 				}
 
-				var pluginDirection = Path.GetDirectoryName(plugin.Assembly.Location);
-				var crashPluginExtensions = Directory.EnumerateFiles(pluginDirection, $"*.{CrashPluginExtension}");
-				if (!crashPluginExtensions?.Any() != true)
+				foreach (var pluginAssembly in crashPluginExtensions)
 				{
-					continue;
-				}
-
-				foreach (var crashAssembly in crashPluginExtensions)
-				{
-					LoadCrashPlugin(crashAssembly);
+					LoadCrashPlugin(pluginAssembly);
 				}
 			}
 		}
 
-		private void LoadCrashPlugin(string crashAssembly)
+		private static void LoadCrashPlugin(string crashAssembly)
 		{
-			var assembly = AppDomain.CurrentDomain.Load(crashAssembly);
-
-			var changeDefinitionTypes = assembly.ExportedTypes.Where(et => et.IsSubclassOf(typeof(CrashPlugIn)));
+			var assembly = System.Reflection.Assembly.LoadFrom(crashAssembly);
+			var changeDefinitionTypes = assembly.ExportedTypes.Where(et => et.GetInterfaces().Contains(typeof(IChangeDefinition)));
 			foreach (var changeDefinitionType in changeDefinitionTypes)
 			{
 				var changeDefinition = Activator.CreateInstance(changeDefinitionType) as IChangeDefinition;
@@ -66,6 +62,18 @@ namespace Crash
 		#endregion
 
 		#region Crash Plugin Specifics
+
+		static CrashRhinoPlugIn()
+		{
+			Changes = new ();
+			RhinoApp.Idle += LoadCrashPlugins;
+		}
+
+		private static void LoadCrashPlugins(object? sender, EventArgs e)
+		{
+			RhinoApp.Idle -= LoadCrashPlugins;
+			LoadCrashPlugins();
+		}
 
 		private void CrashDocRegistryOnDocumentDisposed(object? sender, CrashEventArgs e)
 		{
@@ -146,7 +154,6 @@ namespace Crash
 		public CrashRhinoPlugIn()
 		{
 			Instance = this;
-			Changes = new Stack<IChangeDefinition>();
 
 			// Register the Defaults!
 			Changes.Push(new GeometryChangeDefinition());
@@ -168,8 +175,6 @@ namespace Crash
 		{
 			// Add feature flags as advanced settings here!
 			InteractivePipe.Active = new InteractivePipe { Enabled = false };
-
-			LoadCrashPlugins();
 
 			return base.OnLoad(ref errorMessage);
 		}
