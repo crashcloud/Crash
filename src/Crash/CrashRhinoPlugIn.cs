@@ -113,9 +113,10 @@ namespace Crash
 					                                                   MessageBox
 						                                                   .Show("The server connection has been lost. Nothing can currently be done about this. Your model will be closed.",
 								                                                    MessageBoxButtons.OK);
-				                                                   });
 
-				                         UsersForm.CloseActiveForm();
+																	   UsersForm.CloseActiveForm();
+																   });
+
 				                         await CrashDocRegistry
 					                         .DisposeOfDocumentAsync(args.CrashDoc);
 			                         };
