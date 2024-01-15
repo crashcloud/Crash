@@ -43,7 +43,7 @@ namespace Crash.Commands
 		///     to take action if connected.
 		/// </summary>
 		/// <returns>True if already connected</returns>
-		internal static bool CheckAlreadyConnected(CrashDoc crashDoc)
+		internal static async Task<bool> CheckAlreadyConnectedAsync(CrashDoc crashDoc)
 		{
 			try
 			{
@@ -57,7 +57,7 @@ namespace Crash.Commands
 			}
 			catch (Exception e)
 			{
-				CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
+				await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 				return true;
 			}
 		}

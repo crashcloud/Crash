@@ -35,15 +35,12 @@ namespace Crash.Commands
 		{
 			_crashDoc = null;
 
-			if (!CommandUtils.CheckAlreadyConnected(crashDoc))
+			if (!await CommandUtils.CheckAlreadyConnectedAsync(crashDoc))
 			{
 				return Result.Cancel;
 			}
 
-			if (crashDoc is not null)
-			{
-				CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
-			}
+			await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 
 			var name = Environment.UserName;
 			if (mode == RunMode.Interactive)
@@ -54,6 +51,7 @@ namespace Crash.Commands
 				if (string.IsNullOrEmpty(chosenModel?.ModelAddress))
 				{
 					RhinoApp.WriteLine("Invalid URL Input");
+					await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 					return Result.Cancel;
 				}
 
@@ -85,22 +83,35 @@ namespace Crash.Commands
 
 		private async Task StartServer()
 		{
+			StatusBar.ShowProgressMeter(0, 100, "Loading Crash", true, true);
+			StatusBar.UpdateProgressMeter(25, true);
+
 			if (await CommandUtils.StartLocalClient(_crashDoc, _lastUrl))
 			{
+				StatusBar.UpdateProgressMeter(80, true);
+
 				InteractivePipe.Active.Enabled = true;
 				_crashDoc.Queue.OnCompletedQueue += QueueOnOnCompleted;
 			}
 			else if (_crashDoc?.LocalClient is not null)
 			{
 				await _crashDoc.LocalClient.StopAsync();
+
+				StatusBar.HideProgressMeter();
+				StatusBar.ClearMessagePane();
 			}
 		}
 
 		private void QueueOnOnCompleted(object? sender, CrashEventArgs e)
 		{
+			StatusBar.UpdateProgressMeter(100, true);
+
 			e.CrashDoc.Queue.OnCompletedQueue -= QueueOnOnCompleted;
 			UsersForm.CloseActiveForm();
 			UsersForm.ShowForm(e.CrashDoc);
+
+			StatusBar.HideProgressMeter();
+			StatusBar.ClearMessagePane();
 		}
 
 		private bool _GetServerURL(ref string url)
