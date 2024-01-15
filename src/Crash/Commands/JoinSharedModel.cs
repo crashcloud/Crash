@@ -50,7 +50,6 @@ namespace Crash.Commands
 
 				if (string.IsNullOrEmpty(chosenModel?.ModelAddress))
 				{
-					RhinoApp.WriteLine("Invalid URL Input");
 					await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 					return Result.Cancel;
 				}
@@ -61,13 +60,13 @@ namespace Crash.Commands
 			{
 				if (!CommandUtils.GetUserName(out name))
 				{
-					RhinoApp.WriteLine("Invalid Name Input");
+					RhinoApp.WriteLine("Invalid Name Input. Avoid empty values");
 					return Result.Cancel;
 				}
 
 				if (!_GetServerURL(ref _lastUrl))
 				{
-					RhinoApp.WriteLine("Invalid URL Input");
+					RhinoApp.WriteLine("Invalid URL Input. ");
 					return Result.Nothing;
 				}
 			}

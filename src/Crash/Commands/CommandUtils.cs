@@ -3,6 +3,8 @@
 using Crash.Common.Document;
 using Crash.Handlers;
 
+using Eto.Forms;
+
 using Rhino.Geometry;
 
 namespace Crash.Commands
@@ -86,6 +88,7 @@ namespace Crash.Commands
 		internal static async Task<bool> StartLocalClient(CrashDoc crashDoc, string url)
 		{
 			var userName = crashDoc.Users.CurrentUser.Name;
+			var message = "An unexplained exception occured, try again.";
 
 			try
 			{
@@ -96,21 +99,25 @@ namespace Crash.Commands
 			}
 			catch (HttpRequestException)
 			{
-				RhinoApp.WriteLine("Server was not found! Try retyping the address.");
+				message = "Server was not found! Please try retyping the address.";
 			}
 			catch (UriFormatException)
 			{
-				RhinoApp.WriteLine("Address was invalid!");
+				message = "The given address was invalid! Please try retying the address";
 			}
 			catch (InvalidOperationException)
 			{
-				RhinoApp.WriteLine("There was an issue with the local client");
+				message = "There was an issue with the local client";
 			}
 			catch (Exception ex)
 			{
-				RhinoApp.WriteLine("An unexplained exception occured, try again.");
-				RhinoApp.WriteLine(ex.Message);
+				message += $", {ex.Message}";
 			}
+
+			RhinoApp.InvokeOnUiThread(() =>
+			                          {
+				                          MessageBox.Show(message, MessageBoxButtons.OK);
+			                          });
 
 			return false;
 		}
