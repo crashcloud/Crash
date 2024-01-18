@@ -54,9 +54,12 @@ namespace Crash.UI.UsersView
 			{
 				return;
 			}
-
-			ActiveForm.Close();
-			ActiveForm = null;
+			try
+			{
+				ActiveForm.Close();
+				ActiveForm = null;
+			}
+			catch { }
 		}
 
 		internal static void ReDraw()
