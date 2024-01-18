@@ -54,6 +54,7 @@ namespace Crash.UI.UsersView
 			{
 				return;
 			}
+
 			try
 			{
 				ActiveForm.Close();
@@ -98,28 +99,32 @@ namespace Crash.UI.UsersView
 #endif
 
 			var gridView = new GridView
-			{
-				AllowMultipleSelection = false,
-				AllowEmptySelection = true,
-				DataStore = _viewModel.Users,
-				ShowHeader = false,
-				Border = BorderType.None,
-				RowHeight = 24,
-				Columns =
-							   {
-								   CreateCameraColumn(),
-								   CreateVisibleColumn(),
-								   CreateColourColumn(),
-								   CreateUsersColumn()
-							   }
-			};
+			               {
+				               AllowMultipleSelection = false,
+				               AllowEmptySelection = true,
+				               DataStore = _viewModel.Users,
+				               ShowHeader = false,
+				               Border = BorderType.None,
+				               RowHeight = 24,
+				               Columns =
+				               {
+					               CreateCameraColumn(),
+					               CreateVisibleColumn(),
+					               CreateColourColumn(),
+					               CreateUsersColumn()
+				               }
+			               };
 
 			gridView.CellClick += _viewModel.CycleCameraSetting;
-			Content = new Scrollable()
+
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
-				Content = gridView,
-				ScrollSize = new Size(0,0),
-			};
+				Content = new Scrollable { Content = gridView, ScrollSize = new Size(0, 0) };
+			}
+			else
+			{
+				Content = gridView;
+			}
 		}
 
 		private static GridColumn CreateUsersColumn()
