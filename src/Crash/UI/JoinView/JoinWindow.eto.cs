@@ -42,6 +42,7 @@ namespace Crash.UI.JoinModel
 					                                 CurrentSelection = model;
 				                                 }
 			                                 };
+
 			NewModel = CreateAddGrid();
 
 			Content = new StackLayout
@@ -53,7 +54,14 @@ namespace Crash.UI.JoinModel
 				          HorizontalContentAlignment = HorizontalAlignment.Stretch,
 				          VerticalContentAlignment = VerticalAlignment.Stretch,
 				          Enabled = true,
-				          Items = { ActiveModels, DrawHorizonalCell(), NewModel }
+				          Items = {
+								new Scrollable()
+								{
+									Content = ActiveModels,
+								},
+								DrawHorizonalCell(),
+								NewModel
+							}
 			          };
 		}
 
