@@ -80,42 +80,46 @@ namespace Crash.UI.UsersView
 		private void CreateForm()
 		{
 			Icon = Icons.crashlogo.ToEto();
-			Size = new Size(240, -1);
+			Size = new Size(240, 140);
 			Title = "Collaborators";
 			Owner = RhinoEtoApp.MainWindow;
 			Padding = 0;
 			Topmost = false;
-			AutoSize = true;
+			AutoSize = false;
 			Resizable = false;
 			Maximizable = false;
 			Minimizable = false;
 			WindowStyle = WindowStyle.Default;
 			ShowInTaskbar = false;
-			MinimumSize = new Size(200, 80);
+			MinimumSize = new Size(200, 40);
 
 #if NET7_0
 			this.UseRhinoStyle();
 #endif
 
 			var gridView = new GridView
-			               {
-				               AllowMultipleSelection = false,
-				               AllowEmptySelection = true,
-				               DataStore = _viewModel.Users,
-				               ShowHeader = false,
-				               Border = BorderType.None,
-				               RowHeight = 24,
-				               Columns =
-				               {
-					               CreateCameraColumn(),
-					               CreateVisibleColumn(),
-					               CreateColourColumn(),
-					               CreateUsersColumn()
-				               }
-			               };
+			{
+				AllowMultipleSelection = false,
+				AllowEmptySelection = true,
+				DataStore = _viewModel.Users,
+				ShowHeader = false,
+				Border = BorderType.None,
+				RowHeight = 24,
+				Columns =
+							   {
+								   CreateCameraColumn(),
+								   CreateVisibleColumn(),
+								   CreateColourColumn(),
+								   CreateUsersColumn()
+							   }
+			};
 
 			gridView.CellClick += _viewModel.CycleCameraSetting;
-			Content = gridView;
+			Content = new Scrollable()
+			{
+				Content = gridView,
+				ScrollSize = new Size(0,0),
+			};
 		}
 
 		private static GridColumn CreateUsersColumn()
@@ -201,9 +205,8 @@ namespace Crash.UI.UsersView
 		protected override void OnClosing(CancelEventArgs e)
 		{
 			this.SavePosition();
-			base.OnClosing(e);
-			ActiveForm?.Dispose();
 			ActiveForm = null;
+			base.OnClosing(e);
 		}
 	}
 }
