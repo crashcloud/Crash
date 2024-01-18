@@ -8,7 +8,7 @@ namespace Crash.UI.JoinModel
 	[Guid("37943c4b-5c30-471c-a5b0-c1bdaafa628d")]
 	public partial class JoinWindow
 	{
-		private static readonly int WindowWidth = 400;
+		private static readonly int WindowWidth = IsOSX ? 400 : 350;
 		private static readonly int WindowHeight = 200;
 
 		private static readonly int RowHeight = 25;
@@ -44,6 +44,9 @@ namespace Crash.UI.JoinModel
 			                                 };
 
 			NewModel = CreateAddGrid();
+			Padding = 0;
+			// Size = new Size(-1, WindowHeight + (IsOSX ? OSX_Padd : 0));
+			MinimumSize = new Size(WindowWidth, WindowHeight);
 
 			Content = new StackLayout
 			          {
