@@ -8,20 +8,20 @@ namespace Crash.UI.JoinModel
 	[Guid("37943c4b-5c30-471c-a5b0-c1bdaafa628d")]
 	public partial class JoinWindow
 	{
-		private static readonly int WindowWidth = IsOSX ? 400 : 350;
-		private static readonly int WindowHeight = 200;
+		private static int WindowWidth => 500 - (IsOSX ? 0 : 50);
+		private static int WindowHeight => 200;
 
-		private static readonly int RowHeight = 25;
-		private static readonly int DividerHeight = 5;
+		private static int RowHeight => 25;
+		private static int DividerHeight => 5;
 
-		private static readonly int OpenCellWidth = 60;
-		private static readonly int DividerCellWidth = 10;
-		private static readonly int UserIconCellWidth = 30;
-		private static readonly int CountCellWidth = 30;
-		private static readonly int SignalCellWidth = 30;
-		private static readonly int TextCellWidth = 180;
+		private static int OpenCellWidth => 60;
+		private static int DividerCellWidth => 10;
+		private static int UserIconCellWidth => 30;
+		private static int CountCellWidth => 30;
+		private static int SignalCellWidth => 30;
+		private static int TextCellWidth => 350;
 
-		private static readonly int OSX_Padd = 10;
+		private static int OSX_Padd => 10;
 
 		protected GridView ActiveModels;
 		protected GridView NewModel;
@@ -47,6 +47,7 @@ namespace Crash.UI.JoinModel
 			Padding = 0;
 			// Size = new Size(-1, WindowHeight + (IsOSX ? OSX_Padd : 0));
 			MinimumSize = new Size(WindowWidth, WindowHeight);
+			AutoSize = true;
 
 			Content = new StackLayout
 			          {
@@ -203,9 +204,7 @@ namespace Crash.UI.JoinModel
 			       {
 				       Width = TextCellWidth,
 				       Resizable = false,
-				       AutoSize = false,
 				       Editable = isEditable,
-				       HeaderTextAlignment = TextAlignment.Left,
 				       DataCell = addressCell,
 			       };
 		}
