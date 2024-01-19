@@ -1,15 +1,18 @@
 ﻿using System.Runtime.InteropServices;
 
+using Eto;
 using Eto.Drawing;
 using Eto.Forms;
+
+using Rhino.UI;
 
 namespace Crash.UI.JoinModel
 {
 	[Guid("37943c4b-5c30-471c-a5b0-c1bdaafa628d")]
 	public partial class JoinWindow
 	{
-		private static int WindowWidth => 500 - (IsOSX ? 0 : 50);
-		private static int WindowHeight => 200;
+		private static int WindowWidth => 500;
+		private static int WindowHeight => 260;
 
 		private static int RowHeight => 25;
 		private static int DividerHeight => 5;
@@ -19,7 +22,7 @@ namespace Crash.UI.JoinModel
 		private static int UserIconCellWidth => 30;
 		private static int CountCellWidth => 30;
 		private static int SignalCellWidth => 30;
-		private static int TextCellWidth => 350;
+		private static int TextCellWidth => 280;
 
 		private static int OSX_Padd => 10;
 
@@ -45,23 +48,24 @@ namespace Crash.UI.JoinModel
 
 			NewModel = CreateAddGrid();
 			Padding = 0;
-			// Size = new Size(-1, WindowHeight + (IsOSX ? OSX_Padd : 0));
-			MinimumSize = new Size(WindowWidth, WindowHeight);
+			Size = new Size(WindowWidth, -1);
 			AutoSize = true;
 
 			Content = new StackLayout
 			          {
 				          Padding = 0,
 				          Spacing = 0,
-				          Size = new Size(WindowWidth, WindowHeight + (IsOSX ? OSX_Padd : 0)),
-				          MinimumSize = new Size(WindowWidth, WindowHeight),
 				          HorizontalContentAlignment = HorizontalAlignment.Stretch,
-				          VerticalContentAlignment = VerticalAlignment.Stretch,
+				          VerticalContentAlignment = VerticalAlignment.Top,
 				          Enabled = true,
-				          Items = {
+				          Items = {	
 								new Scrollable()
 								{
 									Content = ActiveModels,
+									Padding = 0,
+									Size = new Size(WindowWidth, 150),
+									ScrollSize = new Size(1, 1),
+									ExpandContentHeight = true,
 								},
 								DrawHorizonalCell(),
 								NewModel
@@ -71,11 +75,12 @@ namespace Crash.UI.JoinModel
 
 		private Drawable DrawHorizonalCell()
 		{
-			var drawable = new Drawable { Height = DividerHeight, Width = WindowWidth };
+			var drawable = new Drawable { Height = DividerHeight, Width = WindowWidth - 6 };
+			drawable.Padding = 0;
 			drawable.Paint += (sender, e) =>
 			                  {
 				                  var half = (float)DividerHeight / 2;
-				                  var start = new PointF(DividerHeight, half);
+				                  var start = new PointF(0, half);
 				                  var end = new PointF(WindowWidth - DividerHeight, half);
 				                  e.Graphics.DrawLine(Palette.SubtleGrey, start, end);
 			                  };
@@ -83,44 +88,56 @@ namespace Crash.UI.JoinModel
 			return drawable;
 		}
 
-		private GridView CreateDefaultGrid(bool isEditable = false)
+		protected const string DefaultGridStyle = "DefaultGrid";
+		protected const string AddButtonStyle = "AddButton";
+		private void InitStyles()
+		{
+			this.Styles.Add<GridView>(DefaultGridStyle, (grid) =>
+			{
+
+				// Allows
+				grid.AllowDrop = false;
+				grid.AllowEmptySelection = false;
+				grid.AllowColumnReordering = false;
+				grid.AllowMultipleSelection = false;
+				grid.ShowHeader = false;
+				grid.RowHeight = RowHeight;
+				grid.Border = BorderType.None;
+
+				// Styling
+				grid.Border = BorderType.None;
+				grid.GridLines = GridLines.Horizontal;
+			});
+
+			this.Styles.Add<Button>(AddButtonStyle, (button) =>
+			{
+
+			});
+		}
+
+		private GridView CreateModelGrid()
 		{
 			var gridView = new GridView
 			               {
-				               // Allows
-				               AllowDrop = false,
-				               AllowEmptySelection = false,
-				               AllowColumnReordering = false,
-				               AllowMultipleSelection = false,
-				               ShowHeader = false,
-				               RowHeight = RowHeight,
-
-				               // Styling
-				               Border = BorderType.None,
-				               GridLines = GridLines.Horizontal,
-				               ContextMenu = CreateContextMenu(isEditable),
+								Style = DefaultGridStyle,
 
 				               // Help
-				               ToolTip = isEditable ? "Enter a model address to join" : "Choose a model to join",
+				               ToolTip = "Choose a model to join",
 			               };
+			gridView.ContextMenu = CreateContextMenu();
 
-			gridView.Columns.Add(isEditable ? CreateAddCell() : CreateOpenCell());
-			gridView.Columns.Add(CreateTextCell(isEditable));
+			gridView.Columns.Add(CreateOpenCell());
+			gridView.Columns.Add(CreateTextCell(false));
 			gridView.Columns.Add(CreateDividerCell());
 			gridView.Columns.Add(CreateUserIconCell());
-			gridView.Columns.Add(CreateCountCell(isEditable));
+			gridView.Columns.Add(CreateCountCell(false));
 			gridView.Columns.Add(CreateSignalCell());
 
 			return gridView;
 		}
 
-		private ContextMenu? CreateContextMenu(bool isEditable = false)
+		private ContextMenu? CreateContextMenu()
 		{
-			if (isEditable)
-			{
-				return null;
-			}
-
 			var menu = new ContextMenu();
 			menu.Items.AddRange(new[]
 			                    {
@@ -143,17 +160,18 @@ namespace Crash.UI.JoinModel
 
 		private GridView CreateAddGrid()
 		{
-			var addView = CreateDefaultGrid(true);
-
-			if (IsOSX)
+			var addView = new GridView
 			{
-				addView.Size = new Size(WindowWidth, RowHeight + OSX_Padd);
-			}
-			else
-			{
-				addView.Size = new Size(WindowWidth, -1);
-			}
+				Style = DefaultGridStyle,
 
+				// Help
+				ToolTip = "Enter a model address to join",
+			};
+
+			addView.Columns.Add(CreateAddCell());
+			addView.Columns.Add(CreateTextCell(false));
+			addView.Columns.Add(CreateDividerCell());
+			addView.Height = 26;
 			addView.DataStore = Model.AddModels;
 
 			return addView;
@@ -161,8 +179,7 @@ namespace Crash.UI.JoinModel
 
 		private GridView CreateExistingGrid()
 		{
-			var existingView = CreateDefaultGrid();
-			existingView.Size = new Size(WindowWidth, ActiveModelsHeight);
+			var existingView = CreateModelGrid();
 			existingView.DataStore = Model.SharedModels;
 
 			return existingView;

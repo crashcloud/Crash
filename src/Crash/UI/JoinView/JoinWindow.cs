@@ -17,6 +17,8 @@ namespace Crash.UI.JoinModel
 
 		internal JoinWindow()
 		{
+			InitStyles();
+
 			Title = "Join Shared Model";
 			Resizable = false;
 			Minimizable = false;
@@ -116,8 +118,7 @@ namespace Crash.UI.JoinModel
 				             Command = new Command(AddNewModel)
 				                       {
 					                       DataContext = modelContext, ToolTip = "Add Model to List"
-				                       },
-				             Enabled = true
+				                       }
 			             };
 
 			return button;

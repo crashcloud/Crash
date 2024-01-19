@@ -82,12 +82,11 @@ namespace Crash.Commands
 
 		private async Task StartServer()
 		{
-			StatusBar.ShowProgressMeter(0, 100, "Loading Crash", true, true);
-			StatusBar.UpdateProgressMeter(25, true);
+			LoadingUtils.Start();
 
 			if (await CommandUtils.StartLocalClient(_crashDoc, _lastUrl))
 			{
-				StatusBar.UpdateProgressMeter(80, true);
+				LoadingUtils.SetState(LoadingUtils.LoadingState.ConnectingToServer);
 
 				InteractivePipe.Active.Enabled = true;
 				_crashDoc.Queue.OnCompletedQueue += QueueOnOnCompleted;
@@ -103,8 +102,7 @@ namespace Crash.Commands
 
 		private void QueueOnOnCompleted(object? sender, CrashEventArgs e)
 		{
-			StatusBar.UpdateProgressMeter(100, true);
-
+			LoadingUtils.Close();
 			e.CrashDoc.Queue.OnCompletedQueue -= QueueOnOnCompleted;
 			UsersForm.CloseActiveForm();
 			UsersForm.ShowForm(e.CrashDoc);

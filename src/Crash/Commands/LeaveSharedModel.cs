@@ -4,6 +4,7 @@ using Crash.Handlers;
 using Crash.UI.UsersView;
 
 using Rhino.Commands;
+using Rhino.UI;
 
 namespace Crash.Commands
 {
@@ -52,6 +53,7 @@ namespace Crash.Commands
 
 			doc.Views.Redraw();
 			UsersForm.CloseActiveForm();
+			LoadingUtils.Close();
 
 			return Result.Success;
 		}

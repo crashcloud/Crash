@@ -67,6 +67,9 @@ namespace Crash.UI.UsersView
 		{
 			try
 			{
+				if (ActiveForm is null)
+					return;
+
 				ActiveForm?.Invalidate(true);
 
 				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(ActiveForm._crashDoc);
