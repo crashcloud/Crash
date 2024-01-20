@@ -1,7 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 [assembly: InternalsVisibleTo("Crash.UI.Tests")]
 
@@ -24,15 +23,12 @@ namespace Crash.UI.JoinModel
 		{
 			SharedModels = new ObservableCollection<SharedModel>();
 
-			SetAddModel();
 			LoadSharedModels();
 
 			RhinoDoc.BeginSaveDocument += SaveSharedModels;
 		}
 
 		internal ObservableCollection<SharedModel> SharedModels { get; }
-		internal SharedModel AddModel { get; private set; }
-		internal ObservableCollection<SharedModel> AddModels => new(new List<SharedModel> { AddModel });
 
 		public void Dispose()
 		{
@@ -102,14 +98,8 @@ namespace Crash.UI.JoinModel
 		{
 			if (ModelIsNew(model))
 			{
-				SharedModels.Add(new SharedModel(model));
-				SetAddModel();
+				SharedModels.Add(model);
 			}
-		}
-
-		internal void SetAddModel()
-		{
-			AddModel = new SharedModel { Loaded = true, ModelAddress = "" };
 		}
 	}
 }

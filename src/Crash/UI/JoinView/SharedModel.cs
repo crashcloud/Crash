@@ -52,7 +52,5 @@ namespace Crash.UI
 
 		public string[] Users { get; set; } = Array.Empty<string>();
 
-		public event Action<Change[]> OnInitialize;
-
 	}
 }

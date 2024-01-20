@@ -35,25 +35,23 @@ namespace Crash.Commands
 		{
 			_crashDoc = null;
 
-			if (!CommandUtils.CheckAlreadyConnected(crashDoc))
+			if (!await CommandUtils.CheckAlreadyConnectedAsync(crashDoc))
 			{
 				return Result.Cancel;
 			}
 
-			if (crashDoc is not null)
-			{
-				CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
-			}
+			await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 
 			var name = Environment.UserName;
 			if (mode == RunMode.Interactive)
 			{
 				var dialog = new JoinWindow();
 				var chosenModel = await dialog.ShowModalAsync(RhinoEtoApp.MainWindow);
+				dialog.Dispose();
 
 				if (string.IsNullOrEmpty(chosenModel?.ModelAddress))
 				{
-					RhinoApp.WriteLine("Invalid URL Input");
+					await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 					return Result.Cancel;
 				}
 
@@ -63,13 +61,13 @@ namespace Crash.Commands
 			{
 				if (!CommandUtils.GetUserName(out name))
 				{
-					RhinoApp.WriteLine("Invalid Name Input");
+					RhinoApp.WriteLine("Invalid Name Input. Avoid empty values");
 					return Result.Cancel;
 				}
 
 				if (!_GetServerURL(ref _lastUrl))
 				{
-					RhinoApp.WriteLine("Invalid URL Input");
+					RhinoApp.WriteLine("Invalid URL Input. ");
 					return Result.Nothing;
 				}
 			}
@@ -85,22 +83,33 @@ namespace Crash.Commands
 
 		private async Task StartServer()
 		{
+			LoadingUtils.Start();
+
 			if (await CommandUtils.StartLocalClient(_crashDoc, _lastUrl))
 			{
+				LoadingUtils.SetState(LoadingUtils.LoadingState.ConnectingToServer);
+
 				InteractivePipe.Active.Enabled = true;
 				_crashDoc.Queue.OnCompletedQueue += QueueOnOnCompleted;
 			}
 			else if (_crashDoc?.LocalClient is not null)
 			{
 				await _crashDoc.LocalClient.StopAsync();
+
+				StatusBar.HideProgressMeter();
+				StatusBar.ClearMessagePane();
 			}
 		}
 
 		private void QueueOnOnCompleted(object? sender, CrashEventArgs e)
 		{
+			LoadingUtils.Close();
 			e.CrashDoc.Queue.OnCompletedQueue -= QueueOnOnCompleted;
 			UsersForm.CloseActiveForm();
 			UsersForm.ShowForm(e.CrashDoc);
+
+			StatusBar.HideProgressMeter();
+			StatusBar.ClearMessagePane();
 		}
 
 		private bool _GetServerURL(ref string url)

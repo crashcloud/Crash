@@ -8,23 +8,38 @@ namespace Crash.UI.JoinModel
 	[Guid("37943c4b-5c30-471c-a5b0-c1bdaafa628d")]
 	public partial class JoinWindow
 	{
-		private static readonly int WindowWidth = 400;
-		private static readonly int WindowHeight = 200;
-
-		private static readonly int RowHeight = 25;
-		private static readonly int DividerHeight = 5;
-
-		private static readonly int OpenCellWidth = 60;
-		private static readonly int DividerCellWidth = 10;
-		private static readonly int UserIconCellWidth = 30;
-		private static readonly int CountCellWidth = 30;
-		private static readonly int SignalCellWidth = 30;
-		private static readonly int TextCellWidth = 180;
-
-		private static readonly int OSX_Padd = 10;
+		protected const string DefaultGridStyle = "DefaultGrid";
+		protected const string AddButtonStyle = "AddButton";
 
 		protected GridView ActiveModels;
-		protected GridView NewModel;
+
+		protected StackLayout NewModel;
+
+		private TextBox inputTextBox { get; } = new()
+		                                        {
+			                                        AutoSelectMode = AutoSelectMode.OnFocus,
+			                                        TextAlignment = TextAlignment.Center,
+			                                        PlaceholderText = "Enter a new Model Address",
+			                                        ShowBorder = false,
+			                                        ToolTip = "Enter a new Model Address to Join",
+			                                        Width = TextCellWidth,
+			                                        Height = RowHeight
+		                                        };
+
+		private static int WindowWidth => 500;
+		private static int WindowHeight => 260;
+
+		private static int RowHeight => 25;
+		private static int DividerHeight => 5;
+
+		private static int OpenCellWidth => 60;
+		private static int DividerCellWidth => 10;
+		private static int UserIconCellWidth => 30;
+		private static int CountCellWidth => 30;
+		private static int SignalCellWidth => 30;
+		private static int TextCellWidth => 280;
+
+		private static int OSX_Padd => 10;
 
 		private static int ActiveModelsHeight => WindowHeight -
 		                                         (RowHeight +
@@ -34,7 +49,7 @@ namespace Crash.UI.JoinModel
 
 		public void InitializeComponent()
 		{
-			ActiveModels = CreateExistingGrid();
+			ActiveModels = CreateModelGrid();
 			ActiveModels.SelectionChanged += (sender, args) =>
 			                                 {
 				                                 if (ActiveModels.SelectedItem is SharedModel model)
@@ -42,28 +57,40 @@ namespace Crash.UI.JoinModel
 					                                 CurrentSelection = model;
 				                                 }
 			                                 };
-			NewModel = CreateAddGrid();
+
+			NewModel = CreateAddLayout();
+			Padding = 0;
 
 			Content = new StackLayout
 			          {
 				          Padding = 0,
 				          Spacing = 0,
-				          Size = new Size(WindowWidth, WindowHeight + (IsOSX ? OSX_Padd : 0)),
-				          MinimumSize = new Size(WindowWidth, WindowHeight),
 				          HorizontalContentAlignment = HorizontalAlignment.Stretch,
-				          VerticalContentAlignment = VerticalAlignment.Stretch,
+				          VerticalContentAlignment = VerticalAlignment.Top,
 				          Enabled = true,
-				          Items = { ActiveModels, DrawHorizonalCell(), NewModel }
+				          Items =
+				          {
+					          new Scrollable
+					          {
+						          Content = ActiveModels,
+						          Padding = 0,
+						          Size = new Size(WindowWidth, 150),
+						          ExpandContentHeight = true
+					          },
+					          DrawHorizonalCell(),
+					          NewModel
+				          }
 			          };
 		}
 
 		private Drawable DrawHorizonalCell()
 		{
-			var drawable = new Drawable { Height = DividerHeight, Width = WindowWidth };
+			var drawable = new Drawable { Height = DividerHeight, Width = WindowWidth - 6 };
+			drawable.Padding = 0;
 			drawable.Paint += (sender, e) =>
 			                  {
 				                  var half = (float)DividerHeight / 2;
-				                  var start = new PointF(DividerHeight, half);
+				                  var start = new PointF(0, half);
 				                  var end = new PointF(WindowWidth - DividerHeight, half);
 				                  e.Graphics.DrawLine(Palette.SubtleGrey, start, end);
 			                  };
@@ -71,50 +98,52 @@ namespace Crash.UI.JoinModel
 			return drawable;
 		}
 
-		private GridView CreateDefaultGrid(bool isEditable = false)
+		private void InitStyles()
+		{
+			Styles.Add<GridView>(DefaultGridStyle, grid =>
+			                                       {
+				                                       // Allows
+				                                       grid.AllowDrop = false;
+				                                       grid.AllowEmptySelection = false;
+				                                       grid.AllowColumnReordering = false;
+				                                       grid.AllowMultipleSelection = false;
+				                                       grid.ShowHeader = false;
+				                                       grid.RowHeight = RowHeight;
+				                                       grid.Border = BorderType.None;
+
+				                                       // Styling
+				                                       grid.Border = BorderType.None;
+				                                       grid.GridLines = GridLines.Horizontal;
+			                                       });
+		}
+
+		private GridView CreateModelGrid()
 		{
 			var gridView = new GridView
 			               {
-				               // Allows
-				               AllowDrop = false,
-				               AllowEmptySelection = false,
-				               AllowColumnReordering = false,
-				               AllowMultipleSelection = false,
-				               ShowHeader = false,
-				               RowHeight = RowHeight,
-
-				               // Styling
-				               Border = BorderType.None,
-				               GridLines = GridLines.None,
-				               ContextMenu = CreateContextMenu(isEditable),
+				               Style = DefaultGridStyle,
 
 				               // Help
-				               ToolTip = "Choose a Model to Join"
+				               ToolTip = "Choose a model to join",
+				               Size = new Size(WindowWidth - 40, -1),
+				               DataStore = Model.SharedModels
 			               };
+			gridView.ContextMenu = CreateContextMenu();
 
-			gridView.Columns.Add(isEditable ? CreateAddCell() : CreateOpenCell());
-			gridView.Columns.Add(CreateTextCell(isEditable));
+			gridView.Columns.Add(CreateOpenCell());
+			gridView.Columns.Add(CreateTextCell());
 			gridView.Columns.Add(CreateDividerCell());
 			gridView.Columns.Add(CreateUserIconCell());
-			gridView.Columns.Add(CreateCountCell(isEditable));
+			gridView.Columns.Add(CreateCountCell());
 			gridView.Columns.Add(CreateSignalCell());
 
 			return gridView;
 		}
 
-		private ContextMenu? CreateContextMenu(bool isEditable = false)
+		private ContextMenu? CreateContextMenu()
 		{
-			if (isEditable)
-			{
-				return null;
-			}
-
 			var menu = new ContextMenu();
-			menu.Items.AddRange(new[]
-			                    {
-				                    MenuCommand("Remove", RemoveModel), MenuCommand("Refresh", RefreshModels),
-				                    MenuCommand("Join", JoinModel)
-			                    });
+			menu.Items.AddRange(new[] { MenuCommand("Remove", RemoveModel), MenuCommand("Join", JoinModel) });
 
 			return menu;
 		}
@@ -129,41 +158,30 @@ namespace Crash.UI.JoinModel
 			return button;
 		}
 
-		private GridView CreateAddGrid()
+		private StackLayout CreateAddLayout()
 		{
-			var addView = CreateDefaultGrid(true);
-
-			if (IsOSX)
-			{
-				addView.Size = new Size(WindowWidth, RowHeight + OSX_Padd);
-			}
-			else
-			{
-				addView.Size = new Size(WindowWidth, -1);
-			}
-
-			addView.DataStore = Model.AddModels;
+			var addView = new StackLayout
+			              {
+				              // Style = DefaultGridStyle,
+				              Padding = 0,
+				              Orientation = Orientation.Horizontal,
+				              Items =
+				              {
+					              new Button
+					              {
+						              Text = "+",
+						              ToolTip = "Add a new Shared Model",
+						              Command = new Command(AddNewModel) { CommandParameter = inputTextBox },
+						              Width = OpenCellWidth
+					              },
+					              inputTextBox
+				              },
+				              Size = new Size(-1, RowHeight),
+				              VerticalContentAlignment = VerticalAlignment.Top,
+				              HorizontalContentAlignment = HorizontalAlignment.Stretch
+			              };
 
 			return addView;
-		}
-
-		private GridView CreateExistingGrid()
-		{
-			var existingView = CreateDefaultGrid();
-			existingView.Size = new Size(WindowWidth, ActiveModelsHeight);
-			existingView.DataStore = Model.SharedModels;
-
-			return existingView;
-		}
-
-		private GridColumn CreateAddCell()
-		{
-			return new GridColumn
-			       {
-				       Width = OpenCellWidth,
-				       Resizable = false,
-				       DataCell = new CustomCell { CreateCell = CreateAddButtonContents }
-			       };
 		}
 
 		private GridColumn CreateOpenCell()
@@ -186,15 +204,7 @@ namespace Crash.UI.JoinModel
 				                  VerticalAlignment = VerticalAlignment.Center
 			                  };
 
-			return new GridColumn
-			       {
-				       Width = TextCellWidth,
-				       Resizable = false,
-				       AutoSize = false,
-				       Editable = isEditable,
-				       HeaderTextAlignment = TextAlignment.Left,
-				       DataCell = addressCell
-			       };
+			return new GridColumn { Width = TextCellWidth, Resizable = false, Editable = true, DataCell = addressCell };
 		}
 
 		private GridColumn CreateDividerCell()
@@ -220,7 +230,7 @@ namespace Crash.UI.JoinModel
 			       };
 		}
 
-		private GridColumn CreateCountCell(bool isEditable = false)
+		private GridColumn CreateCountCell()
 		{
 			return new GridColumn
 			       {
@@ -229,7 +239,7 @@ namespace Crash.UI.JoinModel
 				       DataCell = new TextBoxCell
 				                  {
 					                  Binding =
-						                  Binding.Property<SharedModel, string>(s => isEditable ? "" : s.UserCount)
+						                  Binding.Property<SharedModel, string>(s => "") //s => s.UserCount)
 				                  }
 			       };
 		}

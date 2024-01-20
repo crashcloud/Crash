@@ -8,6 +8,7 @@ using Crash.Handlers.Plugins.Camera;
 using Crash.Handlers.Plugins.Geometry;
 using Crash.Handlers.Plugins.Initializers;
 using Crash.UI.ExceptionsAndErrors;
+using Crash.UI.UsersView;
 
 using Eto.Forms;
 
@@ -105,29 +106,43 @@ namespace Crash
 
 		private void RegisterExceptions(CrashClient client)
 		{
-			client.OnServerClosed += async (sender, args) =>
-			                         {
-				                         RhinoApp.InvokeOnUiThread(() =>
-				                                                   {
-					                                                   MessageBox
-						                                                   .Show("The server connection has been lost. Nothing can currently be done about this. Your model will be closed.",
-							                                                   MessageBoxButtons.OK);
-				                                                   });
+			client.OnServerClosed += ClientOnOnServerClosed;
+			client.OnPushChangeFailed += ClientOnOnPushChangeFailed;
+		}
 
-				                         await CrashDocRegistry
-					                         .DisposeOfDocumentAsync(args.CrashDoc);
-			                         };
+		private void ClientOnOnPushChangeFailed(object sender, CrashChangeArgs args)
+		{
+			badPipe = new BadChangePipeline(args);
+			RhinoApp.InvokeOnUiThread(() =>
+			                          {
+				                          MessageBox
+					                          .Show("A change failed to send.\n" +
+					                                "Any changes highlighted in red will not be communicated\n" +
+					                                "It is advised to delete them.\n" +
+					                                "It may be because the Change is > 1Mb.",
+					                                MessageBoxButtons.OK);
+			                          });
+		}
 
-			client.OnPushChangeFailed += (sender, args) =>
-			                             {
-				                             badPipe = new BadChangePipeline(args);
-				                             RhinoApp.InvokeOnUiThread(() =>
-				                                                       {
-					                                                       MessageBox
-						                                                       .Show("A change failed to send. Any changes highlighted in red will not be communicated",
-							                                                       MessageBoxButtons.OK);
-				                                                       });
-			                             };
+		private async void ClientOnOnServerClosed(object sender, CrashEventArgs args)
+		{
+			var message = "The server connection has been lost.\n" +
+			              "Your model will be closed.\n" +
+			              "Your Data is likely safe.";
+			try
+			{
+				RhinoApp.InvokeOnUiThread(() =>
+				                          {
+					                          MessageBox.Show(message, MessageBoxButtons.OK);
+					                          UsersForm.CloseActiveForm();
+				                          });
+
+				await CrashDocRegistry.DisposeOfDocumentAsync(args.CrashDoc);
+			}
+			catch
+			{
+				RhinoApp.WriteLine(message);
+			}
 		}
 
 		private void RegisterDefinitions(EventDispatcher dispatcher)

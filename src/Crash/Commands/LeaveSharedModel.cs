@@ -4,6 +4,7 @@ using Crash.Handlers;
 using Crash.UI.UsersView;
 
 using Rhino.Commands;
+using Rhino.UI;
 
 namespace Crash.Commands
 {
@@ -52,6 +53,7 @@ namespace Crash.Commands
 
 			doc.Views.Redraw();
 			UsersForm.CloseActiveForm();
+			LoadingUtils.Close();
 
 			return Result.Success;
 		}
@@ -59,7 +61,7 @@ namespace Crash.Commands
 		private bool? _GetReleaseChoice()
 		{
 			return SelectionUtils.GetBoolean(ref defaultValue,
-			                                 "Would you like to Release before exiting?",
+			                                 "Would you like to Release your Changes before exiting?",
 			                                 "JustExit",
 			                                 "ReleaseThenExit");
 		}
