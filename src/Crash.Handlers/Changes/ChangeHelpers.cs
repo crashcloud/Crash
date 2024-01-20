@@ -27,6 +27,9 @@ namespace Crash.Utils
 			}
 
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
+			if (rhinoDoc is null)
+				return false;
+
 			rhinoObject = rhinoDoc.Objects.FindId(rhinoId);
 
 			return rhinoObject is not null;

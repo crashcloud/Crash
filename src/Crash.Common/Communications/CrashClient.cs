@@ -195,7 +195,7 @@ namespace Crash.Common.Communications
 
 		#region Connection
 
-		public bool IsConnected => _connection.State != HubConnectionState.Disconnected;
+		public bool IsConnected => _connection is not null && _connection.State != HubConnectionState.Disconnected;
 
 		public void RegisterConnection(string userName, Uri url)
 		{

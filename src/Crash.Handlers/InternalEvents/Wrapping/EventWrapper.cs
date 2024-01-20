@@ -379,14 +379,20 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 		{
 			foreach (var selected in selection)
 			{
-				if (SelectionQueue.TryGetValue(selected, out var isSelected) && isSelected != select)
+				try
 				{
-					SelectionQueue.Remove(selected);
+					if (SelectionQueue.TryGetValue(selected, out var isSelected) && isSelected != select)
+					{
+						SelectionQueue.Remove(selected);
+					}
+					else
+					{
+						SelectionQueue.Add(selected, select);
+					}
 				}
-
-				else
+				catch(Exception ex)
 				{
-					SelectionQueue.Add(selected, select);
+
 				}
 			}
 		}

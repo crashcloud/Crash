@@ -24,15 +24,12 @@ namespace Crash.UI.JoinModel
 		{
 			SharedModels = new ObservableCollection<SharedModel>();
 
-			SetAddModel();
 			LoadSharedModels();
 
 			RhinoDoc.BeginSaveDocument += SaveSharedModels;
 		}
 
 		internal ObservableCollection<SharedModel> SharedModels { get; }
-		internal SharedModel AddModel { get; private set; }
-		internal ObservableCollection<SharedModel> AddModels => new(new List<SharedModel> { AddModel });
 
 		public void Dispose()
 		{
@@ -103,13 +100,8 @@ namespace Crash.UI.JoinModel
 			if (ModelIsNew(model))
 			{
 				SharedModels.Add(new SharedModel(model));
-				SetAddModel();
 			}
 		}
 
-		internal void SetAddModel()
-		{
-			AddModel = new SharedModel { Loaded = true, ModelAddress = "" };
-		}
 	}
 }

@@ -1,10 +1,12 @@
 ﻿using System.Net;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 
 using Crash.Properties;
 
 using Eto.Forms;
 
+using Rhino.Render.DataSources;
 using Rhino.UI;
 
 namespace Crash.UI.JoinModel
@@ -22,12 +24,10 @@ namespace Crash.UI.JoinModel
 			Title = "Join Shared Model";
 			Resizable = false;
 			Minimizable = false;
-			AutoSize = true;
 			Icon = Icons.crashlogo.ToEto();
 #if NET7_0
 			this.UseRhinoStyle();
 #endif
-			Topmost = true;
 			WindowState = WindowState.Normal;
 			Maximizable = false;
 
@@ -45,7 +45,6 @@ namespace Crash.UI.JoinModel
 
 		private event EventHandler<EventArgs> AddNewModel;
 		private event EventHandler<EventArgs> RemoveModel;
-		private event EventHandler<EventArgs> RefreshModels;
 		private event EventHandler<EventArgs> JoinModel;
 
 		private void JoinWindow_Closed(object? sender, EventArgs e)
@@ -57,8 +56,21 @@ namespace Crash.UI.JoinModel
 		{
 			AddNewModel += (sender, args) =>
 			               {
-				               Model.AddSharedModel(Model.AddModel);
-								ActiveModels.Invalidate(true);
+							   if (sender is not Command command)
+								   return;
+
+							   if (command.CommandParameter is not TextBox textbox)
+								   return;
+
+							   ;
+
+							   string url = textbox.Text;
+
+							   Model.AddSharedModel(new SharedModel() {  ModelAddress = url });
+
+							   textbox.Text = string.Empty;
+							   textbox.Invalidate();
+							   ActiveModels.Invalidate(true);
 			               };
 
 			JoinModel += (sender, args) =>
@@ -107,34 +119,5 @@ namespace Crash.UI.JoinModel
 			return button;
 		}
 
-		private Control CreateAddButtonContents(CellEventArgs args)
-		{
-			var modelContext = args.Item as SharedModel;
-
-			var button = new Button
-			             {
-				             Text = "+",
-				             ToolTip = "Add a new Shared Model",
-				             Command = new Command(AddNewModel)
-				                       {
-					                       DataContext = modelContext, ToolTip = "Add Model to List"
-				                       }
-			             };
-
-			return button;
-		}
-
-		private bool URLIsValid(string modelAddress)
-		{
-			try
-			{
-				var uri = new Uri(modelAddress);
-				return true;
-			}
-			catch
-			{
-				return IPAddress.TryParse(modelAddress, out _);
-			}
-		}
 	}
 }

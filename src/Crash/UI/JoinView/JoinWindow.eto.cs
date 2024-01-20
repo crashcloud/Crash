@@ -27,7 +27,7 @@ namespace Crash.UI.JoinModel
 		private static int OSX_Padd => 10;
 
 		protected GridView ActiveModels;
-		protected GridView NewModel;
+		protected StackLayout NewModel;
 
 		private static int ActiveModelsHeight => WindowHeight -
 		                                         (RowHeight +
@@ -46,10 +46,8 @@ namespace Crash.UI.JoinModel
 				                                 }
 			                                 };
 
-			NewModel = CreateAddGrid();
+			NewModel = CreateAddLayout();
 			Padding = 0;
-			Size = new Size(WindowWidth, -1);
-			AutoSize = true;
 
 			Content = new StackLayout
 			          {
@@ -141,7 +139,7 @@ namespace Crash.UI.JoinModel
 			var menu = new ContextMenu();
 			menu.Items.AddRange(new[]
 			                    {
-				                    MenuCommand("Remove", RemoveModel), MenuCommand("Refresh", RefreshModels),
+				                    MenuCommand("Remove", RemoveModel),
 				                    MenuCommand("Join", JoinModel)
 			                    });
 
@@ -158,21 +156,38 @@ namespace Crash.UI.JoinModel
 			return button;
 		}
 
-		private GridView CreateAddGrid()
+		private TextBox inputTextBox = new TextBox
 		{
-			var addView = new GridView
+			AutoSelectMode = AutoSelectMode.OnFocus,
+			TextAlignment = TextAlignment.Center,
+			PlaceholderText = "Enter a new Model Address",
+			ShowBorder = false,
+			ToolTip = "Enter a new Model Address to Join",
+			Width = TextCellWidth,
+		};
+
+		private StackLayout CreateAddLayout()
+		{
+			var addView = new StackLayout
 			{
-				Style = DefaultGridStyle,
-
-				// Help
-				ToolTip = "Enter a model address to join",
+				// Style = DefaultGridStyle,
+				Padding = 0,
+				Orientation = Orientation.Horizontal,
+				Items =
+				{
+					new Button
+					{
+						Text = "+",
+						ToolTip = "Add a new Shared Model",
+						Command = new Command(AddNewModel) { CommandParameter = inputTextBox },
+						Width = OpenCellWidth
+					},
+					inputTextBox,
+				},
+				Size = new Size(-1, 26),
+				VerticalContentAlignment = VerticalAlignment.Top,
+				HorizontalContentAlignment = HorizontalAlignment.Stretch,
 			};
-
-			addView.Columns.Add(CreateAddCell());
-			addView.Columns.Add(CreateTextCell(false));
-			addView.Columns.Add(CreateDividerCell());
-			addView.Height = 26;
-			addView.DataStore = Model.AddModels;
 
 			return addView;
 		}
@@ -183,18 +198,6 @@ namespace Crash.UI.JoinModel
 			existingView.DataStore = Model.SharedModels;
 
 			return existingView;
-		}
-
-		private GridColumn CreateAddCell()
-		{
-			var customCell = new CustomCell { CreateCell = CreateAddButtonContents };
-
-			return new GridColumn
-			       {
-				       Width = OpenCellWidth,
-				       Resizable = false,
-				       DataCell = customCell,
-			};
 		}
 
 		private GridColumn CreateOpenCell()
@@ -221,7 +224,7 @@ namespace Crash.UI.JoinModel
 			       {
 				       Width = TextCellWidth,
 				       Resizable = false,
-				       Editable = isEditable,
+				       Editable = true,
 				       DataCell = addressCell,
 			       };
 		}
