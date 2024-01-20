@@ -47,6 +47,7 @@ namespace Crash.Commands
 			{
 				var dialog = new JoinWindow();
 				var chosenModel = await dialog.ShowModalAsync(RhinoEtoApp.MainWindow);
+				dialog.Dispose();
 
 				if (string.IsNullOrEmpty(chosenModel?.ModelAddress))
 				{

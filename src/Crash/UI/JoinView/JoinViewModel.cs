@@ -1,7 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 [assembly: InternalsVisibleTo("Crash.UI.Tests")]
 
@@ -99,9 +98,8 @@ namespace Crash.UI.JoinModel
 		{
 			if (ModelIsNew(model))
 			{
-				SharedModels.Add(new SharedModel(model));
+				SharedModels.Add(model);
 			}
 		}
-
 	}
 }

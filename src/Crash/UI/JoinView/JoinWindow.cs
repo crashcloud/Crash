@@ -1,12 +1,9 @@
-﻿using System.Net;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
+﻿using System.Runtime.InteropServices;
 
 using Crash.Properties;
 
 using Eto.Forms;
 
-using Rhino.Render.DataSources;
 using Rhino.UI;
 
 namespace Crash.UI.JoinModel
@@ -56,38 +53,42 @@ namespace Crash.UI.JoinModel
 		{
 			AddNewModel += (sender, args) =>
 			               {
-							   if (sender is not Command command)
-								   return;
+				               if (sender is not Command command)
+				               {
+					               return;
+				               }
 
-							   if (command.CommandParameter is not TextBox textbox)
-								   return;
+				               if (command.CommandParameter is not TextBox textbox)
+				               {
+					               return;
+				               }
 
-							   ;
+				               var url = textbox.Text;
 
-							   string url = textbox.Text;
+				               Model.AddSharedModel(new SharedModel { ModelAddress = url });
 
-							   Model.AddSharedModel(new SharedModel() {  ModelAddress = url });
-
-							   textbox.Text = string.Empty;
-							   textbox.Invalidate();
-							   ActiveModels.Invalidate(true);
+				               textbox.Text = string.Empty;
+				               textbox.Invalidate();
+				               ActiveModels.Invalidate(true);
 			               };
 
 			JoinModel += (sender, args) =>
 			             {
-							 var model = GetModel(sender);
-							 if (model is not null)
-								Close(model);
+				             var model = GetModel(sender);
+				             if (model is not null)
+				             {
+					             Close(model);
+				             }
 			             };
 
 			RemoveModel += (sender, args) =>
 			               {
-							   var model = GetModel(sender);
-							   if (model is not null)
-							   {
-								   Model.SharedModels.Remove(model);
-								   ActiveModels.Invalidate(true);
-							   }
+				               var model = GetModel(sender);
+				               if (model is not null)
+				               {
+					               Model.SharedModels.Remove(model);
+					               ActiveModels.Invalidate(true);
+				               }
 			               };
 		}
 
@@ -97,8 +98,8 @@ namespace Crash.UI.JoinModel
 			{
 				return model;
 			}
-			
-			return this.CurrentSelection;
+
+			return CurrentSelection;
 		}
 
 		private Control CreateOpenButtonContents(CellEventArgs args)
@@ -118,6 +119,5 @@ namespace Crash.UI.JoinModel
 
 			return button;
 		}
-
 	}
 }
