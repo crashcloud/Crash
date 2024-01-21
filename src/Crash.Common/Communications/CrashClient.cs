@@ -26,6 +26,8 @@ namespace Crash.Common.Communications
 		private HubConnection _connection;
 		private string _user;
 
+		private CancellationToken cancelToken = default;
+
 		/// <summary>
 		///     Crash client constructor
 		/// </summary>
@@ -63,10 +65,8 @@ namespace Crash.Common.Communications
 			await StartAsync(token);
 		}
 
-		private CancellationToken cancelToken = default;
 		public void CancelConnection()
 		{
-
 		}
 
 		/// <summary>
@@ -172,8 +172,7 @@ namespace Crash.Common.Communications
 
 		private async Task ChangesCouldNotBeSent()
 		{
-			OnPushChangeFailed?.Invoke(this,
-			                           new CrashChangeArgs(_crashDoc, LastAttemptedChangeCommunication.ToArray()));
+			// TODO : Remove
 		}
 
 		private Task ConnectionReconnectedAsync(string? arg)
@@ -223,6 +222,7 @@ namespace Crash.Common.Communications
 
 		#region Push to Server
 
+		// private int sentCount = 0;
 		private readonly List<Change> LastAttemptedChangeCommunication = new();
 
 		/// <summary>
@@ -233,17 +233,29 @@ namespace Crash.Common.Communications
 		/// <param name="change">The newest changes</param>
 		public async Task PushIdenticalChangesAsync(IEnumerable<Guid> ids, Change change)
 		{
-			LastAttemptedChangeCommunication.Clear();
-			LastAttemptedChangeCommunication.Add(change);
-			await _connection.InvokeAsync(PUSH_IDENTICAL, ids, change);
+			try
+			{
+				await _connection.InvokeAsync(PUSH_IDENTICAL, ids, change);
+			}
+			catch
+			{
+				OnPushChangeFailed?.Invoke(this,
+				                           new CrashChangeArgs(_crashDoc, new[] { change }));
+			}
 		}
 
 		/// <summary>Pushes a single Change</summary>
 		public async Task PushChangeAsync(Change change)
 		{
-			LastAttemptedChangeCommunication.Clear();
-			LastAttemptedChangeCommunication.Add(change);
-			await _connection.InvokeAsync(PUSH_SINGLE, change);
+			try
+			{
+				await _connection.InvokeAsync(PUSH_SINGLE, change);
+			}
+			catch
+			{
+				OnPushChangeFailed?.Invoke(this,
+				                           new CrashChangeArgs(_crashDoc, new[] { change }));
+			}
 		}
 
 		/// <summary>
@@ -252,9 +264,15 @@ namespace Crash.Common.Communications
 		/// </summary>
 		public async Task PushChangesAsync(IEnumerable<Change> changes)
 		{
-			LastAttemptedChangeCommunication.Clear();
-			LastAttemptedChangeCommunication.AddRange(changes);
-			await _connection.InvokeAsync(PUSH_MANY, changes);
+			try
+			{
+				await _connection.InvokeAsync(PUSH_MANY, changes);
+			}
+			catch
+			{
+				OnPushChangeFailed?.Invoke(this,
+				                           new CrashChangeArgs(_crashDoc, changes));
+			}
 		}
 
 		#endregion
