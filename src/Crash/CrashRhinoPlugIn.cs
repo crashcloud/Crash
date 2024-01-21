@@ -100,6 +100,7 @@ namespace Crash
 			e.CrashDoc.Dispatcher = dispatcher;
 			RegisterExceptions(e.CrashDoc.LocalClient as CrashClient);
 			InteractivePipe.Active.Enabled = true;
+			badPipe = new BadChangePipeline(e.CrashDoc);
 		}
 
 		private BadChangePipeline badPipe;
@@ -112,15 +113,19 @@ namespace Crash
 
 		private void ClientOnOnPushChangeFailed(object sender, CrashChangeArgs args)
 		{
-			badPipe = new BadChangePipeline(args);
+			badPipe.Push(args.Changes.Select(c => c.Id));
+
+			var badChangeToast = new Notification
+			                     {
+				                     Title = "Changes failed to send!",
+				                     Message = "Any changes highlighted in red will not be communicated\n" +
+				                               "It is advised to delete them.\n" +
+				                               "It may be because the Change is > 1Mb."
+			                     };
+
 			RhinoApp.InvokeOnUiThread(() =>
 			                          {
-				                          MessageBox
-					                          .Show("A change failed to send.\n" +
-					                                "Any changes highlighted in red will not be communicated\n" +
-					                                "It is advised to delete them.\n" +
-					                                "It may be because the Change is > 1Mb.",
-					                                MessageBoxButtons.OK);
+				                          badChangeToast.Show();
 			                          });
 		}
 

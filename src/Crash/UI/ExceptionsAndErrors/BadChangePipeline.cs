@@ -1,8 +1,7 @@
 using System.Drawing;
 
 using Crash.Common.Document;
-using Crash.Common.Events;
-using Crash.Utils;
+using Crash.Handlers;
 
 using Rhino.Display;
 using Rhino.Geometry;
@@ -11,18 +10,20 @@ namespace Crash.UI.ExceptionsAndErrors
 {
 	public class BadChangePipeline : IDisposable
 	{
-		private readonly IEnumerable<Change> _changes;
+		private readonly List<Guid> _changes;
 
 		private readonly CrashDoc _crashDoc;
+		private readonly RhinoDoc _rhinoDoc;
 
 		/// <summary>
 		///     Empty constructor
 		/// </summary>
-		internal BadChangePipeline(CrashChangeArgs args)
+		internal BadChangePipeline(CrashDoc crashDoc)
 		{
-			_crashDoc = args.CrashDoc;
-			_changes = args.Changes;
-			Enabled = true;
+			_crashDoc = crashDoc;
+			_rhinoDoc = CrashDocRegistry.GetRelatedDocument(_crashDoc);
+			_changes = new List<Guid>();
+			Enabled = false;
 		}
 
 		private bool enabled { get; set; }
@@ -61,7 +62,7 @@ namespace Crash.UI.ExceptionsAndErrors
 
 		private void DrawOverlay(object sender, DrawEventArgs e)
 		{
-			if (_crashDoc?.TemporaryChangeTable is null)
+			if (_crashDoc?.RealisedChangeTable is null)
 			{
 				return;
 			}
@@ -71,15 +72,19 @@ namespace Crash.UI.ExceptionsAndErrors
 				return;
 			}
 
-			var count = 0;
-			foreach (var change in _changes)
+			foreach (var _changeId in _changes.ToHashSet())
 			{
-				if (!change.TryGetRhinoObject(_crashDoc, out var rhinoObject))
+				if (!_crashDoc.RealisedChangeTable.TryGetRhinoId(_changeId, out var rhinoId))
 				{
 					continue;
 				}
 
-				count++;
+				var rhinoObject = _rhinoDoc.Objects.FindId(rhinoId);
+				if (rhinoObject is null)
+				{
+					_changes.Remove(_changeId);
+					continue;
+				}
 
 				var boundingBox = rhinoObject.Geometry.GetBoundingBox(Plane.WorldXY);
 				boundingBox.Inflate(1.2);
@@ -89,11 +94,6 @@ namespace Crash.UI.ExceptionsAndErrors
 				{
 					e.Display.DrawDot(corner, "⚠️", Color.Red, Color.White);
 				}
-			}
-
-			if (count == 0)
-			{
-				Dispose();
 			}
 		}
 
@@ -109,9 +109,15 @@ namespace Crash.UI.ExceptionsAndErrors
 				return;
 			}
 
-			foreach (var change in _changes)
+			foreach (var _changeId in _changes)
 			{
-				if (!change.TryGetRhinoObject(_crashDoc, out var rhinoObject))
+				if (!_crashDoc.RealisedChangeTable.TryGetRhinoId(_changeId, out var rhinoId))
+				{
+					continue;
+				}
+
+				var rhinoObject = _rhinoDoc.Objects.FindId(rhinoId);
+				if (rhinoObject is null)
 				{
 					continue;
 				}
@@ -121,6 +127,12 @@ namespace Crash.UI.ExceptionsAndErrors
 
 				e.IncludeBoundingBox(boundingBox);
 			}
+		}
+
+		internal void Push(IEnumerable<Guid> changeIds)
+		{
+			Enabled = true;
+			_changes.AddRange(changeIds);
 		}
 	}
 }
