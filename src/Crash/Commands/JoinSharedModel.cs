@@ -2,11 +2,15 @@
 using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Handlers;
+using Crash.Handlers.InternalEvents;
 using Crash.UI.JoinModel;
 using Crash.UI.UsersView;
 
 using Rhino.Commands;
+using Rhino.DocObjects;
 using Rhino.UI;
+
+using Environment = System.Environment;
 
 namespace Crash.Commands
 {
@@ -17,6 +21,7 @@ namespace Crash.Commands
 		private CrashDoc? _crashDoc;
 
 		private string? _lastUrl = $"{CrashClient.DefaultURL}:{CrashClient.DefaultPort}";
+		private RhinoDoc _rhinoDoc;
 
 		/// <summary>Default Constructor</summary>
 		public JoinSharedModel()
@@ -34,6 +39,7 @@ namespace Crash.Commands
 		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
 		{
 			_crashDoc = null;
+			_rhinoDoc = doc;
 
 			if (!await CommandUtils.CheckAlreadyConnectedAsync(crashDoc))
 			{
@@ -85,19 +91,39 @@ namespace Crash.Commands
 		{
 			LoadingUtils.Start();
 
+			var settings = new ObjectEnumeratorSettings
+			               {
+				               IncludePhantoms = false,
+				               IncludeGrips = false,
+				               DeletedObjects = false,
+				               HiddenObjects = true,
+				               IncludeLights = false
+			               };
+			var currentObjects = _rhinoDoc.Objects.GetObjectList(settings);
+
 			if (await CommandUtils.StartLocalClient(_crashDoc, _lastUrl))
 			{
 				LoadingUtils.SetState(LoadingUtils.LoadingState.ConnectingToServer);
 
 				InteractivePipe.Active.Enabled = true;
 				_crashDoc.Queue.OnCompletedQueue += QueueOnOnCompleted;
+
+				var addRhinoObjectTasks = new List<Task>(currentObjects.Count());
+				foreach (var rhinoObject in currentObjects)
+				{
+					var task = _crashDoc.Dispatcher.NotifyServerAsync(ChangeAction.Add,
+					                                                  this,
+					                                                  new CrashObjectEventArgs(_crashDoc, rhinoObject));
+					addRhinoObjectTasks.Add(task);
+				}
+
+				await Task.WhenAll(addRhinoObjectTasks);
 			}
 			else if (_crashDoc?.LocalClient is not null)
 			{
 				await _crashDoc.LocalClient.StopAsync();
 
-				StatusBar.HideProgressMeter();
-				StatusBar.ClearMessagePane();
+				LoadingUtils.Close();
 			}
 		}
 
