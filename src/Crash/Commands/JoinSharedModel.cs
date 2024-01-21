@@ -108,16 +108,13 @@ namespace Crash.Commands
 				InteractivePipe.Active.Enabled = true;
 				_crashDoc.Queue.OnCompletedQueue += QueueOnOnCompleted;
 
-				var addRhinoObjectTasks = new List<Task>(currentObjects.Count());
+				// Sends pre-existing Geometry
 				foreach (var rhinoObject in currentObjects)
 				{
-					var task = _crashDoc.Dispatcher.NotifyServerAsync(ChangeAction.Add,
-					                                                  this,
-					                                                  new CrashObjectEventArgs(_crashDoc, rhinoObject));
-					addRhinoObjectTasks.Add(task);
+					await _crashDoc.Dispatcher.NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary,
+					                                             this,
+					                                             new CrashObjectEventArgs(_crashDoc, rhinoObject));
 				}
-
-				await Task.WhenAll(addRhinoObjectTasks);
 			}
 			else if (_crashDoc?.LocalClient is not null)
 			{
