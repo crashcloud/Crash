@@ -27,6 +27,8 @@ namespace Crash.UI.UsersView
 			                           {
 				                           Invalidate(true);
 			                           };
+
+
 			CreateForm();
 
 			RhinoDoc.ActiveDocumentChanged += (_, _) => { Close(); };
@@ -42,7 +44,9 @@ namespace Crash.UI.UsersView
 			}
 
 			var form = new UsersForm(crashDoc);
-			form.Show();
+
+			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
+			form.Show(rhinoDoc);
 			form.BringToFront();
 
 			ActiveForm = form;
@@ -68,7 +72,9 @@ namespace Crash.UI.UsersView
 			try
 			{
 				if (ActiveForm is null)
+				{
 					return;
+				}
 
 				ActiveForm?.Invalidate(true);
 

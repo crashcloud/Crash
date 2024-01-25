@@ -90,15 +90,11 @@ namespace Crash.Commands
 			var userName = crashDoc.Users.CurrentUser.Name;
 			var message = "An unexplained exception occured, try again.";
 
-			var tokenSource = new CancellationTokenSource();
-			tokenSource.CancelAfter(4000);
-			CancellationToken token = tokenSource.Token;
-			
 			try
 			{
 				crashDoc.LocalClient.RegisterConnection(userName, new Uri($"{url}/Crash"));
 
-				await crashDoc.LocalClient.StartLocalClientAsync(token);
+				await crashDoc.LocalClient.StartLocalClientAsync();
 				return true;
 			}
 			catch (HttpRequestException)

@@ -18,7 +18,7 @@ namespace Crash.Common.Communications
 		/// <summary>Starts the Client</summary>
 		/// <exception cref="NullReferenceException">If CrashDoc is null</exception>
 		/// <exception cref="Exception">If UserName is empty</exception>
-		public Task StartLocalClientAsync(CancellationToken token = default);
+		public Task StartLocalClientAsync();
 
 		/// <summary>
 		///     Pushes an Update/Transform/Payload which applies to many Changes

@@ -113,6 +113,11 @@ namespace Crash
 
 		private void ClientOnOnPushChangeFailed(object sender, CrashChangeArgs args)
 		{
+			if (args is null || !args.Changes.Any())
+			{
+				return;
+			}
+
 			badPipe.Push(args.Changes.Select(c => c.Id));
 
 			var badChangeToast = new Notification

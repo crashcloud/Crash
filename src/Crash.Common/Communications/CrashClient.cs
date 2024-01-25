@@ -26,8 +26,6 @@ namespace Crash.Common.Communications
 		private HubConnection _connection;
 		private string _user;
 
-		private CancellationToken cancelToken = default;
-
 		/// <summary>
 		///     Crash client constructor
 		/// </summary>
@@ -46,7 +44,7 @@ namespace Crash.Common.Communications
 		/// <summary>Starts the Client</summary>
 		/// <exception cref="ArgumentNullException">If CrashDoc is null</exception>
 		/// <exception cref="Exception">If UserName is empty</exception>
-		public async Task StartLocalClientAsync(CancellationToken token = default)
+		public async Task StartLocalClientAsync()
 		{
 			if (_crashDoc is null)
 			{
@@ -62,7 +60,7 @@ namespace Crash.Common.Communications
 			OnInitializeChanges += InitChangesAsync;
 			OnInitializeUsers += InitUsersAsync;
 
-			await StartAsync(token);
+			await StartAsync();
 		}
 
 		public void CancelConnection()
@@ -129,9 +127,9 @@ namespace Crash.Common.Communications
 		}
 
 		/// <summary>Start the async connection</summary>
-		private Task StartAsync(CancellationToken token)
+		private Task StartAsync()
 		{
-			return _connection.StartAsync(token);
+			return _connection.StartAsync();
 		}
 
 
