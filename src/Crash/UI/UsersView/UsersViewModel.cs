@@ -16,7 +16,7 @@ namespace Crash.UI.UsersView
 		internal UsersViewModel(CrashDoc crashDoc)
 		{
 			_crashDoc = crashDoc;
-			var userObjects = _crashDoc.Users.Select(u =>
+			var userObjects = _crashDoc.Users.Where(u => !string.IsNullOrEmpty(u.Name)).Select(u =>
 			                                         {
 				                                         var user = new UserObject(_crashDoc, u);
 				                                         user.OnPropertyChanged += (sender, o) => UsersForm.ReDraw();
