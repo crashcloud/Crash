@@ -92,7 +92,8 @@ namespace Crash.Commands
 
 			try
 			{
-				crashDoc.LocalClient.RegisterConnection(userName, new Uri($"{url}/Crash"));
+				var uri = GetCleanUri(url);
+				crashDoc.LocalClient.RegisterConnection(userName, uri);
 
 				await crashDoc.LocalClient.StartLocalClientAsync();
 				return true;
@@ -116,9 +117,30 @@ namespace Crash.Commands
 
 			RhinoApp.InvokeOnUiThread(() =>
 			                          {
+				                          LoadingUtils.Close();
 				                          MessageBox.Show(message, MessageBoxButtons.OK);
 			                          });
 			return false;
+		}
+
+		private static Uri GetCleanUri(string url)
+		{
+			if (string.IsNullOrEmpty(url))
+			{
+				throw new UriFormatException("Url is empty");
+			}
+
+			var cleanUrl = url;
+
+			if (!cleanUrl.EndsWith("/Crash") &&
+			    !cleanUrl.EndsWith("\\Crash"))
+			{
+				cleanUrl = $"{cleanUrl}/Crash";
+			}
+
+			cleanUrl = cleanUrl.Replace("//Crash", "/Crash");
+
+			return new Uri(cleanUrl, false);
 		}
 
 		/// <summary>Prompts the User for a Port with validatiobn</summary>

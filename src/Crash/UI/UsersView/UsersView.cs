@@ -96,7 +96,7 @@ namespace Crash.UI.UsersView
 			Padding = 0;
 			Topmost = false;
 			AutoSize = false;
-			Resizable = false;
+			Resizable = true;
 			Maximizable = false;
 			Minimizable = false;
 			WindowStyle = WindowStyle.Default;

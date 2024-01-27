@@ -22,7 +22,7 @@ namespace Crash.UI.JoinModel
 			                                        PlaceholderText = "Enter a new Model Address",
 			                                        ShowBorder = false,
 			                                        ToolTip = "Enter a new Model Address to Join",
-			                                        Width = TextCellWidth,
+			                                        Width = WindowWidth - OpenCellWidth,
 			                                        Height = RowHeight
 		                                        };
 
@@ -109,10 +109,9 @@ namespace Crash.UI.JoinModel
 				                                       grid.AllowMultipleSelection = false;
 				                                       grid.ShowHeader = false;
 				                                       grid.RowHeight = RowHeight;
-				                                       grid.Border = BorderType.None;
 
 				                                       // Styling
-				                                       grid.Border = BorderType.None;
+				                                       grid.Border = BorderType.Line;
 				                                       grid.GridLines = GridLines.Horizontal;
 			                                       });
 		}
@@ -169,10 +168,11 @@ namespace Crash.UI.JoinModel
 				              {
 					              new Button
 					              {
-						              Text = "+",
-						              ToolTip = "Add a new Shared Model",
+						              Text = "Add",
+						              ToolTip = "Enter a new Shared Model Address",
 						              Command = new Command(AddNewModel) { CommandParameter = inputTextBox },
-						              Width = OpenCellWidth
+						              Width = OpenCellWidth,
+						              Height = RowHeight
 					              },
 					              inputTextBox
 				              },
