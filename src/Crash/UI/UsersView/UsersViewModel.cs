@@ -32,6 +32,9 @@ namespace Crash.UI.UsersView
 
 		private void AddUsers(object? sender, UserEventArgs e)
 		{
+			if (!string.IsNullOrEmpty(e.User.Name))
+				return;
+
 			Application.Instance.Invoke(() =>
 			                            {
 				                            Users.Add(new UserObject(_crashDoc, e.User));
