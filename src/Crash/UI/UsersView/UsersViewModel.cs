@@ -17,11 +17,11 @@ namespace Crash.UI.UsersView
 		{
 			_crashDoc = crashDoc;
 			var userObjects = _crashDoc.Users.Where(u => !string.IsNullOrEmpty(u.Name)).Select(u =>
-			                                         {
-				                                         var user = new UserObject(_crashDoc, u);
-				                                         user.OnPropertyChanged += (sender, o) => UsersForm.ReDraw();
-				                                         return user;
-			                                         });
+						 {
+							 var user = new UserObject(_crashDoc, u);
+							 user.OnPropertyChanged += (sender, o) => UsersForm.ReDraw();
+							 return user;
+						 });
 			Users = new ObservableCollection<UserObject>(userObjects);
 
 			UserTable.OnUserRemoved += UserRemoved;
@@ -81,6 +81,9 @@ namespace Crash.UI.UsersView
 			}
 
 			user.Camera = state;
+			var index = Users.IndexOf(user);
+			Users.RemoveAt(index);
+			Users.Insert(index, user);
 			UsersForm.ReDraw();
 		}
 
