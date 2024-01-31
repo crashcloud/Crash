@@ -147,7 +147,9 @@ namespace Crash
 					                          UsersForm.CloseActiveForm();
 				                          });
 
+				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.CrashDoc);
 				await CrashDocRegistry.DisposeOfDocumentAsync(args.CrashDoc);
+				rhinoDoc.Views.Redraw();
 			}
 			catch
 			{
