@@ -202,6 +202,11 @@ namespace Crash.Handlers.Plugins
 			_eventWrapper.CrashViewModified += NotifyServerOfCrashViewModified;
 		}
 
+		public void ClearUndoRedoQueue()
+		{
+			_eventWrapper.ClearUndoRedoQueue();
+		}
+
 		/// <summary>Deregisters server notifiers.</summary>
 		public void DeregisterDefaultServerCalls()
 		{

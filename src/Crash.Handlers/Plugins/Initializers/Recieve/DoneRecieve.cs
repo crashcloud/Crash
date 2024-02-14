@@ -3,6 +3,8 @@ using Crash.Common.Document;
 using Crash.Handlers.Changes;
 using Crash.Handlers.Plugins.Geometry.Recieve;
 
+using Rhino;
+
 namespace Crash.Handlers.Plugins.Initializers.Recieve
 {
 	/// <summary>Handles 'Done' calls from the Server</summary>
@@ -62,6 +64,10 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 
 			var add = new GeometryAddRecieveAction();
 			await add.OnRecieveAsync(crashDoc, geomChange);
+
+			RhinoDoc.ActiveDoc.ClearUndoRecords(true);
+			(crashDoc.Dispatcher as EventDispatcher).ClearUndoRedoQueue();
+
 		}
 	}
 }

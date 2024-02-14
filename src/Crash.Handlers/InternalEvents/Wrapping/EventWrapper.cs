@@ -296,6 +296,10 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 
 		private void CaptureSelectRhinoObjects(object? sender, RhinoObjectSelectionEventArgs args)
 		{
+			if (args.RhinoObjects.FirstOrDefault(ro => ro is GripObject) is not null)
+			{
+				RhinoApp.WriteLine("Grip Objects are not selected!");
+			}
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
 			if (IgnoreEvent(crashDoc, false, ignoreIfUndoActive: false, ignoreIfRedoActive: false))
 			{
@@ -575,6 +579,14 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 
 			// View Events
 			RhinoView.Modified -= CaptureRhinoViewModified;
+		}
+
+		internal void ClearUndoRedoQueue()
+		{
+			UndoRecords.Clear();
+			RedoRecords.Clear();
+			EventQueue.Clear();
+			SelectionQueue.Clear();
 		}
 
 		#endregion
