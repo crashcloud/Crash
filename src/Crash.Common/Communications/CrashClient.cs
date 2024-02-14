@@ -127,9 +127,9 @@ namespace Crash.Common.Communications
 		}
 
 		/// <summary>Start the async connection</summary>
-		private Task StartAsync()
+		private async Task StartAsync()
 		{
-			return _connection.StartAsync();
+			await _connection.StartAsync();
 		}
 
 
