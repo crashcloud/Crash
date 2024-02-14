@@ -254,7 +254,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 
 		private void CaptureTransformRhinoObject(object? sender, RhinoTransformObjectsEventArgs args)
 		{
-			if (args.GripCount > 0 || args.GripOwnerCount == 0)
+			if (args.GripCount > 0)
 			{
 				CrashApp.Log("Grips Event Missed");
 				RhinoApp.WriteLine("Modifying Grips is not yet supported by Crash");
