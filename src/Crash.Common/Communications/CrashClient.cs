@@ -308,7 +308,7 @@ namespace Crash.Common.Communications
 
 		internal class DummyAction : IdleAction
 		{
-			public DummyAction() : base((args) => { }, null, nameof(DummyAction)) { }
+			public DummyAction() : base((args) => { }, new IdleArgs(null, null), nameof(DummyAction)) { }
 		}
 
 		private async Task InitializeUsersAsync(IEnumerable<string> users)

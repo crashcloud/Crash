@@ -101,12 +101,12 @@ namespace Crash.Commands
 			               };
 			var currentObjects = _rhinoDoc.Objects.GetObjectList(settings);
 
+			_crashDoc.Queue.OnCompletedQueue += QueueOnOnCompleted;
 			if (await CommandUtils.StartLocalClient(_crashDoc, _lastUrl))
 			{
 				LoadingUtils.SetState(LoadingUtils.LoadingState.ConnectingToServer);
 
 				InteractivePipe.Active.Enabled = true;
-				_crashDoc.Queue.OnCompletedQueue += QueueOnOnCompleted;
 
 				// Sends pre-existing Geometry
 				foreach (var rhinoObject in currentObjects)
@@ -115,13 +115,18 @@ namespace Crash.Commands
 					                                             this,
 					                                             new CrashObjectEventArgs(_crashDoc, rhinoObject));
 				}
+
+				return;
 			}
 			else if (_crashDoc?.LocalClient is not null)
 			{
+				_crashDoc.Queue.OnCompletedQueue -= QueueOnOnCompleted;
 				await _crashDoc.LocalClient.StopAsync();
 
 				LoadingUtils.Close();
 			}
+
+			_crashDoc.Queue.OnCompletedQueue -= QueueOnOnCompleted;
 		}
 
 		private void QueueOnOnCompleted(object? sender, CrashEventArgs e)
