@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Common.Logging;
+using Crash.Events;
 
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -297,6 +298,17 @@ namespace Crash.Common.Communications
 			}
 
 			await OnInitializeChanges.Invoke(changes);
+
+			// Cheeky Override 
+			if (!changes.Any())
+			{
+				_crashDoc.Queue.AddAction(new DummyAction());
+			}
+		}
+
+		internal class DummyAction : IdleAction
+		{
+			public DummyAction() : base((args) => { }, null, nameof(DummyAction)) { }
 		}
 
 		private async Task InitializeUsersAsync(IEnumerable<string> users)
@@ -369,4 +381,5 @@ namespace Crash.Common.Communications
 
 		#endregion
 	}
+
 }
