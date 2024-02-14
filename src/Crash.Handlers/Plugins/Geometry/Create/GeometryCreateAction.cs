@@ -25,12 +25,11 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 				return false;
 			}
 
-			changes = CreateChangesFromArgs(crashArgs.Doc, cargs.RhinoId, cargs.Geometry, cargs.UnDelete);
+			changes = CreateChangesFromArgs(crashArgs.Doc, cargs.RhinoId, cargs.Geometry, cargs.UnDelete,cargs.ChangeId);
 			return changes.Any();
 		}
 
-		private IEnumerable<Change> CreateChangesFromArgs(CrashDoc crashDoc, Guid rhinoId, GeometryBase geometry,
-			bool unDelete)
+		private IEnumerable<Change> CreateChangesFromArgs(CrashDoc crashDoc, Guid rhinoId, GeometryBase geometry,bool unDelete, Guid changeId = default)
 		{
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
 			if (rhinoDoc is null)
@@ -47,22 +46,21 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			var user = crashDoc.Users.CurrentUser.Name;
 
 			// For unDelete
-			var currentOrNewId = Guid.NewGuid();
-			if (crashDoc.RealisedChangeTable.TryGetChangeId(rhinoId, out var changeId))
+			if (changeId == Guid.Empty && !crashDoc.RealisedChangeTable.TryGetChangeId(rhinoId, out changeId))
 			{
-				currentOrNewId = changeId;
+				changeId = Guid.NewGuid();
 			}
 
-			crashDoc.RealisedChangeTable.AddPair(currentOrNewId, rhinoId);
+			crashDoc.RealisedChangeTable.AddPair(changeId, rhinoId);
 
 			Change change = null;
 			if (unDelete)
 			{
-				change = GeometryChange.CreateChange(currentOrNewId, user, ChangeAction.Add | ChangeAction.Temporary);
+				change = GeometryChange.CreateChange(changeId, user, ChangeAction.Add | ChangeAction.Temporary);
 			}
 			else
 			{
-				change = GeometryChange.CreateChange(currentOrNewId, user, Action, geometry);
+				change = GeometryChange.CreateChange(changeId, user, Action, geometry);
 			}
 
 			return new[] { change };

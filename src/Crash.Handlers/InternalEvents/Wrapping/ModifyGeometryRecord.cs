@@ -1,4 +1,4 @@
-using Crash.Common.Document;
+﻿using Crash.Common.Document;
 
 using Rhino.DocObjects;
 

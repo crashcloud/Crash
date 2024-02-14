@@ -32,7 +32,8 @@ namespace Crash.Handlers.InternalEvents
 			Geometry = geometry;
 			if (changeId == default)
 			{
-				crashDoc.RealisedChangeTable.TryGetChangeId(rhinoId, out ChangeId);
+				if (!crashDoc.RealisedChangeTable.TryGetChangeId(rhinoId, out ChangeId))
+					ChangeId = Guid.NewGuid();
 			}
 			else
 			{
