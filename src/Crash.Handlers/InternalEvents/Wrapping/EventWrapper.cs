@@ -1,5 +1,6 @@
 ﻿using Crash.Common.App;
 using Crash.Common.Document;
+using Crash.Geometry;
 
 using Rhino;
 using Rhino.Commands;
@@ -258,10 +259,9 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			{
 				CrashApp.Log("Grips Event Missed");
 				RhinoApp.WriteLine("Modifying Grips is not yet supported by Crash");
-				return;
 			}
 
-			var rhinoDoc = RhinoDocUtils.GetRhinoDocFromObjects(args.Objects);
+			var rhinoDoc = RhinoDocUtils.GetRhinoDocFromObjects(args.Objects.Union(args.GripOwners));
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
 			if (IgnoreEvent(crashDoc, false))
 			{
@@ -277,6 +277,14 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			TransformIsActive = true;
 
 			var transform = args.Transform.ToCrash();
+
+			// Nullify the transform
+			if (args.GripCount > 0)
+			{
+				transform = CTransform.Unset;
+			}
+
+
 			var transformArgs =
 				new CrashTransformEventArgs(crashDoc, transform,
 				                            args.Objects.Select(o => new CrashObject(crashDoc, o)),

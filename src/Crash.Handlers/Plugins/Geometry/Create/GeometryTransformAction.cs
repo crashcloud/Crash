@@ -11,10 +11,10 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 	{
 		public ChangeAction Action => ChangeAction.Transform;
 
-
 		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
 		{
-			return crashArgs.Args is CrashTransformEventArgs;
+			return crashArgs.Args is CrashTransformEventArgs transformArgs &&
+				!transformArgs.Transform.Equals(CTransform.Unset);
 		}
 
 
