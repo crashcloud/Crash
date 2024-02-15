@@ -464,6 +464,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			if (!ContextDocument.RealisedChangeTable.TryGetChangeId(args.NewState.Id, out var changeId))
 			{
 				changeId = Guid.NewGuid();
+				ContextDocument.RealisedChangeTable.AddPair(changeId, args.NewState.Id);
 			}
 
 			var diffs = args.EventType switch
