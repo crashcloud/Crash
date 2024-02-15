@@ -44,7 +44,8 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 
 			if (!layer.HasIndex)
 			{
-				rhinoDoc.Layers.Add(layer);
+				int newIndex = rhinoDoc.Layers.Add(layer);
+				layer = rhinoDoc.Layers.FindIndex(newIndex);
 			}
 
 			args.Doc.RealisedChangeTable.AddPair(args.Change.Id, layer.Id);
