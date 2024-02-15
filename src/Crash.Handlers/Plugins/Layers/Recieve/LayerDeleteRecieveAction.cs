@@ -5,8 +5,6 @@ using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
 
-using Rhino.DocObjects;
-
 namespace Crash.Handlers.Plugins.Layers.Recieve
 {
 	public class LayerDeleteRecieveAction : IChangeRecieveAction
@@ -28,13 +26,13 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
 
-			if (!layerUpdates.TryGetValue(nameof(Layer.FullPath), out var fullPath))
+			if (!args.Doc.RealisedChangeTable.TryGetRhinoId(args.Change.Id, out var RhinoId))
 			{
 				return;
 			}
 
-			var layerIndex = rhinoDoc.Layers.FindByFullPath(fullPath, -1);
-			rhinoDoc.Layers.Delete(layerIndex, false);
+			var layer = rhinoDoc.Layers.FindId(RhinoId);
+			rhinoDoc.Layers.Delete(layer, false);
 
 			args.Doc.RealisedChangeTable.DeleteChange(args.Change.Id);
 		}
