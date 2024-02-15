@@ -7,6 +7,7 @@ using Crash.Handlers.Plugins;
 using Crash.Handlers.Plugins.Camera;
 using Crash.Handlers.Plugins.Geometry;
 using Crash.Handlers.Plugins.Initializers;
+using Crash.Handlers.Plugins.Layers;
 using Crash.UI.ExceptionsAndErrors;
 using Crash.UI.UsersView;
 
@@ -192,6 +193,7 @@ namespace Crash
 			Changes.Push(new GeometryChangeDefinition());
 			Changes.Push(new CameraChangeDefinition());
 			Changes.Push(new DoneDefinition());
+			Changes.Push(new LayerChangeDefinition());
 
 			CrashDocRegistry.DocumentRegistered += CrashDocRegistryOnDocumentRegistered;
 			CrashDocRegistry.DocumentDisposed += CrashDocRegistryOnDocumentDisposed;

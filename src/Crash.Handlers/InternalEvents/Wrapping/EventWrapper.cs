@@ -6,6 +6,7 @@ using Rhino;
 using Rhino.Commands;
 using Rhino.Display;
 using Rhino.DocObjects;
+using Rhino.DocObjects.Tables;
 
 namespace Crash.Handlers.InternalEvents.Wrapping
 {
@@ -444,6 +445,43 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			}
 		}
 
+		private void CaptureLayerTableChange(object? sender, LayerTableEventArgs args)
+		{
+			if (args.EventType is LayerTableEventType.Current or LayerTableEventType.Sorted)
+			{
+				return;
+			}
+
+			var action = args.EventType switch
+			             {
+				             LayerTableEventType.Added     => ChangeAction.Add,
+				             LayerTableEventType.Undeleted => ChangeAction.Add,
+				             LayerTableEventType.Deleted   => ChangeAction.Remove,
+				             LayerTableEventType.Modified  => ChangeAction.Update,
+				             _                             => ChangeAction.None
+			             };
+
+			if (!ContextDocument.RealisedChangeTable.TryGetChangeId(args.NewState.Id, out var changeId))
+			{
+				changeId = Guid.NewGuid();
+			}
+
+			var diffs = args.EventType switch
+			            {
+				            LayerTableEventType.Added => RhinoLayerUtils.GetLayerDefaults(args.NewState),
+				            LayerTableEventType.Modified => RhinoLayerUtils.GetLayerDifference(args.OldState,
+						             args.NewState),
+				            _ => new Dictionary<string, string>()
+			            };
+
+			diffs[nameof(Layer.FullPath)] = args.NewState.FullPath;
+
+			var layer = new CrashObject(changeId, args.NewState.Id);
+			var crashArgs = new CrashLayerArgs(ContextDocument, layer, action, diffs);
+
+			LayerModified?.Invoke(this, crashArgs);
+		}
+
 		// TODO : Does this fire if redo cannot be done in Rhino?
 		private void CaptureUndoRedo(object? sender, UndoRedoEventArgs args)
 		{
@@ -518,6 +556,9 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 		/// <summary>Invoked when a Crash Object is updated and the Crash Doc is not busy</summary>
 		internal event AsyncEventHandler<CrashUpdateArgs>? UpdateCrashObject;
 
+		/// <summary>Invoked when a Crash Layer is updated and the Crash Doc is not busy</summary>
+		internal event AsyncEventHandler<CrashLayerArgs>? LayerModified;
+
 		/// <summary>Is invoked when the Rhino View is modified</summary>
 		internal event AsyncEventHandler<CrashViewArgs>? CrashViewModified;
 
@@ -536,7 +577,9 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			RhinoDoc.DeselectAllObjects += CaptureDeselectAllRhinoObjects;
 			RhinoDoc.SelectObjects += CaptureSelectRhinoObjects;
 			RhinoDoc.ModifyObjectAttributes += CaptureModifyRhinoObjectAttributes;
-			// RhinoDoc.ReplaceRhinoObject
+
+			// Layer Events
+			RhinoDoc.LayerTableEvent += CaptureLayerTableChange;
 
 			// Command Events
 			Command.UndoRedo += CaptureUndoRedo;
@@ -564,6 +607,9 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			RhinoDoc.DeselectAllObjects -= CaptureDeselectAllRhinoObjects;
 			RhinoDoc.SelectObjects -= CaptureSelectRhinoObjects;
 			RhinoDoc.ModifyObjectAttributes -= CaptureModifyRhinoObjectAttributes;
+
+			// Layer Events
+			RhinoDoc.LayerTableEvent -= CaptureLayerTableChange;
 
 			// Command Events
 			Command.UndoRedo -= CaptureUndoRedo;
