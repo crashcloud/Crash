@@ -2,9 +2,9 @@
 
 namespace Crash.Handlers.Plugins.Layers.Create
 {
-	public class LayerCreateAction : IChangeCreateAction
+	public class LayerModifyAction : IChangeCreateAction
 	{
-		public ChangeAction Action => ChangeAction.Add;
+		public ChangeAction Action => ChangeAction.Update;
 
 		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
 		{

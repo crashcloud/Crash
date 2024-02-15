@@ -9,19 +9,19 @@ using Rhino.DocObjects;
 
 namespace Crash.Handlers.Plugins.Layers.Recieve
 {
-	public class LayerRecieveAction : IChangeRecieveAction
+	public class LayerDeleteRecieveAction : IChangeRecieveAction
 	{
 		public bool CanRecieve(IChange change)
 		{
-			return change.HasFlag(ChangeAction.Add);
+			return change.HasFlag(ChangeAction.Remove);
 		}
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
 		{
-			crashDoc.Queue.AddAction(new IdleAction(CreateLayerAction, new IdleArgs(crashDoc, recievedChange)));
+			crashDoc.Queue.AddAction(new IdleAction(DeleteLayerAction, new IdleArgs(crashDoc, recievedChange)));
 		}
 
-		private void CreateLayerAction(IdleArgs args)
+		private void DeleteLayerAction(IdleArgs args)
 		{
 			var packet = JsonSerializer.Deserialize<PayloadPacket>(args.Change.Payload);
 			var layerUpdates = packet.Updates;
@@ -34,18 +34,9 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 			}
 
 			var layerIndex = rhinoDoc.Layers.FindByFullPath(fullPath, -1);
-			var layer = rhinoDoc.Layers.FindIndex(layerIndex);
-			if (layer is null)
-			{
-				layer = new Layer();
-			}
+			rhinoDoc.Layers.Delete(layerIndex, false);
 
-			RhinoLayerUtils.UpdateLayer(layer, layerUpdates);
-
-			if (!layer.HasIndex)
-			{
-				rhinoDoc.Layers.Add(layer);
-			}
+			args.Doc.RealisedChangeTable.DeleteChange(args.Change.Id);
 		}
 	}
 }

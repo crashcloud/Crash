@@ -1,4 +1,4 @@
-﻿using Crash.Handlers.Plugins.Camera.Create;
+﻿using Crash.Handlers.Plugins.Layers.Create;
 using Crash.Handlers.Plugins.Layers.Recieve;
 
 using Rhino.Display;
@@ -11,7 +11,10 @@ namespace Crash.Handlers.Plugins.Layers
 		public LayerChangeDefinition()
 		{
 			CreateActions = new List<IChangeCreateAction> { new LayerCreateAction() };
-			RecieveActions = new List<IChangeRecieveAction> { new LayerRecieveAction() };
+			RecieveActions = new List<IChangeRecieveAction>
+			                 {
+				                 new LayerCreateOrModifyRecieveAction(), new LayerDeleteRecieveAction()
+			                 };
 		}
 
 		public string ChangeName => LayerChange.ChangeType;
