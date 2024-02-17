@@ -5,8 +5,6 @@ using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
 
-using Rhino.DocObjects;
-
 namespace Crash.Handlers.Plugins.Layers.Recieve
 {
 	public class LayerCreateRecieveAction : IChangeRecieveAction
@@ -28,16 +26,13 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
 
-			if (!layerUpdates.TryGetValue(nameof(Layer.FullPath), out var fullPath))
-			{
-				return;
-			}
-
 			args.Doc.DocumentIsBusy = true;
 			try
 			{
-				var layerIndex = rhinoDoc.Layers.FindByFullPath(fullPath, -1);
-				var layer = rhinoDoc.Layers.FindIndex(layerIndex) ?? new Layer();
+				if (!RhinoLayerUtils.TryGetAtExpectedPath(rhinoDoc, layerUpdates, out var layer))
+				{
+					return;
+				}
 
 				RhinoLayerUtils.UpdateLayer(layer, layerUpdates);
 
