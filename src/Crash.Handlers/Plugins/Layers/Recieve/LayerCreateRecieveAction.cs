@@ -36,14 +36,15 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 					layer = new Layer();
 				}
 
-				RhinoLayerUtils.UpdateLayer(layer, layerUpdates);
-
 				if (!layer.HasIndex)
 				{
 					var newIndex = rhinoDoc.Layers.Add(layer);
 					layer = rhinoDoc.Layers.FindIndex(newIndex);
 				}
 
+				RhinoLayerUtils.UpdateLayer(layer, layerUpdates);
+
+				args.Doc.RealisedChangeTable.RestoreChange(args.Change.Id);
 				args.Doc.RealisedChangeTable.AddPair(args.Change.Id, layer.Id);
 			}
 			finally

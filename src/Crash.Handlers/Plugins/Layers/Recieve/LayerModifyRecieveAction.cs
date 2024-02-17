@@ -45,15 +45,16 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 					layer = RhinoLayerUtils.MoveLayerToExpectedPath(rhinoDoc, layerUpdates);
 				}
 
-				// Handle New Layer Full Path
-				RhinoLayerUtils.UpdateLayer(layer, layerUpdates);
-
 				if (!layer.HasIndex)
 				{
 					var newIndex = rhinoDoc.Layers.Add(layer);
 					layer = rhinoDoc.Layers.FindIndex(newIndex);
 				}
 
+				// Handle New Layer Full Path
+				RhinoLayerUtils.UpdateLayer(layer, layerUpdates);
+
+				args.Doc.RealisedChangeTable.RestoreChange(args.Change.Id);
 				args.Doc.RealisedChangeTable.AddPair(args.Change.Id, layer.Id);
 			}
 			finally
@@ -62,31 +63,5 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 			}
 		}
 
-		private static void ChangedFullPath(Dictionary<string, string> updates, RhinoDoc rhinoDoc)
-		{
-			if (!updates.TryGetValue(RhinoLayerUtils.GetOldKey(nameof(Layer.FullPath)), out var oldFullPath))
-			{
-				return;
-			}
-
-			if (!updates.TryGetValue(RhinoLayerUtils.GetNewKey(nameof(Layer.FullPath)), out var newFullPath))
-			{
-				return;
-			}
-
-			var layerIndex = rhinoDoc.Layers.FindByFullPath(oldFullPath, -1);
-			if (layerIndex <= 0)
-			{
-				return;
-			}
-
-			var layer = rhinoDoc.Layers.FindIndex(layerIndex);
-			if (layer is null)
-			{
-				return;
-			}
-
-			RhinoLayerUtils.SetLayerFullPath(rhinoDoc, layer, newFullPath);
-		}
 	}
 }

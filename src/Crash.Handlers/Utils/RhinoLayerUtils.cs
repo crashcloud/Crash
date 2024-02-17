@@ -7,45 +7,85 @@ namespace Crash.Handlers
 {
 	internal static class RhinoLayerUtils
 	{
-		private const string Separater = "::";
-		private static readonly Layer s_defaultLayer;
+		private static string Separater = ModelComponent.NamePathSeparator;
+		private static Layer GetDefaultLayer() => new Layer();
+
+		private static void EmptySetValue(Layer layer, object value) { }
+		private static int GetIntOrDefault(string value)
+		{
+			if (int.TryParse(value, out int result))
+				return result;
+
+			return -1;
+		}
+
+		private static Color GetColourOrDefault(string value, Color defaultValue)
+		{
+			if (!int.TryParse(value, out int result))
+				return defaultValue;
+
+			return Color.FromArgb(result);
+		}
+
+		private static string SerializeColour(Color colour) => colour.ToArgb().ToString();
+
+		private static bool GetBoolOrDefault(string value, bool defaultValue = true)
+		{
+		if (bool.TryParse(value, out bool result))
+			return result;
+
+		return defaultValue;
+		}
+
+		private static string GetStringOrDefault(string value, string defaultValue)
+		{
+			if (string.IsNullOrEmpty(value))
+				return defaultValue ?? string.Empty;
+
+			return value;
+		} 
 
 		static RhinoLayerUtils()
 		{
-			s_defaultLayer = new Layer();
 			s_gettersAndSetters = new Dictionary<string, GetterAndSetter>
-			                      {
-				                      {
-					                      nameof(Layer.Name),
-					                      new GetterAndSetter(layer => layer.Name, (layer, value) => layer.Name = value)
-				                      },
-				                      { nameof(Layer.FullPath), new(layer => layer.FullPath, (layer, value) => { }) },
-				                      {
-					                      nameof(Layer.Color),
-					                      new GetterAndSetter(layer => layer.Color.ToArgb().ToString(),
-					                                          (layer, value) =>
-						                                          layer.Color = Color.FromArgb(int.Parse(value)))
-				                      },
-				                      {
-					                      nameof(Layer.IsLocked),
-					                      new GetterAndSetter(layer => layer.IsLocked.ToString(),
-					                                          (layer, value) =>
-						                                          layer.IsLocked = bool.Parse(value))
-				                      },
-				                      {
-					                      nameof(Layer.IsVisible),
-					                      new GetterAndSetter(layer => layer.IsVisible.ToString(),
-					                                          (layer, value) =>
-						                                          layer.IsVisible = bool.Parse(value))
-				                      }
-			                      };
+								  {
+									  {
+										  nameof(Layer.Name),
+										  new GetterAndSetter(layer => layer.Name,
+													(layer, value) =>
+													{
+														layer.Name = GetStringOrDefault(value, layer.FullPath?.Split(Separater)?.Last());
+													})
+									  },
+									  { nameof(Layer.FullPath), new(layer => layer.FullPath, EmptySetValue) },
+									  {
+										  nameof(Layer.Color),
+										  new GetterAndSetter(layer => SerializeColour(layer.Color),
+															  (layer, value) => layer.Color = GetColourOrDefault(value, Color.Black))
+									  },
+				{
+					nameof(Layer.LinetypeIndex), new GetterAndSetter(layer => layer.LinetypeIndex.ToString(), (layer, value) => layer.LinetypeIndex = GetIntOrDefault(value))
+				},
+									  {
+										  nameof(Layer.IsLocked),
+										  new GetterAndSetter(layer => layer.IsLocked.ToString(),
+															  (layer, value) =>
+																  layer.IsLocked = GetBoolOrDefault(value))
+									  },
+									  {
+										  nameof(Layer.IsVisible),
+										  new GetterAndSetter(layer => layer.IsVisible.ToString(),
+															  (layer, value) =>
+																  layer.IsVisible = GetBoolOrDefault(value))
+									  }
+								  };
 		}
 
 		private static Dictionary<string, GetterAndSetter> s_gettersAndSetters { get; }
 
 		internal static Dictionary<string, string> GetLayerDefaults(Layer layer)
 		{
-			return GetLayerDifference(s_defaultLayer, layer);
+			return GetLayerDifference(GetDefaultLayer(), layer);
 		}
 
 		internal static Dictionary<string, string> GetLayerDifference(Layer oldState, Layer newState)
@@ -59,8 +99,8 @@ namespace Crash.Handlers
 					continue;
 				}
 
-				dict.Add(GetNewKey(getter.Key), newValue);
 				dict.Add(GetOldKey(getter.Key), oldValue);
+				dict.Add(GetNewKey(getter.Key), newValue);
 			}
 
 			var oldFullPathKey = GetOldKey(nameof(Layer.FullPath));
@@ -76,13 +116,6 @@ namespace Crash.Handlers
 			}
 
 			return dict;
-		}
-
-		internal static void SetLayerFullPath(RhinoDoc doc, Layer oldLayer, string layerFullPath)
-		{
-			if (oldLayer.FullPath.Equals(layerFullPath))
-			{
-			}
 		}
 
 		internal static string GetNewKey(string key)
