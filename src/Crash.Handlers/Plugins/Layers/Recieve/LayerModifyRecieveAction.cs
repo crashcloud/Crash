@@ -26,6 +26,12 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 			var packet = JsonSerializer.Deserialize<PayloadPacket>(args.Change.Payload);
 			var layerUpdates = packet.Updates;
 
+			if (layerUpdates.Count == 0)
+			{
+				;
+				return;
+			}
+
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
 
 			var userName = args.Doc.Users.CurrentUser.Name;

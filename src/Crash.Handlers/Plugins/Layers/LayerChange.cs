@@ -18,7 +18,7 @@ namespace Crash.Handlers.Plugins.Layers
 		public static Change CreateChange(string owner, Guid changeId, ChangeAction action,
 			Dictionary<string, string> updates)
 		{
-			var packet = new PayloadPacket { Updates = updates, Data = string.Empty };
+			var packet = new PayloadPacket { Updates = updates, Data = "Layer" };
 			return new Change
 			       {
 				       Stamp = DateTime.Now,
@@ -26,7 +26,7 @@ namespace Crash.Handlers.Plugins.Layers
 				       Owner = owner,
 				       Type = ChangeType,
 				       Action = action,
-				       Payload = JsonSerializer.Serialize(packet)
+				       Payload = JsonSerializer.Serialize(updates)
 			       };
 		}
 	}
