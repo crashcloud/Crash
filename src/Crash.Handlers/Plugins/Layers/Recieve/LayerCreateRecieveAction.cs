@@ -9,11 +9,11 @@ using Rhino.DocObjects;
 
 namespace Crash.Handlers.Plugins.Layers.Recieve
 {
-	public class LayerCreateOrModifyRecieveAction : IChangeRecieveAction
+	public class LayerCreateRecieveAction : IChangeRecieveAction
 	{
 		public bool CanRecieve(IChange change)
 		{
-			return change.HasFlag(ChangeAction.Add) || change.HasFlag(ChangeAction.Update);
+			return change.HasFlag(ChangeAction.Add);
 		}
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
@@ -37,11 +37,7 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 			try
 			{
 				var layerIndex = rhinoDoc.Layers.FindByFullPath(fullPath, -1);
-				var layer = rhinoDoc.Layers.FindIndex(layerIndex);
-				if (layer is null)
-				{
-					layer = new Layer();
-				}
+				var layer = rhinoDoc.Layers.FindIndex(layerIndex) ?? new Layer();
 
 				RhinoLayerUtils.UpdateLayer(layer, layerUpdates);
 

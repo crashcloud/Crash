@@ -10,10 +10,15 @@ namespace Crash.Handlers.Plugins.Layers
 	{
 		public LayerChangeDefinition()
 		{
-			CreateActions = new List<IChangeCreateAction> { new LayerCreateAction(), new LayerDeleteAction(), new LayerModifyAction() };
+			CreateActions = new List<IChangeCreateAction>
+			                {
+				                new LayerCreateAction(), new LayerDeleteAction(), new LayerModifyAction()
+			                };
 			RecieveActions = new List<IChangeRecieveAction>
 			                 {
-				                 new LayerCreateOrModifyRecieveAction(), new LayerDeleteRecieveAction()
+				                 new LayerCreateRecieveAction(),
+				                 new LayerModifyRecieveAction(),
+				                 new LayerDeleteRecieveAction()
 			                 };
 		}
 
