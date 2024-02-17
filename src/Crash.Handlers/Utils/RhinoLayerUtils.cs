@@ -165,7 +165,7 @@ namespace Crash.Handlers
 		{
 			if (s_userSpecificKeys.Contains(key))
 			{
-				return $"{KeyDivider}{userName}";
+				return $"{userName}{KeyDivider}";
 			}
 
 			return string.Empty;
@@ -173,10 +173,12 @@ namespace Crash.Handlers
 
 		private static string GetNeutralKey(string key, string userName)
 		{
-			return key.Replace("Old", "")
-			          .Replace("New", "")
-			          .Replace("_", "")
-			          .Replace(userName, "");
+			var neutralKey = key.Replace("Old", "")
+			                    .Replace("New", "")
+			                    .Replace(KeyDivider, "")
+			                    .Replace(userName, "");
+
+			return neutralKey;
 		}
 
 		internal static bool TryGetAtExpectedPath(RhinoDoc rhinoDoc, Dictionary<string, string> layerUpdates,
