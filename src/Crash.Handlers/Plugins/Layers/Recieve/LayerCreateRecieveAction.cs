@@ -5,6 +5,8 @@ using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
 
+using Rhino.DocObjects;
+
 namespace Crash.Handlers.Plugins.Layers.Recieve
 {
 	public class LayerCreateRecieveAction : IChangeRecieveAction
@@ -31,7 +33,7 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 			{
 				if (!RhinoLayerUtils.TryGetAtExpectedPath(rhinoDoc, layerUpdates, out var layer))
 				{
-					return;
+					layer = new Layer();
 				}
 
 				RhinoLayerUtils.UpdateLayer(layer, layerUpdates);
