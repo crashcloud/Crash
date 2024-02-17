@@ -8,81 +8,105 @@ namespace Crash.Handlers
 	internal static class RhinoLayerUtils
 	{
 #if NETFRAMEWORK
-		private static string Separater = Layer.PathSeparator;
+		private static readonly string Separater = Layer.PathSeparator;
 #else
-		private static string Separater = Layer.NamePathSeparator;
+		private static readonly string Separater = ModelComponent.NamePathSeparator;
 #endif
-		private static Layer GetDefaultLayer() => new Layer();
+		private static Layer GetDefaultLayer()
+		{
+			return new Layer();
+		}
 
 		private static void EmptySetValue(Layer layer, object value) { }
+
 		private static int GetIntOrDefault(string value)
 		{
-			if (int.TryParse(value, out int result))
+			if (int.TryParse(value, out var result))
+			{
 				return result;
+			}
 
 			return -1;
 		}
 
 		private static Color GetColourOrDefault(string value, Color defaultValue)
 		{
-			if (!int.TryParse(value, out int result))
+			if (!int.TryParse(value, out var result))
+			{
 				return defaultValue;
+			}
 
 			return Color.FromArgb(result);
 		}
 
-		private static string SerializeColour(Color colour) => colour.ToArgb().ToString();
+		private static string SerializeColour(Color colour)
+		{
+			return colour.ToArgb().ToString();
+		}
 
 		private static bool GetBoolOrDefault(string value, bool defaultValue = true)
 		{
-		if (bool.TryParse(value, out bool result))
-			return result;
+			if (bool.TryParse(value, out var result))
+			{
+				return result;
+			}
 
-		return defaultValue;
+			return defaultValue;
 		}
 
 		private static string GetStringOrDefault(string value, string defaultValue)
 		{
 			if (string.IsNullOrEmpty(value))
+			{
 				return defaultValue ?? string.Empty;
+			}
 
 			return value;
-		} 
+		}
 
 		static RhinoLayerUtils()
 		{
 			s_gettersAndSetters = new Dictionary<string, GetterAndSetter>
-								  {
-									  {
-										  nameof(Layer.Name),
-										  new GetterAndSetter(layer => layer.Name,
-													(layer, value) =>
-													{
-														layer.Name = GetStringOrDefault(value, layer.FullPath?.Split(new string[] {Separater }, StringSplitOptions.RemoveEmptyEntries)?.Last());
-													})
-									  },
-									  { nameof(Layer.FullPath), new(layer => layer.FullPath, EmptySetValue) },
-									  {
-										  nameof(Layer.Color),
-										  new GetterAndSetter(layer => SerializeColour(layer.Color),
-															  (layer, value) => layer.Color = GetColourOrDefault(value, Color.Black))
-									  },
-				{
-					nameof(Layer.LinetypeIndex), new GetterAndSetter(layer => layer.LinetypeIndex.ToString(), (layer, value) => layer.LinetypeIndex = GetIntOrDefault(value))
-				},
-									  {
-										  nameof(Layer.IsLocked),
-										  new GetterAndSetter(layer => layer.IsLocked.ToString(),
-															  (layer, value) =>
-																  layer.IsLocked = GetBoolOrDefault(value))
-									  },
-									  {
-										  nameof(Layer.IsVisible),
-										  new GetterAndSetter(layer => layer.IsVisible.ToString(),
-															  (layer, value) =>
-																  layer.IsVisible = GetBoolOrDefault(value))
-									  }
-								  };
+			                      {
+				                      {
+					                      nameof(Layer.Name), new GetterAndSetter(layer => layer.Name,
+						                      (layer, value) =>
+						                      {
+							                      layer.Name =
+								                      GetStringOrDefault(value,
+								                                         layer.FullPath
+								                                              ?.Split(new[] { Separater },
+									                                              StringSplitOptions
+										                                              .RemoveEmptyEntries)
+								                                              ?.Last());
+						                      })
+				                      },
+				                      { nameof(Layer.FullPath), new(layer => layer.FullPath, EmptySetValue) },
+				                      {
+					                      nameof(Layer.Color),
+					                      new GetterAndSetter(layer => SerializeColour(layer.Color),
+					                                          (layer, value) =>
+						                                          layer.Color = GetColourOrDefault(value, Color.Black))
+				                      },
+				                      {
+					                      nameof(Layer.LinetypeIndex),
+					                      new GetterAndSetter(layer => layer.LinetypeIndex.ToString(),
+					                                          (layer, value) =>
+						                                          layer.LinetypeIndex = GetIntOrDefault(value))
+				                      },
+				                      {
+					                      nameof(Layer.IsLocked),
+					                      new GetterAndSetter(layer => layer.IsLocked.ToString(),
+					                                          (layer, value) =>
+						                                          layer.IsLocked = GetBoolOrDefault(value))
+				                      },
+				                      {
+					                      nameof(Layer.IsVisible),
+					                      new GetterAndSetter(layer => layer.IsVisible.ToString(),
+					                                          (layer, value) =>
+						                                          layer.IsVisible = GetBoolOrDefault(value))
+				                      }
+			                      };
 		}
 
 		private static Dictionary<string, GetterAndSetter> s_gettersAndSetters { get; }
