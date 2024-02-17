@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics.Metrics;
+using System.Drawing;
 
 using Rhino;
 using Rhino.DocObjects;
@@ -62,6 +63,13 @@ namespace Crash.Handlers
 				dict.Add(GetNewKey(getter.Key), newValue);
 				dict.Add(GetOldKey(getter.Key), oldValue);
 			}
+
+			string oldFullPathKey = GetOldKey(nameof(Layer.FullPath));
+			string newFullPathKey = GetNewKey(nameof(Layer.FullPath));
+			if (!dict.ContainsKey(oldFullPathKey))
+				dict.Add(oldFullPathKey, oldState.FullPath);
+			if (!dict.ContainsKey(newFullPathKey))
+				dict.Add(newFullPathKey, newState.FullPath);
 
 			return dict;
 		}

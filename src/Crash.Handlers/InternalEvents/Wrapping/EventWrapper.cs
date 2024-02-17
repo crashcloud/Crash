@@ -475,8 +475,6 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 				            _ => new Dictionary<string, string>()
 			            };
 
-			diffs[nameof(Layer.FullPath)] = args.NewState.FullPath;
-
 			var layer = new CrashObject(changeId, args.NewState.Id);
 			var crashArgs = new CrashLayerArgs(ContextDocument, layer, action, diffs);
 
