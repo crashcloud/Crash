@@ -452,6 +452,12 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 				return;
 			}
 
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(args.Document);
+			if (IgnoreEvent(crashDoc, ignoreIfRedoActive: false, ignoreIfUndoActive: false))
+			{
+				return;
+			}
+
 			var action = args.EventType switch
 			             {
 				             LayerTableEventType.Added     => ChangeAction.Add,
