@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.Metrics;
-using System.Drawing;
+﻿using System.Drawing;
 
 using Rhino;
 using Rhino.DocObjects;
@@ -64,12 +63,17 @@ namespace Crash.Handlers
 				dict.Add(GetOldKey(getter.Key), oldValue);
 			}
 
-			string oldFullPathKey = GetOldKey(nameof(Layer.FullPath));
-			string newFullPathKey = GetNewKey(nameof(Layer.FullPath));
+			var oldFullPathKey = GetOldKey(nameof(Layer.FullPath));
+			var newFullPathKey = GetNewKey(nameof(Layer.FullPath));
 			if (!dict.ContainsKey(oldFullPathKey))
+			{
 				dict.Add(oldFullPathKey, oldState.FullPath);
+			}
+
 			if (!dict.ContainsKey(newFullPathKey))
+			{
 				dict.Add(newFullPathKey, newState.FullPath);
+			}
 
 			return dict;
 		}
@@ -93,7 +97,7 @@ namespace Crash.Handlers
 
 		private static string GetNeutralKey(string key)
 		{
-			return key.Replace("Old", "").Replace("New", "");
+			return key.Replace("Old", "").Replace("New", "").Replace("_", "");
 		}
 
 		internal static bool TryGetAtExpectedPath(RhinoDoc rhinoDoc, Dictionary<string, string> layerUpdates,
