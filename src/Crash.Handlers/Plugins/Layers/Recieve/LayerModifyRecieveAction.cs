@@ -5,7 +5,6 @@ using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
 
-using Rhino;
 using Rhino.DocObjects;
 
 namespace Crash.Handlers.Plugins.Layers.Recieve
@@ -29,20 +28,22 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
 
+			var userName = args.Doc.Users.CurrentUser.Name;
+
 			args.Doc.DocumentIsBusy = true;
 			try
 			{
 				Layer layer = null;
-				if (!RhinoLayerUtils.TryGetAtExpectedPath(rhinoDoc, layerUpdates, out layer))
+				if (!RhinoLayerUtils.TryGetAtExpectedPath(rhinoDoc, layerUpdates, userName, out layer))
 				{
 					// Full Path is now different!
-					if (!RhinoLayerUtils.TryGetAtOldPath(rhinoDoc, layerUpdates, out layer))
+					if (!RhinoLayerUtils.TryGetAtOldPath(rhinoDoc, layerUpdates, userName, out layer))
 					{
 						return;
 					}
 
 					// Move Layer to New Full Path!
-					layer = RhinoLayerUtils.MoveLayerToExpectedPath(rhinoDoc, layerUpdates);
+					layer = RhinoLayerUtils.MoveLayerToExpectedPath(rhinoDoc, layerUpdates, userName);
 				}
 
 				if (!layer.HasIndex)
@@ -62,6 +63,5 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 				args.Doc.DocumentIsBusy = false;
 			}
 		}
-
 	}
 }

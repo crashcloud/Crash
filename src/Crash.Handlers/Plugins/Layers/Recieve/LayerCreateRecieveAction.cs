@@ -31,7 +31,8 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 			args.Doc.DocumentIsBusy = true;
 			try
 			{
-				if (!RhinoLayerUtils.TryGetAtExpectedPath(rhinoDoc, layerUpdates, out var layer))
+				var userName = args.Doc.Users.CurrentUser.Name;
+				if (!RhinoLayerUtils.TryGetAtExpectedPath(rhinoDoc, layerUpdates, userName, out var layer))
 				{
 					layer = new Layer();
 				}

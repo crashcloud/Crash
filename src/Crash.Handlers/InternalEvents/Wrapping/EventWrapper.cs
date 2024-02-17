@@ -473,11 +473,13 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 				ContextDocument.RealisedChangeTable.AddPair(changeId, args.NewState.Id);
 			}
 
+			var userName = crashDoc.Users.CurrentUser.Name;
+
 			var diffs = args.EventType switch
 			            {
-				            LayerTableEventType.Added => RhinoLayerUtils.GetLayerDefaults(args.NewState),
+				            LayerTableEventType.Added => RhinoLayerUtils.GetLayerDefaults(args.NewState, userName),
 				            LayerTableEventType.Modified => RhinoLayerUtils.GetLayerDifference(args.OldState,
-						             args.NewState),
+						             args.NewState, userName),
 				            _ => new Dictionary<string, string>()
 			            };
 

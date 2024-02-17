@@ -229,10 +229,11 @@ namespace Crash.Handlers
 			return !string.IsNullOrEmpty(newValue);
 		}
 
-		public static Layer MoveLayerToExpectedPath(RhinoDoc rhinoDoc, Dictionary<string, string> layerUpdates)
+		public static Layer MoveLayerToExpectedPath(RhinoDoc rhinoDoc, Dictionary<string, string> layerUpdates,
+			string userName)
 		{
-			TryGetAtOldPath(rhinoDoc, layerUpdates, out var originalLayer);
-			var expectedPath = layerUpdates[GetNewKey(nameof(Layer.FullPath))];
+			TryGetAtOldPath(rhinoDoc, layerUpdates, userName, out var originalLayer);
+			var expectedPath = layerUpdates[GetNewKey(nameof(Layer.FullPath), userName)];
 
 			var lineage = expectedPath.Split(new[] { Separater }, StringSplitOptions.RemoveEmptyEntries).ToList();
 
@@ -269,7 +270,7 @@ namespace Crash.Handlers
 				previousLayer = rhinoDoc.Layers.FindIndex(layerIndex);
 			}
 
-			TryGetAtExpectedPath(rhinoDoc, layerUpdates, out var expectedLayer);
+			TryGetAtExpectedPath(rhinoDoc, layerUpdates, userName, out var expectedLayer);
 			return expectedLayer;
 		}
 
