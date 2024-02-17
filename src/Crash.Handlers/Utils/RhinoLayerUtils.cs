@@ -7,7 +7,11 @@ namespace Crash.Handlers
 {
 	internal static class RhinoLayerUtils
 	{
-		private static string Separater = ModelComponent.NamePathSeparator;
+#if NETFRAMEWORK
+		private static string Separater = Layer.PathSeparator;
+#else
+		private static string Separater = Layer.NamePathSeparator;
+#endif
 		private static Layer GetDefaultLayer() => new Layer();
 
 		private static void EmptySetValue(Layer layer, object value) { }
@@ -54,7 +58,7 @@ namespace Crash.Handlers
 										  new GetterAndSetter(layer => layer.Name,
 													(layer, value) =>
 													{
-														layer.Name = GetStringOrDefault(value, layer.FullPath?.Split(Separater)?.Last());
+														layer.Name = GetStringOrDefault(value, layer.FullPath?.Split(new string[] {Separater }, StringSplitOptions.RemoveEmptyEntries)?.Last());
 													})
 									  },
 									  { nameof(Layer.FullPath), new(layer => layer.FullPath, EmptySetValue) },
