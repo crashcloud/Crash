@@ -221,7 +221,8 @@ namespace Crash.Handlers
 
 			var lineage = expectedPath.Split(new[] { Separater }, StringSplitOptions.RemoveEmptyEntries).ToList();
 
-			for (var i = 0; i < lineage.Count; i++)
+			Layer previousLayer = null;
+			for (var i = 0; i <= lineage.Count; i++)
 			{
 				var l = lineage.GetRange(0, i);
 				var layer = string.Join(Separater, l);
@@ -233,14 +234,24 @@ namespace Crash.Handlers
 				var layerIndex = rhinoDoc.Layers.FindByFullPath(layer, -1);
 				if (layerIndex == -1)
 				{
-					// .. Infill!
-					var newLayer = new Layer { Name = lineage[i] };
-					var l2 = lineage.GetRange(0, i - 1);
-					var parentLayerFullName = string.Join(Separater, l2);
+					var newLayer = new Layer();
+					if (i == lineage.Count)
+					{
+						newLayer = originalLayer;
+						layerIndex = newLayer.Index;
+					}
+
+					var parentLayerFullName = previousLayer.FullPath;
 					var parentIndex = rhinoDoc.Layers.FindByFullPath(parentLayerFullName, -1);
 					newLayer.ParentLayerId = rhinoDoc.Layers.FindIndex(parentIndex)?.Id ?? Guid.Empty;
-					rhinoDoc.Layers.Add(newLayer);
+
+					if (!newLayer.HasIndex)
+					{
+						layerIndex = rhinoDoc.Layers.Add(newLayer);
+					}
 				}
+
+				previousLayer = rhinoDoc.Layers.FindIndex(layerIndex);
 			}
 
 			TryGetAtExpectedPath(rhinoDoc, layerUpdates, out var expectedLayer);
