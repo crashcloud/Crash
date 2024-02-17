@@ -171,9 +171,12 @@ namespace Crash.Handlers
 			return string.Empty;
 		}
 
-		private static string GetNeutralKey(string key)
+		private static string GetNeutralKey(string key, string userName)
 		{
-			return key.Replace("Old", "").Replace("New", "").Replace("_", "");
+			return key.Replace("Old", "")
+			          .Replace("New", "")
+			          .Replace("_", "")
+			          .Replace(userName, "");
 		}
 
 		internal static bool TryGetAtExpectedPath(RhinoDoc rhinoDoc, Dictionary<string, string> layerUpdates,
@@ -202,11 +205,11 @@ namespace Crash.Handlers
 			return false;
 		}
 
-		internal static void UpdateLayer(Layer layer, Dictionary<string, string> values)
+		internal static void UpdateLayer(Layer layer, Dictionary<string, string> values, string userName)
 		{
 			foreach (var kvp in values)
 			{
-				if (!s_gettersAndSetters.TryGetValue(GetNeutralKey(kvp.Key), out var setter))
+				if (!s_gettersAndSetters.TryGetValue(GetNeutralKey(kvp.Key, userName), out var setter))
 				{
 					continue;
 				}

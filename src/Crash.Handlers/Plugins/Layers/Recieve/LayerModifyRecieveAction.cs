@@ -53,7 +53,7 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 				}
 
 				// Handle New Layer Full Path
-				RhinoLayerUtils.UpdateLayer(layer, layerUpdates);
+				RhinoLayerUtils.UpdateLayer(layer, layerUpdates, userName);
 
 				args.Doc.RealisedChangeTable.RestoreChange(args.Change.Id);
 				args.Doc.RealisedChangeTable.AddPair(args.Change.Id, layer.Id);
