@@ -152,6 +152,10 @@ namespace Crash.Handlers
 			{
 				var l = lineage.GetRange(0, i);
 				var layer = string.Join(Separater, l);
+				if (string.IsNullOrEmpty(layer))
+				{
+					continue;
+				}
 
 				var layerIndex = rhinoDoc.Layers.FindByFullPath(layer, -1);
 				if (layerIndex == -1)
