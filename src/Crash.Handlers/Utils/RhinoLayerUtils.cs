@@ -132,8 +132,8 @@ namespace Crash.Handlers
 					continue;
 				}
 
-				dict.Add(GetOldKey(userName, getter.Key), oldValue);
-				dict.Add(GetNewKey(userName, getter.Key), newValue);
+				dict.Add(GetOldKey(getter.Key, userName), oldValue);
+				dict.Add(GetNewKey(getter.Key, userName), newValue);
 			}
 
 			var oldFullPathKey = GetOldKey(nameof(Layer.FullPath), userName);
