@@ -12,6 +12,9 @@ namespace Crash.Handlers
 #else
 		private static readonly string Separater = ModelComponent.NamePathSeparator;
 #endif
+
+		private const string KeyDivider = ";";
+
 		private static Layer GetDefaultLayer()
 		{
 			return new Layer();
@@ -66,6 +69,7 @@ namespace Crash.Handlers
 
 		static RhinoLayerUtils()
 		{
+			s_userSpecificKeys = new HashSet<string> { nameof(Layer.IsLocked), nameof(Layer.IsVisible) };
 			s_gettersAndSetters = new Dictionary<string, GetterAndSetter>
 			                      {
 				                      {
@@ -110,13 +114,14 @@ namespace Crash.Handlers
 		}
 
 		private static Dictionary<string, GetterAndSetter> s_gettersAndSetters { get; }
+		private static HashSet<string> s_userSpecificKeys { get; }
 
-		internal static Dictionary<string, string> GetLayerDefaults(Layer layer)
+		internal static Dictionary<string, string> GetLayerDefaults(Layer layer, string userName)
 		{
-			return GetLayerDifference(GetDefaultLayer(), layer);
+			return GetLayerDifference(GetDefaultLayer(), layer, userName);
 		}
 
-		internal static Dictionary<string, string> GetLayerDifference(Layer oldState, Layer newState)
+		internal static Dictionary<string, string> GetLayerDifference(Layer oldState, Layer newState, string userName)
 		{
 			var dict = new Dictionary<string, string>();
 
@@ -127,12 +132,12 @@ namespace Crash.Handlers
 					continue;
 				}
 
-				dict.Add(GetOldKey(getter.Key), oldValue);
-				dict.Add(GetNewKey(getter.Key), newValue);
+				dict.Add(GetOldKey(userName, getter.Key), oldValue);
+				dict.Add(GetNewKey(userName, getter.Key), newValue);
 			}
 
-			var oldFullPathKey = GetOldKey(nameof(Layer.FullPath));
-			var newFullPathKey = GetNewKey(nameof(Layer.FullPath));
+			var oldFullPathKey = GetOldKey(nameof(Layer.FullPath), userName);
+			var newFullPathKey = GetNewKey(nameof(Layer.FullPath), userName);
 			if (!dict.ContainsKey(oldFullPathKey))
 			{
 				dict.Add(oldFullPathKey, oldState.FullPath);
@@ -146,14 +151,24 @@ namespace Crash.Handlers
 			return dict;
 		}
 
-		internal static string GetNewKey(string key)
+		internal static string GetNewKey(string key, string userName)
 		{
-			return $"New_{key}";
+			return $"New{KeyDivider}{GetUserSpecificKey(key, userName)}{key}";
 		}
 
-		internal static string GetOldKey(string key)
+		internal static string GetOldKey(string key, string userName)
 		{
-			return $"Old_{key}";
+			return $"Old{KeyDivider}{GetUserSpecificKey(key, userName)}{key}";
+		}
+
+		internal static string GetUserSpecificKey(string key, string userName)
+		{
+			if (s_userSpecificKeys.Contains(key))
+			{
+				return $"{KeyDivider}{userName}";
+			}
+
+			return string.Empty;
 		}
 
 		private static string GetNeutralKey(string key)
@@ -162,15 +177,15 @@ namespace Crash.Handlers
 		}
 
 		internal static bool TryGetAtExpectedPath(RhinoDoc rhinoDoc, Dictionary<string, string> layerUpdates,
-			out Layer layer)
+			string userName, out Layer layer)
 		{
-			return TryGetLayer(GetNewKey(nameof(Layer.FullPath)), rhinoDoc, layerUpdates, out layer);
+			return TryGetLayer(GetNewKey(nameof(Layer.FullPath), userName), rhinoDoc, layerUpdates, out layer);
 		}
 
 		internal static bool TryGetAtOldPath(RhinoDoc rhinoDoc, Dictionary<string, string> layerUpdates,
-			out Layer layer)
+			string userName, out Layer layer)
 		{
-			return TryGetLayer(GetOldKey(nameof(Layer.FullPath)), rhinoDoc, layerUpdates, out layer);
+			return TryGetLayer(GetOldKey(nameof(Layer.FullPath), userName), rhinoDoc, layerUpdates, out layer);
 		}
 
 		private static bool TryGetLayer(string key, RhinoDoc rhinoDoc, Dictionary<string, string> layerUpdates,
