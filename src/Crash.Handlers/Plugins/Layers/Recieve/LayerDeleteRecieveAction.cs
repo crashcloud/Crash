@@ -31,10 +31,18 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 				return;
 			}
 
-			var layer = rhinoDoc.Layers.FindId(RhinoId);
-			rhinoDoc.Layers.Delete(layer, false);
+			args.Doc.DocumentIsBusy = true;
+			try
+			{
+				var layer = rhinoDoc.Layers.FindId(RhinoId);
+				rhinoDoc.Layers.Delete(layer, false);
 
-			args.Doc.RealisedChangeTable.DeleteChange(args.Change.Id);
+				args.Doc.RealisedChangeTable.DeleteChange(args.Change.Id);
+			}
+			finally
+			{
+				args.Doc.DocumentIsBusy = false;
+			}
 		}
 	}
 }

@@ -33,22 +33,30 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 				return;
 			}
 
-			var layerIndex = rhinoDoc.Layers.FindByFullPath(fullPath, -1);
-			var layer = rhinoDoc.Layers.FindIndex(layerIndex);
-			if (layer is null)
+			args.Doc.DocumentIsBusy = true;
+			try
 			{
-				layer = new Layer();
+				var layerIndex = rhinoDoc.Layers.FindByFullPath(fullPath, -1);
+				var layer = rhinoDoc.Layers.FindIndex(layerIndex);
+				if (layer is null)
+				{
+					layer = new Layer();
+				}
+
+				RhinoLayerUtils.UpdateLayer(layer, layerUpdates);
+
+				if (!layer.HasIndex)
+				{
+					var newIndex = rhinoDoc.Layers.Add(layer);
+					layer = rhinoDoc.Layers.FindIndex(newIndex);
+				}
+
+				args.Doc.RealisedChangeTable.AddPair(args.Change.Id, layer.Id);
 			}
-
-			RhinoLayerUtils.UpdateLayer(layer, layerUpdates);
-
-			if (!layer.HasIndex)
+			finally
 			{
-				int newIndex = rhinoDoc.Layers.Add(layer);
-				layer = rhinoDoc.Layers.FindIndex(newIndex);
+				args.Doc.DocumentIsBusy = false;
 			}
-
-			args.Doc.RealisedChangeTable.AddPair(args.Change.Id, layer.Id);
 		}
 	}
 }
