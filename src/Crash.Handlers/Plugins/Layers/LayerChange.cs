@@ -2,23 +2,15 @@
 
 namespace Crash.Handlers.Plugins.Layers
 {
-	public sealed class LayerChange : IChange
+	public sealed class LayerChange
 	{
 		public const string ChangeType = "Crash.LayerChange";
 
-		private LayerChange() { }
-
-		public DateTime Stamp { get; }
-		public Guid Id { get; }
-		public string? Owner { get; }
-		public string? Payload { get; }
-		public string Type { get; }
-		public ChangeAction Action { get; set; }
 
 		public static Change CreateChange(string owner, Guid changeId, ChangeAction action,
 			Dictionary<string, string> updates)
 		{
-			var packet = new PayloadPacket { Updates = updates, Data = "Layer" };
+			var packet = new PayloadPacket { Updates = updates };
 			return new Change
 			       {
 				       Stamp = DateTime.Now,
@@ -26,7 +18,7 @@ namespace Crash.Handlers.Plugins.Layers
 				       Owner = owner,
 				       Type = ChangeType,
 				       Action = action,
-				       Payload = JsonSerializer.Serialize(updates)
+				       Payload = JsonSerializer.Serialize(packet)
 			       };
 		}
 	}
