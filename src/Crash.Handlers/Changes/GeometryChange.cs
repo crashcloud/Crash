@@ -37,7 +37,7 @@ namespace Crash.Handlers.Changes
 			{
 				var packet = PayloadSerialization.GetPayloadPacket(change.Payload);
 				GeometryBase geometry = null;
-				if (!string.IsNullOrEmpty(change.Payload))
+				if (!string.IsNullOrEmpty(packet.Data))
 				{
 					geometry = CommonObject.FromJSON(packet.Data) as GeometryBase;
 				}

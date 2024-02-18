@@ -70,11 +70,13 @@ namespace Crash.Handlers.Utils
 						                                          layer.PlotWeight =
 							                                          DictionaryUtils.GetDoubleOrDefault(value))
 				                      },
+				                      /*
 				                      {
 					                      nameof(Layer.RenderMaterial),
-					                      new GetterAndSetter(layer => layer.RenderMaterial.DisplayName,
+					                      new GetterAndSetter(layer => layer.RenderMaterial?.DisplayName,
 					                                          DictionaryUtils.EmptySetValue)
 				                      },
+										*/
 
 				                      // User Specific
 				                      {
