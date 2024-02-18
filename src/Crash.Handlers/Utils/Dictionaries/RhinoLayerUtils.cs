@@ -183,6 +183,9 @@ namespace Crash.Handlers.Utils
 
 			var lineage = expectedPath.Split(new[] { Separater }, StringSplitOptions.RemoveEmptyEntries).ToList();
 
+			if (lineage.Count <= 1)
+				return new Layer() { Name = lineage?.Last()};
+			
 			Layer previousLayer = null;
 			for (var i = 0; i <= lineage.Count; i++)
 			{
