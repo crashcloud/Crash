@@ -18,12 +18,13 @@ namespace Crash.Handlers.Plugins.Layers.Create
 			changes = new[]
 			          {
 				          LayerChange.CreateChange(owner,
-				                                   layerArgs.CrashLayer.ChangeId,
+				                                   layerArgs.CrashLayer,
 				                                   ChangeAction.Add,
 				                                   layerArgs.Updates)
 			          };
 
-			crashArgs.Doc.RealisedChangeTable.RestoreChange(layerArgs.CrashLayer.ChangeId);
+			var layerTable = crashArgs.Doc.Tables.Get<LayerTable>();
+			layerTable.AddLayer(layerArgs.CrashLayer);
 
 			return true;
 		}

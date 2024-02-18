@@ -18,12 +18,13 @@ namespace Crash.Handlers.Plugins.Layers.Create
 			changes = new[]
 			          {
 				          LayerChange.CreateChange(owner,
-				                                   layerArgs.CrashLayer.ChangeId,
+				                                   layerArgs.CrashLayer,
 				                                   ChangeAction.Remove,
 				                                   layerArgs.Updates)
 			          };
 
-			layerArgs.Doc.RealisedChangeTable.DeleteChange(layerArgs.CrashLayer.ChangeId);
+			var layerTable = crashArgs.Doc.Tables.Get<LayerTable>();
+			layerTable.MarkAsDeleted(layerArgs.CrashLayer.Index);
 
 			return true;
 		}

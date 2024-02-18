@@ -44,8 +44,8 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 
 				RhinoLayerUtils.UpdateLayer(layer, layerUpdates, userName);
 
-				args.Doc.RealisedChangeTable.RestoreChange(args.Change.Id);
-				args.Doc.RealisedChangeTable.AddPair(args.Change.Id, layer.Id);
+				var layerTable = args.Doc.Tables.Get<LayerTable>();
+				layerTable.MarkAsDeleted(layerArgs.CrashLayer.Index);
 			}
 			finally
 			{

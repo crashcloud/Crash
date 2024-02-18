@@ -11,7 +11,7 @@ namespace Crash.Common.Tables
 	///     These temporary changes are, if necessary displayed
 	///     in the pipeline to show pending changes
 	/// </summary>
-	public sealed class TemporaryChangeTable : IEnumerable<IChange>
+	public sealed class TemporaryChangeTable : ICrashTable, IEnumerable<IChange>
 	{
 		private readonly ConcurrentDictionary<Guid, IChange> _cache;
 		private readonly CrashDoc _crashDoc;
@@ -102,7 +102,7 @@ namespace Crash.Common.Tables
 		}
 
 		/// <summary>
-		/// Checks that a pairing with this RhinoId exists.
+		///     Checks that a pairing with this RhinoId exists.
 		/// </summary>
 		public bool HasPairing(Guid rhinoId)
 		{
@@ -110,7 +110,7 @@ namespace Crash.Common.Tables
 		}
 
 		/// <summary>
-		/// Attempts to find the Change associated to this RhinoId 
+		///     Attempts to find the Change associated to this RhinoId
 		/// </summary>
 		public bool TryGetChange(Guid rhinoId, out IChange change)
 		{

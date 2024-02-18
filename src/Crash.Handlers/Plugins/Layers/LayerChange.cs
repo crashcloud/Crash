@@ -7,14 +7,14 @@ namespace Crash.Handlers.Plugins.Layers
 		public const string ChangeType = "Crash.LayerChange";
 
 
-		public static Change CreateChange(string owner, Guid changeId, ChangeAction action,
+		public static Change CreateChange(string owner, CrashLayer layer, ChangeAction action,
 			Dictionary<string, string> updates)
 		{
 			var packet = new PayloadPacket { Updates = updates };
 			return new Change
 			       {
 				       Stamp = DateTime.Now,
-				       Id = changeId,
+				       Id = layer.ChangeId,
 				       Owner = owner,
 				       Type = ChangeType,
 				       Action = action,

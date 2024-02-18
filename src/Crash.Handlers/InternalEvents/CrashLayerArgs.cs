@@ -1,4 +1,5 @@
 ﻿using Crash.Common.Document;
+using Crash.Handlers.Plugins.Layers;
 
 namespace Crash.Handlers.InternalEvents
 {
@@ -8,7 +9,7 @@ namespace Crash.Handlers.InternalEvents
 		public readonly ChangeAction Action;
 
 		/// <summary>The modified Crash Object</summary>
-		public readonly CrashObject CrashLayer;
+		public readonly CrashLayer CrashLayer;
 
 		/// <summary>The Crash Doc of these Args</summary>
 		public readonly CrashDoc Doc;
@@ -19,7 +20,7 @@ namespace Crash.Handlers.InternalEvents
 		/// <summary>Default constructor</summary>
 		/// <param name="layer">The modified Crash Object</param>
 		/// <param name="updates">The given updates</param>
-		public CrashLayerArgs(CrashDoc crashDoc, CrashObject layer, ChangeAction action,
+		public CrashLayerArgs(CrashDoc crashDoc, CrashLayer layer, ChangeAction action,
 			Dictionary<string, string> updates)
 		{
 			Doc = crashDoc;
