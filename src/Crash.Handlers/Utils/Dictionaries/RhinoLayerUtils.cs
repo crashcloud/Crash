@@ -199,7 +199,7 @@ namespace Crash.Handlers.Utils
 					var newLayer = new Layer();
 					if (i == lineage.Count)
 					{
-						newLayer = originalLayer;
+						newLayer ??= originalLayer;
 						layerIndex = newLayer.Index;
 					}
 
@@ -217,7 +217,7 @@ namespace Crash.Handlers.Utils
 			}
 
 			TryGetAtExpectedPath(rhinoDoc, layerUpdates, userName, out var expectedLayer);
-			return expectedLayer;
+			return expectedLayer ?? previousLayer;
 		}
 
 		private record struct GetterAndSetter(Func<Layer, string> Get, Action<Layer, string> Set);

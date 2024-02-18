@@ -6,8 +6,6 @@ using Crash.Common.Events;
 using Crash.Events;
 using Crash.Handlers.Utils;
 
-using Rhino.DocObjects;
-
 namespace Crash.Handlers.Plugins.Layers.Recieve
 {
 	public class LayerCreateRecieveAction : IChangeRecieveAction
@@ -35,7 +33,7 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 				var userName = args.Doc.Users.CurrentUser.Name;
 				if (!RhinoLayerUtils.TryGetAtExpectedPath(rhinoDoc, layerUpdates, userName, out var layer))
 				{
-					layer = new Layer();
+					layer = RhinoLayerUtils.MoveLayerToExpectedPath(rhinoDoc, layerUpdates, userName);
 				}
 
 				if (!layer.HasIndex)
