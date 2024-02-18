@@ -1,6 +1,7 @@
 ﻿using Crash.Common.App;
 using Crash.Common.Document;
 using Crash.Geometry;
+using Crash.Handlers.Utils;
 
 using Rhino;
 using Rhino.Commands;
@@ -422,7 +423,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 				}
 
 				var updates =
-					RhinoObjectAttributesUtils.GetAttributeDifferencesAsDictionary(args.OldAttributes,
+					RhinoObjectAndAttributesUtils.GetAttributeDifferencesAsDictionary(args.OldAttributes,
 							 args.NewAttributes);
 
 				if (updates is null || !updates.Any())

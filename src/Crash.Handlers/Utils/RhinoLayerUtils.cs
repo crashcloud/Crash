@@ -3,7 +3,7 @@
 using Rhino;
 using Rhino.DocObjects;
 
-namespace Crash.Handlers
+namespace Crash.Handlers.Utils
 {
 	internal static class RhinoLayerUtils
 	{
@@ -20,63 +20,6 @@ namespace Crash.Handlers
 			return new Layer();
 		}
 
-		private static void EmptySetValue(Layer layer, object value) { }
-
-		private static int GetIntOrDefault(string value)
-		{
-			if (int.TryParse(value, out var result))
-			{
-				return result;
-			}
-
-			return -1;
-		}
-
-		private static double GetDoubleOrDefault(string value)
-		{
-			if (double.TryParse(value, out var result))
-			{
-				return result;
-			}
-
-			return 0.0;
-		}
-
-		private static Color GetColourOrDefault(string value, Color defaultValue)
-		{
-			if (!int.TryParse(value, out var result))
-			{
-				return defaultValue;
-			}
-
-			return Color.FromArgb(result);
-		}
-
-		private static string SerializeColour(Color colour)
-		{
-			return colour.ToArgb().ToString();
-		}
-
-		private static bool GetBoolOrDefault(string value, bool defaultValue = true)
-		{
-			if (bool.TryParse(value, out var result))
-			{
-				return result;
-			}
-
-			return defaultValue;
-		}
-
-		private static string GetStringOrDefault(string value, string defaultValue)
-		{
-			if (string.IsNullOrEmpty(value))
-			{
-				return defaultValue ?? string.Empty;
-			}
-
-			return value;
-		}
-
 		static RhinoLayerUtils()
 		{
 			s_userSpecificKeys = new HashSet<string> { nameof(Layer.IsLocked), nameof(Layer.IsVisible) };
@@ -87,43 +30,54 @@ namespace Crash.Handlers
 						                      (layer, value) =>
 						                      {
 							                      layer.Name =
-								                      GetStringOrDefault(value,
-								                                         layer.FullPath
-								                                              ?.Split(new[] { Separater },
-									                                              StringSplitOptions
-										                                              .RemoveEmptyEntries)
-								                                              ?.Last());
+								                      RhinoObjectsUtils.GetStringOrDefault(value,
+									                      layer.FullPath
+									                           ?.Split(new[] { Separater },
+									                                   StringSplitOptions
+										                                   .RemoveEmptyEntries)
+									                           ?.Last());
 						                      })
 				                      },
-				                      { nameof(Layer.FullPath), new(layer => layer.FullPath, EmptySetValue) },
+				                      {
+					                      nameof(Layer.FullPath),
+					                      new(layer => layer.FullPath, RhinoObjectsUtils.EmptySetValue)
+				                      },
 				                      {
 					                      nameof(Layer.Color),
-					                      new GetterAndSetter(layer => SerializeColour(layer.Color),
+					                      new GetterAndSetter(layer => RhinoObjectsUtils.SerializeColour(layer.Color),
 					                                          (layer, value) =>
-						                                          layer.Color = GetColourOrDefault(value, Color.Black))
+						                                          layer.Color =
+							                                          RhinoObjectsUtils
+								                                          .GetColourOrDefault(value, Color.Black))
 				                      },
 				                      {
 					                      nameof(Layer.LinetypeIndex),
 					                      new GetterAndSetter(layer => layer.LinetypeIndex.ToString(),
 					                                          (layer, value) =>
-						                                          layer.LinetypeIndex = GetIntOrDefault(value))
+						                                          layer.LinetypeIndex =
+							                                          RhinoObjectsUtils.GetIntOrDefault(value))
 				                      },
 				                      {
 					                      nameof(Layer.PlotColor),
-					                      new GetterAndSetter(layer => SerializeColour(layer.PlotColor),
-					                                          (layer, value) =>
-						                                          layer.Color = GetColourOrDefault(value, Color.Black)
-					                                         )
+					                      new
+						                      GetterAndSetter(layer => RhinoObjectsUtils.SerializeColour(layer.PlotColor),
+						                                      (layer, value) =>
+							                                      layer.Color =
+								                                      RhinoObjectsUtils
+									                                      .GetColourOrDefault(value, Color.Black)
+						                                     )
 				                      },
 				                      {
 					                      nameof(Layer.PlotWeight),
 					                      new GetterAndSetter(layer => layer.PlotWeight.ToString(),
 					                                          (layer, value) =>
-						                                          layer.PlotWeight = GetDoubleOrDefault(value))
+						                                          layer.PlotWeight =
+							                                          RhinoObjectsUtils.GetDoubleOrDefault(value))
 				                      },
 				                      {
 					                      nameof(Layer.RenderMaterial),
-					                      new GetterAndSetter(layer => layer.RenderMaterial.DisplayName, EmptySetValue)
+					                      new GetterAndSetter(layer => layer.RenderMaterial.DisplayName,
+					                                          RhinoObjectsUtils.EmptySetValue)
 				                      },
 
 				                      // User Specific
@@ -131,13 +85,15 @@ namespace Crash.Handlers
 					                      nameof(Layer.IsLocked),
 					                      new GetterAndSetter(layer => layer.IsLocked.ToString(),
 					                                          (layer, value) =>
-						                                          layer.IsLocked = GetBoolOrDefault(value))
+						                                          layer.IsLocked =
+							                                          RhinoObjectsUtils.GetBoolOrDefault(value))
 				                      },
 				                      {
 					                      nameof(Layer.IsVisible),
 					                      new GetterAndSetter(layer => layer.IsVisible.ToString(),
 					                                          (layer, value) =>
-						                                          layer.IsVisible = GetBoolOrDefault(value))
+						                                          layer.IsVisible =
+							                                          RhinoObjectsUtils.GetBoolOrDefault(value))
 				                      }
 			                      };
 		}
