@@ -19,7 +19,7 @@ namespace Crash.Handlers.Plugins.Layers.Create
 			          {
 				          LayerChange.CreateChange(owner,
 				                                   layerArgs.CrashLayer.ChangeId,
-				                                   ChangeAction.Update,
+				                                   layerArgs.Action,
 				                                   layerArgs.Updates)
 			          };
 			return true;
