@@ -4,6 +4,7 @@ using Crash.Changes.Extensions;
 using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
+using Crash.Handlers.Utils;
 
 using Rhino.DocObjects;
 

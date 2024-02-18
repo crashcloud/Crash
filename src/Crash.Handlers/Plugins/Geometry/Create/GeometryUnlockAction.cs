@@ -4,7 +4,7 @@ using Crash.Handlers.InternalEvents;
 namespace Crash.Handlers.Plugins.Geometry.Create
 {
 	/// <summary>Handles unselction</summary>
-	internal sealed class GeometryUnSelectAction : IChangeCreateAction
+	internal sealed class GeometryUnlockAction : IChangeCreateAction
 	{
 		public ChangeAction Action => ChangeAction.Unlocked;
 

@@ -422,18 +422,16 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 					return;
 				}
 
-				var updates =
-					RhinoObjectAndAttributesUtils.GetAttributeDifferencesAsDictionary(args.OldAttributes,
-							 args.NewAttributes);
+				var userName = crashDoc.Users.CurrentUser.Name;
 
-				if (updates is null || !updates.Any())
+				var updates =
+					RhinoObjectAndAttributesUtils.GetAttributeDifferences(args.OldAttributes,
+					                                                      args.NewAttributes, userName);
+
+				if (updates is null || updates.Count == 0)
 				{
 					return;
 				}
-
-				// TODO : Make into a const and document
-				// Adding this allows us to quickly check if we need to loop through all the Rhino Object Attributes.
-				updates.Add("HasRhinoObjectAttributes", bool.TrueString);
 
 				var crashObject = new CrashObject(changeId, args.RhinoObject.Id);
 

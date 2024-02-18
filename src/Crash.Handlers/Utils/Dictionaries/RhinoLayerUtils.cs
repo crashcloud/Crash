@@ -13,8 +13,6 @@ namespace Crash.Handlers.Utils
 		private static readonly string Separater = ModelComponent.NamePathSeparator;
 #endif
 
-		private const string KeyDivider = ";";
-
 		private static Layer GetDefaultLayer()
 		{
 			return new Layer();
@@ -22,7 +20,6 @@ namespace Crash.Handlers.Utils
 
 		static RhinoLayerUtils()
 		{
-			s_userSpecificKeys = new HashSet<string> { nameof(Layer.IsLocked), nameof(Layer.IsVisible) };
 			s_gettersAndSetters = new Dictionary<string, GetterAndSetter>
 			                      {
 				                      {
@@ -30,7 +27,7 @@ namespace Crash.Handlers.Utils
 						                      (layer, value) =>
 						                      {
 							                      layer.Name =
-								                      RhinoObjectsUtils.GetStringOrDefault(value,
+								                      DictionaryUtils.GetStringOrDefault(value,
 									                      layer.FullPath
 									                           ?.Split(new[] { Separater },
 									                                   StringSplitOptions
@@ -40,14 +37,14 @@ namespace Crash.Handlers.Utils
 				                      },
 				                      {
 					                      nameof(Layer.FullPath),
-					                      new(layer => layer.FullPath, RhinoObjectsUtils.EmptySetValue)
+					                      new(layer => layer.FullPath, DictionaryUtils.EmptySetValue)
 				                      },
 				                      {
 					                      nameof(Layer.Color),
-					                      new GetterAndSetter(layer => RhinoObjectsUtils.SerializeColour(layer.Color),
+					                      new GetterAndSetter(layer => DictionaryUtils.SerializeColour(layer.Color),
 					                                          (layer, value) =>
 						                                          layer.Color =
-							                                          RhinoObjectsUtils
+							                                          DictionaryUtils
 								                                          .GetColourOrDefault(value, Color.Black))
 				                      },
 				                      {
@@ -55,15 +52,14 @@ namespace Crash.Handlers.Utils
 					                      new GetterAndSetter(layer => layer.LinetypeIndex.ToString(),
 					                                          (layer, value) =>
 						                                          layer.LinetypeIndex =
-							                                          RhinoObjectsUtils.GetIntOrDefault(value))
+							                                          DictionaryUtils.GetIntOrDefault(value))
 				                      },
 				                      {
-					                      nameof(Layer.PlotColor),
-					                      new
-						                      GetterAndSetter(layer => RhinoObjectsUtils.SerializeColour(layer.PlotColor),
+					                      nameof(Layer.PlotColor), new
+						                      GetterAndSetter(layer => DictionaryUtils.SerializeColour(layer.PlotColor),
 						                                      (layer, value) =>
 							                                      layer.Color =
-								                                      RhinoObjectsUtils
+								                                      DictionaryUtils
 									                                      .GetColourOrDefault(value, Color.Black)
 						                                     )
 				                      },
@@ -72,12 +68,12 @@ namespace Crash.Handlers.Utils
 					                      new GetterAndSetter(layer => layer.PlotWeight.ToString(),
 					                                          (layer, value) =>
 						                                          layer.PlotWeight =
-							                                          RhinoObjectsUtils.GetDoubleOrDefault(value))
+							                                          DictionaryUtils.GetDoubleOrDefault(value))
 				                      },
 				                      {
 					                      nameof(Layer.RenderMaterial),
 					                      new GetterAndSetter(layer => layer.RenderMaterial.DisplayName,
-					                                          RhinoObjectsUtils.EmptySetValue)
+					                                          DictionaryUtils.EmptySetValue)
 				                      },
 
 				                      // User Specific
@@ -86,20 +82,19 @@ namespace Crash.Handlers.Utils
 					                      new GetterAndSetter(layer => layer.IsLocked.ToString(),
 					                                          (layer, value) =>
 						                                          layer.IsLocked =
-							                                          RhinoObjectsUtils.GetBoolOrDefault(value))
+							                                          DictionaryUtils.GetBoolOrDefault(value))
 				                      },
 				                      {
 					                      nameof(Layer.IsVisible),
 					                      new GetterAndSetter(layer => layer.IsVisible.ToString(),
 					                                          (layer, value) =>
 						                                          layer.IsVisible =
-							                                          RhinoObjectsUtils.GetBoolOrDefault(value))
+							                                          DictionaryUtils.GetBoolOrDefault(value))
 				                      }
 			                      };
 		}
 
 		private static Dictionary<string, GetterAndSetter> s_gettersAndSetters { get; }
-		private static HashSet<string> s_userSpecificKeys { get; }
 
 		internal static Dictionary<string, string> GetLayerDefaults(Layer layer, string userName)
 		{
@@ -112,17 +107,18 @@ namespace Crash.Handlers.Utils
 
 			foreach (var getter in s_gettersAndSetters)
 			{
-				if (!IsDifferent(getter.Value.Get, oldState, newState, out var oldValue, out var newValue))
+				if (!DictionaryUtils.IsDifferent(getter.Value.Get, oldState, newState, out var oldValue,
+				                                 out var newValue))
 				{
 					continue;
 				}
 
-				dict.Add(GetOldKey(getter.Key, userName), oldValue);
-				dict.Add(GetNewKey(getter.Key, userName), newValue);
+				dict.Add(DictionaryUtils.GetOldKey(getter.Key, userName), oldValue);
+				dict.Add(DictionaryUtils.GetNewKey(getter.Key, userName), newValue);
 			}
 
-			var oldFullPathKey = GetOldKey(nameof(Layer.FullPath), userName);
-			var newFullPathKey = GetNewKey(nameof(Layer.FullPath), userName);
+			var oldFullPathKey = DictionaryUtils.GetOldKey(nameof(Layer.FullPath), userName);
+			var newFullPathKey = DictionaryUtils.GetNewKey(nameof(Layer.FullPath), userName);
 			if (!dict.ContainsKey(oldFullPathKey))
 			{
 				dict.Add(oldFullPathKey, oldState.FullPath);
@@ -136,46 +132,18 @@ namespace Crash.Handlers.Utils
 			return dict;
 		}
 
-		internal static string GetNewKey(string key, string userName)
-		{
-			return $"New{KeyDivider}{GetUserSpecificKey(key, userName)}{key}";
-		}
-
-		internal static string GetOldKey(string key, string userName)
-		{
-			return $"Old{KeyDivider}{GetUserSpecificKey(key, userName)}{key}";
-		}
-
-		internal static string GetUserSpecificKey(string key, string userName)
-		{
-			if (s_userSpecificKeys.Contains(key))
-			{
-				return $"{userName}{KeyDivider}";
-			}
-
-			return string.Empty;
-		}
-
-		private static string GetNeutralKey(string key, string userName)
-		{
-			var neutralKey = key.Replace("Old", "")
-			                    .Replace("New", "")
-			                    .Replace(KeyDivider, "")
-			                    .Replace(userName, "");
-
-			return neutralKey;
-		}
-
 		internal static bool TryGetAtExpectedPath(RhinoDoc rhinoDoc, Dictionary<string, string> layerUpdates,
 			string userName, out Layer layer)
 		{
-			return TryGetLayer(GetNewKey(nameof(Layer.FullPath), userName), rhinoDoc, layerUpdates, out layer);
+			return TryGetLayer(DictionaryUtils.GetNewKey(nameof(Layer.FullPath), userName), rhinoDoc, layerUpdates,
+			                   out layer);
 		}
 
 		internal static bool TryGetAtOldPath(RhinoDoc rhinoDoc, Dictionary<string, string> layerUpdates,
 			string userName, out Layer layer)
 		{
-			return TryGetLayer(GetOldKey(nameof(Layer.FullPath), userName), rhinoDoc, layerUpdates, out layer);
+			return TryGetLayer(DictionaryUtils.GetOldKey(nameof(Layer.FullPath), userName), rhinoDoc, layerUpdates,
+			                   out layer);
 		}
 
 		private static bool TryGetLayer(string key, RhinoDoc rhinoDoc, Dictionary<string, string> layerUpdates,
@@ -196,7 +164,7 @@ namespace Crash.Handlers.Utils
 		{
 			foreach (var kvp in values)
 			{
-				if (!s_gettersAndSetters.TryGetValue(GetNeutralKey(kvp.Key, userName), out var setter))
+				if (!s_gettersAndSetters.TryGetValue(DictionaryUtils.GetNeutralKey(kvp.Key, userName), out var setter))
 				{
 					continue;
 				}
@@ -205,25 +173,11 @@ namespace Crash.Handlers.Utils
 			}
 		}
 
-		private static bool IsDifferent(Func<Layer, string> getter, Layer oldState, Layer newState, out string oldValue,
-			out string newValue)
-		{
-			oldValue = getter(oldState);
-			newValue = getter(newState);
-
-			if (!string.IsNullOrEmpty(oldValue))
-			{
-				return !oldValue.Equals(newValue);
-			}
-
-			return !string.IsNullOrEmpty(newValue);
-		}
-
 		public static Layer MoveLayerToExpectedPath(RhinoDoc rhinoDoc, Dictionary<string, string> layerUpdates,
 			string userName)
 		{
 			TryGetAtOldPath(rhinoDoc, layerUpdates, userName, out var originalLayer);
-			var expectedPath = layerUpdates[GetNewKey(nameof(Layer.FullPath), userName)];
+			var expectedPath = layerUpdates[DictionaryUtils.GetNewKey(nameof(Layer.FullPath), userName)];
 
 			var lineage = expectedPath.Split(new[] { Separater }, StringSplitOptions.RemoveEmptyEntries).ToList();
 
