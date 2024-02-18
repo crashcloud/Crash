@@ -32,6 +32,16 @@ namespace Crash.Handlers
 			return -1;
 		}
 
+		private static double GetDoubleOrDefault(string value)
+		{
+			if (double.TryParse(value, out var result))
+			{
+				return result;
+			}
+
+			return 0.0;
+		}
+
 		private static Color GetColourOrDefault(string value, Color defaultValue)
 		{
 			if (!int.TryParse(value, out var result))
@@ -98,6 +108,25 @@ namespace Crash.Handlers
 					                                          (layer, value) =>
 						                                          layer.LinetypeIndex = GetIntOrDefault(value))
 				                      },
+				                      {
+					                      nameof(Layer.PlotColor),
+					                      new GetterAndSetter(layer => SerializeColour(layer.PlotColor),
+					                                          (layer, value) =>
+						                                          layer.Color = GetColourOrDefault(value, Color.Black)
+					                                         )
+				                      },
+				                      {
+					                      nameof(Layer.PlotWeight),
+					                      new GetterAndSetter(layer => layer.PlotWeight.ToString(),
+					                                          (layer, value) =>
+						                                          layer.PlotWeight = GetDoubleOrDefault(value))
+				                      },
+				                      {
+					                      nameof(Layer.RenderMaterial),
+					                      new GetterAndSetter(layer => layer.RenderMaterial.DisplayName, EmptySetValue)
+				                      },
+
+				                      // User Specific
 				                      {
 					                      nameof(Layer.IsLocked),
 					                      new GetterAndSetter(layer => layer.IsLocked.ToString(),
