@@ -46,7 +46,7 @@ namespace Crash.Handlers.Plugins.Layers
 		public bool IsExpanded { get; internal set; }
 		public bool Current { get; internal set; }
 
-		public int LineTypeIndex { get; private set; }
+		public int LinetypeIndex { get; private set; }
 
 		public double PlotWeight { get; private set; }
 
@@ -82,7 +82,7 @@ namespace Crash.Handlers.Plugins.Layers
 				       Color = colour,
 				       PlotColor = plotColour,
 				       PlotWeight = plotWeight,
-				       LineTypeIndex = linetypeIndex,
+				       LinetypeIndex = linetypeIndex,
 
 				       // User Specific
 				       IsVisible = isVisible,
@@ -104,10 +104,10 @@ namespace Crash.Handlers.Plugins.Layers
 			rhinoLayer.Id = Id;
 
 			// Styles
-			Color = Color;
-			PlotColor = PlotColor;
-			PlotWeight = PlotWeight;
-			LineTypeIndex = LineTypeIndex;
+			rhinoLayer.Color = Color;
+			rhinoLayer.PlotColor = PlotColor;
+			rhinoLayer.PlotWeight = PlotWeight;
+			rhinoLayer.LinetypeIndex = LinetypeIndex;
 
 			// User Specific
 			rhinoLayer.IsVisible = IsVisible;
@@ -122,6 +122,14 @@ namespace Crash.Handlers.Plugins.Layers
 			rhinoLayer.Name = GetLayerNameFromPath(crashLayer.FullPath);
 			rhinoLayer.Index = crashLayer.Index;
 			rhinoLayer.Id = crashLayer.Id;
+
+			// Styles
+			rhinoLayer.Color = crashLayer.Color;
+			rhinoLayer.PlotColor = crashLayer.PlotColor;
+			rhinoLayer.PlotWeight = crashLayer.PlotWeight;
+			rhinoLayer.LinetypeIndex = crashLayer.LinetypeIndex;
+			
+			// User Specific
 			rhinoLayer.IsVisible = crashLayer.IsVisible;
 			rhinoLayer.IsLocked = crashLayer.IsLocked;
 			rhinoLayer.IsExpanded = crashLayer.IsExpanded;
