@@ -1,7 +1,7 @@
 using Rhino;
 using Rhino.DocObjects;
 
-namespace Crash.Handlers
+namespace Crash.Handlers.Utils
 {
 	internal static class RhinoDocUtils
 	{

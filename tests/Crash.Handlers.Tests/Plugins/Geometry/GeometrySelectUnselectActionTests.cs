@@ -48,7 +48,7 @@ namespace Crash.Handlers.Tests.Plugins
 		public void GeometrySelectAction_CanConvert(CrashSelectionEventArgs selectEventArgs)
 		{
 			var selectArgs = new CreateRecieveArgs(ChangeAction.Locked, selectEventArgs, _cdoc);
-			var createAction = new GeometrySelectAction();
+			var createAction = new GeometryLockAction();
 			Assert.That(createAction.CanConvert(null, selectArgs), Is.True);
 		}
 
@@ -56,7 +56,7 @@ namespace Crash.Handlers.Tests.Plugins
 		public void GeometrySelectAction_TryConvert(CrashSelectionEventArgs selectEventArgs)
 		{
 			var selectArgs = new CreateRecieveArgs(ChangeAction.Locked, selectEventArgs, _cdoc);
-			var createAction = new GeometrySelectAction();
+			var createAction = new GeometryLockAction();
 			Assert.That(createAction.TryConvert(null, selectArgs, out var changes), Is.True);
 			Assert.That(changes, Is.Not.Empty);
 			foreach (var change in changes)
@@ -69,7 +69,7 @@ namespace Crash.Handlers.Tests.Plugins
 		public void GeometryUnSelectAction_CanConvert(CrashSelectionEventArgs selectEventArgs)
 		{
 			var selectArgs = new CreateRecieveArgs(ChangeAction.Unlocked, selectEventArgs, _cdoc);
-			var createAction = new GeometryUnSelectAction();
+			var createAction = new GeometryUnlockAction();
 			Assert.That(createAction.CanConvert(null, selectArgs), Is.True);
 		}
 
@@ -77,7 +77,7 @@ namespace Crash.Handlers.Tests.Plugins
 		public void GeometryUnSelectAction_TryConvert(CrashSelectionEventArgs selectEventArgs)
 		{
 			var selectArgs = new CreateRecieveArgs(ChangeAction.Unlocked, selectEventArgs, _cdoc);
-			var createAction = new GeometryUnSelectAction();
+			var createAction = new GeometryUnlockAction();
 			Assert.That(createAction.TryConvert(null, selectArgs, out var changes), Is.True);
 			Assert.That(changes, Is.Not.Empty);
 			foreach (var change in changes)

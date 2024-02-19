@@ -184,6 +184,11 @@ namespace Crash.Handlers.Plugins
 			await NotifyServerAsync(ChangeAction.Update, sender, args);
 		}
 
+		private async Task NotifyServerOfCrashLayerModified(object? sender, CrashLayerArgs args)
+		{
+			await NotifyServerAsync(args.Action, sender, args);
+		}
+
 		private async Task NotifyServerOfCrashViewModified(object? sender, CrashViewArgs crashArgs)
 		{
 			await NotifyServerAsync(ChangeAction.Add, sender, crashArgs);
@@ -199,6 +204,7 @@ namespace Crash.Handlers.Plugins
 			_eventWrapper.SelectCrashObjects += NotifyServerOfSelectCrashObjects;
 			_eventWrapper.DeSelectCrashObjects += NotifyServerOfDeSelectCrashObjects;
 			_eventWrapper.UpdateCrashObject += NotifyServerOfUpdateCrashObject;
+			_eventWrapper.LayerModified += NotifyServerOfCrashLayerModified;
 			_eventWrapper.CrashViewModified += NotifyServerOfCrashViewModified;
 		}
 
