@@ -33,6 +33,8 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 				crashLayer = new CrashLayer(rhinoLayer, args.Change.Id);
 				var layerTable = args.Doc.Tables.Get<LayerTable>();
 				layerTable.UpdateLayer(crashLayer);
+				CrashLayer.UpdateRhinoLayer(rhinoDoc, crashLayer, rhinoLayer);
+				CrashLayer.UpdateRegisteredLayer(rhinoDoc, crashLayer);
 			}
 			finally
 			{

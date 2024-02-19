@@ -3,7 +3,6 @@
 using Crash.Handlers.Utils;
 
 using Rhino;
-using Rhino.DocObjects;
 
 using RhinoLayer = Rhino.DocObjects.Layer;
 
@@ -78,6 +77,18 @@ namespace Crash.Handlers.Plugins.Layers
 			rhinoLayer.IsVisible = IsVisible;
 			rhinoLayer.IsLocked = IsLocked;
 			rhinoLayer.IsExpanded = IsExpanded;
+
+			return rhinoLayer;
+		}
+
+		public static RhinoLayer UpdateRhinoLayer(RhinoDoc rhinoDoc, CrashLayer crashLayer, RhinoLayer rhinoLayer)
+		{
+			rhinoLayer.Name = GetLayerNameFromPath(crashLayer.FullPath);
+			rhinoLayer.Index = crashLayer.Index;
+			rhinoLayer.Id = crashLayer.Id;
+			rhinoLayer.IsVisible = crashLayer.IsVisible;
+			rhinoLayer.IsLocked = crashLayer.IsLocked;
+			rhinoLayer.IsExpanded = crashLayer.IsExpanded;
 
 			return rhinoLayer;
 		}
