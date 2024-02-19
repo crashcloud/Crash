@@ -1,4 +1,5 @@
-﻿using Crash.Handlers.Plugins.Layers.Create;
+﻿using Crash.Common.Events;
+using Crash.Handlers.Plugins.Layers.Create;
 using Crash.Handlers.Plugins.Layers.Recieve;
 
 using Rhino.Display;
@@ -20,6 +21,8 @@ namespace Crash.Handlers.Plugins.Layers
 				                 new LayerModifyRecieveAction(),
 				                 new LayerDeleteRecieveAction()
 			                 };
+
+			CrashDocRegistry.DocumentRegistered += RegisterLayersTable;
 		}
 
 		public string ChangeName => LayerChange.ChangeType;
@@ -33,6 +36,11 @@ namespace Crash.Handlers.Plugins.Layers
 		public BoundingBox GetBoundingBox(IChange change)
 		{
 			return BoundingBox.Empty;
+		}
+
+		private void RegisterLayersTable(object sender, CrashEventArgs e)
+		{
+			e.CrashDoc.Tables.AddTable(new LayerTable(e.CrashDoc));
 		}
 	}
 }

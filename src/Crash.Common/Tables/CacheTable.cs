@@ -14,9 +14,13 @@ namespace Crash.Common.Tables
 
 		private Dictionary<string, ICrashTable> CachedTables { get; }
 
-		public void AddTable(ICrashTable cachedTables)
+		public void AddTable(ICrashTable table)
 		{
-			CachedTables.Add(cachedTables.GetType().Name, cachedTables);
+			var key = table.GetType().Name;
+			if (!CachedTables.ContainsKey(key))
+			{
+				CachedTables.Add(key, table);
+			}
 		}
 
 		public TTable? Get<TTable>() where TTable : class

@@ -30,6 +30,7 @@ namespace Crash
 
 		#region Crash Plugins
 
+		// TODO : https://learn.microsoft.com/en-us/dotnet/core/tutorials/creating-app-with-plugin-support
 		private static void LoadCrashPlugins()
 		{
 			IEnumerable<Guid> pluginIds = GetInstalledPlugIns().Keys;
