@@ -80,6 +80,10 @@
 		</None>
 	</ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="Crash.Tests"/>
+	</ItemGroup>
+
 	<Target Name="Replace" AfterTargets="CoreCompile">
 		<PropertyGroup>
 			<InputFile>Manifest.yml</InputFile>
