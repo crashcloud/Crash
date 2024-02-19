@@ -25,8 +25,8 @@ namespace Crash.Common.Tables
 
 		public TTable? Get<TTable>() where TTable : class
 		{
-			var name = CachedTables.GetType().Name;
-			CachedTables.TryGetValue(name, out var table);
+			var key = typeof(TTable).Name;
+			CachedTables.TryGetValue(key, out var table);
 			return table as TTable;
 		}
 	}
