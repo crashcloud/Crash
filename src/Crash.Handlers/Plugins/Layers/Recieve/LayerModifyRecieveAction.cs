@@ -1,12 +1,8 @@
-﻿using System.Text.Json;
-
-using Crash.Changes.Extensions;
+﻿using Crash.Changes.Extensions;
 using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
 using Crash.Handlers.Utils;
-
-using Rhino.DocObjects;
 
 namespace Crash.Handlers.Plugins.Layers.Recieve
 {
@@ -24,46 +20,20 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 
 		private void ModifyLayerAction(IdleArgs args)
 		{
-			var packet = JsonSerializer.Deserialize<PayloadPacket>(args.Change.Payload);
-			var layerUpdates = packet.Updates;
-
-			if (layerUpdates.Count == 0)
-			{
-				;
-				return;
-			}
-
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
-
-			var userName = args.Doc.Users.CurrentUser.Name;
 
 			args.Doc.DocumentIsBusy = true;
 			try
 			{
-				Layer layer = null;
-				if (!RhinoLayerUtils.TryGetAtExpectedPath(rhinoDoc, layerUpdates, userName, out layer))
-				{
-					// Full Path is now different!
-					if (!RhinoLayerUtils.TryGetAtOldPath(rhinoDoc, layerUpdates, userName, out layer))
-					{
-						return;
-					}
+				var crashLayer = CrashLayer.CreateFrom(args.Change);
 
-					// Move Layer to New Full Path!
-					layer = RhinoLayerUtils.MoveLayerToExpectedPath(rhinoDoc, layerUpdates, userName);
-				}
+				var rhinoLayer = crashLayer.GetOrCreateRhinoLayer(rhinoDoc);
+				RhinoLayerUtils.MoveLayerToCorrectLocation(rhinoLayer, crashLayer);
 
-				if (!layer.HasIndex)
-				{
-					var newIndex = rhinoDoc.Layers.Add(layer);
-					layer = rhinoDoc.Layers.FindIndex(newIndex);
-				}
-
-				// Handle New Layer Full Path
-				RhinoLayerUtils.UpdateLayer(layer, layerUpdates, userName);
-
-				args.Doc.RealisedChangeTable.RestoreChange(args.Change.Id);
-				args.Doc.RealisedChangeTable.AddPair(args.Change.Id, layer.Id);
+				// TODO : Double check this
+				crashLayer = new CrashLayer(rhinoLayer, args.Change.Id);
+				var layerTable = args.Doc.Tables.Get<LayerTable>();
+				layerTable.UpdateLayer(crashLayer);
 			}
 			finally
 			{

@@ -1,5 +1,7 @@
 ﻿using System.Drawing;
 
+using Crash.Handlers.Plugins.Layers;
+
 using Rhino;
 using Rhino.DocObjects;
 
@@ -8,9 +10,9 @@ namespace Crash.Handlers.Utils
 	internal static class RhinoLayerUtils
 	{
 #if NETFRAMEWORK
-		private static readonly string Separater = Layer.PathSeparator;
+		internal static readonly string Separater = Layer.PathSeparator;
 #else
-		private static readonly string Separater = ModelComponent.NamePathSeparator;
+		internal static readonly string Separater = ModelComponent.NamePathSeparator;
 #endif
 
 		private static Layer GetDefaultLayer()
@@ -103,6 +105,24 @@ namespace Crash.Handlers.Utils
 			return GetLayerDifference(GetDefaultLayer(), layer, userName);
 		}
 
+		internal static bool TryGetValue<TValue>(this Dictionary<string, string> updates, string key, out TValue val)
+		{
+			var realKey = DictionaryUtils.GetNewKey(key, string.Empty);
+			if (!s_gettersAndSetters.TryGetValue(realKey, out var getterAndSetter))
+			{
+				val = default;
+				return false;
+			}
+
+			updates.TryGetValue(realKey, out var value)
+		}
+
+		internal static string GetNewFullPath(Dictionary<string, string> updates, string userName)
+		{
+			updates.TryGetValue(DictionaryUtils.GetNewKey(nameof(Layer.FullPath), userName), out var newFullPath);
+			return newFullPath;
+		}
+
 		internal static Dictionary<string, string> GetLayerDifference(Layer oldState, Layer newState, string userName)
 		{
 			var dict = new Dictionary<string, string>();
@@ -184,8 +204,10 @@ namespace Crash.Handlers.Utils
 			var lineage = expectedPath.Split(new[] { Separater }, StringSplitOptions.RemoveEmptyEntries).ToList();
 
 			if (lineage.Count <= 1)
-				return new Layer() { Name = lineage?.Last()};
-			
+			{
+				return new Layer { Name = lineage?.Last() };
+			}
+
 			Layer previousLayer = null;
 			for (var i = 0; i <= lineage.Count; i++)
 			{
@@ -224,5 +246,10 @@ namespace Crash.Handlers.Utils
 		}
 
 		private record struct GetterAndSetter(Func<Layer, string> Get, Action<Layer, string> Set);
+
+		public static void MoveLayerToCorrectLocation(Layer rhinoLayer, CrashLayer crashLayer)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

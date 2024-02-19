@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-using Crash.Changes.Extensions;
+﻿using Crash.Changes.Extensions;
 using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
@@ -22,30 +20,20 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 
 		private void CreateLayerAction(IdleArgs args)
 		{
-			var packet = JsonSerializer.Deserialize<PayloadPacket>(args.Change.Payload);
-			var layerUpdates = packet.Updates;
-
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
 
 			args.Doc.DocumentIsBusy = true;
 			try
 			{
-				var userName = args.Doc.Users.CurrentUser.Name;
-				if (!RhinoLayerUtils.TryGetAtExpectedPath(rhinoDoc, layerUpdates, userName, out var layer))
-				{
-					layer = RhinoLayerUtils.MoveLayerToExpectedPath(rhinoDoc, layerUpdates, userName);
-				}
+				var crashLayer = CrashLayer.CreateFrom(args.Change);
 
-				if (!layer.HasIndex)
-				{
-					var newIndex = rhinoDoc.Layers.Add(layer);
-					layer = rhinoDoc.Layers.FindIndex(newIndex);
-				}
-
-				RhinoLayerUtils.UpdateLayer(layer, layerUpdates, userName);
+				var rhinoLayer = crashLayer.GetOrCreateRhinoLayer(rhinoDoc);
+				RhinoLayerUtils.MoveLayerToCorrectLocation(rhinoLayer, crashLayer);
 
 				var layerTable = args.Doc.Tables.Get<LayerTable>();
-				layerTable.MarkAsDeleted(layerArgs.CrashLayer.Index);
+				layerTable.UpdateLayer(crashLayer);
+
+				rhinoDoc.Layers.Add(rhinoLayer);
 			}
 			finally
 			{

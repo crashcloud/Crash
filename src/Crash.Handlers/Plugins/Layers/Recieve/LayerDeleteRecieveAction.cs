@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-using Crash.Changes.Extensions;
+﻿using Crash.Changes.Extensions;
 using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Events;
@@ -21,23 +19,17 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 
 		private void DeleteLayerAction(IdleArgs args)
 		{
-			var packet = JsonSerializer.Deserialize<PayloadPacket>(args.Change.Payload);
-			var layerUpdates = packet.Updates;
+			var crashLayer = CrashLayer.CreateFrom(args.Change);
 
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
-
-			if (!args.Doc.RealisedChangeTable.TryGetRhinoId(args.Change.Id, out var RhinoId))
-			{
-				return;
-			}
 
 			args.Doc.DocumentIsBusy = true;
 			try
 			{
-				var layer = rhinoDoc.Layers.FindId(RhinoId);
-				rhinoDoc.Layers.Delete(layer, false);
+				var layerTable = args.Doc.Tables.Get<LayerTable>();
+				layerTable.MarkAsDeleted(crashLayer.Index);
 
-				args.Doc.RealisedChangeTable.DeleteChange(args.Change.Id);
+				rhinoDoc.Layers.Delete(crashLayer.Index, false);
 			}
 			finally
 			{

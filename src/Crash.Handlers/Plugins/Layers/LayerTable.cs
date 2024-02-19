@@ -93,5 +93,10 @@ namespace Crash.Handlers.Plugins.Layers
 			Layers.Remove(layer.Index);
 			AddLayer(layer);
 		}
+
+		public bool TryGet(int index, out CrashLayer crashLayer)
+		{
+			return Layers.TryGetValue(index, out crashLayer);
+		}
 	}
 }

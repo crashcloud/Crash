@@ -4,6 +4,92 @@ using Rhino.DocObjects;
 
 namespace Crash.Handlers.Utils
 {
+	internal static class Extents
+	{
+		private static bool TryGetUserSpecificLayerValue(this Dictionary<string, string> dict, string key,
+			string userName, out string returnValue)
+		{
+			var fullKey = DictionaryUtils.GetNewKey(key, userName);
+			dict.TryGetValue(fullKey, out var foundValue);
+
+			if (string.IsNullOrEmpty(foundValue))
+			{
+				returnValue = null;
+				return false;
+			}
+
+			returnValue = foundValue;
+			return true;
+		}
+
+		internal static bool TryGetLayerValue(this Dictionary<string, string> dict, string key,
+			string userName, double defaultValue, out double value)
+		{
+			if (!dict.TryGetUserSpecificLayerValue(key, userName, out var foundValue))
+			{
+				value = defaultValue;
+				return false;
+			}
+
+			if (double.TryParse(foundValue, out value))
+			{
+				return true;
+			}
+
+			value = defaultValue;
+			return false;
+		}
+
+		internal static bool TryGetLayerValue(this Dictionary<string, string> dict, string key,
+			string userName, bool defaultValue, out bool value)
+		{
+			if (!dict.TryGetUserSpecificLayerValue(key, userName, out var foundValue))
+			{
+				value = defaultValue;
+				return false;
+			}
+
+			if (bool.TryParse(foundValue, out value))
+			{
+				return true;
+			}
+
+			value = defaultValue;
+			return false;
+		}
+
+		internal static bool TryGetLayerValue(this Dictionary<string, string> dict, string key,
+			string userName, int defaultValue, out int value)
+		{
+			if (!dict.TryGetUserSpecificLayerValue(key, userName, out var foundValue))
+			{
+				value = defaultValue;
+				return false;
+			}
+
+			if (int.TryParse(foundValue, out value))
+			{
+				return true;
+			}
+
+			value = defaultValue;
+			return false;
+		}
+
+		internal static bool TryGetLayerValue(this Dictionary<string, string> dict, string key,
+			string userName, string defaultValue, out string value)
+		{
+			if (dict.TryGetUserSpecificLayerValue(key, userName, out value))
+			{
+				return true;
+			}
+
+			value = defaultValue;
+			return false;
+		}
+	}
+
+
 	internal class DictionaryUtils
 	{
 		private const string KeyDivider = ";";
@@ -93,6 +179,11 @@ namespace Crash.Handlers.Utils
 			return $"Old{KeyDivider}{GetUserSpecificKey(key, userName)}{key}";
 		}
 
+		private static string GetKey(string key, string userName)
+		{
+			return GetNewKey(key, userName) ?? GetOldKey(key, userName);
+		}
+
 		internal static string GetUserSpecificKey(string key, string userName)
 		{
 			if (s_userSpecificKeys.Contains(key))
@@ -100,7 +191,7 @@ namespace Crash.Handlers.Utils
 				return $"{userName}{KeyDivider}";
 			}
 
-			return string.Empty;
+			return null;
 		}
 
 		internal static string GetNeutralKey(string key, string userName)

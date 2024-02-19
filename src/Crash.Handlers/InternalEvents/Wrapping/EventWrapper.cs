@@ -1,6 +1,7 @@
 ﻿using Crash.Common.App;
 using Crash.Common.Document;
 using Crash.Geometry;
+using Crash.Handlers.Plugins.Layers;
 using Crash.Handlers.Utils;
 
 using Rhino;
@@ -8,6 +9,8 @@ using Rhino.Commands;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.DocObjects.Tables;
+
+using LayerTable = Crash.Handlers.Plugins.Layers.LayerTable;
 
 namespace Crash.Handlers.InternalEvents.Wrapping
 {
@@ -466,10 +469,10 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 				             _                             => ChangeAction.None
 			             };
 
-			if (!ContextDocument.RealisedChangeTable.TryGetChangeId(args.NewState.Id, out var changeId))
+			var layerTable = ContextDocument.Tables.Get<LayerTable>();
+			if (!layerTable.TryGet(args.LayerIndex, out var crashLayer))
 			{
-				changeId = Guid.NewGuid();
-				ContextDocument.RealisedChangeTable.AddPair(changeId, args.NewState.Id);
+				crashLayer = new CrashLayer(args.NewState, Guid.NewGuid());
 			}
 
 			var userName = crashDoc.Users.CurrentUser.Name;
@@ -482,8 +485,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 				            _ => new Dictionary<string, string>()
 			            };
 
-			var layer = new CrashObject(changeId, args.NewState.Id);
-			var crashArgs = new CrashLayerArgs(ContextDocument, layer, action, diffs);
+			var crashArgs = new CrashLayerArgs(ContextDocument, crashLayer, action, diffs);
 
 			LayerModified?.Invoke(this, crashArgs);
 		}

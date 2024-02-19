@@ -19,11 +19,11 @@ namespace Crash.Common.Tables
 			CachedTables.Add(cachedTables.GetType().Name, cachedTables);
 		}
 
-		public TTable Get<TTable>() where TTable : class
+		public TTable? Get<TTable>() where TTable : class
 		{
 			var name = CachedTables.GetType().Name;
 			CachedTables.TryGetValue(name, out var table);
-			return table as TTable
+			return table as TTable;
 		}
 	}
 }
