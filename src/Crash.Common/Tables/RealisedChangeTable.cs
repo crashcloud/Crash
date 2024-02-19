@@ -16,7 +16,7 @@ namespace Crash.Common.Tables
 	///     When a realised ...
 	///     TODO : How do we solve this for Layers etc?
 	/// </summary>
-	public sealed class RealisedChangeTable
+	public sealed class RealisedChangeTable : ICacheTable
 	{
 		/// <summary>The current Crash Document</summary>
 		private readonly CrashDoc _crashDoc;
