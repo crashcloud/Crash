@@ -28,7 +28,8 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 				var crashLayer = CrashLayer.CreateFrom(args.Change);
 
 				var rhinoLayer = crashLayer.GetOrCreateRhinoLayer(rhinoDoc);
-				RhinoLayerUtils.MoveLayerToCorrectLocation(rhinoLayer, crashLayer);
+				rhinoLayer = RhinoLayerUtils.MoveLayerToCorrectLocation(rhinoDoc, rhinoLayer, crashLayer);
+				CrashLayer.UpdateRegisteredLayer(rhinoDoc, crashLayer);
 
 				var layerTable = args.Doc.Tables.Get<LayerTable>();
 				layerTable.UpdateLayer(crashLayer);

@@ -26,7 +26,7 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			if (updates?.Count > 0)
 			{
 				var userName = crashDoc.Users.CurrentUser.Name;
-				RhinoObjectAndAttributesUtils.UpdateAttributes(rhinoObject.Attributes, updates, userName);
+				ObjectAttributeComparisonUtils.UpdateAttributes(rhinoObject.Attributes, updates, userName);
 				rhinoObject.CommitChanges();
 			}
 		}

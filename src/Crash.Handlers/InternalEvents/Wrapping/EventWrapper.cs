@@ -137,13 +137,13 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 #pragma warning disable VSTHRD100 // Cannot avoid async void methods here
 		private async void CaptureIdle(object? _, EventArgs __)
 		{
-			var crashDoc = CrashDocRegistry.GetRelatedDocument(RhinoDoc.ActiveDoc);
-			if (crashDoc != ContextDocument)
+			if (EventQueue.Count <= 0 && SelectionQueue.Count <= 0)
 			{
 				return;
 			}
 
-			if (EventQueue.Count <= 0 && SelectionQueue.Count <= 0)
+			var crashDoc = CrashDocRegistry.GetRelatedDocument(RhinoDoc.ActiveDoc);
+			if (crashDoc is null || !crashDoc.Equals(ContextDocument))
 			{
 				return;
 			}
@@ -428,8 +428,8 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 				var userName = crashDoc.Users.CurrentUser.Name;
 
 				var updates =
-					RhinoObjectAndAttributesUtils.GetAttributeDifferences(args.OldAttributes,
-					                                                      args.NewAttributes, userName);
+					ObjectAttributeComparisonUtils.GetAttributeDifferences(args.OldAttributes,
+					                                                       args.NewAttributes, userName);
 
 				if (updates is null || updates.Count == 0)
 				{
@@ -479,11 +479,12 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 
 			var diffs = args.EventType switch
 			            {
-				            LayerTableEventType.Added => RhinoLayerUtils.GetLayerDefaults(args.NewState, userName),
-				            LayerTableEventType.Modified => RhinoLayerUtils.GetLayerDifference(args.OldState,
+				            LayerTableEventType.Added => LayerComparisonUtils.GetDefault(args.NewState, userName),
+				            LayerTableEventType.Modified => LayerComparisonUtils.GetDifferences(args.OldState,
 						             args.NewState, userName),
 				            _ => new Dictionary<string, string>()
 			            };
+			LayerComparisonUtils.InsertLayerDefaults(args.OldState, args.NewState, diffs, userName);
 
 			var crashArgs = new CrashLayerArgs(ContextDocument, crashLayer, action, diffs);
 

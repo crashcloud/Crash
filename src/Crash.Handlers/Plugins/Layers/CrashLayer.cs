@@ -3,6 +3,7 @@ using System.Text.Json;
 using Crash.Handlers.Utils;
 
 using Rhino;
+using Rhino.DocObjects;
 
 using RhinoLayer = Rhino.DocObjects.Layer;
 
@@ -10,6 +11,12 @@ namespace Crash.Handlers.Plugins.Layers
 {
 	public class CrashLayer
 	{
+#if NETFRAMEWORK
+		internal static readonly string Separator = RhinoLayer.PathSeparator;
+#else
+		internal static readonly string Separator = ModelComponent.NamePathSeparator;
+#endif
+
 		internal CrashLayer(string fullPath, int index, Guid changeId)
 		{
 			FullPath = fullPath;
@@ -65,24 +72,46 @@ namespace Crash.Handlers.Plugins.Layers
 				rhinoLayer = new RhinoLayer();
 			}
 
-			rhinoLayer.Name = FullPath.Split(new[] { RhinoLayerUtils.Separater }, StringSplitOptions.RemoveEmptyEntries)
-			                          .Last();
+			rhinoLayer.Name = GetLayerNameFromPath(FullPath);
 			rhinoLayer.Index = Index;
 			rhinoLayer.Id = Id;
 			rhinoLayer.IsVisible = IsVisible;
 			rhinoLayer.IsLocked = IsLocked;
 			rhinoLayer.IsExpanded = IsExpanded;
 
-			// rhinoLayer.FullPath = this.FullPath;
-
-			// TODO : Resolve Deleted
-			// rhinoLayer.IsDeleted = this.IsDeleted;
-			// rhinoDoc.Layers.Delete()
-
-			// TOOD : Resolve Current
-			// rhinoLayer.Current = this.Current;
-
 			return rhinoLayer;
+		}
+
+		public static void UpdateRegisteredLayer(RhinoDoc rhinoDoc, CrashLayer crashLayer)
+		{
+			if (crashLayer.IsDeleted)
+			{
+				rhinoDoc.Layers.Undelete(crashLayer.Index);
+			}
+			else
+			{
+				rhinoDoc.Layers.Delete(crashLayer.Index, false);
+			}
+
+			if (crashLayer.Current)
+			{
+				rhinoDoc.Layers.SetCurrentLayerIndex(crashLayer.Index, false);
+			}
+		}
+
+		internal static string[] GetLayerLineage(string fullPath)
+		{
+			return fullPath.Split(new[] { Separator }, StringSplitOptions.RemoveEmptyEntries);
+		}
+
+		internal static string GetFullPath(IEnumerable<string> ancestors)
+		{
+			return string.Join(Separator, ancestors);
+		}
+
+		internal static string GetLayerNameFromPath(string fullPath)
+		{
+			return GetLayerLineage(fullPath)?.Last() ?? string.Empty;
 		}
 	}
 }

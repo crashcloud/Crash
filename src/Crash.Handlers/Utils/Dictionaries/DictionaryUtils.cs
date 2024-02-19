@@ -204,12 +204,12 @@ namespace Crash.Handlers.Utils
 			return neutralKey;
 		}
 
-		internal static bool IsDifferent<TObject>(Func<TObject, string> getter, TObject oldState, TObject newState,
+		internal static bool IsDifferent<TObject>(Getter<TObject> getter, TObject oldState, TObject newState,
 			out string oldValue,
 			out string newValue)
 		{
-			oldValue = getter(oldState);
-			newValue = getter(newState);
+			oldValue = getter.Get(oldState);
+			newValue = getter.Get(newState);
 
 			if (!string.IsNullOrEmpty(oldValue))
 			{
@@ -219,4 +219,8 @@ namespace Crash.Handlers.Utils
 			return !string.IsNullOrEmpty(newValue);
 		}
 	}
+
+	internal record struct Getter<TObject>(Func<TObject, string?> Get);
+
+	internal record struct Setter<TObject>(Action<TObject, string?> Set);
 }

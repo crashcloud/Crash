@@ -63,7 +63,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			}
 			else
 			{
-				var updates = RhinoObjectAndAttributesUtils.GetDefaults(rhinoObject.Attributes, userName);
+				var updates = ObjectAttributeComparisonUtils.GetDefaults(rhinoObject.Attributes, userName);
 				change = GeometryChange.CreateChange(changeId, userName, Action, geometry, updates);
 			}
 
