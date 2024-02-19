@@ -23,7 +23,7 @@ namespace Crash.Handlers.Utils
 
 			var lineage = CrashLayer.GetLayerLineage(crashLayer.FullPath).ToList();
 			Layer previousLayer = null;
-			for (var i = 0; i < lineage.Count; i++)
+			for (var i = 1; i < lineage.Count; i++)
 			{
 				var range = lineage.GetRange(0, i);
 				var fullPath = CrashLayer.GetFullPath(range);
