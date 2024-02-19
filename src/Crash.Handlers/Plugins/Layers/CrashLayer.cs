@@ -29,11 +29,20 @@ namespace Crash.Handlers.Plugins.Layers
 		{
 			FullPath = layer.FullPath;
 			Index = layer.Index;
+			Id = changeId;
+
 			IsDeleted = layer.IsDeleted;
+
+			// Styles
+			Color = layer.Color;
+			PlotColor = layer.PlotColor;
+			PlotWeight = layer.PlotWeight;
+			LinetypeIndex = layer.LinetypeIndex;
+
+			// User Specific
 			IsVisible = layer.IsVisible;
 			IsLocked = layer.IsLocked;
 			IsExpanded = layer.IsExpanded;
-			Id = changeId;
 		}
 
 		public string FullPath { get; }
@@ -128,7 +137,7 @@ namespace Crash.Handlers.Plugins.Layers
 			rhinoLayer.PlotColor = crashLayer.PlotColor;
 			rhinoLayer.PlotWeight = crashLayer.PlotWeight;
 			rhinoLayer.LinetypeIndex = crashLayer.LinetypeIndex;
-			
+
 			// User Specific
 			rhinoLayer.IsVisible = crashLayer.IsVisible;
 			rhinoLayer.IsLocked = crashLayer.IsLocked;
