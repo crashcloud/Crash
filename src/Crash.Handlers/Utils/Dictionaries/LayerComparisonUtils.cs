@@ -82,6 +82,13 @@ namespace Crash.Handlers.Utils
 			{
 				updates.Add(newFullPathKey, newState.FullPath);
 			}
+
+			var indexKey = DictionaryUtils.GetNewKey(nameof(Layer.Index), userName);
+			if (!updates.ContainsKey(indexKey))
+			{
+				updates.Add(indexKey, (newState?.Index ?? oldState?.Index ?? -1).ToString());
+			}
+			
 		}
 	}
 }
