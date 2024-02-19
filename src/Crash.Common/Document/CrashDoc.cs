@@ -22,8 +22,9 @@ namespace Crash.Common.Document
 			_id = Guid.NewGuid();
 
 			Users = new UserTable(this);
-			TemporaryChangeTable = new TemporaryChangeTable(this);
-			RealisedChangeTable = new RealisedChangeTable(this);
+			Tables = new CacheTable(this);
+			Tables.AddTable(new TemporaryChangeTable(this));
+			Tables.AddTable(new RealisedChangeTable(this));
 			Cameras = new CameraTable(this);
 
 			LocalClient = new CrashClient(this);
@@ -75,15 +76,20 @@ namespace Crash.Common.Document
 		#region Tables
 
 		/// <summary>The Users Table for the Crash Doc</summary>
-		public readonly UserTable Users;
+		public UserTable Users { get; }
 
 		/// <summary>The Changes Table for the Crash Doc</summary>
-		public readonly TemporaryChangeTable TemporaryChangeTable;
+		[Obsolete("Use Tables.Get<TemporaryChangeTable>()")]
+		public TemporaryChangeTable TemporaryChangeTable => Tables.Get<TemporaryChangeTable>();
 
-		public readonly RealisedChangeTable RealisedChangeTable;
+		[Obsolete("Use Tables.Get<RealisedChangeTable>()")]
+		public RealisedChangeTable RealisedChangeTable => Tables.Get<RealisedChangeTable>();
+
+		/// <summary>Stores all of the Tables in the Crash Doc</summary>
+		public CacheTable Tables { get; }
 
 		/// <summary>The Camera Table for the crash Doc</summary>
-		public readonly CameraTable Cameras;
+		public CameraTable Cameras { get; }
 
 		#endregion
 
