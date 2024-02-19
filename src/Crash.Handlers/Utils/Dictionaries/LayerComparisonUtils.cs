@@ -72,12 +72,12 @@ namespace Crash.Handlers.Utils
 		{
 			var oldFullPathKey = DictionaryUtils.GetOldKey(nameof(Layer.FullPath), userName);
 			var newFullPathKey = DictionaryUtils.GetNewKey(nameof(Layer.FullPath), userName);
-			if (!updates.ContainsKey(oldFullPathKey))
+			if (!updates.ContainsKey(oldFullPathKey) && !string.IsNullOrEmpty(oldState?.FullPath))
 			{
 				updates.Add(oldFullPathKey, oldState.FullPath);
 			}
 
-			if (!updates.ContainsKey(newFullPathKey))
+			if (!updates.ContainsKey(newFullPathKey) && !string.IsNullOrEmpty(newState?.FullPath))
 			{
 				updates.Add(newFullPathKey, newState.FullPath);
 			}
