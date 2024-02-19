@@ -7,6 +7,7 @@ using Crash.Handlers.Plugins;
 using Crash.Handlers.Plugins.Camera;
 using Crash.Handlers.Plugins.Geometry;
 using Crash.Handlers.Plugins.Initializers;
+using Crash.Plugins;
 using Crash.UI.ExceptionsAndErrors;
 using Crash.UI.UsersView;
 
@@ -56,14 +57,42 @@ namespace Crash
 
 		private static void LoadCrashPlugin(string crashAssembly)
 		{
-			var assembly = Assembly.LoadFrom(crashAssembly);
+			var assembly = LoadPlugin(crashAssembly);
 			var changeDefinitionTypes =
-				assembly.ExportedTypes.Where(et => et.GetInterfaces().Contains(typeof(IChangeDefinition)));
+				assembly.ExportedTypes.Where(et => typeof(IChangeDefinition).IsAssignableFrom(et));
+
+			if (changeDefinitionTypes is null || changeDefinitionTypes.Count() == 0)
+			{
+				RhinoApp.WriteLine($"Could not find any type in {crashAssembly} that implements type {nameof(IChangeDefinition)}");
+				return;
+			}
+
 			foreach (var changeDefinitionType in changeDefinitionTypes)
 			{
 				var changeDefinition = Activator.CreateInstance(changeDefinitionType) as IChangeDefinition;
+				if (changeDefinition is null)
+				{
+					RhinoApp.WriteLine($"Could not load {changeDefinitionType.Name}");
+					continue;
+				}
+
 				Changes.Push(changeDefinition);
 			}
+		}
+
+		private static Assembly LoadPlugin(string crashAssembly)
+		{
+#if NETFRAMEWORK
+			return Assembly.LoadFrom(crashAssembly);
+
+#elif NET7_0_OR_GREATER
+			RhinoApp.WriteLine($"Loading commands from: {crashAssembly}");
+			var loadContext = new PluginLoadContext(crashAssembly);
+			return loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(crashAssembly)));
+
+#else
+			RhinoApp.WriteLine("An Unsupported Framework has been loaded");
+#endif
 		}
 
 		#endregion
