@@ -10,7 +10,7 @@ namespace Crash.Handlers.Utils
 		public static Layer MoveLayerToCorrectLocation(RhinoDoc rhinoDoc, Layer rhinoLayer, CrashLayer crashLayer)
 		{
 			var layerResult = rhinoLayer;
-			if (rhinoDoc.Layers.FindIndex(rhinoLayer.Index) is not null)
+			if (rhinoDoc.Layers.FindIndex(rhinoLayer.Index) is null)
 			{
 				var layerIndex = rhinoDoc.Layers.Add(rhinoLayer);
 				layerResult = rhinoDoc.Layers.FindIndex(layerIndex);
