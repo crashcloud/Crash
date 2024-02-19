@@ -59,6 +59,25 @@ namespace Crash.Handlers.Utils
 		}
 
 		internal static bool TryGetLayerValue(this Dictionary<string, string> dict, string key,
+			string userName, Color defaultValue, out Color value)
+		{
+			if (!dict.TryGetUserSpecificLayerValue(key, userName, out var foundValue))
+			{
+				value = defaultValue;
+				return false;
+			}
+
+			if (!int.TryParse(foundValue, out var intValue))
+			{
+				value = defaultValue;
+				return false;
+			}
+
+			value = Color.FromArgb(intValue);
+			return true;
+		}
+
+		internal static bool TryGetLayerValue(this Dictionary<string, string> dict, string key,
 			string userName, int defaultValue, out int value)
 		{
 			if (!dict.TryGetUserSpecificLayerValue(key, userName, out var foundValue))

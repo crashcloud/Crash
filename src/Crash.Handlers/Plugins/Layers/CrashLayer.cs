@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Drawing;
+using System.Text.Json;
 
 using Crash.Handlers.Utils;
 
@@ -35,15 +36,23 @@ namespace Crash.Handlers.Plugins.Layers
 			Id = changeId;
 		}
 
-		public string FullPath { get; set; }
-		public int Index { get; set; }
+		public string FullPath { get; }
+		public int Index { get; }
 
-		public Guid Id { get; set; }
-		public bool IsDeleted { get; set; }
-		public bool IsVisible { get; set; }
-		public bool IsLocked { get; set; }
-		public bool IsExpanded { get; set; }
-		public bool Current { get; set; }
+		public Guid Id { get; }
+		public bool IsDeleted { get; internal set; }
+		public bool IsVisible { get; internal set; }
+		public bool IsLocked { get; internal set; }
+		public bool IsExpanded { get; internal set; }
+		public bool Current { get; internal set; }
+
+		public int LineTypeIndex { get; private set; }
+
+		public double PlotWeight { get; private set; }
+
+		public Color PlotColor { get; private set; }
+
+		public Color Color { get; private set; }
 
 		public static CrashLayer CreateFrom(IChange change)
 		{
@@ -52,15 +61,33 @@ namespace Crash.Handlers.Plugins.Layers
 			packet.Updates.TryGetLayerValue(nameof(RhinoLayer.FullPath), change.Owner, string.Empty, out var fullPath);
 			packet.Updates.TryGetLayerValue(nameof(RhinoLayer.Index), change.Owner, -1, out var index);
 			packet.Updates.TryGetLayerValue(nameof(RhinoLayer.IsDeleted), change.Owner, false, out var isDeleted);
+
+			// Styles
+			packet.Updates.TryGetLayerValue(nameof(RhinoLayer.Color), change.Owner, Color.Black, out var colour);
+			packet.Updates.TryGetLayerValue(nameof(RhinoLayer.PlotColor), change.Owner, Color.Black,
+			                                out var plotColour);
+			packet.Updates.TryGetLayerValue(nameof(RhinoLayer.PlotWeight), change.Owner, 0.0, out var plotWeight);
+			packet.Updates.TryGetLayerValue(nameof(RhinoLayer.LinetypeIndex), change.Owner, -1, out var linetypeIndex);
+
+			// User Specific
 			packet.Updates.TryGetLayerValue(nameof(RhinoLayer.IsVisible), change.Owner, true, out var isVisible);
 			packet.Updates.TryGetLayerValue(nameof(RhinoLayer.IsLocked), change.Owner, false, out var isLocked);
 			packet.Updates.TryGetLayerValue(nameof(RhinoLayer.IsExpanded), change.Owner, true, out var isExpanded);
-			// updates.TryGetValue(nameof(Layer.Current), out bool current);FullPath), out string fullName);
 
 			return new CrashLayer(fullPath, index, change.Id)
 			       {
-				       IsDeleted = isDeleted, IsVisible = isVisible, IsLocked = isLocked, IsExpanded = isExpanded
-				       // Current = current,
+				       IsDeleted = isDeleted,
+
+				       // Styles
+				       Color = colour,
+				       PlotColor = plotColour,
+				       PlotWeight = plotWeight,
+				       LineTypeIndex = linetypeIndex,
+
+				       // User Specific
+				       IsVisible = isVisible,
+				       IsLocked = isLocked,
+				       IsExpanded = isExpanded
 			       };
 		}
 
@@ -75,6 +102,14 @@ namespace Crash.Handlers.Plugins.Layers
 			rhinoLayer.Name = GetLayerNameFromPath(FullPath);
 			rhinoLayer.Index = Index;
 			rhinoLayer.Id = Id;
+
+			// Styles
+			Color = Color;
+			PlotColor = PlotColor;
+			PlotWeight = PlotWeight;
+			LineTypeIndex = LineTypeIndex;
+
+			// User Specific
 			rhinoLayer.IsVisible = IsVisible;
 			rhinoLayer.IsLocked = IsLocked;
 			rhinoLayer.IsExpanded = IsExpanded;
