@@ -3,6 +3,7 @@
 using Crash.Handlers.Utils;
 
 using Rhino;
+using Rhino.DocObjects;
 
 using RhinoLayer = Rhino.DocObjects.Layer;
 
