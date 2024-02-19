@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-using Crash.Common.Communications;
+﻿using Crash.Common.Communications;
 using Crash.Common.Events;
 using Crash.Handlers;
 using Crash.Handlers.Plugins;
@@ -20,82 +18,11 @@ namespace Crash
 	///<summary>The crash plugin for multi user rhino collaboration</summary>
 	public sealed class CrashRhinoPlugIn : PlugIn
 	{
-		private const string CrashPluginExtension = ".mup";
-
 		/// <summary>The Id of the Crash Plugin. DO NOT reuse this!</summary>
 		private const string CrashPluginId = "53CB2393-C71F-4079-9CEC-97464FF9D14E";
 
 		/// <summary>Contains all of the Change Definitions of this PlugIn</summary>
-		private static readonly Stack<IChangeDefinition> Changes;
-
-		#region Crash Plugins
-
-		private static void LoadCrashPlugins()
-		{
-			IEnumerable<Guid> pluginIds = GetInstalledPlugIns().Keys;
-			var pluginInfos = pluginIds.Select(p => GetPlugInInfo(p));
-			foreach (var pluginInfo in pluginInfos)
-			{
-				var pluginDirectory = Path.GetDirectoryName(pluginInfo.FileName);
-				if (!Directory.Exists(pluginDirectory))
-				{
-					continue;
-				}
-
-				var crashPluginExtensions = Directory.EnumerateFiles(pluginDirectory, $"*{CrashPluginExtension}");
-				if (crashPluginExtensions?.Any() != true)
-				{
-					continue;
-				}
-
-				foreach (var pluginAssembly in crashPluginExtensions)
-				{
-					LoadCrashPlugin(pluginAssembly);
-				}
-			}
-		}
-
-		private static void LoadCrashPlugin(string crashAssembly)
-		{
-			var assembly = LoadPlugin(crashAssembly);
-			var changeDefinitionTypes =
-				assembly.ExportedTypes.Where(et => typeof(IChangeDefinition).IsAssignableFrom(et));
-
-			if (changeDefinitionTypes is null || changeDefinitionTypes.Count() == 0)
-			{
-				RhinoApp.WriteLine($"Could not find any type in {crashAssembly} that implements type {nameof(IChangeDefinition)}");
-				return;
-			}
-
-			foreach (var changeDefinitionType in changeDefinitionTypes)
-			{
-				var changeDefinition = Activator.CreateInstance(changeDefinitionType) as IChangeDefinition;
-				if (changeDefinition is null)
-				{
-					RhinoApp.WriteLine($"Could not load {changeDefinitionType.Name}");
-					continue;
-				}
-
-				Changes.Push(changeDefinition);
-			}
-		}
-
-		private static Assembly LoadPlugin(string crashAssembly)
-		{
-#if NETFRAMEWORK
-			return Assembly.LoadFrom(crashAssembly);
-
-#elif NET7_0_OR_GREATER
-			RhinoApp.WriteLine($"Loading commands from: {crashAssembly}");
-			var loadContext = new PluginLoadContext(crashAssembly);
-			return loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(crashAssembly)));
-
-#else
-			RhinoApp.WriteLine("An Unsupported Framework has been loaded");
-#endif
-		}
-
-		#endregion
+		internal static Stack<IChangeDefinition> Changes { get; set; }
 
 		#region Crash Plugin Specifics
 
@@ -108,7 +35,22 @@ namespace Crash
 		private static void LoadCrashPlugins(object? sender, EventArgs e)
 		{
 			RhinoApp.Idle -= LoadCrashPlugins;
-			LoadCrashPlugins();
+
+			IEnumerable<Guid> pluginIds = GetInstalledPlugIns().Keys;
+			var pluginInfos = pluginIds.Select(GetPlugInInfo).ToList();
+			List<string> pluginLocations = new(pluginInfos.Count);
+			foreach (var pluginInfo in pluginInfos)
+			{
+				var pluginDirectory = Path.GetDirectoryName(pluginInfo.FileName);
+				pluginLocations.Add(pluginDirectory);
+			}
+
+			var loader = new CrashPluginLoader(pluginLocations);
+			var changes = loader.LoadCrashPlugins();
+			foreach (var change in changes)
+			{
+				Changes.Push(change);
+			}
 		}
 
 		private void CrashDocRegistryOnDocumentDisposed(object? sender, CrashEventArgs e)
@@ -140,7 +82,7 @@ namespace Crash
 			client.OnPushChangeFailed += ClientOnOnPushChangeFailed;
 		}
 
-		private void ClientOnOnPushChangeFailed(object sender, CrashChangeArgs args)
+		private void ClientOnOnPushChangeFailed(object? sender, CrashChangeArgs? args)
 		{
 			if (args is null || !args.Changes.Any())
 			{
