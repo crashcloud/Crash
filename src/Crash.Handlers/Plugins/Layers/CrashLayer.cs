@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 
 using Crash.Handlers.Utils;
 
@@ -111,7 +111,7 @@ namespace Crash.Handlers.Plugins.Layers
 
 		internal static string GetLayerNameFromPath(string fullPath)
 		{
-			return GetLayerLineage(fullPath)?.Last() ?? string.Empty;
+			return GetLayerLineage(fullPath)?.LastOrDefault() ?? string.Empty;
 		}
 	}
 }
