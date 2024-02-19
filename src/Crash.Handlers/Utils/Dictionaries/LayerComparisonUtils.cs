@@ -12,6 +12,7 @@ namespace Crash.Handlers.Utils
 			          {
 				          { nameof(Layer.Name), new Getter<Layer>(layer => layer.Name) },
 				          { nameof(Layer.FullPath), new Getter<Layer>(layer => layer.FullPath) },
+				          { nameof(Layer.Index), new Getter<Layer>(layer => layer.Index.ToString()) },
 				          {
 					          nameof(Layer.Color),
 					          new Getter<Layer>(layer => DictionaryUtils.SerializeColour(layer.Color))
