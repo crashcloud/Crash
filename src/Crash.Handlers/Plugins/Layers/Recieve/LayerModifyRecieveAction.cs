@@ -10,7 +10,7 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 	{
 		public bool CanRecieve(IChange change)
 		{
-			return change.HasFlag(ChangeAction.Update);
+			return change.HasFlag(ChangeAction.Update) && !change.HasFlag(ChangeAction.Remove);
 		}
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)

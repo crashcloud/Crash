@@ -10,7 +10,8 @@ namespace Crash.Handlers.Plugins.Layers.Recieve
 	{
 		public bool CanRecieve(IChange change)
 		{
-			return change.HasFlag(ChangeAction.Add);
+			// TODO : Add Deleted Layers and Delete them so Undo works?
+			return change.HasFlag(ChangeAction.Add) && !change.HasFlag(ChangeAction.Remove);
 		}
 
 		public async Task OnRecieveAsync(CrashDoc crashDoc, Change recievedChange)
