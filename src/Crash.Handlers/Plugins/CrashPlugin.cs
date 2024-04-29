@@ -23,6 +23,6 @@ namespace Crash.Handlers.Plugins
 		public string Name { get; }
 
 		/// <summary>Contains all of the Change Definitions of this <see cref="CrashPlugIn" /></summary>
-		private IEnumerable<IChangeDefinition> Changes { get; }
+		protected IEnumerable<IChangeDefinition> Changes { get; }
 	}
 }
