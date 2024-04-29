@@ -1,5 +1,6 @@
-﻿using Crash.Common.Changes;
+using Crash.Common.Changes;
 using Crash.Common.Document;
+using Crash.Handlers.Authentication;
 
 using Rhino.Commands;
 
@@ -20,6 +21,7 @@ namespace Crash.Commands
 
 		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
 		{
+			GetOpenIdToken();
 			if (!CommandUtils.InSharedModel(crashDoc))
 			{
 				RhinoApp.WriteLine("You aren't in a shared model.");
@@ -34,6 +36,20 @@ namespace Crash.Commands
 			doc.Views.Redraw();
 
 			return Result.Success;
+		}
+
+		private async Task<string> GetOpenIdToken()
+		{
+			var secret = "/*Put Secret Here*/";
+			var id = "crash";
+
+			var cancelToken = new CancellationTokenSource(5000).Token;
+			var token = await ClientAuthentication.GetRhinoToken(id, secret, cancelToken);
+
+			var openId = token.Item1;
+			var oauth2 = token.Item2;
+
+			return openId.RawToken;
 		}
 	}
 }
