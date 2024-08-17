@@ -16,7 +16,7 @@ namespace Crash.Common.Tables
 	///     When a realised ...
 	///     TODO : How do we solve this for Layers etc?
 	/// </summary>
-	public sealed class RealisedChangeTable
+	public sealed class RealisedChangeTable : ICacheTable
 	{
 		/// <summary>The current Crash Document</summary>
 		private readonly CrashDoc _crashDoc;
@@ -116,6 +116,7 @@ namespace Crash.Common.Tables
 			var rhinoGuid = new RhinoGuid(rhinoId);
 			var changeGuid = new ChangeGuid(changeId);
 			_rhinoChangeMap.Remove(rhinoGuid);
+			_deletedRhinoChangeMap.Remove(rhinoGuid);
 			_deletedRhinoChangeMap.Add(rhinoGuid, changeGuid);
 			_selected.Remove(changeGuid);
 		}

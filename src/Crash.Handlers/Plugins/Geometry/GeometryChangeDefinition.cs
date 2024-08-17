@@ -21,14 +21,16 @@ namespace Crash.Handlers.Plugins.Geometry
 			                {
 				                new GeometryCreateAction(),
 				                new GeometryRemoveAction(),
+				                new GeometryUpdateAction(),
 				                new GeometryTransformAction(),
-				                new GeometrySelectAction(),
-				                new GeometryUnSelectAction()
+				                new GeometryLockAction(),
+				                new GeometryUnlockAction()
 			                };
 			RecieveActions = new List<IChangeRecieveAction>
 			                 {
 				                 new GeometryAddRecieveAction(),
 				                 new GeometryRemoveRecieveAction(),
+				                 new GeometryUpdateRecieveAction(),
 				                 new GeometryTransformRecieveAction(),
 				                 new GeometryLockRecieveAction(),
 				                 new GeometryUnlockRecieveAction()
