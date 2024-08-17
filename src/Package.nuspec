@@ -29,8 +29,8 @@
         <dependency id="Microsoft.VisualStudio.Threading" version="17.5.22" />
         
         <dependency id="System.Drawing.Common" version="7.0.0" />
-        <dependency id="System.Text.Json" version="7.0.2" />
-        <dependency id="Crash.Changes" version="1.2.0" />
+        <dependency id="System.Text.Json" version="8.0.4" />
+        <dependency id="Crash.Changes" version="1.2.1" />
       </group>
     </dependencies>
 

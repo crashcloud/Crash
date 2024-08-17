@@ -1,12 +1,11 @@
-﻿using System.Reflection;
-
-using Crash.Common.Communications;
+﻿using Crash.Common.Communications;
 using Crash.Common.Events;
 using Crash.Handlers;
 using Crash.Handlers.Plugins;
 using Crash.Handlers.Plugins.Camera;
 using Crash.Handlers.Plugins.Geometry;
 using Crash.Handlers.Plugins.Initializers;
+using Crash.Plugins;
 using Crash.Handlers.Plugins.Layers;
 using Crash.UI.ExceptionsAndErrors;
 using Crash.UI.UsersView;
@@ -20,10 +19,10 @@ namespace Crash
 	///<summary>The crash plugin for multi user rhino collaboration</summary>
 	public sealed class CrashRhinoPlugIn : PlugIn
 	{
-		private const string CrashPluginExtension = ".mup";
-
 		/// <summary>The Id of the Crash Plugin. DO NOT reuse this!</summary>
 		private const string CrashPluginId = "53CB2393-C71F-4079-9CEC-97464FF9D14E";
+
+		private const string CrashPluginExtension = ".op";
 
 		/// <summary>Contains all of the Change Definitions of this PlugIn</summary>
 		private static readonly Stack<IChangeDefinition> Changes;
@@ -58,7 +57,7 @@ namespace Crash
 
 		private static void LoadCrashPlugin(string crashAssembly)
 		{
-			var assembly = Assembly.LoadFrom(crashAssembly);
+			var assembly = System.Reflection.Assembly.LoadFrom(crashAssembly);
 			var changeDefinitionTypes =
 				assembly.ExportedTypes.Where(et => et.GetInterfaces().Contains(typeof(IChangeDefinition)));
 			foreach (var changeDefinitionType in changeDefinitionTypes)
@@ -81,7 +80,22 @@ namespace Crash
 		private static void LoadCrashPlugins(object? sender, EventArgs e)
 		{
 			RhinoApp.Idle -= LoadCrashPlugins;
-			LoadCrashPlugins();
+
+			IEnumerable<Guid> pluginIds = GetInstalledPlugIns().Keys;
+			var pluginInfos = pluginIds.Select(GetPlugInInfo).ToList();
+			List<string> pluginLocations = new(pluginInfos.Count);
+			foreach (var pluginInfo in pluginInfos)
+			{
+				var pluginDirectory = Path.GetDirectoryName(pluginInfo.FileName);
+				pluginLocations.Add(pluginDirectory);
+			}
+
+			var loader = new CrashPluginLoader(pluginLocations);
+			var changes = loader.LoadCrashPlugins();
+			foreach (var change in changes)
+			{
+				Changes.Push(change);
+			}
 		}
 
 		private void CrashDocRegistryOnDocumentDisposed(object? sender, CrashEventArgs e)
@@ -113,7 +127,7 @@ namespace Crash
 			client.OnPushChangeFailed += ClientOnOnPushChangeFailed;
 		}
 
-		private void ClientOnOnPushChangeFailed(object sender, CrashChangeArgs args)
+		private void ClientOnOnPushChangeFailed(object? sender, CrashChangeArgs? args)
 		{
 			if (args is null || !args.Changes.Any())
 			{
@@ -123,31 +137,31 @@ namespace Crash
 			badPipe.Push(args.Changes.Select(c => c.Id));
 
 			var badChangeToast = new Notification
-			                     {
-				                     Title = "Changes failed to send!",
-				                     Message = "Any changes highlighted in red will not be communicated\n" +
-				                               "It is advised to delete them.\n" +
-				                               "It may be because the Change is > 1Mb."
-			                     };
+			{
+				Title = "Changes failed to send!",
+				Message = "Any changes highlighted in red will not be communicated\n" +
+											   "It is advised to delete them.\n" +
+											   "It may be because the Change is > 1Mb."
+			};
 
 			RhinoApp.InvokeOnUiThread(() =>
-			                          {
-				                          badChangeToast.Show();
-			                          });
+									  {
+										  badChangeToast.Show();
+									  });
 		}
 
 		private async void ClientOnOnServerClosed(object sender, CrashEventArgs args)
 		{
 			var message = "The server connection has been lost.\n" +
-			              "Your model will be closed.\n" +
-			              "Your Data is likely safe.";
+						  "Your model will be closed.\n" +
+						  "Your Data is likely safe.";
 			try
 			{
 				RhinoApp.InvokeOnUiThread(() =>
-				                          {
-					                          MessageBox.Show(message, MessageBoxButtons.OK);
-					                          UsersForm.CloseActiveForm();
-				                          });
+										  {
+											  MessageBox.Show(message, MessageBoxButtons.OK);
+											  UsersForm.CloseActiveForm();
+										  });
 
 				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.CrashDoc);
 				await CrashDocRegistry.DisposeOfDocumentAsync(args.CrashDoc);
