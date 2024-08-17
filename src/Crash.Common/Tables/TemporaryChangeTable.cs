@@ -11,7 +11,7 @@ namespace Crash.Common.Tables
 	///     These temporary changes are, if necessary displayed
 	///     in the pipeline to show pending changes
 	/// </summary>
-	public sealed class TemporaryChangeTable : ICrashTable, IEnumerable<IChange>
+	public sealed class TemporaryChangeTable : ICacheTable, IEnumerable<IChange>
 	{
 		private readonly ConcurrentDictionary<Guid, IChange> _cache;
 		private readonly CrashDoc _crashDoc;
