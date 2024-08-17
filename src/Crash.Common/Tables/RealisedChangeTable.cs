@@ -116,6 +116,7 @@ namespace Crash.Common.Tables
 			var rhinoGuid = new RhinoGuid(rhinoId);
 			var changeGuid = new ChangeGuid(changeId);
 			_rhinoChangeMap.Remove(rhinoGuid);
+			_deletedRhinoChangeMap.Remove(rhinoGuid);
 			_deletedRhinoChangeMap.Add(rhinoGuid, changeGuid);
 			_selected.Remove(changeGuid);
 		}

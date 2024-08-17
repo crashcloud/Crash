@@ -48,7 +48,7 @@ namespace Crash.Handlers.Tests.Changes
 			Assert.That(change.Geometry, Is.EqualTo(geom));
 			Assert.That(change.Payload, Is.Not.Null);
 
-			Assert.That(GeometryChange.SerializeGeometry(geom), Is.EqualTo(change.Payload));
+			Assert.That(GeometryChange.GeneratePayload(geom), Is.EqualTo(change.Payload));
 		}
 
 		[TestCaseSource(nameof(InValidGeometry))]

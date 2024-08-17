@@ -1,4 +1,5 @@
 ﻿using System.Runtime.Serialization;
+using System.Text.Json;
 
 using Crash.Common.Serialization;
 using Crash.Geometry;
@@ -36,7 +37,7 @@ namespace Crash.Handlers.Changes
 			{
 				var packet = PayloadSerialization.GetPayloadPacket(change.Payload);
 				GeometryBase geometry = null;
-				if (!string.IsNullOrEmpty(change.Payload))
+				if (!string.IsNullOrEmpty(packet.Data))
 				{
 					geometry = CommonObject.FromJSON(packet.Data) as GeometryBase;
 				}
@@ -88,7 +89,7 @@ namespace Crash.Handlers.Changes
 				       Stamp = DateTime.UtcNow,
 				       Id = Guid.NewGuid(),
 				       Owner = userName,
-				       Payload = SerializeGeometry(geometry),
+				       Payload = GeneratePayload(geometry),
 				       Action = ChangeAction.Add | ChangeAction.Temporary
 			       };
 		}
@@ -99,27 +100,32 @@ namespace Crash.Handlers.Changes
 		/// <param name="action">The action for the Change</param>
 		/// <param name="payload">The payload if an add, otherwise none.</param>
 		/// <returns>A change suitable for sending to the server</returns>
-		public static Change CreateChange(Guid id, string user, ChangeAction action, GeometryBase? geometry = null)
+		public static Change CreateChange(Guid id, string user, ChangeAction action, GeometryBase? geometry = null,
+			Dictionary<string, string> updates = null)
 		{
 			return new Change
 			       {
 				       Id = id,
 				       Owner = user,
 				       Action = action,
-				       Payload = SerializeGeometry(geometry),
+				       Payload = GeneratePayload(geometry, updates),
 				       Type = ChangeType
 			       };
 		}
 
 		/// <summary>Serializes Geometry Correctly to Rhino version 7</summary>
-		public static string SerializeGeometry(GeometryBase geometry)
+		public static string GeneratePayload(GeometryBase geometry = null, Dictionary<string, string> updates = null)
 		{
-			if (geometry is null)
-			{
-				return string.Empty;
-			}
+			PayloadPacket payload = new()
+			                        {
+				                        Data = geometry?.ToJSON(new SerializationOptions
+				                                                {
+					                                                RhinoVersion = 70, WriteUserData = false
+				                                                }) ?? string.Empty,
+				                        Updates = updates ?? new Dictionary<string, string>()
+			                        };
 
-			return geometry?.ToJSON(new SerializationOptions { RhinoVersion = 70, WriteUserData = false });
+			return JsonSerializer.Serialize(payload);
 		}
 
 		/// <summary>Sets the Geometry of the Change</summary>
@@ -127,6 +133,5 @@ namespace Crash.Handlers.Changes
 		{
 			Geometry = geometry;
 		}
-
 	}
 }
