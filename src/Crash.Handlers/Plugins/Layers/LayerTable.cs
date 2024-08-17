@@ -3,7 +3,7 @@ using Crash.Common.Tables;
 
 namespace Crash.Handlers.Plugins.Layers
 {
-	internal class LayerTable : ICrashTable
+	internal class LayerTable : ICacheTable
 	{
 		internal LayerTable(CrashDoc crashDoc)
 		{
