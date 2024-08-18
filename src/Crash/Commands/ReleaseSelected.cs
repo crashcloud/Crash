@@ -1,5 +1,6 @@
 ﻿using Crash.Common.Changes;
 using Crash.Common.Document;
+using Crash.Common.Tables;
 using Crash.Handlers;
 using Crash.Utils;
 

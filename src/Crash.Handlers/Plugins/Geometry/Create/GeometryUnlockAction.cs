@@ -24,7 +24,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 				return false;
 			}
 
-			if (!crashDoc.Tables.TryGet<RealisedChangeTable>(out var realisedTable))
+			if (!crashArgs.Doc.Tables.TryGet<RealisedChangeTable>(out var realisedTable))
 			{
 				return false;
 			}

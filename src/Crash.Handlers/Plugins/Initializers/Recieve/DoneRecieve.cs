@@ -1,5 +1,6 @@
 ﻿using Crash.Changes.Extensions;
 using Crash.Common.Document;
+using Crash.Common.Tables;
 using Crash.Handlers.Changes;
 using Crash.Handlers.Plugins.Geometry.Recieve;
 
@@ -20,7 +21,7 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 			crashDoc.DocumentIsBusy = true;
 			try
 			{
-				if (!crashDoc.Tables.TryGet<TemporaryChangeTable>(out var tempTable)) return Task.CompletedTask;
+				if (!crashDoc.Tables.TryGet<TemporaryChangeTable>(out var tempTable)) return;
 				// Done Range
 				if (string.IsNullOrEmpty(recievedChange.Owner))
 				{
@@ -53,11 +54,8 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 
 		private async Task ReleaseChange(CrashDoc crashDoc, IChange change)
 		{
-			if (!tempTable.TryGetChangeOfType(recievedChange.Id, out IChange doneChange)) return Task.CompletedTask;
-			if (!tempTable.TryGetChangeOfType(change.Id, out GeometryChange geomChange))
-			{
-				return;
-			}
+			if (!crashDoc.Tables.TryGet<TemporaryChangeTable>(out var tempTable)) return;
+			if (!tempTable.TryGetChangeOfType(change.Id, out GeometryChange geomChange)) return;
 
 			tempTable.RemoveChange(change.Id);
 

@@ -74,7 +74,7 @@ namespace Crash.Handlers.Plugins.Layers
 			// Styles
 			packet.Updates.TryGetLayerValue(nameof(RhinoLayer.Color), change.Owner, Color.Black, out var colour);
 			packet.Updates.TryGetLayerValue(nameof(RhinoLayer.PlotColor), change.Owner, Color.Black,
-			                                out var plotColour);
+											out var plotColour);
 			packet.Updates.TryGetLayerValue(nameof(RhinoLayer.PlotWeight), change.Owner, 0.0, out var plotWeight);
 			packet.Updates.TryGetLayerValue(nameof(RhinoLayer.LinetypeIndex), change.Owner, -1, out var linetypeIndex);
 
@@ -84,20 +84,20 @@ namespace Crash.Handlers.Plugins.Layers
 			packet.Updates.TryGetLayerValue(nameof(RhinoLayer.IsExpanded), change.Owner, true, out var isExpanded);
 
 			return new CrashLayer(fullPath, index, change.Id)
-			       {
-				       IsDeleted = isDeleted,
+			{
+				IsDeleted = isDeleted,
 
-				       // Styles
-				       Color = colour,
-				       PlotColor = plotColour,
-				       PlotWeight = plotWeight,
-				       LinetypeIndex = linetypeIndex,
+				// Styles
+				Color = colour,
+				PlotColor = plotColour,
+				PlotWeight = plotWeight,
+				LinetypeIndex = linetypeIndex,
 
-				       // User Specific
-				       IsVisible = isVisible,
-				       IsLocked = isLocked,
-				       IsExpanded = isExpanded
-			       };
+				// User Specific
+				IsVisible = isVisible,
+				IsLocked = isLocked,
+				IsExpanded = isExpanded
+			};
 		}
 
 		public RhinoLayer GetOrCreateRhinoLayer(RhinoDoc rhinoDoc)

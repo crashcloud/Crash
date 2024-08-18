@@ -63,7 +63,7 @@ namespace Crash.UI.ExceptionsAndErrors
 
 		private void DrawOverlay(object sender, DrawEventArgs e)
 		{
-			if (!crashDoc.Tables.TryGet<RealisedChangeTable>(out var realisedTable)) return;
+			if (!_crashDoc.Tables.TryGet<RealisedChangeTable>(out var realisedTable)) return;
 
 			if (_crashDoc?.Users is null)
 			{
@@ -97,7 +97,7 @@ namespace Crash.UI.ExceptionsAndErrors
 
 		private void DisplayPipelineOnCalculateBoundingBox(object? sender, CalculateBoundingBoxEventArgs e)
 		{
-			if (!_crashDoc.Tables.TryGetTable<RealisedChangeTable>(out var table)) return;
+			if (!_crashDoc.Tables.TryGet<RealisedChangeTable>(out var table)) return;
 
 			if (_crashDoc?.Users is null)
 			{
