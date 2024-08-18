@@ -38,6 +38,9 @@ namespace Crash.Commands
 
 		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
 		{
+			var dialog = new JoinWindow();
+			var chosenModel = await dialog.ShowModalAsync(RhinoEtoApp.MainWindow);
+
 			_crashDoc = null;
 			_rhinoDoc = doc;
 
@@ -51,17 +54,6 @@ namespace Crash.Commands
 			var name = Environment.UserName;
 			if (mode == RunMode.Interactive)
 			{
-				var dialog = new JoinWindow();
-				var chosenModel = await dialog.ShowModalAsync(RhinoEtoApp.MainWindow);
-				dialog.Dispose();
-
-				if (string.IsNullOrEmpty(chosenModel?.ModelAddress))
-				{
-					await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
-					return Result.Cancel;
-				}
-
-				_lastUrl = chosenModel?.ModelAddress;
 			}
 			else
 			{
@@ -92,13 +84,13 @@ namespace Crash.Commands
 			LoadingUtils.Start();
 
 			var settings = new ObjectEnumeratorSettings
-			               {
-				               IncludePhantoms = false,
-				               IncludeGrips = false,
-				               DeletedObjects = false,
-				               HiddenObjects = true,
-				               IncludeLights = false
-			               };
+			{
+				IncludePhantoms = false,
+				IncludeGrips = false,
+				DeletedObjects = false,
+				HiddenObjects = true,
+				IncludeLights = false
+			};
 			var currentObjects = _rhinoDoc.Objects.GetObjectList(settings);
 
 			_crashDoc.Queue.OnCompletedQueue += QueueOnOnCompleted;
@@ -112,8 +104,8 @@ namespace Crash.Commands
 				foreach (var rhinoObject in currentObjects)
 				{
 					await _crashDoc.Dispatcher.NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary,
-					                                             this,
-					                                             new CrashObjectEventArgs(_crashDoc, rhinoObject));
+																 this,
+																 new CrashObjectEventArgs(_crashDoc, rhinoObject));
 				}
 
 				return;

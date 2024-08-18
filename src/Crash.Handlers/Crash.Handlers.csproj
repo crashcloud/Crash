@@ -17,7 +17,7 @@
 		<PackageReference Include="RhinoCommon" Version="7.21.22208.13001" IncludeAssets="compile;build" Condition="'$(TargetFramework)' == 'net48'"/>
 		<PackageReference Include="RhinoCommon" Version="8.3.24009.15001" IncludeAssets="compile;build" Condition="'$(TargetFramework)' == 'net7.0'"/>
 		<PackageReference Include="System.Drawing.Common" Version="7.0.0"/>
-		<PackageReference Include="System.Text.Json" Version="8.0.4"/>
+		<PackageReference Include="System.Text.Json" Version="7.0.0"/>
 		<PackageReference Include="Crash.Changes" Version="1.2.1"/>
 
 		<ProjectReference Include="..\Crash.Common\Crash.Common.csproj"/>

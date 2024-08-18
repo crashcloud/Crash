@@ -29,10 +29,17 @@ namespace Crash.UI.JoinModel
 			Maximizable = false;
 
 			SubscribeToEvents();
-			Model = new JoinViewModel();
-			InitializeComponent();
-			ActiveForm = this;
-			Closed += JoinWindow_Closed;
+			try
+			{
+				Model = new JoinViewModel();
+				InitializeComponent();
+				ActiveForm = this;
+				Closed += JoinWindow_Closed;
+			}
+			catch (Exception ex)
+			{
+				;
+			}
 		}
 
 		internal string ChosenAddress { get; set; }
@@ -52,44 +59,44 @@ namespace Crash.UI.JoinModel
 		private void SubscribeToEvents()
 		{
 			AddNewModel += (sender, args) =>
-			               {
-				               if (sender is not Command command)
-				               {
-					               return;
-				               }
+						   {
+							   if (sender is not Command command)
+							   {
+								   return;
+							   }
 
-				               if (command.CommandParameter is not TextBox textbox)
-				               {
-					               return;
-				               }
+							   if (command.CommandParameter is not TextBox textbox)
+							   {
+								   return;
+							   }
 
-				               var url = textbox.Text;
+							   var url = textbox.Text;
 
-				               Model.AddSharedModel(new SharedModel { ModelAddress = url });
+							   Model.AddSharedModel(new SharedModel { ModelAddress = url });
 
-				               textbox.Text = string.Empty;
-				               textbox.Invalidate();
-				               ActiveModels.Invalidate(true);
-			               };
+							   textbox.Text = string.Empty;
+							   textbox.Invalidate();
+							   ActiveModels.Invalidate(true);
+						   };
 
 			JoinModel += (sender, args) =>
-			             {
-				             var model = GetModel(sender);
-				             if (model is not null)
-				             {
-					             Close(model);
-				             }
-			             };
+						 {
+							 var model = GetModel(sender);
+							 if (model is not null)
+							 {
+								 Close(model);
+							 }
+						 };
 
 			RemoveModel += (sender, args) =>
-			               {
-				               var model = GetModel(sender);
-				               if (model is not null)
-				               {
-					               Model.SharedModels.Remove(model);
-					               ActiveModels.Invalidate(true);
-				               }
-			               };
+						   {
+							   var model = GetModel(sender);
+							   if (model is not null)
+							   {
+								   Model.SharedModels.Remove(model);
+								   ActiveModels.Invalidate(true);
+							   }
+						   };
 		}
 
 		private SharedModel GetModel(object sender)
@@ -107,15 +114,16 @@ namespace Crash.UI.JoinModel
 			var modelContext = args.Item as SharedModel;
 
 			var button = new Button
-			             {
-				             Text = "Join",
-				             ToolTip = "Join a Shared Model",
-				             Command = new Command(JoinModel)
-				                       {
-					                       DataContext = modelContext, ToolTip = "Join Shared Model"
-				                       },
-				             Enabled = true
-			             };
+			{
+				Text = "Join",
+				ToolTip = "Join a Shared Model",
+				Command = new Command(JoinModel)
+				{
+					DataContext = modelContext,
+					ToolTip = "Join Shared Model"
+				},
+				Enabled = true
+			};
 
 			return button;
 		}
