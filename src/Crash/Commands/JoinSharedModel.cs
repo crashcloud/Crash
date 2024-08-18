@@ -6,6 +6,8 @@ using Crash.Handlers.InternalEvents;
 using Crash.UI.JoinModel;
 using Crash.UI.UsersView;
 
+using Eto.Forms;
+
 using Rhino.Commands;
 using Rhino.DocObjects;
 using Rhino.UI;
@@ -38,38 +40,46 @@ namespace Crash.Commands
 
 		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
 		{
-			var dialog = new JoinWindow();
-			var chosenModel = await dialog.ShowModalAsync(RhinoEtoApp.MainWindow);
-
 			_crashDoc = null;
 			_rhinoDoc = doc;
 
-			if (!await CommandUtils.CheckAlreadyConnectedAsync(crashDoc))
+			if (crashDoc?.LocalClient?.IsConnected == true)
 			{
+				AlertUser(mode, "You are already connected to a model. Please disconnect first.");
 				return Result.Cancel;
 			}
-
-			await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 
 			var name = Environment.UserName;
 			if (mode == RunMode.Interactive)
 			{
+				var dialog = new JoinWindow();
+				var chosenModel = await dialog.ShowModalAsync(RhinoEtoApp.MainWindow);
+
+				if (chosenModel is null) return Result.Cancel;
+
+				if (string.IsNullOrEmpty(chosenModel?.ModelAddress))
+				{
+					return Result.Cancel;
+				}
+
+				_lastUrl = chosenModel?.ModelAddress;
 			}
 			else
 			{
 				if (!CommandUtils.GetUserName(out name))
 				{
-					RhinoApp.WriteLine("Invalid Name Input. Avoid empty values");
+					AlertUser(mode, "Invalid Name Input. Avoid empty values");
 					return Result.Cancel;
 				}
 
 				if (!_GetServerURL(ref _lastUrl))
 				{
-					RhinoApp.WriteLine("Invalid URL Input. ");
+					AlertUser(mode, "Invalid URL Input. ");
 					return Result.Nothing;
 				}
 			}
 
+			await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 			_crashDoc ??= CrashDocRegistry.CreateAndRegisterDocument(doc);
 
 			_CreateCurrentUser(_crashDoc, name);
@@ -79,6 +89,20 @@ namespace Crash.Commands
 			return Result.Success;
 		}
 
+		private void AlertUser(RunMode mode, string message)
+		{
+			if (mode == RunMode.Interactive)
+			{
+				RhinoApp.InvokeOnUiThread(() =>
+				{
+					MessageBox.Show(message, MessageBoxButtons.OK);
+				});
+			}
+			else
+			{
+				RhinoApp.WriteLine(message);
+			}
+		}
 		private async Task StartServer()
 		{
 			LoadingUtils.Start();

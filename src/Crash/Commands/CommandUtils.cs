@@ -13,20 +13,20 @@ namespace Crash.Commands
 	internal static class CommandUtils
 	{
 		private static readonly Dictionary<Interval, string> PortValidation = new()
-		                                                                      {
-			                                                                      {
-				                                                                      new Interval(int.MinValue, 1000),
-				                                                                      "Port number is too small!"
-			                                                                      },
-			                                                                      {
-				                                                                      new Interval(10000, int.MaxValue),
-				                                                                      "Port number is too high!"
-			                                                                      },
-			                                                                      {
-				                                                                      new Interval(5000, 5001),
-				                                                                      "Port number is already in use on Macs"
-			                                                                      }
-		                                                                      };
+																			  {
+																				  {
+																					  new Interval(int.MinValue, 1000),
+																					  "Port number is too small!"
+																				  },
+																				  {
+																					  new Interval(10000, int.MaxValue),
+																					  "Port number is too high!"
+																				  },
+																				  {
+																					  new Interval(5000, 5001),
+																					  "Port number is already in use on Macs"
+																				  }
+																			  };
 
 		/// <summary>Checks to see if the user is currently in a Shared Model</summary>
 		internal static bool InSharedModel(CrashDoc crashDoc)
@@ -45,7 +45,7 @@ namespace Crash.Commands
 		///     to take action if connected.
 		/// </summary>
 		/// <returns>True if already connected</returns>
-		internal static async Task<bool> CheckAlreadyConnectedAsync(CrashDoc crashDoc)
+		internal static async Task<bool> TryLeaveModel(CrashDoc crashDoc)
 		{
 			try
 			{
@@ -85,7 +85,7 @@ namespace Crash.Commands
 		}
 
 
-		internal static async Task<bool> StartLocalClient(CrashDoc crashDoc, string url)
+		internal static async Task<bool> StartLocalClient(CrashDoc crashDoc, string url, bool headless = false)
 		{
 			var userName = crashDoc.Users.CurrentUser.Name;
 			var message = "An unexplained exception occured, try again.";
@@ -100,11 +100,11 @@ namespace Crash.Commands
 			}
 			catch (HttpRequestException)
 			{
-				message = "Server was not found! Please try retyping the address.";
+				message = $"Server was not found at {url}! Please try retyping the address.";
 			}
 			catch (UriFormatException)
 			{
-				message = "The given address was invalid! Please try retying the address";
+				message = $"The given address ({url}) was invalid! Please try retying the address";
 			}
 			catch (InvalidOperationException)
 			{
@@ -113,14 +113,31 @@ namespace Crash.Commands
 			catch (Exception ex)
 			{
 				message += $", {ex.Message}";
+				message += $" Please contact a developer for assistance.";
 			}
 
 			RhinoApp.InvokeOnUiThread(() =>
-			                          {
-				                          LoadingUtils.Close();
-				                          MessageBox.Show(message, MessageBoxButtons.OK);
-			                          });
+									  {
+										  LoadingUtils.Close();
+										  if (headless)
+										  {
+											  RhinoApp.WriteLine(message);
+										  }
+										  else
+										  {
+										  	MessageBox.Show(message, MessageBoxButtons.OK);
+										  }
+									  });
+
+			RhinoApp.Idle += ReOpenJoinWindow;
+
 			return false;
+		}
+
+		private static void ReOpenJoinWindow(object? sender, EventArgs e)
+		{
+			RhinoApp.Idle -= ReOpenJoinWindow;
+			RhinoApp.RunScript(JoinSharedModel.Instance.EnglishName, false);
 		}
 
 		private static Uri GetCleanUri(string url)
@@ -133,7 +150,7 @@ namespace Crash.Commands
 			var cleanUrl = url;
 
 			if (!cleanUrl.EndsWith("/Crash") &&
-			    !cleanUrl.EndsWith("\\Crash"))
+				!cleanUrl.EndsWith("\\Crash"))
 			{
 				cleanUrl = $"{cleanUrl}/Crash";
 			}

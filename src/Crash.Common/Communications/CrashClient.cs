@@ -24,6 +24,8 @@ namespace Crash.Common.Communications
 		public const string DefaultPort = "8080";
 		private readonly CrashDoc _crashDoc;
 
+		public string Url { get; private set; }
+
 		private HubConnection _connection;
 		private string _user;
 
@@ -81,28 +83,28 @@ namespace Crash.Common.Communications
 		public static HubConnection GetHubConnection(Uri url)
 		{
 			return new HubConnectionBuilder()
-			       .WithUrl(url)
-			       // .ConfigureLogging(LoggingConfigurer)
-			       .WithAutomaticReconnect(new[]
-			                               {
-				                               TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100),
-				                               TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(10)
-			                               })
-			       .Build();
+				   .WithUrl(url)
+				   // .ConfigureLogging(LoggingConfigurer)
+				   .WithAutomaticReconnect(new[]
+										   {
+											   TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100),
+											   TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(10)
+										   })
+				   .Build();
 		}
 
 		private static JsonHubProtocolOptions JsonOptions()
 		{
 			return new JsonHubProtocolOptions
-			       {
-				       PayloadSerializerOptions = new JsonSerializerOptions
-				                                  {
-					                                  IgnoreReadOnlyFields = true,
-					                                  IgnoreReadOnlyProperties = true,
-					                                  NumberHandling = JsonNumberHandling
-						                                  .AllowNamedFloatingPointLiterals
-				                                  }
-			       };
+			{
+				PayloadSerializerOptions = new JsonSerializerOptions
+				{
+					IgnoreReadOnlyFields = true,
+					IgnoreReadOnlyProperties = true,
+					NumberHandling = JsonNumberHandling
+														  .AllowNamedFloatingPointLiterals
+				}
+			};
 		}
 
 		private static void LoggingConfigurer(ILoggingBuilder loggingBuilder)
@@ -139,10 +141,10 @@ namespace Crash.Common.Communications
 		private async Task ConnectionReconnectingAsync(Exception? arg)
 		{
 			var closedTask = arg switch
-			                 {
-				                 HubException => ChangesCouldNotBeSent(),
-				                 _            => Task.CompletedTask
-			                 };
+			{
+				HubException => ChangesCouldNotBeSent(),
+				_ => Task.CompletedTask
+			};
 
 			await closedTask;
 		}
@@ -150,12 +152,12 @@ namespace Crash.Common.Communications
 		private async Task ConnectionClosedAsync(Exception? arg)
 		{
 			var closedTask = arg switch
-			                 {
-				                 HubException               => ChangesCouldNotBeSent(),
-				                 WebSocketException         => ServerIndicatedPossibleClosure(),
-				                 OperationCanceledException => ServerClosedUnexpectidly(),
-				                 _                          => Task.CompletedTask
-			                 };
+			{
+				HubException => ChangesCouldNotBeSent(),
+				WebSocketException => ServerIndicatedPossibleClosure(),
+				OperationCanceledException => ServerClosedUnexpectidly(),
+				_ => Task.CompletedTask
+			};
 
 			await closedTask;
 		}
@@ -214,7 +216,14 @@ namespace Crash.Common.Communications
 
 			_user = userName;
 			_connection = GetHubConnection(url);
+			_connection.Reconnecting += InformUserOfReconnect;
+			Url = url.AbsoluteUri;
 			RegisterConnections();
+		}
+
+		private async Task InformUserOfReconnect(Exception? exception)
+		{
+			Console.WriteLine("Attempting to reconnect to Server");
 		}
 
 		#endregion
@@ -239,7 +248,7 @@ namespace Crash.Common.Communications
 			catch
 			{
 				OnPushChangeFailed?.Invoke(this,
-				                           new CrashChangeArgs(_crashDoc, new[] { change }));
+										   new CrashChangeArgs(_crashDoc, new[] { change }));
 			}
 		}
 
@@ -253,7 +262,7 @@ namespace Crash.Common.Communications
 			catch
 			{
 				OnPushChangeFailed?.Invoke(this,
-				                           new CrashChangeArgs(_crashDoc, new[] { change }));
+										   new CrashChangeArgs(_crashDoc, new[] { change }));
 			}
 		}
 
@@ -270,7 +279,7 @@ namespace Crash.Common.Communications
 			catch
 			{
 				OnPushChangeFailed?.Invoke(this,
-				                           new CrashChangeArgs(_crashDoc, changes));
+										   new CrashChangeArgs(_crashDoc, changes));
 			}
 		}
 

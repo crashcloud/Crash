@@ -7,6 +7,9 @@ namespace Crash.Common.Communications
 		/// <summary>Tests for an Active Connection</summary>
 		public bool IsConnected { get; }
 
+		/// <summary>The connection address</summary>
+		public string Url { get; }
+
 		/// <summary>Registers the client and its connection url</summary>
 		/// <param name="userName">The User of the Client</param>
 		/// <param name="url">url of the server the client will talk to</param>

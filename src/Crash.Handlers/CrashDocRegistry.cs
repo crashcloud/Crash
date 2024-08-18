@@ -90,7 +90,8 @@ namespace Crash.Handlers
 		private static void RegisterQueue(object? sender, CrashInitArgs e)
 		{
 			e.CrashDoc.LocalClient.OnInit -= RegisterQueue;
-			RhinoApp.WriteLine("Loading Changes ...");
+			RhinoApp.WriteLine($"Connected to Crash Server {e.CrashDoc.LocalClient.Url} successfully.");
+			RhinoApp.WriteLine("Loading Changes from the server ...");
 
 			EventHandler cycleQueueDelegate = null;
 			cycleQueueDelegate = (o, args) =>
