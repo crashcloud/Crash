@@ -3,6 +3,7 @@ using System.Net.WebSockets;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+using Crash.Common.App;
 using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Common.Logging;
@@ -47,23 +48,24 @@ namespace Crash.Common.Communications
 		/// <summary>Starts the Client</summary>
 		/// <exception cref="ArgumentNullException">If CrashDoc is null</exception>
 		/// <exception cref="Exception">If UserName is empty</exception>
-		public async Task StartLocalClientAsync()
+		public async Task<Exception?> StartLocalClientAsync()
 		{
 			if (_crashDoc is null)
 			{
-				throw new ArgumentNullException("CrashDoc cannot be null!");
+				return new ArgumentNullException("CrashDoc cannot be null!");
 			}
 
 			var userName = _crashDoc?.Users?.CurrentUser.Name;
 			if (string.IsNullOrEmpty(userName))
 			{
-				throw new Exception("A User has not been assigned!");
+				return new Exception("A User has not been assigned!");
 			}
 
 			OnInitializeChanges += InitChangesAsync;
 			OnInitializeUsers += InitUsersAsync;
 
 			await StartAsync();
+			return null;
 		}
 
 		public void CancelConnection()
@@ -197,21 +199,21 @@ namespace Crash.Common.Communications
 
 		public bool IsConnected => _connection is not null && _connection.State != HubConnectionState.Disconnected;
 
-		public void RegisterConnection(string userName, Uri url)
+		public Exception RegisterConnection(string userName, Uri url)
 		{
 			if (string.IsNullOrEmpty(userName))
 			{
-				throw new ArgumentException("Username cannot be empty or null");
+				return new ArgumentException("Username cannot be empty or null");
 			}
 
 			if (url is null)
 			{
-				throw new UriFormatException("URL Cannot be null");
+				return new UriFormatException("URL Cannot be null");
 			}
 
 			if (!url.AbsoluteUri.Contains("/Crash"))
 			{
-				throw new UriFormatException("URL must end in /Crash to connect!");
+				return new UriFormatException("URL must end in /Crash to connect!");
 			}
 
 			_user = userName;
@@ -219,11 +221,20 @@ namespace Crash.Common.Communications
 			_connection.Reconnecting += InformUserOfReconnect;
 			Url = url.AbsoluteUri;
 			RegisterConnections();
+
+			return null;
 		}
 
 		private async Task InformUserOfReconnect(Exception? exception)
 		{
-			Console.WriteLine("Attempting to reconnect to Server");
+			CrashApp.InformUser("Attempting to reconnect to Server ...");
+			_connection.Reconnected += InformUserOfReconnection;
+		}
+
+		private async Task InformUserOfReconnection(string? arg)
+		{
+			_connection.Reconnected -= InformUserOfReconnection;
+			CrashApp.InformUser("Reconnected successfully");
 		}
 
 		#endregion

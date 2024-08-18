@@ -13,6 +13,7 @@ using Crash.UI.UsersView;
 using Eto.Forms;
 
 using Rhino.PlugIns;
+using Crash.Common.App;
 
 namespace Crash
 {
@@ -154,7 +155,7 @@ namespace Crash
 		{
 			var message = "The server connection has been lost.\n" +
 						  "Your model will be closed.\n" +
-						  "Your Data is likely safe.";
+						  "Objects highlighted in Red have not transmitted all of their data and will be lost.";
 			try
 			{
 				RhinoApp.InvokeOnUiThread(() =>
@@ -225,6 +226,8 @@ namespace Crash
 		{
 			// Add feature flags as advanced settings here!
 			InteractivePipe.Active = new InteractivePipe { Enabled = false };
+
+			CrashApp.UserMessage += (_, m) => RhinoApp.WriteLine(m);
 
 			return base.OnLoad(ref errorMessage);
 		}

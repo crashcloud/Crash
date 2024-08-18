@@ -90,48 +90,59 @@ namespace Crash.Commands
 			var userName = crashDoc.Users.CurrentUser.Name;
 			var message = "An unexplained exception occured, try again.";
 
-			try
+			var uri = GetCleanUri(url);
+			var result = crashDoc.LocalClient.RegisterConnection(userName, uri);
+			var registerResult = result switch
 			{
-				var uri = GetCleanUri(url);
-				crashDoc.LocalClient.RegisterConnection(userName, uri);
+				HttpRequestException => "Server was not found at {url}! Please try retyping the address.",
+				UriFormatException => "The given address ({url}) was invalid! Please try retying the address",
+				InvalidOperationException => "There was an issue with the local client",
+				Exception ex => $"An unexplained exception occured, try again. ({ex.Message}), please contact a developer for assistance.",
+				_ => string.Empty
+			};
 
-				await crashDoc.LocalClient.StartLocalClientAsync();
-				return true;
-			}
-			catch (HttpRequestException)
+			if (!string.IsNullOrEmpty(registerResult))
 			{
-				message = $"Server was not found at {url}! Please try retyping the address.";
-			}
-			catch (UriFormatException)
-			{
-				message = $"The given address ({url}) was invalid! Please try retying the address";
-			}
-			catch (InvalidOperationException)
-			{
-				message = "There was an issue with the local client";
-			}
-			catch (Exception ex)
-			{
-				message += $", {ex.Message}";
-				message += $" Please contact a developer for assistance.";
+				message = registerResult;
+				AlertUser(message, headless);
+				RhinoApp.Idle += ReOpenJoinWindow;
+
+				return false;
 			}
 
+			var startResult = await crashDoc.LocalClient.StartLocalClientAsync();
+			var startMessage = startResult switch
+			{
+				Exception ex => $"An unexplained exception occured, try again. ({ex.Message}), please contact a developer for assistance.",
+				_ => string.Empty
+			};
+
+			if (!string.IsNullOrEmpty(startMessage))
+			{
+				message = startMessage;
+				AlertUser(message, headless);
+				RhinoApp.Idle += ReOpenJoinWindow;
+
+				return false;
+			}
+
+			return true;
+		}
+
+		internal static void AlertUser(string message, bool headless = false)
+		{
 			RhinoApp.InvokeOnUiThread(() =>
-									  {
-										  LoadingUtils.Close();
-										  if (headless)
-										  {
-											  RhinoApp.WriteLine(message);
-										  }
-										  else
-										  {
-										  	MessageBox.Show(message, MessageBoxButtons.OK);
-										  }
-									  });
-
-			RhinoApp.Idle += ReOpenJoinWindow;
-
-			return false;
+									{
+										LoadingUtils.Close();
+										if (headless)
+										{
+											RhinoApp.WriteLine(message);
+										}
+										else
+										{
+											MessageBox.Show(message, MessageBoxButtons.OK);
+										}
+									});
 		}
 
 		private static void ReOpenJoinWindow(object? sender, EventArgs e)

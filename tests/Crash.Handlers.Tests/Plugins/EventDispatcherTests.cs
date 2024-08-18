@@ -31,10 +31,10 @@ namespace Crash.Handlers.Tests.Plugins
 
 				var addArgs = new CrashObjectEventArgs(null, point, rhinoId, Guid.NewGuid());
 				yield return new object[]
-				             {
-					             nameof(ICrashClient.PushChangeAsync), ChangeAction.Add | ChangeAction.Temporary,
-					             addArgs
-				             };
+							 {
+								 nameof(ICrashClient.PushChangeAsync), ChangeAction.Add | ChangeAction.Temporary,
+								 addArgs
+							 };
 
 				var deleteArgs = new CrashObjectEventArgs(null, null, Guid.NewGuid(), Guid.NewGuid());
 				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Remove, deleteArgs };
@@ -120,18 +120,18 @@ namespace Crash.Handlers.Tests.Plugins
 	internal sealed class DispatcherTestClient : ICrashClient
 	{
 		public Dictionary<string, int> CallCount = new()
-		                                           {
-			                                           { nameof(ICrashClient.StopAsync), 0 },
-			                                           { nameof(ICrashClient.StartLocalClientAsync), 0 },
-			                                           { nameof(ICrashClient.PushIdenticalChangesAsync), 0 },
-			                                           { nameof(ICrashClient.PushChangeAsync), 0 },
-			                                           { nameof(ICrashClient.PushChangesAsync), 0 },
-			                                           { nameof(ICrashClient.OnRecieveIdentical), 0 },
-			                                           { nameof(ICrashClient.OnRecieveChange), 0 },
-			                                           { nameof(ICrashClient.OnRecieveChanges), 0 },
-			                                           { nameof(ICrashClient.OnInitializeChanges), 0 },
-			                                           { nameof(ICrashClient.OnInitializeUsers), 0 }
-		                                           };
+												   {
+													   { nameof(ICrashClient.StopAsync), 0 },
+													   { nameof(ICrashClient.StartLocalClientAsync), 0 },
+													   { nameof(ICrashClient.PushIdenticalChangesAsync), 0 },
+													   { nameof(ICrashClient.PushChangeAsync), 0 },
+													   { nameof(ICrashClient.PushChangesAsync), 0 },
+													   { nameof(ICrashClient.OnRecieveIdentical), 0 },
+													   { nameof(ICrashClient.OnRecieveChange), 0 },
+													   { nameof(ICrashClient.OnRecieveChanges), 0 },
+													   { nameof(ICrashClient.OnInitializeChanges), 0 },
+													   { nameof(ICrashClient.OnInitializeUsers), 0 }
+												   };
 
 		internal DispatcherTestClient()
 		{
@@ -142,7 +142,7 @@ namespace Crash.Handlers.Tests.Plugins
 		public bool IsConnected { get; } = true;
 		public event EventHandler<CrashInitArgs>? OnInit;
 
-		public void RegisterConnection(string userName, Uri url)
+		public Exception RegisterConnection(string userName, Uri url)
 		{
 			throw new NotImplementedException();
 		}

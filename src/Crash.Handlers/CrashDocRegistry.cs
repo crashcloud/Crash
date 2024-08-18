@@ -1,5 +1,6 @@
 ﻿using BidirectionalMap;
 
+using Crash.Common.App;
 using Crash.Common.Document;
 using Crash.Common.Events;
 

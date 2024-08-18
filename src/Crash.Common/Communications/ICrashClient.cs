@@ -13,7 +13,7 @@ namespace Crash.Common.Communications
 		/// <summary>Registers the client and its connection url</summary>
 		/// <param name="userName">The User of the Client</param>
 		/// <param name="url">url of the server the client will talk to</param>
-		void RegisterConnection(string userName, Uri url);
+		Exception RegisterConnection(string userName, Uri url);
 
 		/// <summary>Stops the Connection</summary>
 		public Task StopAsync();
@@ -21,7 +21,7 @@ namespace Crash.Common.Communications
 		/// <summary>Starts the Client</summary>
 		/// <exception cref="NullReferenceException">If CrashDoc is null</exception>
 		/// <exception cref="Exception">If UserName is empty</exception>
-		public Task StartLocalClientAsync();
+		public Task<Exception> StartLocalClientAsync();
 
 		/// <summary>
 		///     Pushes an Update/Transform/Payload which applies to many Changes

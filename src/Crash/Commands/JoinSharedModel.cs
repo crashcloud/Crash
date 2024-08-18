@@ -45,7 +45,7 @@ namespace Crash.Commands
 
 			if (crashDoc?.LocalClient?.IsConnected == true)
 			{
-				AlertUser(mode, "You are already connected to a model. Please disconnect first.");
+				CommandUtils.AlertUser("You are already connected to a model. Please disconnect first.", mode == RunMode.Scripted);
 				return Result.Cancel;
 			}
 
@@ -68,13 +68,13 @@ namespace Crash.Commands
 			{
 				if (!CommandUtils.GetUserName(out name))
 				{
-					AlertUser(mode, "Invalid Name Input. Avoid empty values");
+					CommandUtils.AlertUser("Invalid Name Input. Avoid empty values", true);
 					return Result.Cancel;
 				}
 
 				if (!_GetServerURL(ref _lastUrl))
 				{
-					AlertUser(mode, "Invalid URL Input. ");
+					CommandUtils.AlertUser("Invalid URL Input.", true);
 					return Result.Nothing;
 				}
 			}
@@ -89,20 +89,6 @@ namespace Crash.Commands
 			return Result.Success;
 		}
 
-		private void AlertUser(RunMode mode, string message)
-		{
-			if (mode == RunMode.Interactive)
-			{
-				RhinoApp.InvokeOnUiThread(() =>
-				{
-					MessageBox.Show(message, MessageBoxButtons.OK);
-				});
-			}
-			else
-			{
-				RhinoApp.WriteLine(message);
-			}
-		}
 		private async Task StartServer()
 		{
 			LoadingUtils.Start();

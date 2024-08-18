@@ -42,9 +42,17 @@ namespace Crash.Common.App
 			Log(message, LogLevel.Warning);
 		}
 
+		public static void InformUser(string message)
+		{
+			Log(message, LogLevel.Debug);
+			UserMessage?.Invoke(null, message);
+		}
 
 		/// <summary>Fired every time a Log is called</summary>
 		public static event EventHandler<CrashLog> LogMessage;
+
+		/// <summary>Fired every time a Log is called</summary>
+		public static event EventHandler<string> UserMessage;
 
 		/// <summary>A Log structure</summary>
 		/// <param name="Message"></param>

@@ -24,9 +24,9 @@ namespace Crash.UI.UsersView
 			_crashDoc = crashDoc;
 			_viewModel = new UsersViewModel(crashDoc);
 			_viewModel.OnInvalidate += (sender, args) =>
-			                           {
-				                           Invalidate(true);
-			                           };
+									   {
+										   Invalidate(true);
+									   };
 
 
 			CreateForm();
@@ -108,21 +108,21 @@ namespace Crash.UI.UsersView
 #endif
 
 			var gridView = new GridView
-			               {
-				               AllowMultipleSelection = false,
-				               AllowEmptySelection = true,
-				               DataStore = _viewModel.Users,
-				               ShowHeader = false,
-				               Border = BorderType.None,
-				               RowHeight = 24,
-				               Columns =
-				               {
-					               CreateCameraColumn(),
-					               CreateVisibleColumn(),
-					               CreateColourColumn(),
-					               CreateUsersColumn()
-				               }
-			               };
+			{
+				AllowMultipleSelection = false,
+				AllowEmptySelection = true,
+				DataStore = _viewModel.Users,
+				ShowHeader = false,
+				Border = BorderType.None,
+				RowHeight = 24,
+				Columns =
+							   {
+								   CreateCameraColumn(),
+								   CreateVisibleColumn(),
+								   CreateColourColumn(),
+								   CreateUsersColumn()
+							   }
+			};
 
 			gridView.CellClick += _viewModel.CycleCameraSetting;
 
@@ -134,22 +134,27 @@ namespace Crash.UI.UsersView
 			{
 				Content = gridView;
 			}
+
+			this.Shown += (sender, args) =>
+						  {
+							  RhinoApp.InvokeOnUiThread(() => RhinoEtoApp.MainWindow?.Focus());
+						  };
 		}
 
 		private static GridColumn CreateUsersColumn()
 		{
 			return new GridColumn
-			       {
-				       DataCell = new TextBoxCell
-				                  {
-					                  Binding =
-						                  Binding.Property<UserObject, string>(u => u.Name)
-				                  },
-				       AutoSize = true,
-				       Editable = false,
-				       HeaderText = "Name",
-				       Resizable = false
-			       };
+			{
+				DataCell = new TextBoxCell
+				{
+					Binding =
+										  Binding.Property<UserObject, string>(u => u.Name)
+				},
+				AutoSize = true,
+				Editable = false,
+				HeaderText = "Name",
+				Resizable = false
+			};
 		}
 
 		private static GridColumn CreateColourColumn()
@@ -157,14 +162,14 @@ namespace Crash.UI.UsersView
 			var cell = new DrawableCell();
 			cell.Paint += DrawColourCircle;
 			var colourColumn = new GridColumn
-			                   {
-				                   DataCell = cell,
-				                   AutoSize = false,
-				                   Editable = false,
-				                   HeaderText = "",
-				                   Resizable = false,
-				                   Width = 24
-			                   };
+			{
+				DataCell = cell,
+				AutoSize = false,
+				Editable = false,
+				HeaderText = "",
+				Resizable = false,
+				Width = 24
+			};
 
 			return colourColumn;
 		}
@@ -172,31 +177,31 @@ namespace Crash.UI.UsersView
 		private GridColumn CreateVisibleColumn()
 		{
 			return new GridColumn
-			       {
-				       DataCell = new CheckBoxCell { Binding = Binding.Property<UserObject, bool?>(uo => uo.Visible) },
-				       AutoSize = false,
-				       Editable = true,
-				       HeaderText = "",
-				       Resizable = false,
-				       Width = 24
-			       };
+			{
+				DataCell = new CheckBoxCell { Binding = Binding.Property<UserObject, bool?>(uo => uo.Visible) },
+				AutoSize = false,
+				Editable = true,
+				HeaderText = "",
+				Resizable = false,
+				Width = 24
+			};
 		}
 
 		private static GridColumn CreateCameraColumn()
 		{
 			return new GridColumn
-			       {
-				       DataCell = new ImageViewCell
-				                  {
-					                  Binding =
-						                  Binding.Property<UserObject, Image>(u => u.Image)
-				                  },
-				       AutoSize = false,
-				       Editable = false,
-				       HeaderText = "",
-				       Resizable = false,
-				       Width = 30
-			       };
+			{
+				DataCell = new ImageViewCell
+				{
+					Binding =
+										  Binding.Property<UserObject, Image>(u => u.Image)
+				},
+				AutoSize = false,
+				Editable = false,
+				HeaderText = "",
+				Resizable = false,
+				Width = 30
+			};
 		}
 
 		private static void DrawColourCircle(object? sender, CellPaintEventArgs e)
