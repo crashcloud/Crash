@@ -50,7 +50,8 @@ namespace Crash.Handlers.Tests.Plugins.Geometry
 
 			// Assert that RhinoDoc had something added 
 			Assert.That(_rdoc.Objects, Is.Not.Empty);
-			Assert.That(_cdoc.TemporaryChangeTable, Is.Empty);
+			Assert.That(_cdoc.Tables.TryGet<TemporaryChangeTable>(out var tempTable), Is.True);
+			Assert.That(tempTable, Is.Empty);
 		}
 
 		[OneTimeTearDown]

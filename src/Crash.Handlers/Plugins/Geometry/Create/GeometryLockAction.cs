@@ -1,4 +1,5 @@
 ﻿using Crash.Common.Document;
+using Crash.Common.Tables;
 using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
 
@@ -27,9 +28,14 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			var userName = crashArgs.Doc.Users.CurrentUser.Name;
 			changes = GetChanges(crashArgs.Doc, cargs.CrashObjects, userName);
 
+			if (!crashArgs.Doc.Tables.TryGet<RealisedChangeTable>(out var realisedTable))
+			{
+				return false;
+			}
+
 			foreach (var change in changes)
 			{
-				crashArgs.Doc.RealisedChangeTable.AddSelected(change.Id);
+				realisedTable.AddSelected(change.Id);
 			}
 
 			return true;

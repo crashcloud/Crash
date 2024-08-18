@@ -37,7 +37,7 @@ namespace Crash.Commands
 			}
 
 			await crashDoc.LocalClient.PushIdenticalChangesAsync(selectedChanges,
-			                                                     DoneChange.GetDoneChange(string.Empty));
+																 DoneChange.GetDoneChange(string.Empty));
 
 			doc.Objects.UnselectAll();
 			doc.Views.Redraw();
@@ -48,10 +48,15 @@ namespace Crash.Commands
 		private static IEnumerable<Guid> GetSelectedChanges(RhinoDoc doc)
 		{
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(doc);
+			if (!crashDoc.Tables.TryGet<RealisedChangeTable>(out var realTable))
+			{
+				return Enumerable.Empty<Guid>();
+			}
+
 			var selected = new List<Guid>();
 			foreach (var rhinoObj in doc.Objects.GetSelectedObjects(false, false))
 			{
-				if (!crashDoc.RealisedChangeTable.TryGetChangeId(rhinoObj.Id, out var changeId))
+				if (!realTable.TryGetChangeId(rhinoObj.Id, out var changeId))
 				{
 					continue;
 				}

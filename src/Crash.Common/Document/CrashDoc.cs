@@ -78,13 +78,6 @@ namespace Crash.Common.Document
 		/// <summary>The Users Table for the Crash Doc</summary>
 		public UserTable Users { get; }
 
-		/// <summary>The Changes Table for the Crash Doc</summary>
-		[Obsolete("Use Tables.Get<TemporaryChangeTable>()")]
-		public TemporaryChangeTable TemporaryChangeTable => Tables.Get<TemporaryChangeTable>();
-
-		[Obsolete("Use Tables.Get<RealisedChangeTable>()")]
-		public RealisedChangeTable RealisedChangeTable => Tables.Get<RealisedChangeTable>();
-
 		/// <summary>Stores all of the Tables in the Crash Doc</summary>
 		public CacheTable Tables { get; }
 

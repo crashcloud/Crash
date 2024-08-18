@@ -1,5 +1,6 @@
 ﻿using Crash.Common.App;
 using Crash.Common.Document;
+using Crash.Common.Tables;
 using Crash.Geometry;
 using Crash.Handlers.Plugins.Layers;
 using Crash.Handlers.Utils;
@@ -154,18 +155,20 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 				{
 					var cache = EventQueue.Dequeue();
 					var cacheAction = cache switch
-					                  {
-						                  AddRecord add => AddCrashObject.Invoke(this, add.AddArgs),
-						                  TransformRecord transform =>
-							                  TransformCrashObject.Invoke(this, transform.TransformArgs),
-						                  DeleteRecord delete => DeleteCrashObject.Invoke(this, delete.DeleteArgs),
-						                  UpdateRecord update => UpdateCrashObject.Invoke(this, update.UpdateArgs),
-						                  ModifyGeometryRecord modify => SendModifyAsync(modify),
-						                  _ => throw new NotImplementedException("Scenario not implemented!")
-					                  };
+					{
+						AddRecord add => AddCrashObject.Invoke(this, add.AddArgs),
+						TransformRecord transform =>
+							TransformCrashObject.Invoke(this, transform.TransformArgs),
+						DeleteRecord delete => DeleteCrashObject.Invoke(this, delete.DeleteArgs),
+						UpdateRecord update => UpdateCrashObject.Invoke(this, update.UpdateArgs),
+						ModifyGeometryRecord modify => SendModifyAsync(modify),
+						_ => throw new NotImplementedException("Scenario not implemented!")
+					};
 
 					await cacheAction;
 				}
+
+				if (!crashDoc.Tables.TryGet<RealisedChangeTable>(out var realisedTable)) return;
 
 				var selectionQueue = SelectionQueue.ToArray();
 				SelectionQueue.Clear();
@@ -174,7 +177,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 					var isSelected = queueItem.Value;
 					var changeId = queueItem.Key;
 
-					if (!crashDoc.RealisedChangeTable.TryGetRhinoId(changeId, out var rhinoId))
+					if (!realisedTable.TryGetRhinoId(changeId, out var rhinoId))
 					{
 						continue;
 					}
@@ -292,8 +295,8 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 
 			var transformArgs =
 				new CrashTransformEventArgs(crashDoc, transform,
-				                            args.Objects.Select(o => new CrashObject(crashDoc, o)),
-				                            args.ObjectsWillBeCopied);
+											args.Objects.Select(o => new CrashObject(crashDoc, o)),
+											args.ObjectsWillBeCopied);
 
 			var transformRecord = new TransformRecord(transformArgs);
 			Push(transformRecord);
@@ -310,10 +313,8 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			var changeIds = new List<Guid>(args.RhinoObjects.Length);
 			foreach (var rhinoObject in args.RhinoObjects)
 			{
-				if (!crashDoc.RealisedChangeTable.TryGetChangeId(rhinoObject.Id, out var changeId))
-				{
-					continue;
-				}
+				if (!crashDoc.Tables.TryGet<RealisedChangeTable>(out var realisedTable)) continue;
+				if (!realisedTable.TryGetChangeId(rhinoObject.Id, out var changeId)) continue;
 
 				changeIds.Add(changeId);
 			}
@@ -332,10 +333,8 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			var changeIds = new List<Guid>(args.RhinoObjects.Length);
 			foreach (var rhinoObject in args.RhinoObjects)
 			{
-				if (!crashDoc.RealisedChangeTable.TryGetChangeId(rhinoObject.Id, out var changeId))
-				{
-					continue;
-				}
+				if (!crashDoc.Tables.TryGet<RealisedChangeTable>(out var realisedTable)) continue;
+				if (!realisedTable.TryGetChangeId(rhinoObject.Id, out var changeId)) continue;
 
 				changeIds.Add(changeId);
 			}
@@ -351,7 +350,9 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 				return;
 			}
 
-			var currentlySelected = crashDoc.RealisedChangeTable.GetSelected();
+			if (!crashDoc.Tables.TryGet<RealisedChangeTable>(out var realisedTable)) return;
+
+			var currentlySelected = realisedTable.GetSelected();
 			PushSelections(currentlySelected, false);
 		}
 
@@ -420,7 +421,8 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 
 			try
 			{
-				if (!crashDoc.RealisedChangeTable.TryGetChangeId(args.RhinoObject.Id, out var changeId))
+				if (!crashDoc.Tables.TryGet<RealisedChangeTable>(out var realisedTable)) return;
+				if (!realisedTable.TryGetChangeId(args.RhinoObject.Id, out var changeId))
 				{
 					return;
 				}
@@ -429,7 +431,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 
 				var updates =
 					ObjectAttributeComparisonUtils.GetAttributeDifferences(args.OldAttributes,
-					                                                       args.NewAttributes, userName);
+																		   args.NewAttributes, userName);
 
 				if (updates is null || updates.Count == 0)
 				{
@@ -461,13 +463,13 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			}
 
 			var action = args.EventType switch
-			             {
-				             LayerTableEventType.Added     => ChangeAction.Add,
-				             LayerTableEventType.Undeleted => ChangeAction.Add,
-				             LayerTableEventType.Deleted   => ChangeAction.Remove,
-				             LayerTableEventType.Modified  => ChangeAction.Update,
-				             _                             => ChangeAction.None
-			             };
+			{
+				LayerTableEventType.Added => ChangeAction.Add,
+				LayerTableEventType.Undeleted => ChangeAction.Add,
+				LayerTableEventType.Deleted => ChangeAction.Remove,
+				LayerTableEventType.Modified => ChangeAction.Update,
+				_ => ChangeAction.None
+			};
 
 			var layerTable = ContextDocument.Tables.Get<LayerTable>();
 			if (!layerTable.TryGet(args.LayerIndex, out var crashLayer))
@@ -478,12 +480,12 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			var userName = crashDoc.Users.CurrentUser.Name;
 
 			var diffs = args.EventType switch
-			            {
-				            LayerTableEventType.Added => LayerComparisonUtils.GetDefault(args.NewState, userName),
-				            LayerTableEventType.Modified => LayerComparisonUtils.GetDifferences(args.OldState,
-						             args.NewState, userName),
-				            _ => new Dictionary<string, string>()
-			            };
+			{
+				LayerTableEventType.Added => LayerComparisonUtils.GetDefault(args.NewState, userName),
+				LayerTableEventType.Modified => LayerComparisonUtils.GetDifferences(args.OldState,
+						 args.NewState, userName),
+				_ => new Dictionary<string, string>()
+			};
 			LayerComparisonUtils.InsertLayerDefaults(args.OldState, args.NewState, diffs, userName);
 
 			var crashArgs = new CrashLayerArgs(ContextDocument, crashLayer, action, diffs);
@@ -517,7 +519,7 @@ namespace Crash.Handlers.InternalEvents.Wrapping
 			}
 
 			if ((args.IsBeginUndo && UndoRecords.Count == 0) ||
-			    (args.IsBeginRedo && RedoRecords.Count == 0))
+				(args.IsBeginRedo && RedoRecords.Count == 0))
 			{
 				return;
 			}

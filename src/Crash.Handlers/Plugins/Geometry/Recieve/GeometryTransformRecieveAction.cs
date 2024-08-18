@@ -1,6 +1,7 @@
 ﻿using Crash.Common.Changes;
 using Crash.Common.Document;
 using Crash.Common.Events;
+using Crash.Common.Tables;
 using Crash.Events;
 using Crash.Handlers.Changes;
 using Crash.Utils;
@@ -29,7 +30,10 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				return;
 			}
 
-			if (crashDoc.TemporaryChangeTable.TryGetChangeOfType(recievedChange.Id, out GeometryChange geomChange))
+			if (!crashDoc.Tables.TryGet<TemporaryChangeTable>(out var tempTable))
+				return;
+
+			if (tempTable.TryGetChangeOfType(recievedChange.Id, out GeometryChange geomChange))
 			{
 				geomChange.Geometry.Transform(xform);
 			}

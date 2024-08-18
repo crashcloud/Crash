@@ -1,4 +1,5 @@
 ﻿using Crash.Common.Document;
+using Crash.Common.Tables;
 
 using Rhino.DocObjects;
 
@@ -19,7 +20,10 @@ namespace Crash.Handlers.InternalEvents
 		internal CrashObject(CrashDoc crashDoc, RhinoObject rhinoObject)
 		{
 			RhinoId = rhinoObject.Id;
-			crashDoc.RealisedChangeTable.TryGetChangeId(rhinoObject.Id, out ChangeId);
+			if (crashDoc.Tables.TryGet<RealisedChangeTable>(out var realTable))
+			{
+				realTable.TryGetChangeId(rhinoObject.Id, out ChangeId);
+			}
 		}
 
 		internal CrashObject(Guid changeId, Guid rhinoId)

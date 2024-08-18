@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 
 using Crash.Common.Document;
+using Crash.Common.Tables;
 using Crash.Handlers.Utils;
 
 namespace Crash.Handlers.Plugins.Geometry.Recieve
@@ -17,7 +18,9 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 		{
 			var payload = JsonSerializer.Deserialize<PayloadPacket>(recievedChange.Payload);
 
-			crashDoc.RealisedChangeTable.TryGetRhinoId(recievedChange.Id, out var rhinoId);
+			if (!crashDoc.Tables.TryGet<RealisedChangeTable>(out var realisedTable)) return;
+
+			realisedTable.TryGetRhinoId(recievedChange.Id, out var rhinoId);
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
 
 			var rhinoObject = rhinoDoc.Objects.FindId(rhinoId);

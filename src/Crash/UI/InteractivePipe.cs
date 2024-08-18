@@ -2,6 +2,7 @@
 
 using Crash.Common.Changes;
 using Crash.Common.Document;
+using Crash.Common.Tables;
 using Crash.Handlers;
 using Crash.Handlers.Plugins;
 
@@ -45,8 +46,8 @@ namespace Crash.UI
 		}
 
 		private double scale => RhinoDoc.ActiveDoc is not null
-			                        ? RhinoMath.UnitScale(UnitSystem.Meters, RhinoDoc.ActiveDoc.ModelUnitSystem)
-			                        : 0;
+									? RhinoMath.UnitScale(UnitSystem.Meters, RhinoDoc.ActiveDoc.ModelUnitSystem)
+									: 0;
 
 		private int FAR_AWAY => (int)scale * 1_5000;
 		private int VERY_FAR_AWAY => (int)scale * 7_5000;
@@ -109,17 +110,14 @@ namespace Crash.UI
 			}
 
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
-			if (crashDoc?.TemporaryChangeTable is null)
-			{
-				return;
-			}
+			if (!crashDoc.Tables.TryGet<TemporaryChangeTable>(out var tempTable)) return;
 
 			if (crashDoc?.Users is null)
 			{
 				return;
 			}
 
-			var caches = crashDoc.TemporaryChangeTable.GetChanges().ToList();
+			var caches = tempTable.GetChanges().ToList();
 			foreach (var change in caches)
 			{
 				if (e.Display.InterruptDrawing())
@@ -166,7 +164,7 @@ namespace Crash.UI
 				var cameraChange = CameraChange.CreateNew(activeCamera.Value, "");
 
 				if (!definitionRegistry.TryGetValue(cameraChange.Type,
-				                                    out var definition))
+													out var definition))
 				{
 					continue;
 				}

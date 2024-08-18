@@ -1,4 +1,5 @@
 ﻿using Crash.Common.Document;
+using Crash.Common.Tables;
 
 using Rhino.DocObjects;
 using Rhino.Geometry;
@@ -32,8 +33,11 @@ namespace Crash.Handlers.InternalEvents
 			Geometry = geometry;
 			if (changeId == default)
 			{
-				if (!crashDoc.RealisedChangeTable.TryGetChangeId(rhinoId, out ChangeId))
+				if (crashDoc.Tables.TryGet<RealisedChangeTable>(out var realisedTable) &&
+					!realisedTable.TryGetChangeId(rhinoId, out ChangeId))
+				{
 					ChangeId = Guid.NewGuid();
+				}
 			}
 			else
 			{

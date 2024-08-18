@@ -1,5 +1,6 @@
 ﻿using Crash.Common.Document;
 using Crash.Common.Events;
+using Crash.Common.Tables;
 using Crash.Events;
 using Crash.Handlers.Changes;
 using Crash.Utils;
@@ -23,11 +24,11 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			var changeArgs = new IdleArgs(crashDoc, recievedChange);
 			IdleAction resultingAction = null;
 
-			if (crashDoc.TemporaryChangeTable.TryGetChangeOfType(recievedChange.Id, out IChange temporaryChange))
+			if (crashDoc.Tables.TryGet<TemporaryChangeTable>(out var tempTable) && tempTable.TryGetChangeOfType(recievedChange.Id, out IChange temporaryChange))
 			{
 				resultingAction = new IdleAction(RemoveFromCache, changeArgs);
 			}
-			else if (crashDoc.RealisedChangeTable.ContainsChangeId(recievedChange.Id))
+			else if (crashDoc.Tables.TryGet<RealisedChangeTable>(out var realisedTable) && realisedTable.ContainsChangeId(recievedChange.Id))
 			{
 				resultingAction = new IdleAction(RemoveFromDocument, changeArgs);
 			}
@@ -56,9 +57,12 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.Doc);
 				rhinoDoc.Objects.Delete(rhinoObject, true, true);
 
-				args.Doc.TemporaryChangeTable.UpdateChange(geomChange);
-				args.Doc.TemporaryChangeTable.DeleteChange(geomChange.Id);
-				args.Doc.RealisedChangeTable.PurgeChange(args.Change.Id);
+				if (!args.Doc.Tables.TryGet<TemporaryChangeTable>(out var tempTable)) return;
+				if (!args.Doc.Tables.TryGet<RealisedChangeTable>(out var realTable)) return;
+
+				tempTable.UpdateChange(geomChange);
+				tempTable.DeleteChange(geomChange.Id);
+				realTable.PurgeChange(args.Change.Id);
 			}
 			finally
 			{
@@ -68,7 +72,8 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 
 		private void RemoveFromCache(IdleArgs args)
 		{
-			args.Doc.TemporaryChangeTable.DeleteChange(args.Change.Id);
+			if (!args.Doc.Tables.TryGet<TemporaryChangeTable>(out var tempTable)) return;
+			tempTable.DeleteChange(args.Change.Id);
 		}
 	}
 }

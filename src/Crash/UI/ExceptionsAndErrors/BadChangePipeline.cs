@@ -1,6 +1,7 @@
 using System.Drawing;
 
 using Crash.Common.Document;
+using Crash.Common.Tables;
 using Crash.Handlers;
 
 using Rhino.Display;
@@ -62,10 +63,7 @@ namespace Crash.UI.ExceptionsAndErrors
 
 		private void DrawOverlay(object sender, DrawEventArgs e)
 		{
-			if (_crashDoc?.RealisedChangeTable is null)
-			{
-				return;
-			}
+			if (!crashDoc.Tables.TryGet<RealisedChangeTable>(out var realisedTable)) return;
 
 			if (_crashDoc?.Users is null)
 			{
@@ -74,7 +72,7 @@ namespace Crash.UI.ExceptionsAndErrors
 
 			foreach (var _changeId in _changes.ToHashSet())
 			{
-				if (!_crashDoc.RealisedChangeTable.TryGetRhinoId(_changeId, out var rhinoId))
+				if (!realisedTable.TryGetRhinoId(_changeId, out var rhinoId))
 				{
 					continue;
 				}
@@ -99,10 +97,7 @@ namespace Crash.UI.ExceptionsAndErrors
 
 		private void DisplayPipelineOnCalculateBoundingBox(object? sender, CalculateBoundingBoxEventArgs e)
 		{
-			if (_crashDoc?.TemporaryChangeTable is null)
-			{
-				return;
-			}
+			if (!_crashDoc.Tables.TryGetTable<RealisedChangeTable>(out var table)) return;
 
 			if (_crashDoc?.Users is null)
 			{
@@ -111,7 +106,7 @@ namespace Crash.UI.ExceptionsAndErrors
 
 			foreach (var _changeId in _changes)
 			{
-				if (!_crashDoc.RealisedChangeTable.TryGetRhinoId(_changeId, out var rhinoId))
+				if (!table.TryGetRhinoId(_changeId, out var rhinoId))
 				{
 					continue;
 				}

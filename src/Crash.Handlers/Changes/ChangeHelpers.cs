@@ -1,4 +1,5 @@
 ﻿using Crash.Common.Document;
+using Crash.Common.Tables;
 using Crash.Handlers;
 
 using Rhino.DocObjects;
@@ -21,7 +22,8 @@ namespace Crash.Utils
 				return false;
 			}
 
-			if (!crashDoc.RealisedChangeTable.TryGetRhinoId(change, out var rhinoId))
+			if (crashDoc.Tables.TryGet<RealisedChangeTable>(out var realTable)) return false;
+			if (!realTable.TryGetRhinoId(change, out var rhinoId))
 			{
 				return false;
 			}

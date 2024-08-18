@@ -20,10 +20,6 @@ namespace Crash.Handlers
 			s_documentRelationship = new BiMap<RhinoDoc, CrashDoc>();
 		}
 
-		/// <summary>The Active Crash Document.</summary>
-		[Obsolete("Don't use this, it's being phased out")]
-		public static CrashDoc? ActiveDoc => GetRelatedDocument(RhinoDoc.ActiveDoc);
-
 		/// <summary>
 		///     Returns the Document Related to the given <see cref="RhinoDoc" />
 		/// </summary>
@@ -98,17 +94,17 @@ namespace Crash.Handlers
 
 			EventHandler cycleQueueDelegate = null;
 			cycleQueueDelegate = (o, args) =>
-			                     {
-				                     e.CrashDoc.Queue.RunNextAction();
-			                     };
+								 {
+									 e.CrashDoc.Queue.RunNextAction();
+								 };
 			RhinoApp.Idle += cycleQueueDelegate;
 
 			EventHandler<CrashEventArgs> deRegisterQueueCycle = null;
 			deRegisterQueueCycle = (o, args) =>
-			                       {
-				                       DocumentDisposed -= deRegisterQueueCycle;
-				                       RhinoApp.Idle -= cycleQueueDelegate;
-			                       };
+								   {
+									   DocumentDisposed -= deRegisterQueueCycle;
+									   RhinoApp.Idle -= cycleQueueDelegate;
+								   };
 
 			DocumentDisposed += deRegisterQueueCycle;
 		}
@@ -152,9 +148,11 @@ namespace Crash.Handlers
 			s_documentRelationship.Remove(rhinoDoc);
 
 			var settings = new ObjectEnumeratorSettings
-			               {
-				               ActiveObjects = false, LockedObjects = true, HiddenObjects = true
-			               };
+			{
+				ActiveObjects = false,
+				LockedObjects = true,
+				HiddenObjects = true
+			};
 			var rhinoObjects = rhinoDoc.Objects.GetObjectList(settings);
 			foreach (var rhinoObject in rhinoObjects)
 			{

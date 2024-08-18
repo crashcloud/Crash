@@ -32,12 +32,12 @@ namespace Crash.Handlers.Tests.Plugins
 				{
 					var geom = NRhino.Random.Geometry.NLineCurve.Any();
 					Func<RhinoDoc, CrashObjectEventArgs> func = rdoc =>
-					                                            {
-						                                            var id = rdoc.Objects.Add(geom);
-						                                            var rhinoObject = rdoc.Objects.FindId(id);
-						                                            return new CrashObjectEventArgs(null, rhinoObject,
-								                                             Guid.NewGuid());
-					                                            };
+																{
+																	var id = rdoc.Objects.Add(geom);
+																	var rhinoObject = rdoc.Objects.FindId(id);
+																	return new CrashObjectEventArgs(null, rhinoObject,
+																			 Guid.NewGuid());
+																};
 					yield return func;
 				}
 			}
@@ -51,12 +51,12 @@ namespace Crash.Handlers.Tests.Plugins
 				{
 					var geom = NRhino.Random.Geometry.NLineCurve.Any();
 					Func<RhinoDoc, CrashObjectEventArgs> func = rdoc =>
-					                                            {
-						                                            var id = rdoc.Objects.Add(geom);
-						                                            var rhinoObject = rdoc.Objects.FindId(id);
-						                                            return new CrashObjectEventArgs(null, rhinoObject,
-								                                             Guid.NewGuid());
-					                                            };
+																{
+																	var id = rdoc.Objects.Add(geom);
+																	var rhinoObject = rdoc.Objects.FindId(id);
+																	return new CrashObjectEventArgs(null, rhinoObject,
+																			 Guid.NewGuid());
+																};
 					yield return func;
 				}
 			}
@@ -104,7 +104,8 @@ namespace Crash.Handlers.Tests.Plugins
 			var cache = GeometryChange.CreateNew(createRecieveArgs.Geometry, "Test");
 			cache.Id = createRecieveArgs.ChangeId;
 
-			_cdoc.TemporaryChangeTable.UpdateChange(cache);
+			Assert.True(_cdoc.Tables.TryGetTable<TemporaryChangeTable>(out var table));
+			table.UpdateChange(cache);
 
 			Assert.That(createAction.TryConvert(null, createArgs, out var changes), Is.True);
 			Assert.That(changes, Is.Not.Empty);

@@ -1,6 +1,7 @@
 ﻿using Crash.Changes.Extensions;
 using Crash.Common.Document;
 using Crash.Common.Events;
+using Crash.Common.Tables;
 using Crash.Events;
 using Crash.Handlers.Changes;
 
@@ -48,8 +49,8 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 			IdleAction resultingAction = null;
 
 			if (!geomChange.HasFlag(ChangeAction.Temporary) ||
-			    geomChange.Owner?.Equals(crashDoc.Users.CurrentUser.Name,
-			                             StringComparison.InvariantCultureIgnoreCase) == true)
+				geomChange.Owner?.Equals(crashDoc.Users.CurrentUser.Name,
+										 StringComparison.InvariantCultureIgnoreCase) == true)
 			{
 				resultingAction = new IdleAction(AddToDocument, changeArgs);
 			}
@@ -69,14 +70,16 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				return;
 			}
 
+			if (!args.Doc.Tables.TryGet<RealisedChangeTable>(out var realisedTable)) return;
+
 			args.Doc.DocumentIsBusy = true;
 			try
 			{
 				var rhinoId = Guid.Empty;
 				if (geomChange.Geometry is null)
 				{
-					args.Doc.RealisedChangeTable.RestoreChange(args.Change.Id);
-					args.Doc.RealisedChangeTable.TryGetRhinoId(args.Change.Id, out rhinoId);
+					realisedTable.RestoreChange(args.Change.Id);
+					realisedTable.TryGetRhinoId(args.Change.Id, out rhinoId);
 				}
 				else
 				{
@@ -84,11 +87,11 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				}
 
 				var rhinoObject = rhinoDoc.Objects.FindId(rhinoId);
-				args.Doc.RealisedChangeTable.AddPair(args.Change.Id, rhinoObject.Id);
+				realisedTable.AddPair(args.Change.Id, rhinoObject.Id);
 				if (args.Change.HasFlag(ChangeAction.Locked))
 				{
 					if (string.Equals(args.Change.Owner, args.Doc.Users.CurrentUser.Name,
-					                  StringComparison.InvariantCultureIgnoreCase))
+									  StringComparison.InvariantCultureIgnoreCase))
 					{
 						rhinoDoc.Objects.Select(rhinoId, true, true);
 					}
@@ -115,23 +118,26 @@ namespace Crash.Handlers.Plugins.Geometry.Recieve
 				return;
 			}
 
+			if (!args.Doc.Tables.TryGet<RealisedChangeTable>(out var realisedTable)) return;
+			if (!args.Doc.Tables.TryGet<TemporaryChangeTable>(out var tempTable)) return;
+
 			// Undo Delete Realised
-			if (args.Doc.RealisedChangeTable.IsDeleted(geomChange.Id))
+			if (realisedTable.IsDeleted(geomChange.Id))
 			{
-				args.Doc.RealisedChangeTable.PurgeChange(geomChange.Id);
+				realisedTable.PurgeChange(geomChange.Id);
 			}
 
 			// Undo Delete Temporary
-			if (args.Doc.TemporaryChangeTable.IsDeleted(geomChange.Id))
+			if (tempTable.IsDeleted(geomChange.Id))
 			{
 				// Restore!
-				args.Doc.TemporaryChangeTable.RestoreChange(geomChange.Id);
+				tempTable.RestoreChange(geomChange.Id);
 
 				return;
 			}
 
 			// Add Temporary
-			args.Doc.TemporaryChangeTable.UpdateChange(geomChange);
+			tempTable.UpdateChange(geomChange);
 		}
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using Crash.Common.Document;
+using Crash.Common.Tables;
 using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
 using Crash.Handlers.Utils;
@@ -15,7 +16,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
 		{
 			return crashArgs.Args is CrashObjectEventArgs rargs &&
-			       rargs.Geometry is not null;
+				   rargs.Geometry is not null;
 		}
 
 		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
@@ -27,7 +28,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 			}
 
 			changes = CreateChangesFromArgs(crashArgs.Doc, cargs.RhinoId, cargs.Geometry, cargs.UnDelete,
-			                                cargs.ChangeId);
+											cargs.ChangeId);
 			return changes.Any();
 		}
 
@@ -48,13 +49,18 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 
 			var userName = crashDoc.Users.CurrentUser.Name;
 
+			if (!crashDoc.Tables.TryGet<RealisedChangeTable>(out var realTable))
+			{
+				return Array.Empty<Change>();
+			}
+
 			// For unDelete
-			if (changeId == Guid.Empty && !crashDoc.RealisedChangeTable.TryGetChangeId(rhinoId, out changeId))
+			if (changeId == Guid.Empty && !realTable.TryGetChangeId(rhinoId, out changeId))
 			{
 				changeId = Guid.NewGuid();
 			}
 
-			crashDoc.RealisedChangeTable.AddPair(changeId, rhinoId);
+			realTable.AddPair(changeId, rhinoId);
 
 			Change change;
 			if (unDelete)

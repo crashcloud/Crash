@@ -1,4 +1,5 @@
-﻿using Crash.Handlers.Changes;
+﻿using Crash.Common.Tables;
+using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
 
 namespace Crash.Handlers.Plugins.Geometry.Create
@@ -12,7 +13,7 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
 		{
 			return crashArgs.Args is CrashSelectionEventArgs cargs &&
-			       !cargs.Selected;
+				   !cargs.Selected;
 		}
 
 		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
@@ -23,13 +24,18 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 				return false;
 			}
 
+			if (!crashDoc.Tables.TryGet<RealisedChangeTable>(out var realisedTable))
+			{
+				return false;
+			}
+
 			var userName = crashArgs.Doc.Users.CurrentUser.Name;
 
 			changes = getChanges(cargs.CrashObjects, userName);
 
 			foreach (var change in changes)
 			{
-				crashArgs.Doc.RealisedChangeTable.RemoveSelected(change.Id);
+				realisedTable.RemoveSelected(change.Id);
 			}
 
 			return true;

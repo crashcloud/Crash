@@ -20,10 +20,11 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 			crashDoc.DocumentIsBusy = true;
 			try
 			{
+				if (!crashDoc.Tables.TryGet<TemporaryChangeTable>(out var tempTable)) return Task.CompletedTask;
 				// Done Range
 				if (string.IsNullOrEmpty(recievedChange.Owner))
 				{
-					if (!crashDoc.TemporaryChangeTable.TryGetChangeOfType(recievedChange.Id, out IChange doneChange))
+					if (!tempTable.TryGetChangeOfType(recievedChange.Id, out IChange doneChange))
 					{
 						return;
 					}
@@ -33,10 +34,10 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 				// Done
 				else
 				{
-					foreach (var change in crashDoc.TemporaryChangeTable.GetChanges())
+					foreach (var change in tempTable.GetChanges())
 					{
 						if (string.Equals(change.Owner, recievedChange.Owner,
-						                  StringComparison.InvariantCultureIgnoreCase))
+										  StringComparison.InvariantCultureIgnoreCase))
 						{
 							await ReleaseChange(crashDoc, change);
 						}
@@ -52,13 +53,13 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 
 		private async Task ReleaseChange(CrashDoc crashDoc, IChange change)
 		{
-			if (!crashDoc.TemporaryChangeTable.TryGetChangeOfType(change.Id,
-			                                                      out GeometryChange geomChange))
+			if (!tempTable.TryGetChangeOfType(recievedChange.Id, out IChange doneChange)) return Task.CompletedTask;
+			if (!tempTable.TryGetChangeOfType(change.Id, out GeometryChange geomChange))
 			{
 				return;
 			}
 
-			crashDoc.TemporaryChangeTable.RemoveChange(change.Id);
+			tempTable.RemoveChange(change.Id);
 
 			geomChange.RemoveAction(ChangeAction.Temporary);
 
