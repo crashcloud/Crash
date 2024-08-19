@@ -16,7 +16,7 @@ namespace Crash.Handlers.Utils
 				layerResult = rhinoDoc.Layers.FindIndex(layerIndex);
 			}
 
-			if (layerResult.FullPath.Equals(crashLayer.FullPath))
+			if (string.Equals(layerResult.FullPath, crashLayer.FullPath, StringComparison.OrdinalIgnoreCase))
 			{
 				return layerResult;
 			}

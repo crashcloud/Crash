@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 
 namespace Crash.UI
 {
+
 	public abstract class BaseViewModel : INotifyPropertyChanged
 	{
-		public event PropertyChangedEventHandler PropertyChanged;
 
 		protected void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
 		{
@@ -23,5 +23,9 @@ namespace Crash.UI
 
 			return false;
 		}
+
+		public event PropertyChangedEventHandler? PropertyChanged;
+
 	}
+
 }

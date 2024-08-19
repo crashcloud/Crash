@@ -61,7 +61,7 @@ namespace Crash.UI.ExceptionsAndErrors
 		{
 		}
 
-		private void DrawOverlay(object sender, DrawEventArgs e)
+		private void DrawOverlay(object? sender, DrawEventArgs e)
 		{
 			if (!_crashDoc.Tables.TryGet<RealisedChangeTable>(out var realisedTable)) return;
 

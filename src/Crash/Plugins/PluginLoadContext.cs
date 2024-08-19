@@ -15,7 +15,7 @@ namespace Crash.Plugins
 			_resolver = new AssemblyDependencyResolver(pluginPath);
 		}
 
-		protected override Assembly Load(AssemblyName assemblyName)
+		protected override Assembly? Load(AssemblyName assemblyName)
 		{
 			var assemblyPath = _resolver.ResolveAssemblyToPath(assemblyName);
 			if (assemblyPath is not null)
