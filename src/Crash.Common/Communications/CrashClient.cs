@@ -227,6 +227,9 @@ namespace Crash.Common.Communications
 
 		private async Task InformUserOfReconnect(Exception? exception)
 		{
+			await Task.Delay(3000);
+			if (_connection.State == HubConnectionState.Connected) return;
+
 			CrashApp.InformUser("Attempting to reconnect to Server ...");
 			_connection.Reconnected += InformUserOfReconnection;
 		}
