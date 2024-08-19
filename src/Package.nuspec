@@ -30,7 +30,7 @@
         
         <dependency id="System.Drawing.Common" version="7.0.0" />
         <dependency id="System.Text.Json" version="7.0.0" />
-        <dependency id="Crash.Changes" version="1.2.1" />
+        <dependency id="Crash.Changes" version="1.2.2" />
       </group>
     </dependencies>
 

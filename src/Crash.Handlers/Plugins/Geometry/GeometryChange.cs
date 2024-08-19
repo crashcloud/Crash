@@ -1,6 +1,7 @@
 ﻿using System.Runtime.Serialization;
 using System.Text.Json;
 
+using Crash.Changes.Utils;
 using Crash.Common.Serialization;
 using Crash.Geometry;
 
@@ -35,7 +36,12 @@ namespace Crash.Handlers.Changes
 		{
 			try
 			{
-				var packet = PayloadSerialization.GetPayloadPacket(change.Payload);
+				if (!PayloadUtils.TryGetPayloadFromChange(change, out var packet))
+				{
+					// TODO : Do something about this, log it etc
+					return null;
+				}
+
 				GeometryBase geometry = null;
 				if (!string.IsNullOrEmpty(packet.Data))
 				{
@@ -43,8 +49,8 @@ namespace Crash.Handlers.Changes
 				}
 
 				if (packet.Transform.IsValid() &&
-				    !packet.Transform.Equals(CTransform.Unset) &&
-				    geometry is not null)
+					!packet.Transform.Equals(CTransform.Unset) &&
+					geometry is not null)
 				{
 					var transform = packet.Transform.ToRhino();
 					if (transform.IsValid)
@@ -54,14 +60,14 @@ namespace Crash.Handlers.Changes
 				}
 
 				return new GeometryChange
-				       {
-					       Geometry = geometry,
-					       Stamp = change.Stamp,
-					       Id = change.Id,
-					       Owner = change.Owner,
-					       Payload = change.Payload,
-					       Action = change.Action
-				       };
+				{
+					Geometry = geometry,
+					Stamp = change.Stamp,
+					Id = change.Id,
+					Owner = change.Owner,
+					Payload = change.Payload,
+					Action = change.Action
+				};
 			}
 			catch (SerializationException serialEx)
 			{
@@ -84,14 +90,14 @@ namespace Crash.Handlers.Changes
 		public static GeometryChange CreateNew(GeometryBase geometry, string userName)
 		{
 			return new GeometryChange
-			       {
-				       Geometry = geometry,
-				       Stamp = DateTime.UtcNow,
-				       Id = Guid.NewGuid(),
-				       Owner = userName,
-				       Payload = GeneratePayload(geometry),
-				       Action = ChangeAction.Add | ChangeAction.Temporary
-			       };
+			{
+				Geometry = geometry,
+				Stamp = DateTime.UtcNow,
+				Id = Guid.NewGuid(),
+				Owner = userName,
+				Payload = GeneratePayload(geometry),
+				Action = ChangeAction.Add | ChangeAction.Temporary
+			};
 		}
 
 		/// <summary>Creates a new Change for sending to the server</summary>
@@ -104,26 +110,27 @@ namespace Crash.Handlers.Changes
 			Dictionary<string, string> updates = null)
 		{
 			return new Change
-			       {
-				       Id = id,
-				       Owner = user,
-				       Action = action,
-				       Payload = GeneratePayload(geometry, updates),
-				       Type = ChangeType
-			       };
+			{
+				Id = id,
+				Owner = user,
+				Action = action,
+				Payload = GeneratePayload(geometry, updates),
+				Type = ChangeType
+			};
 		}
 
 		/// <summary>Serializes Geometry Correctly to Rhino version 7</summary>
 		public static string GeneratePayload(GeometryBase geometry = null, Dictionary<string, string> updates = null)
 		{
 			PayloadPacket payload = new()
-			                        {
-				                        Data = geometry?.ToJSON(new SerializationOptions
-				                                                {
-					                                                RhinoVersion = 70, WriteUserData = false
-				                                                }) ?? string.Empty,
-				                        Updates = updates ?? new Dictionary<string, string>()
-			                        };
+			{
+				Data = geometry?.ToJSON(new SerializationOptions
+				{
+					RhinoVersion = 70,
+					WriteUserData = false
+				}) ?? string.Empty,
+				Updates = updates ?? new Dictionary<string, string>()
+			};
 
 			return JsonSerializer.Serialize(payload);
 		}

@@ -119,7 +119,7 @@ namespace Crash.Handlers.Plugins
 		public async Task NotifyClientAsync(CrashDoc doc, Change change)
 		{
 			if (!_recieveActions.TryGetValue(change.Type, out var recievers) ||
-			    recievers is null)
+				recievers is null)
 			{
 				CrashLogger.Logger.LogDebug($"Could not find a Recieve Action for {change.Type}, {change.Id}");
 				return;
@@ -135,8 +135,8 @@ namespace Crash.Handlers.Plugins
 				}
 
 				CrashLogger.Logger
-				           .LogDebug(
-				                     $"Calling action {recieveAction.GetType().Name}, {change.Action}, {change.Type}, {change.Id}");
+						   .LogDebug(
+									 $"Calling action {recieveAction.GetType().Name}, {change.Action}, {change.Type}, {change.Id}");
 
 				await recieveAction.OnRecieveAsync(doc, change);
 				return;

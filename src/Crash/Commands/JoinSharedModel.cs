@@ -118,6 +118,8 @@ namespace Crash.Commands
 																 new CrashObjectEventArgs(_crashDoc, rhinoObject));
 				}
 
+				UsersForm.ShowForm(_crashDoc);
+
 				return;
 			}
 			else if (_crashDoc?.LocalClient is not null)
