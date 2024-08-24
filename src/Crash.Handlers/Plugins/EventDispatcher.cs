@@ -27,6 +27,7 @@ namespace Crash.Handlers.Plugins
 			_createActions = new Dictionary<ChangeAction, List<IChangeCreateAction>>();
 			_recieveActions = new Dictionary<string, List<IChangeRecieveAction>>();
 			_sendQueue = new DelayQueue<Change>(TimeSpan.FromMilliseconds(250), (a, b) => a.Equals(b));
+			_sendQueue.Start();
 			_sendQueue.OnReadyToSend += async (s, e) => await NotifyServerAsync(e);
 		}
 

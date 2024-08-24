@@ -39,9 +39,11 @@ public class DelayQueue<T>
 		_lastAdded = DateTime.UtcNow;
 	}
 
-	public void Enqueue(IEnumerable<T> item)
+	public void Enqueue(IEnumerable<T> items)
 	{
-		_sendQueue.Enqueue(item);
+		foreach (var item in items)
+			_sendQueue.Enqueue(item);
+
 		_lastAdded = DateTime.UtcNow;
 	}
 
@@ -53,23 +55,8 @@ public class DelayQueue<T>
 			if (_sendQueue.Count == 0) continue;
 			if (DateTime.UtcNow - _lastAdded < _delay) continue;
 
-			List<T> items = new();
-			while (true)
-			{
-				if (_sendQueue.Count <= 0)
-				{
-					items.Add(_sendQueue.Dequeue());
-					continue;
-				}
-
-				var peek = _sendQueue.Peek();
-				if (!_groupable(items.Last(), peek))
-					break;
-
-				items.Add(_sendQueue.Dequeue());
-			}
-
-			OnReadyToSend?.Invoke(this, items);
+			OnReadyToSend?.Invoke(this, _sendQueue.ToList());
+			_sendQueue.Clear();
 		}
 	}
 
