@@ -226,13 +226,13 @@ namespace Crash.Handlers.Plugins
 			doc.LocalClient.OnInitializeChanges += InitializeChangesAsync;
 		}
 
-		private async Task InitializeChangesAsync(IAsyncEnumerable<Change> changeStream)
+		private async Task InitializeChangesAsync(IEnumerable<Change> changeStream)
 		{
 			_crashDoc.LocalClient.OnInitializeChanges -= InitializeChangesAsync;
 
 			CrashLogger.Logger.LogDebug($"{nameof(_crashDoc.LocalClient.OnInitializeChanges)}");
 
-			await foreach (var change in changeStream)
+			foreach (var change in changeStream)
 			{
 				await NotifyClientAsync(_crashDoc, change);
 			}

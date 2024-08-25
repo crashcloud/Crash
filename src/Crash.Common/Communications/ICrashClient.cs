@@ -30,10 +30,10 @@ namespace Crash.Common.Communications
 		public Task StreamChangesAsync(IAsyncEnumerable<Change> changeStream);
 
 		/// <summary>Local Event corresponding to a Server call for Initialize</summary>
-		public event Func<IAsyncEnumerable<Change>, Task> OnInitializeChanges;
+		public event Func<IEnumerable<Change>, Task> OnInitializeChanges;
 
 		/// <summary>Local Event corresponding to a Server call for Initialize Users</summary>
-		public event Func<IAsyncEnumerable<string>, Task> OnInitializeUsers;
+		public event Func<IEnumerable<string>, Task> OnInitializeUsers;
 
 		/// <summary>Local event wrapping Crash Args with Initialization</summary>
 		public event EventHandler<CrashInitArgs> OnInit;

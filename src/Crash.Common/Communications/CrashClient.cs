@@ -121,8 +121,8 @@ namespace Crash.Common.Communications
 		/// <summary>Registers Local Events responding to Server calls</summary>
 		private void RegisterConnections()
 		{
-			_connection.On<IAsyncEnumerable<Change>>(INITIALIZE, InitializeChangesAsync);
-			_connection.On<IAsyncEnumerable<string>>(INITIALIZEUSERS, InitializeUsersAsync);
+			_connection.On<IEnumerable<Change>>(INITIALIZE, InitializeChangesAsync);
+			_connection.On<IEnumerable<string>>(INITIALIZEUSERS, InitializeUsersAsync);
 			_connection.On<IAsyncEnumerable<Change>>(PUSH_STREAM, SendChangesThroughStream);
 
 			_connection.Reconnected += ConnectionReconnectedAsync;
@@ -269,15 +269,13 @@ namespace Crash.Common.Communications
 
 		#region Recieve from Server
 
-		public event Func<IAsyncEnumerable<Change>, Task> OnRecieveChanges;
+		public event Func<IEnumerable<Change>, Task> OnInitializeChanges;
 
-		public event Func<IAsyncEnumerable<Change>, Task> OnInitializeChanges;
-
-		public event Func<IAsyncEnumerable<string>, Task> OnInitializeUsers;
+		public event Func<IEnumerable<string>, Task> OnInitializeUsers;
 
 		public event EventHandler<CrashInitArgs> OnInit;
 
-		private async Task InitializeChangesAsync(IAsyncEnumerable<Change> changes)
+		private async Task InitializeChangesAsync(IEnumerable<Change> changes)
 		{
 			if (OnInitializeChanges is null)
 			{
@@ -294,7 +292,7 @@ namespace Crash.Common.Communications
 			public DummyAction() : base((args) => { }, new IdleArgs(null, null), nameof(DummyAction)) { }
 		}
 
-		private async Task InitializeUsersAsync(IAsyncEnumerable<string> users)
+		private async Task InitializeUsersAsync(IEnumerable<string> users)
 		{
 			if (OnInitializeUsers is null)
 			{
@@ -306,23 +304,18 @@ namespace Crash.Common.Communications
 
 		// TODO : This isn't calling, and needs to call the Event Dispatcher
 		// TODO : Resolve this and Init
-		private async Task InitChangesAsync(IAsyncEnumerable<Change> changeStream)
+		private async Task InitChangesAsync(IEnumerable<Change> changes)
 		{
 			OnInitializeChanges -= InitChangesAsync;
-			List<Change> changes = new();
-			await foreach (var change in changeStream)
-			{
-				changes.Add(change);
-			}
 
 			OnInit?.Invoke(this, new CrashInitArgs(_crashDoc, changes));
 		}
 
-		private async Task InitUsersAsync(IAsyncEnumerable<string> users)
+		private async Task InitUsersAsync(IEnumerable<string> users)
 		{
 			OnInitializeUsers -= InitUsersAsync;
 			// User Init
-			await foreach (var user in users)
+			foreach (var user in users)
 			{
 				_crashDoc.Users.Add(user);
 			}
