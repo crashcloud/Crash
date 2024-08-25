@@ -124,7 +124,9 @@ namespace Crash
 
 		private void RegisterExceptions(CrashClient client)
 		{
+#pragma warning disable CS8622 // Avoid async void methods
 			client.OnServerClosed += ClientOnOnServerClosed;
+#pragma warning restore CS8622 // Avoid async void methods
 			client.OnPushChangeFailed += ClientOnOnPushChangeFailed;
 		}
 
@@ -151,7 +153,9 @@ namespace Crash
 									  });
 		}
 
+#pragma warning disable VSTHRD100 // Avoid async void methods
 		private async void ClientOnOnServerClosed(object sender, CrashEventArgs args)
+
 		{
 			var message = "The server connection has been lost.\n" +
 						  "Your model will be closed.\n" +
@@ -173,6 +177,7 @@ namespace Crash
 				RhinoApp.WriteLine(message);
 			}
 		}
+#pragma warning restore VSTHRD100 // Avoid async void methods
 
 		private void RegisterDefinitions(EventDispatcher dispatcher)
 		{
@@ -197,7 +202,9 @@ namespace Crash
 			var openCrashDocs = CrashDocRegistry.GetOpenDocuments().ToArray();
 			foreach (var crashDoc in openCrashDocs)
 			{
+#pragma warning disable CS4014, VSTHRD110 // Because this call is not awaited, execution of the current method continues before the call is completed
 				CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
+#pragma warning restore CS4014, VSTHRD110 // Because this call is not awaited, execution of the current method continues before the call is completed
 			}
 		}
 

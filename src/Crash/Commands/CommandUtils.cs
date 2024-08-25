@@ -57,7 +57,7 @@ namespace Crash.Commands
 
 				return true;
 			}
-			catch (Exception e)
+			catch
 			{
 				await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 				return true;
@@ -168,7 +168,7 @@ namespace Crash.Commands
 
 			cleanUrl = cleanUrl.Replace("//Crash", "/Crash");
 
-			return new Uri(cleanUrl, false);
+			return new Uri(cleanUrl);
 		}
 
 		/// <summary>Prompts the User for a Port with validatiobn</summary>

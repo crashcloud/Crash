@@ -36,9 +36,9 @@ namespace Crash.UI.JoinModel
 				ActiveForm = this;
 				Closed += JoinWindow_Closed;
 			}
-			catch (Exception ex)
+			catch
 			{
-				;
+
 			}
 		}
 

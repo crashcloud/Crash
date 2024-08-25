@@ -91,7 +91,7 @@ namespace Crash.UI
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void CalculateBoundingBox(object sender, CalculateBoundingBoxEventArgs e)
+		private void CalculateBoundingBox(object? sender, CalculateBoundingBoxEventArgs e)
 		{
 			e.IncludeBoundingBox(bbox);
 		}
@@ -101,7 +101,7 @@ namespace Crash.UI
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void PostDrawObjects(object sender, DrawEventArgs e)
+		private void PostDrawObjects(object? sender, DrawEventArgs e)
 		{
 			var rhinoDoc = RhinoDoc.ActiveDoc;
 			if (rhinoDoc is null)
