@@ -40,7 +40,7 @@ namespace Crash.Commands
 					return Result.Cancel;
 				case true:
 					var doneChange = DoneChange.GetDoneChange(crashDoc.Users.CurrentUser.Name);
-					await crashDoc.LocalClient.PushChangeAsync(doneChange);
+					await crashDoc.LocalClient.StreamChangesAsync(new List<Change> { doneChange }.ToAsyncEnumerable());
 					break;
 			}
 
@@ -61,9 +61,9 @@ namespace Crash.Commands
 		private bool? _GetReleaseChoice()
 		{
 			return SelectionUtils.GetBoolean(ref defaultValue,
-			                                 "Would you like to Release your Changes before exiting?",
-			                                 "JustExit",
-			                                 "ReleaseThenExit");
+											 "Would you like to Release your Changes before exiting?",
+											 "JustExit",
+											 "ReleaseThenExit");
 		}
 	}
 }

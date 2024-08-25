@@ -2,6 +2,7 @@
 using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Handlers;
+using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
 using Crash.UI.JoinModel;
 using Crash.UI.UsersView;
@@ -111,12 +112,15 @@ namespace Crash.Commands
 				InteractivePipe.Active.Enabled = true;
 
 				// Sends pre-existing Geometry
+				List<Change> changes = new List<Change>(currentObjects.Count());
 				foreach (var rhinoObject in currentObjects)
 				{
-					await _crashDoc.Dispatcher.NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary,
-																 this,
-																 new CrashObjectEventArgs(_crashDoc, rhinoObject));
+					if (rhinoObject?.Geometry is null) continue;
+					var change = GeometryChange.CreateNew(rhinoObject.Geometry, _crashDoc.Users.CurrentUser.Name);
+					changes.Add(new Change(change));
 				}
+
+				await _crashDoc.Dispatcher.NotifyServerAsync(changes);
 
 				UsersForm.ShowForm(_crashDoc);
 

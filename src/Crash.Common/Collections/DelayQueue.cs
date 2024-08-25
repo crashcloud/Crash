@@ -53,7 +53,12 @@ public class DelayQueue<T>
 		{
 			await Task.Delay(_delay, cancellationToken);
 			if (_sendQueue.Count == 0) continue;
-			if (DateTime.UtcNow - _lastAdded < _delay) continue;
+
+			bool sendItems = false;
+			sendItems = DateTime.UtcNow - _lastAdded >= _delay;
+			// sendItems &= _sendQueue.Count
+
+			if (!sendItems) continue;
 
 			OnReadyToSend?.Invoke(this, _sendQueue.ToList());
 			_sendQueue.Clear();

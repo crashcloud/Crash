@@ -28,7 +28,7 @@ namespace Crash.Commands
 
 			var doneChange = DoneChange.GetDoneChange(crashDoc.Users.CurrentUser.Name);
 
-			await crashDoc.LocalClient.PushChangeAsync(doneChange);
+			await crashDoc.LocalClient.StreamChangesAsync(new List<Change> { doneChange }.ToAsyncEnumerable());
 
 			doc.Objects.UnselectAll();
 			doc.Views.Redraw();

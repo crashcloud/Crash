@@ -6,6 +6,7 @@ using Crash.Common.Document;
 using Crash.Common.Logging;
 using Crash.Handlers.InternalEvents;
 using Crash.Handlers.InternalEvents.Wrapping;
+using System.Linq;
 
 using Microsoft.Extensions.Logging;
 
@@ -32,13 +33,15 @@ namespace Crash.Handlers.Plugins
 		}
 
 		// TODO : How can we prevent the same events being subscribed multiple times?
+
+
 		public async Task NotifyServerAsync(List<Change> changes)
 		{
 			try
 			{
-				await _crashDoc.LocalClient.PushChangesAsync(changes);
+				await _crashDoc.LocalClient.StreamChangesAsync(changes.ToAsyncEnumerable());
 			}
-			catch
+			catch (Exception ex)
 			{
 
 			}
@@ -219,36 +222,20 @@ namespace Crash.Handlers.Plugins
 		/// </summary>
 		public void RegisterDefaultServerCalls(CrashDoc doc)
 		{
-			doc.LocalClient.OnRecieveChange += RecieveChangeAsync;
-			doc.LocalClient.OnRecieveChanges += RecieveChangesAsync;
-			doc.LocalClient.OnRecieveIdentical += RecieveIdenticalChangeAsync;
-
 			// OnInit is called on reconnect as well
 			doc.LocalClient.OnInitializeChanges += InitializeChangesAsync;
 		}
 
-		private async Task RecieveChangeAsync(Change change)
-		{
-			await NotifyClientAsync(_crashDoc, change);
-		}
-
-		private async Task RecieveChangesAsync(IEnumerable<Change> changes)
-		{
-			await Task.WhenAll(changes.Select(c => NotifyClientAsync(_crashDoc, c)));
-		}
-
-		private async Task RecieveIdenticalChangeAsync(IEnumerable<Guid> ids, Change change)
-		{
-			await Task.WhenAll(ids.Select(c => NotifyClientAsync(_crashDoc, new Change(change) { Id = c })));
-		}
-
-		private async Task InitializeChangesAsync(IEnumerable<Change> changes)
+		private async Task InitializeChangesAsync(IAsyncEnumerable<Change> changeStream)
 		{
 			_crashDoc.LocalClient.OnInitializeChanges -= InitializeChangesAsync;
 
 			CrashLogger.Logger.LogDebug($"{nameof(_crashDoc.LocalClient.OnInitializeChanges)}");
 
-			await Task.WhenAll(changes.Select(c => NotifyClientAsync(_crashDoc, c)));
+			await foreach (var change in changeStream)
+			{
+				await NotifyClientAsync(_crashDoc, change);
+			}
 		}
 	}
 }

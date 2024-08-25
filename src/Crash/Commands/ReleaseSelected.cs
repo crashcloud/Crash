@@ -37,8 +37,8 @@ namespace Crash.Commands
 				return Result.Cancel;
 			}
 
-			await crashDoc.LocalClient.PushIdenticalChangesAsync(selectedChanges,
-																 DoneChange.GetDoneChange(string.Empty));
+			// TODO : FIX
+			// await crashDoc.LocalClient.StreamChangesAsync(selectedChanges.ToAsyncEnumerable(), DoneChange.GetDoneChange(string.Empty));
 
 			doc.Objects.UnselectAll();
 			doc.Views.Redraw();

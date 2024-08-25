@@ -11,6 +11,7 @@
 		/// <param name="changeAction">The ChangeAction</param>
 		/// <param name="sender">The sender of the Event</param>
 		/// <param name="args">The EventArgs</param>
-		Task NotifyServerAsync(ChangeAction changeAction, object sender, EventArgs args);
+		Task NotifyServerAsync(List<Change> changes);
+
 	}
 }

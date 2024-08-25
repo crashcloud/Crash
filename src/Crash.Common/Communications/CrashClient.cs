@@ -2,6 +2,7 @@
 using System.Net.WebSockets;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Channels;
 
 using Crash.Common.App;
 using Crash.Common.Document;
@@ -120,11 +121,9 @@ namespace Crash.Common.Communications
 		/// <summary>Registers Local Events responding to Server calls</summary>
 		private void RegisterConnections()
 		{
-			_connection.On<IEnumerable<Change>>(INITIALIZE, InitializeChangesAsync);
-			_connection.On<IEnumerable<string>>(INITIALIZEUSERS, InitializeUsersAsync);
-			_connection.On<IEnumerable<Guid>, Change>(PUSH_IDENTICAL, RecieveIdenticalChangesAsync);
-			_connection.On<Change>(PUSH_SINGLE, RecieveChangeAsync);
-			_connection.On<IEnumerable<Change>>(PUSH_MANY, RecieveManyUniqueChangesAsync);
+			_connection.On<IAsyncEnumerable<Change>>(INITIALIZE, InitializeChangesAsync);
+			_connection.On<IAsyncEnumerable<string>>(INITIALIZEUSERS, InitializeUsersAsync);
+			_connection.On<IAsyncEnumerable<Change>>(PUSH_STREAM, SendChangesThroughStream);
 
 			_connection.Reconnected += ConnectionReconnectedAsync;
 			_connection.Closed += ConnectionClosedAsync;
@@ -135,6 +134,11 @@ namespace Crash.Common.Communications
 		private async Task StartAsync()
 		{
 			await _connection.StartAsync();
+		}
+
+		private async Task SendChangesThroughStream(IAsyncEnumerable<Change> changeStream)
+		{
+			await _connection.SendAsync(PUSH_STREAM, changeStream);
 		}
 
 
@@ -244,56 +248,20 @@ namespace Crash.Common.Communications
 
 		#region Push to Server
 
-		// private int sentCount = 0;
-		private readonly List<Change> LastAttemptedChangeCommunication = new();
-
-		/// <summary>
-		///     Pushes an Update/Transform/Payload which applies to many Changes
-		///     An example of this is arraying the same item or deleting many items at once
-		/// </summary>
-		/// <param name="ids">The records to update</param>
-		/// <param name="change">The newest changes</param>
-		public async Task PushIdenticalChangesAsync(IEnumerable<Guid> ids, Change change)
+		public async Task StreamChangesAsync(IAsyncEnumerable<Change> changeStream)
 		{
 			try
 			{
-				await _connection.InvokeAsync(PUSH_IDENTICAL, ids, change);
+				await _connection.InvokeAsync(PUSH_STREAM, changeStream);
 			}
-			catch
+			catch (Exception ex)
 			{
-				OnPushChangeFailed?.Invoke(this,
-										   new CrashChangeArgs(_crashDoc, new[] { change }));
-			}
-		}
-
-		/// <summary>Pushes a single Change</summary>
-		public async Task PushChangeAsync(Change change)
-		{
-			try
-			{
-				await _connection.InvokeAsync(PUSH_SINGLE, change);
-			}
-			catch
-			{
-				OnPushChangeFailed?.Invoke(this,
-										   new CrashChangeArgs(_crashDoc, new[] { change }));
-			}
-		}
-
-		/// <summary>
-		///     Pushes many unique changes at once
-		///     An example of this may be copying 10 unique items
-		/// </summary>
-		public async Task PushChangesAsync(IEnumerable<Change> changes)
-		{
-			try
-			{
-				await _connection.InvokeAsync(PUSH_MANY, changes);
-			}
-			catch
-			{
-				OnPushChangeFailed?.Invoke(this,
-										   new CrashChangeArgs(_crashDoc, changes));
+				List<Change> changes = new List<Change>();
+				await foreach (var change in changeStream)
+				{
+					changes.Add(change);
+				}
+				OnPushChangeFailed?.Invoke(this, new CrashChangeArgs(_crashDoc, changes));
 			}
 		}
 
@@ -301,19 +269,15 @@ namespace Crash.Common.Communications
 
 		#region Recieve from Server
 
-		public event Func<IEnumerable<Guid>, Change, Task> OnRecieveIdentical;
+		public event Func<IAsyncEnumerable<Change>, Task> OnRecieveChanges;
 
-		public event Func<Change, Task> OnRecieveChange;
+		public event Func<IAsyncEnumerable<Change>, Task> OnInitializeChanges;
 
-		public event Func<IEnumerable<Change>, Task> OnRecieveChanges;
-
-		public event Func<IEnumerable<Change>, Task> OnInitializeChanges;
-
-		public event Func<IEnumerable<string>, Task> OnInitializeUsers;
+		public event Func<IAsyncEnumerable<string>, Task> OnInitializeUsers;
 
 		public event EventHandler<CrashInitArgs> OnInit;
 
-		private async Task InitializeChangesAsync(IEnumerable<Change> changes)
+		private async Task InitializeChangesAsync(IAsyncEnumerable<Change> changes)
 		{
 			if (OnInitializeChanges is null)
 			{
@@ -322,11 +286,7 @@ namespace Crash.Common.Communications
 
 			await OnInitializeChanges.Invoke(changes);
 
-			// Cheeky Override 
-			if (!changes.Any())
-			{
-				_crashDoc.Queue.AddAction(new DummyAction());
-			}
+			_crashDoc.Queue.AddAction(new DummyAction());
 		}
 
 		internal class DummyAction : IdleAction
@@ -334,7 +294,7 @@ namespace Crash.Common.Communications
 			public DummyAction() : base((args) => { }, new IdleArgs(null, null), nameof(DummyAction)) { }
 		}
 
-		private async Task InitializeUsersAsync(IEnumerable<string> users)
+		private async Task InitializeUsersAsync(IAsyncEnumerable<string> users)
 		{
 			if (OnInitializeUsers is null)
 			{
@@ -346,59 +306,33 @@ namespace Crash.Common.Communications
 
 		// TODO : This isn't calling, and needs to call the Event Dispatcher
 		// TODO : Resolve this and Init
-		private async Task InitChangesAsync(IEnumerable<Change> changes)
+		private async Task InitChangesAsync(IAsyncEnumerable<Change> changeStream)
 		{
 			OnInitializeChanges -= InitChangesAsync;
+			List<Change> changes = new();
+			await foreach (var change in changeStream)
+			{
+				changes.Add(change);
+			}
+
 			OnInit?.Invoke(this, new CrashInitArgs(_crashDoc, changes));
 		}
 
-		private async Task InitUsersAsync(IEnumerable<string> users)
+		private async Task InitUsersAsync(IAsyncEnumerable<string> users)
 		{
 			OnInitializeUsers -= InitUsersAsync;
 			// User Init
-			foreach (var user in users)
+			await foreach (var user in users)
 			{
 				_crashDoc.Users.Add(user);
 			}
-		}
-
-		private async Task RecieveIdenticalChangesAsync(IEnumerable<Guid> ids, Change change)
-		{
-			if (OnRecieveIdentical is null)
-			{
-				return;
-			}
-
-			await OnRecieveIdentical.Invoke(ids, change);
-		}
-
-		private async Task RecieveChangeAsync(Change change)
-		{
-			if (OnRecieveChange is null)
-			{
-				return;
-			}
-
-			await OnRecieveChange.Invoke(change);
-		}
-
-		private async Task RecieveManyUniqueChangesAsync(IEnumerable<Change> changes)
-		{
-			if (OnRecieveChanges is null)
-			{
-				return;
-			}
-
-			await OnRecieveChanges.Invoke(changes);
 		}
 
 		#endregion
 
 		#region consts
 
-		private const string PUSH_IDENTICAL = "PushIdenticalChanges";
-		private const string PUSH_SINGLE = "PushChange";
-		private const string PUSH_MANY = "PushChanges";
+		private const string PUSH_STREAM = "PushChangesThroughStream";
 		private const string INITIALIZE = "InitializeChanges";
 		private const string INITIALIZEUSERS = "InitializeUsers";
 
