@@ -126,15 +126,11 @@ namespace Crash.Commands
 
 				return;
 			}
-			else if (_crashDoc?.LocalClient is not null)
-			{
-				_crashDoc.Queue.OnCompletedQueue -= QueueOnOnCompleted;
-				await _crashDoc.LocalClient.StopAsync();
-
-				LoadingUtils.Close();
-			}
 
 			_crashDoc.Queue.OnCompletedQueue -= QueueOnOnCompleted;
+			await _crashDoc.LocalClient.StopAsync();
+
+			LoadingUtils.Close();
 		}
 
 		private void QueueOnOnCompleted(object? sender, CrashEventArgs e)

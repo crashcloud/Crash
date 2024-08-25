@@ -18,7 +18,6 @@ namespace Crash.Handlers.Plugins
 		private readonly CrashDoc _crashDoc;
 		private readonly Dictionary<ChangeAction, List<IChangeCreateAction>> _createActions;
 		private readonly Dictionary<string, List<IChangeRecieveAction>> _recieveActions;
-		private DelayQueue<Change> _sendQueue { get; }
 		private EventWrapper _eventWrapper;
 
 		/// <summary>Default Constructor</summary>
@@ -27,9 +26,6 @@ namespace Crash.Handlers.Plugins
 			_crashDoc = crashDoc;
 			_createActions = new Dictionary<ChangeAction, List<IChangeCreateAction>>();
 			_recieveActions = new Dictionary<string, List<IChangeRecieveAction>>();
-			_sendQueue = new DelayQueue<Change>(TimeSpan.FromMilliseconds(250), (a, b) => a.Equals(b));
-			_sendQueue.Start();
-			_sendQueue.OnReadyToSend += async (s, e) => await NotifyServerAsync(e);
 		}
 
 		// TODO : How can we prevent the same events being subscribed multiple times?
@@ -47,7 +43,7 @@ namespace Crash.Handlers.Plugins
 			}
 		}
 
-		private async Task<IEnumerable<Change>> TryGetChangeFromEvent(ChangeAction changeAction, object sender, EventArgs args)
+		private async Task<List<Change>> TryGetChangeFromEvent(ChangeAction changeAction, object sender, EventArgs args)
 		{
 			if (!_createActions.TryGetValue(changeAction, out var actionChain))
 			{
@@ -152,42 +148,42 @@ namespace Crash.Handlers.Plugins
 
 		private async Task NotifyServerOfAddCrashObject(object? sender, CrashObjectEventArgs args)
 		{
-			_sendQueue.Enqueue(await TryGetChangeFromEvent(ChangeAction.Add | ChangeAction.Temporary, sender, args));
+			NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Add | ChangeAction.Temporary, sender, args));
 		}
 
 		private async Task NotifyServerOfDeleteCrashObject(object? sender, CrashObjectEventArgs crashArgs)
 		{
-			_sendQueue.Enqueue(await TryGetChangeFromEvent(ChangeAction.Remove, sender, crashArgs));
+			NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Remove, sender, crashArgs));
 		}
 
 		private async Task NotifyServerOfTransformCrashObject(object? sender, CrashTransformEventArgs crashArgs)
 		{
-			_sendQueue.Enqueue(await TryGetChangeFromEvent(ChangeAction.Transform, sender, crashArgs));
+			NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Transform, sender, crashArgs));
 		}
 
 		private async Task NotifyServerOfSelectCrashObjects(object? sender, CrashSelectionEventArgs crashArgs)
 		{
-			_sendQueue.Enqueue(await TryGetChangeFromEvent(ChangeAction.Locked, sender, crashArgs));
+			NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Locked, sender, crashArgs));
 		}
 
 		private async Task NotifyServerOfDeSelectCrashObjects(object? sender, CrashSelectionEventArgs crashArgs)
 		{
-			_sendQueue.Enqueue(await TryGetChangeFromEvent(ChangeAction.Unlocked, sender, crashArgs));
+			NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Unlocked, sender, crashArgs));
 		}
 
 		private async Task NotifyServerOfUpdateCrashObject(object? sender, CrashUpdateArgs args)
 		{
-			_sendQueue.Enqueue(await TryGetChangeFromEvent(ChangeAction.Update, sender, args));
+			NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Update, sender, args));
 		}
 
 		private async Task NotifyServerOfCrashLayerModified(object? sender, CrashLayerArgs args)
 		{
-			_sendQueue.Enqueue(await TryGetChangeFromEvent(args.Action, sender, args));
+			NotifyServerAsync(await TryGetChangeFromEvent(args.Action, sender, args));
 		}
 
 		private async Task NotifyServerOfCrashViewModified(object? sender, CrashViewArgs crashArgs)
 		{
-			_sendQueue.Enqueue(await TryGetChangeFromEvent(ChangeAction.Add, sender, crashArgs));
+			NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Add, sender, crashArgs));
 		}
 
 		/// <summary>Registers the default server notifiers</summary>
