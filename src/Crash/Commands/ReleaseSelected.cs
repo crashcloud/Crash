@@ -37,8 +37,15 @@ namespace Crash.Commands
 				return Result.Cancel;
 			}
 
-			// TODO : FIX
-			// await crashDoc.LocalClient.StreamChangesAsync(selectedChanges.ToAsyncEnumerable(), DoneChange.GetDoneChange(string.Empty));
+			List<Change> changes = new List<Change>();
+			foreach (var changeId in selectedChanges)
+			{
+				var change = DoneChange.GetDoneChange(string.Empty);
+				change.Id = changeId;
+				changes.Add(change);
+			}
+
+			await crashDoc.LocalClient.StreamChangesAsync(changes.ToAsyncEnumerable());
 
 			doc.Objects.UnselectAll();
 			doc.Views.Redraw();
