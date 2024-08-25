@@ -1,4 +1,5 @@
-﻿using Crash.Common.Changes;
+﻿using Crash.Common.Communications;
+using Crash.Common.Changes;
 using Crash.Common.Document;
 using Crash.Handlers;
 using Crash.UI.UsersView;
@@ -30,6 +31,7 @@ namespace Crash.Commands
 		{
 			if (crashDoc?.LocalClient?.IsConnected != true)
 			{
+				RhinoApp.WriteLine("You are not connected to a Shared Model currently.");
 				return Result.Cancel;
 			}
 
@@ -46,6 +48,7 @@ namespace Crash.Commands
 
 			doc.Objects.UnselectAll();
 
+			(crashDoc.LocalClient as CrashClient).ClosedByUser = true;
 			await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 			InteractivePipe.Active.Enabled = false;
 
