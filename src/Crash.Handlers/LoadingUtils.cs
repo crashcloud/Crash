@@ -3,9 +3,9 @@
 namespace Crash.Commands
 {
 
-	internal static class LoadingUtils
+	public static class LoadingUtils
 	{
-		internal enum LoadingState
+		public enum LoadingState
 		{
 			None = -1,
 			CheckingServer = 0,
@@ -28,7 +28,7 @@ namespace Crash.Commands
 			}
 		}
 
-		internal static void Start()
+		public static void Start()
 		{
 			Close();
 
@@ -39,7 +39,7 @@ namespace Crash.Commands
 			SetState(LoadingState.CheckingServer);
 		}
 
-		internal static void SetState(LoadingState state)
+		public static void SetState(LoadingState state, bool slowlyUpdate = true)
 		{
 			if (state == LoadingState.None)
 			{
@@ -64,7 +64,8 @@ namespace Crash.Commands
 			}
 
 #pragma warning disable CS4014, VSTHRD110 // Because this call is not awaited, execution of the current method continues before the call is completed
-			SlowlyUpdate((int)nextState);
+			if (slowlyUpdate)
+				SlowlyUpdate((int)nextState);
 #pragma warning restore CS4014, VSTHRD110 // Because this call is not awaited, execution of the current method continues before the call is completed
 
 		}
@@ -81,7 +82,7 @@ namespace Crash.Commands
 			});
 		}
 
-		internal static void Close()
+		public static void Close()
 		{
 			Enabled = false;
 			StatusBar.HideProgressMeter();

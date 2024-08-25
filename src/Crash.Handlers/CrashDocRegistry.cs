@@ -3,6 +3,7 @@
 using Crash.Common.App;
 using Crash.Common.Document;
 using Crash.Common.Events;
+using Crash.Commands;
 
 using Rhino;
 using Rhino.DocObjects;
@@ -83,6 +84,7 @@ namespace Crash.Handlers
 			DocumentRegistered?.Invoke(null, new CrashEventArgs(crashDoc));
 
 			crashDoc.Queue.OnCompletedQueue += RedrawOncompleted;
+			crashDoc.Queue.OnItemProcessed += RedrawEverySoOften;
 			crashDoc.LocalClient.OnInit += RegisterQueue;
 
 			return crashDoc;
@@ -93,6 +95,23 @@ namespace Crash.Handlers
 			e.CrashDoc.LocalClient.OnInit -= RegisterQueue;
 			RhinoApp.WriteLine($"Connected to Crash Server {e.CrashDoc.LocalClient.Url} successfully.");
 			RhinoApp.WriteLine("Loading Changes from the server ...");
+
+			double count = 0.0;
+			double changeLoadAmount = 50.0;
+
+			EventHandler<CrashEventArgs> initialLoadingBar = null;
+			initialLoadingBar = (_, itemArgs) =>
+			{
+				count++;
+				double crashCount = e.Changes.Count();
+				double percentage = changeLoadAmount + (count / crashCount * changeLoadAmount);
+
+				LoadingUtils.SetState((LoadingUtils.LoadingState)(int)percentage, false);
+
+				if (count < crashCount) return;
+				e.CrashDoc.Queue.OnItemProcessed -= initialLoadingBar;
+			};
+			e.CrashDoc.Queue.OnItemProcessed += initialLoadingBar;
 
 			EventHandler cycleQueueDelegate = null;
 			cycleQueueDelegate = (o, args) =>
@@ -119,6 +138,17 @@ namespace Crash.Handlers
 		{
 			var rhinoDoc = GetRelatedDocument(e.CrashDoc);
 			rhinoDoc.Views.Redraw();
+			ProessedCount = 0;
+		}
+
+		private static int ProessedCount { get; set; } = 0;
+		private static void RedrawEverySoOften(object? sender, CrashEventArgs e)
+		{
+			ProessedCount++;
+			if (ProessedCount >= 10)
+			{
+				RedrawOncompleted(sender, e);
+			}
 		}
 
 		private static void Register(CrashDoc crashDoc,

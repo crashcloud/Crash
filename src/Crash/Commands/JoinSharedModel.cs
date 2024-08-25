@@ -46,7 +46,7 @@ namespace Crash.Commands
 
 			if (crashDoc?.LocalClient?.IsConnected == true)
 			{
-				CommandUtils.AlertUser("You are already connected to a model. Please disconnect first.", mode == RunMode.Scripted);
+				CommandUtils.AlertUser($"You are already connected to a model ({crashDoc.LocalClient.Url}). Please disconnect first.", mode == RunMode.Scripted);
 				return Result.Cancel;
 			}
 
@@ -75,7 +75,7 @@ namespace Crash.Commands
 
 				if (!_GetServerURL(ref _lastUrl))
 				{
-					CommandUtils.AlertUser("Invalid URL Input.", true);
+					CommandUtils.AlertUser($"{_lastUrl} is an invalid URL.", true);
 					return Result.Nothing;
 				}
 			}
@@ -104,6 +104,7 @@ namespace Crash.Commands
 			};
 			var currentObjects = _rhinoDoc.Objects.GetObjectList(settings);
 
+			LoadingUtils.SetState(LoadingUtils.LoadingState.CheckingServer);
 			_crashDoc.Queue.OnCompletedQueue += QueueOnOnCompleted;
 			if (await CommandUtils.StartLocalClient(_crashDoc, _lastUrl))
 			{

@@ -148,42 +148,42 @@ namespace Crash.Handlers.Plugins
 
 		private async Task NotifyServerOfAddCrashObject(object? sender, CrashObjectEventArgs args)
 		{
-			NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Add | ChangeAction.Temporary, sender, args));
+			await NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Add | ChangeAction.Temporary, sender, args));
 		}
 
 		private async Task NotifyServerOfDeleteCrashObject(object? sender, CrashObjectEventArgs crashArgs)
 		{
-			NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Remove, sender, crashArgs));
+			await NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Remove, sender, crashArgs));
 		}
 
 		private async Task NotifyServerOfTransformCrashObject(object? sender, CrashTransformEventArgs crashArgs)
 		{
-			NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Transform, sender, crashArgs));
+			await NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Transform, sender, crashArgs));
 		}
 
 		private async Task NotifyServerOfSelectCrashObjects(object? sender, CrashSelectionEventArgs crashArgs)
 		{
-			NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Locked, sender, crashArgs));
+			await NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Locked, sender, crashArgs));
 		}
 
 		private async Task NotifyServerOfDeSelectCrashObjects(object? sender, CrashSelectionEventArgs crashArgs)
 		{
-			NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Unlocked, sender, crashArgs));
+			await NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Unlocked, sender, crashArgs));
 		}
 
 		private async Task NotifyServerOfUpdateCrashObject(object? sender, CrashUpdateArgs args)
 		{
-			NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Update, sender, args));
+			await NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Update, sender, args));
 		}
 
 		private async Task NotifyServerOfCrashLayerModified(object? sender, CrashLayerArgs args)
 		{
-			NotifyServerAsync(await TryGetChangeFromEvent(args.Action, sender, args));
+			await NotifyServerAsync(await TryGetChangeFromEvent(args.Action, sender, args));
 		}
 
 		private async Task NotifyServerOfCrashViewModified(object? sender, CrashViewArgs crashArgs)
 		{
-			NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Add, sender, crashArgs));
+			await NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Add, sender, crashArgs));
 		}
 
 		/// <summary>Registers the default server notifiers</summary>
