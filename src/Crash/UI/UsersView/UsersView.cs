@@ -90,7 +90,6 @@ namespace Crash.UI.UsersView
 		private void CreateForm()
 		{
 			Icon = Icons.crashlogo.ToEto();
-			Size = new Size(240, 140);
 			Title = "Collaborators";
 			Owner = RhinoEtoApp.MainWindow;
 			Padding = 0;
@@ -101,7 +100,8 @@ namespace Crash.UI.UsersView
 			Minimizable = false;
 			WindowStyle = WindowStyle.Default;
 			ShowInTaskbar = false;
-			MinimumSize = new Size(200, 40);
+
+			SetSizeAndLocation();
 
 #if NET7_0
 			this.UseRhinoStyle();
@@ -139,6 +139,33 @@ namespace Crash.UI.UsersView
 						  {
 							  RhinoApp.InvokeOnUiThread(() => RhinoEtoApp.MainWindow?.Focus());
 						  };
+		}
+
+		private void SetSizeAndLocation()
+		{
+			MinimumSize = new Size(200, 40);
+			Size = new Size(240, 140);
+			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(_crashDoc);
+			if (rhinoDoc is null) return;
+
+			try
+			{
+				Point point = new Point(0, 0);
+				foreach (var view in rhinoDoc.Views)
+				{
+					if (view is null) continue;
+					var rect = view.ScreenRectangle;
+					if (point.X == 0 || point.X < rect.Right)
+						point = new Point(rect.Right, point.Y);
+
+					if (point.Y == 0 || point.Y > rect.Top)
+						point = new Point(point.X, rect.Top);
+				}
+
+				int padding = 5;
+				Location = new Point(point.X - padding - Size.Width, point.Y + padding);
+			}
+			catch { }
 		}
 
 		private static GridColumn CreateUsersColumn()
