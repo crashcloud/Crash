@@ -174,7 +174,7 @@ namespace Crash
 			}
 			catch
 			{
-				RhinoApp.WriteLine(message);
+
 			}
 		}
 #pragma warning restore VSTHRD100 // Avoid async void methods

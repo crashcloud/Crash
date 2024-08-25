@@ -24,12 +24,14 @@ namespace Crash.Common.Communications
 		// TODO : Move to https
 		public const string DefaultURL = "http://localhost";
 		public const string DefaultPort = "8080";
-		private readonly CrashDoc _crashDoc;
+		private CrashDoc _crashDoc { get; }
 
 		public string Url { get; private set; }
 
 		private HubConnection _connection;
-		private string _user;
+		private string _user { get; set; }
+
+		public bool ClosedByUser { get; set; } = false;
 
 		/// <summary>
 		///     Crash client constructor
@@ -170,11 +172,13 @@ namespace Crash.Common.Communications
 
 		private async Task ServerClosedUnexpectidly()
 		{
+			if (ClosedByUser) return;
 			OnServerClosed?.Invoke(this, new CrashEventArgs(_crashDoc));
 		}
 
 		private async Task ServerIndicatedPossibleClosure()
 		{
+
 		}
 
 		private async Task ChangesCouldNotBeSent()
