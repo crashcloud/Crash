@@ -142,6 +142,7 @@ namespace Crash.Commands
 
 			StatusBar.HideProgressMeter();
 			StatusBar.ClearMessagePane();
+			_rhinoDoc.Views.Redraw();
 		}
 
 		private bool _GetServerURL(ref string url)
