@@ -22,7 +22,10 @@ namespace Crash.UI.UsersView
 							 user.OnPropertyChanged += (sender, o) => UsersForm.ReDraw();
 							 return user;
 						 });
-			Users = new ObservableCollection<UserObject>(userObjects);
+			Users = new ObservableCollection<UserObject> { UserObject.CreateForCurrentUser(_crashDoc) };
+
+			foreach (var userObject in userObjects)
+				Users.Add(userObject);
 
 			UserTable.OnUserRemoved += UserRemoved;
 			UserTable.OnUserAdded += AddUsers;
@@ -38,19 +41,19 @@ namespace Crash.UI.UsersView
 			}
 
 			Application.Instance.Invoke(() =>
-			                            {
-				                            Users.Add(new UserObject(_crashDoc, e.User));
-				                            UsersForm.ReDraw();
-			                            });
+										{
+											Users.Add(new UserObject(_crashDoc, e.User));
+											UsersForm.ReDraw();
+										});
 		}
 
 		private void UserRemoved(object? sender, UserEventArgs e)
 		{
 			Application.Instance.Invoke(() =>
-			                            {
-				                            Users.Remove(new UserObject(_crashDoc, e.User));
-				                            UsersForm.ReDraw();
-			                            });
+										{
+											Users.Remove(new UserObject(_crashDoc, e.User));
+											UsersForm.ReDraw();
+										});
 		}
 
 		internal void CycleCameraSetting(object? sender, GridCellMouseEventArgs e)
@@ -72,6 +75,8 @@ namespace Crash.UI.UsersView
 			{
 				return;
 			}
+
+			if (user.IsCurrentUser) return;
 
 			var state = CycleState(user.Camera);
 			if (state == CameraState.Follow)

@@ -11,9 +11,11 @@ namespace Crash.UI.UsersView
 {
 	internal sealed class UserObject
 	{
-		private readonly CrashDoc _crashDoc;
-		private CameraState _cameraState;
-		private bool _visible;
+		private CrashDoc _crashDoc { get; set; }
+		private CameraState _cameraState { get; set; }
+		private bool _visible { get; set; }
+
+		public bool IsCurrentUser { get; private set; } = false;
 
 		internal EventHandler<UserObject> OnPropertyChanged;
 
@@ -28,14 +30,32 @@ namespace Crash.UI.UsersView
 			_visible = user.Visible;
 		}
 
-		public string Name { get; }
-		public Color Colour { get; }
+		private UserObject() { }
+
+		internal static UserObject CreateForCurrentUser(CrashDoc crashDoc)
+		{
+			var user = crashDoc.Users.CurrentUser;
+
+			return new UserObject()
+			{
+				_crashDoc = crashDoc,
+				Name = $"{user.Name} (You)",
+				Colour = user.Color,
+				_cameraState = CameraState.None,
+				_visible = true,
+				IsCurrentUser = true,
+			};
+		}
+
+		public string Name { get; private set; }
+		public Color Colour { get; private set; }
 
 		public CameraState Camera
 		{
 			get => _cameraState;
 			set
 			{
+				if (IsCurrentUser) return;
 				_cameraState = value;
 				_crashDoc.Users.Update(Convert(this));
 				OnPropertyChanged?.Invoke(null, this);
@@ -43,16 +63,16 @@ namespace Crash.UI.UsersView
 		}
 
 		public Image Image => ((Camera, Palette.DarkMode) switch
-		                       {
-			                       (CameraState.Follow, true)   => Icons.CameraFollow_Light,
-			                       (CameraState.Follow, false)  => Icons.CameraFollow_Dark,
-			                       (CameraState.Visible, true)  => Icons.CameraVisible_Light,
-			                       (CameraState.Visible, false) => Icons.CameraVisible_Dark,
-			                       (CameraState.None, true)     => Icons.CameraNone_Light,
-			                       (CameraState.None, false)    => Icons.CameraNone_Dark,
+		{
+			(CameraState.Follow, true) => Icons.CameraFollow_Light,
+			(CameraState.Follow, false) => Icons.CameraFollow_Dark,
+			(CameraState.Visible, true) => Icons.CameraVisible_Light,
+			(CameraState.Visible, false) => Icons.CameraVisible_Dark,
+			(CameraState.None, true) => Icons.CameraNone_Light,
+			(CameraState.None, false) => Icons.CameraNone_Dark,
 
-			                       _ => Icons.CameraNone_Dark
-		                       }).ToEto();
+			_ => Icons.CameraNone_Dark
+		}).ToEto();
 
 		public bool Visible
 		{
@@ -60,6 +80,7 @@ namespace Crash.UI.UsersView
 
 			set
 			{
+				if (IsCurrentUser) return;
 				_visible = value;
 				_crashDoc.Users.Update(Convert(this));
 				Camera = value ? CameraState.Visible : CameraState.None;

@@ -153,7 +153,7 @@ namespace Crash.UI.UsersView
 				AutoSize = true,
 				Editable = false,
 				HeaderText = "Name",
-				Resizable = false
+				Resizable = false,
 			};
 		}
 
@@ -168,7 +168,7 @@ namespace Crash.UI.UsersView
 				Editable = false,
 				HeaderText = "",
 				Resizable = false,
-				Width = 24
+				Width = 24,
 			};
 
 			return colourColumn;
