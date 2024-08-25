@@ -12,7 +12,7 @@
 			"stopAtEntry": false,
 			"console": "internalConsole",
 			"env": {
-				"RHINO_PACKAGE_DIRS": "${workspaceFolder}/src/Crash/bin/Debug/net7.0/Crash.rhp"
+				"RHINO_PACKAGE_DIRS": "${workspaceFolder}/src/Crash/bin/Debug/"
 			}
 		},
 		{
@@ -26,15 +26,15 @@
 			"stopAtEntry": false,
 			"console": "internalConsole",
 			"env": {
-				"RHINO_PACKAGE_DIRS": "${workspaceFolder}/src/Crash/bin/Debug/net7.0/Crash.rhp"
+				"RHINO_PACKAGE_DIRS": "${workspaceFolder}/src/Crash/bin/Debug/"
 			}
 		},
 		{
-			"name": "Run Rhino 8 WIP (Windows)",
+			"name": "Run Rhino 8 (Windows)",
 			"type": "clr",
 			"request": "launch",
 			"preLaunchTask": "build-plugin-netcore",
-			"program": "C:\\Program Files\\Rhino 7\\System\\Rhino.exe",
+			"program": "C:\\Program Files\\Rhino 8\\System\\Rhino.exe",
 			"args": ["${workspaceFolder}\\src\\Crash\\bin\\Debug\\net7.0\\Crash.rhp"],
 			"cwd": "${workspaceFolder}",
 			"stopAtEntry": false,
