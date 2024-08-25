@@ -67,7 +67,14 @@ namespace Crash.Common.Communications
 			OnInitializeChanges += InitChangesAsync;
 			OnInitializeUsers += InitUsersAsync;
 
-			await StartAsync();
+			try
+			{
+				await StartAsync();
+			}
+			catch (Exception ex)
+			{
+				return ex;
+			}
 			return null;
 		}
 
@@ -209,7 +216,7 @@ namespace Crash.Common.Communications
 
 		public Exception RegisterConnection(string userName, Uri url)
 		{
-			if (string.IsNullOrEmpty(userName))
+			if (string.IsNullOrEmpty(userName?.Replace(" ", "")))
 			{
 				return new ArgumentException("Username cannot be empty or null");
 			}
@@ -224,11 +231,18 @@ namespace Crash.Common.Communications
 				return new UriFormatException("URL must end in /Crash to connect!");
 			}
 
-			_user = userName;
-			_connection = GetHubConnection(url);
-			_connection.Reconnecting += InformUserOfReconnect;
-			Url = url.AbsoluteUri;
-			RegisterConnections();
+			try
+			{
+				_user = userName;
+				_connection = GetHubConnection(url);
+				_connection.Reconnecting += InformUserOfReconnect;
+				Url = url.AbsoluteUri;
+				RegisterConnections();
+			}
+			catch (Exception ex)
+			{
+				return ex;
+			}
 
 			return null;
 		}

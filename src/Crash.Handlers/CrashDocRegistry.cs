@@ -132,41 +132,52 @@ namespace Crash.Handlers
 		/// </summary>
 		public static async Task DisposeOfDocumentAsync(CrashDoc crashDoc)
 		{
-			if (crashDoc is null)
+			if (crashDoc is null) return;
+
+			try
 			{
-				return;
+				if (crashDoc.Queue is not null)
+				{
+					crashDoc.Queue.ForceCycleQueue();
+					// DeRegister Events
+					crashDoc.Queue.OnCompletedQueue -= RedrawOncompleted;
+				}
+
+				if (crashDoc.LocalClient is not null)
+				{
+					await crashDoc.LocalClient.StopAsync();
+				}
+
+				// Remove Geometry
+				var rhinoDoc = GetRelatedDocument(crashDoc);
+				if (rhinoDoc is not null)
+				{
+					s_documentRelationship.Remove(rhinoDoc);
+
+					var settings = new ObjectEnumeratorSettings
+					{
+						ActiveObjects = false,
+						LockedObjects = true,
+						HiddenObjects = true
+					};
+					var rhinoObjects = rhinoDoc.Objects.GetObjectList(settings);
+					foreach (var rhinoObject in rhinoObjects)
+					{
+						rhinoDoc.Objects.Unlock(rhinoObject, true);
+						rhinoDoc.Objects.Show(rhinoObject, true);
+					}
+
+					rhinoDoc.Objects.Clear();
+				}
+
+				// Dispose
+				crashDoc?.Dispose();
+				DocumentDisposed?.Invoke(null, new CrashEventArgs(crashDoc));
 			}
-
-			crashDoc.Queue.ForceCycleQueue();
-			// DeRegister Events
-			crashDoc.Queue.OnCompletedQueue -= RedrawOncompleted;
-			if (crashDoc.LocalClient is not null)
+			catch
 			{
-				await crashDoc.LocalClient?.StopAsync();
+
 			}
-
-			// Remove Geometry
-			var rhinoDoc = GetRelatedDocument(crashDoc);
-			s_documentRelationship.Remove(rhinoDoc);
-
-			var settings = new ObjectEnumeratorSettings
-			{
-				ActiveObjects = false,
-				LockedObjects = true,
-				HiddenObjects = true
-			};
-			var rhinoObjects = rhinoDoc.Objects.GetObjectList(settings);
-			foreach (var rhinoObject in rhinoObjects)
-			{
-				rhinoDoc.Objects.Unlock(rhinoObject, true);
-				rhinoDoc.Objects.Show(rhinoObject, true);
-			}
-
-			rhinoDoc.Objects.Clear();
-
-			// Dispose
-			crashDoc?.Dispose();
-			DocumentDisposed?.Invoke(null, new CrashEventArgs(crashDoc));
 		}
 
 		/// <summary>
