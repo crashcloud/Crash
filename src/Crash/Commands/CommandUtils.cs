@@ -109,6 +109,7 @@ namespace Crash.Commands
 			{
 				HttpRequestException => $"Server was not found at {url}! Please try retyping the address.",
 				UriFormatException => $"The given address ({url}) was invalid! Please try retying the address",
+				NotSupportedException => $"The given address ({url}) was invalid! Please try retying the address",
 				InvalidOperationException => "There was an issue with the local client",
 				Exception ex => $"An unexplained exception occured, try again. ({ex.Message}), please contact a developer for assistance.",
 				_ => string.Empty

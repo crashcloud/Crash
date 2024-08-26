@@ -23,8 +23,6 @@ namespace Crash
 		/// <summary>The Id of the Crash Plugin. DO NOT reuse this!</summary>
 		private const string CrashPluginId = "53CB2393-C71F-4079-9CEC-97464FF9D14E";
 
-		private const string CrashPluginExtension = ".op";
-
 		/// <summary>Contains all of the Change Definitions of this PlugIn</summary>
 		private static readonly Stack<IChangeDefinition> Changes;
 
@@ -43,7 +41,7 @@ namespace Crash
 					continue;
 				}
 
-				var crashPluginExtensions = Directory.EnumerateFiles(pluginDirectory, $"*{CrashPluginExtension}");
+				var crashPluginExtensions = Directory.EnumerateFiles(pluginDirectory, $"*{CrashPluginLoader.Extension}");
 				if (crashPluginExtensions?.Any() != true)
 				{
 					continue;
