@@ -91,7 +91,6 @@ namespace Crash.UI.UsersView
 		{
 			Icon = Icons.crashlogo.ToEto();
 			Title = "Collaborators";
-			Owner = RhinoEtoApp.MainWindow;
 			Padding = 0;
 			Topmost = false;
 			AutoSize = false;
@@ -100,6 +99,10 @@ namespace Crash.UI.UsersView
 			Minimizable = false;
 			WindowStyle = WindowStyle.Default;
 			ShowInTaskbar = false;
+
+			var _rhinoDoc = CrashDocRegistry.GetRelatedDocument(_crashDoc);
+			if (_rhinoDoc is not null)
+				Owner = RhinoEtoApp.MainWindowForDocument(_rhinoDoc);
 
 			SetSizeAndLocation();
 
@@ -137,7 +140,7 @@ namespace Crash.UI.UsersView
 
 			this.Shown += (sender, args) =>
 						  {
-							  RhinoApp.InvokeOnUiThread(() => RhinoEtoApp.MainWindow?.Focus());
+							  RhinoApp.InvokeOnUiThread(() => Owner?.Focus());
 						  };
 		}
 
