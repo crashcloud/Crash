@@ -45,13 +45,6 @@ namespace Crash.UI
 			Active = this;
 		}
 
-		private double scale => RhinoDoc.ActiveDoc is not null
-									? RhinoMath.UnitScale(UnitSystem.Meters, RhinoDoc.ActiveDoc.ModelUnitSystem)
-									: 0;
-
-		private int FAR_AWAY => (int)scale * 1_5000;
-		private int VERY_FAR_AWAY => (int)scale * 7_5000;
-
 		private bool enabled { get; set; }
 
 		/// <summary>
@@ -103,11 +96,8 @@ namespace Crash.UI
 		/// <param name="e"></param>
 		private void PostDrawObjects(object? sender, DrawEventArgs e)
 		{
-			var rhinoDoc = RhinoDoc.ActiveDoc;
-			if (rhinoDoc is null)
-			{
-				return;
-			}
+			var rhinoDoc = e.RhinoDoc;
+			if (rhinoDoc is null) return;
 
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
 			if (!crashDoc.Tables.TryGet<TemporaryChangeTable>(out var tempTable)) return;

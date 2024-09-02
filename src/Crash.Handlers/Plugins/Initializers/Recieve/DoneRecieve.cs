@@ -56,6 +56,8 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 		{
 			if (!crashDoc.Tables.TryGet<TemporaryChangeTable>(out var tempTable)) return;
 			if (!tempTable.TryGetChangeOfType(change.Id, out GeometryChange geomChange)) return;
+			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
+			if (rhinoDoc is null) return;
 
 			tempTable.RemoveChange(change.Id);
 
@@ -64,7 +66,7 @@ namespace Crash.Handlers.Plugins.Initializers.Recieve
 			var add = new GeometryAddRecieveAction();
 			await add.OnRecieveAsync(crashDoc, geomChange);
 
-			RhinoDoc.ActiveDoc.ClearUndoRecords(true);
+			rhinoDoc.ClearUndoRecords(true);
 			(crashDoc.Dispatcher as EventDispatcher).ClearUndoRedoQueue();
 
 		}

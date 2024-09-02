@@ -35,6 +35,10 @@ namespace Crash.Handlers.Plugins.Camera
 				return;
 			}
 
+			var modelSystem = drawArgs?.RhinoDoc.ModelUnitSystem;
+			if (modelSystem is null) return;
+
+			var scale = RhinoMath.UnitScale(modelSystem.Value, UnitSystem.Millimeters);
 			Active = new CameraGraphic(cameraChange.Camera);
 			Active.Draw(drawArgs, material);
 		}
@@ -68,13 +72,11 @@ namespace Crash.Handlers.Plugins.Camera
 
 			private static double GetRelativeSize(double size)
 			{
-				var modelSystem = RhinoDoc.ActiveDoc.ModelUnitSystem;
-				var scale = RhinoMath.UnitScale(modelSystem, UnitSystem.Millimeters);
 				return size * scale;
 			}
 
 			// TODO : Scale correctly!
-			internal CameraGraphic(Common.View.Camera camera)
+			internal CameraGraphic(Common.View.Camera camera, double scale = 1.0)
 			{
 				var location = camera.Location.ToRhino();
 				var target = camera.Target.ToRhino();

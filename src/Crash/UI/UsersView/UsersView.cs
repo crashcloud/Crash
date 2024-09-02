@@ -30,7 +30,6 @@ namespace Crash.UI.UsersView
 
 
 			CreateForm();
-
 			RhinoDoc.ActiveDocumentChanged += (_, _) => { Close(); };
 		}
 
