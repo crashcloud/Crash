@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 
 using Crash.Properties;
+using Crash.UI.JoinView;
 
 using Eto.Forms;
 

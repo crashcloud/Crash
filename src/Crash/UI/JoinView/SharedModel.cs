@@ -10,7 +10,7 @@ using Rhino.UI;
 
 namespace Crash.UI
 {
-	
+
 	[JsonConverter(typeof(SharedModelConverter))]
 	public sealed class SharedModel
 	{
@@ -26,51 +26,68 @@ namespace Crash.UI
 
 	public class SharedModelConverter : JsonConverter<SharedModel>
 	{
+		private void SetValue(ref Utf8JsonReader reader, SharedModel model)
+		{
+			var propertyName = reader.GetString();
+			reader.Read();
+
+			if (propertyName.Equals(nameof(SharedModel.Thumbnail)))
+			{
+				var thumbnailString = reader.GetString();
+				if (!string.IsNullOrEmpty(thumbnailString))
+				{
+					var thumbnail = Convert.FromBase64String(thumbnailString);
+					model.Thumbnail = new Bitmap(thumbnail);
+				}
+			}
+			else if (propertyName.Equals(nameof(SharedModel.UserCount)))
+			{
+				model.UserCount = reader.GetDouble();
+			}
+			else if (propertyName.Equals(nameof(SharedModel.ModelAddress)))
+			{
+				model.ModelAddress = reader.GetString();
+			}
+		}
+
 		public override SharedModel? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
 			var model = new SharedModel();
-			reader.Read();
 
-			model.ModelAddress = reader.GetString();
-			reader.Read();
-
-			model.UserCount = reader.GetDouble();
-			reader.Read();
-
-			var thumbnailString = reader.GetString();
-			if (!string.IsNullOrEmpty(thumbnailString))
+			while (reader.Read())
 			{
-				var thumbnail = Convert.FromBase64String(thumbnailString);
-				model.Thumbnail = new Bitmap(thumbnail);
-				reader.Read();
+				if (reader.TokenType == JsonTokenType.EndObject)
+				{
+					return model;
+				}
+				else if (reader.TokenType == JsonTokenType.PropertyName)
+				{
+					SetValue(ref reader, model);
+				}
 			}
 
-			reader.Read();
 			return model;
 		}
 
 		public override void Write(Utf8JsonWriter writer, SharedModel model, JsonSerializerOptions options)
 		{
-			if (string.IsNullOrEmpty(model.ModelAddress))
+			// Model Address
+			var modelAddress = "No model address found";
+			if (!string.IsNullOrEmpty(model.ModelAddress))
 			{
-				writer.WriteStringValue("No Model Address Found");
+				modelAddress = model.ModelAddress;
 			}
-			else
-			{
-				writer.WriteStringValue(model.ModelAddress);
-			}
+			writer.WriteString(nameof(SharedModel.ModelAddress), modelAddress);
 
-			writer.WriteNumberValue(model.UserCount);
+			// User Count
+			writer.WriteNumber(nameof(SharedModel.UserCount), model.UserCount);
+
 
 			if (model.Thumbnail == null || model.Thumbnail.IsDisposed)
 			{
 				var byteImage = model.Thumbnail.ToByteArray(ImageFormat.Png);
 				var base64String = Convert.ToBase64String(byteImage);
-				writer.WriteStringValue(base64String);
-			}
-			else
-			{
-				writer.WriteStringValue("");
+				writer.WriteString(nameof(SharedModel.Thumbnail), base64String);
 			}
 		}
 	}

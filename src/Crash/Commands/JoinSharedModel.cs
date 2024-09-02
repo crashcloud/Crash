@@ -38,7 +38,7 @@ namespace Crash.Commands
 			_rhinoDoc = doc;
 
 			var jwn = new JoinWindowNew();
-			var result = jwn.ShowModal();
+			var result = await jwn.ShowModalAsync(RhinoEtoApp.MainWindowForDocument(doc));
 
 			return Result.Cancel;
 
@@ -51,10 +51,8 @@ namespace Crash.Commands
 			var name = Environment.UserName;
 			if (mode == RunMode.Interactive)
 			{
-				var dialog = new JoinWindow();
-
+				var dialog = new JoinWindowNew();
 				var chosenModel = await dialog.ShowModalAsync(RhinoEtoApp.MainWindowForDocument(doc));
-
 				if (chosenModel is null) return Result.Cancel;
 
 				if (string.IsNullOrEmpty(chosenModel?.ModelAddress))
@@ -105,6 +103,7 @@ namespace Crash.Commands
 
 			LoadingUtils.SetState(_crashDoc, LoadingUtils.LoadingState.CheckingServer);
 			_crashDoc.Queue.OnCompletedQueue += QueueOnOnCompleted;
+
 			if (await CommandUtils.StartLocalClient(_crashDoc, _lastUrl))
 			{
 				LoadingUtils.SetState(_crashDoc, LoadingUtils.LoadingState.ConnectingToServer);
@@ -123,6 +122,7 @@ namespace Crash.Commands
 
 				await _crashDoc.Dispatcher.NotifyServerAsync(changes);
 
+				UsersForm.ShowForm(_crashDoc);
 				return;
 			}
 

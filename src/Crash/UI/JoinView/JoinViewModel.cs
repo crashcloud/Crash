@@ -2,6 +2,8 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 
+using Rhino.UI;
+
 [assembly: InternalsVisibleTo("Crash.UI.Tests")]
 
 namespace Crash.UI.JoinView

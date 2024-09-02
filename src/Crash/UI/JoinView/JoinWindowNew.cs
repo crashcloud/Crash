@@ -119,8 +119,9 @@ namespace Crash.UI.JoinView
 				layout.Paint += (s, e) =>
 				{
 					if (layout.DataContext is not SharedModel sharedModel) return;
+					if (sharedModel.Thumbnail is null) return;
 
-					e.Graphics.DrawImage(sharedModel.Thumbnail, new PointF(0, 0), new SizeF(100, 26));
+					e.Graphics.DrawImage(sharedModel.Thumbnail, 0, 0);
 				};
 
 
