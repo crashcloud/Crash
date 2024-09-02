@@ -123,12 +123,7 @@ namespace Crash.Handlers.Tests.Plugins
 												   {
 													   { nameof(ICrashClient.StopAsync), 0 },
 													   { nameof(ICrashClient.StartLocalClientAsync), 0 },
-													   { nameof(ICrashClient.PushIdenticalChangesAsync), 0 },
-													   { nameof(ICrashClient.PushChangeAsync), 0 },
-													   { nameof(ICrashClient.PushChangesAsync), 0 },
-													   { nameof(ICrashClient.OnRecieveIdentical), 0 },
-													   { nameof(ICrashClient.OnRecieveChange), 0 },
-													   { nameof(ICrashClient.OnRecieveChanges), 0 },
+													   { nameof(ICrashClient.StreamChangesAsync), 0 },
 													   { nameof(ICrashClient.OnInitializeChanges), 0 },
 													   { nameof(ICrashClient.OnInitializeUsers), 0 }
 												   };
@@ -159,21 +154,9 @@ namespace Crash.Handlers.Tests.Plugins
 			await Task.CompletedTask;
 		}
 
-		public async Task PushIdenticalChangesAsync(IEnumerable<Guid> ids, Change change)
+		public async Task StreamChangesAsync(IAsyncEnumerable<Change> changes)
 		{
-			IncrementCallCount(nameof(ICrashClient.PushIdenticalChangesAsync));
-			await Task.CompletedTask;
-		}
-
-		public async Task PushChangeAsync(Change change)
-		{
-			IncrementCallCount(nameof(ICrashClient.PushChangeAsync));
-			await Task.CompletedTask;
-		}
-
-		public async Task PushChangesAsync(IEnumerable<Change> changes)
-		{
-			IncrementCallCount(nameof(ICrashClient.PushChangesAsync));
+			IncrementCallCount(nameof(ICrashClient.StreamChangesAsync));
 			await Task.CompletedTask;
 		}
 
