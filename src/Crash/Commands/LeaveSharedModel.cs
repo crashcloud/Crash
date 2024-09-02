@@ -55,7 +55,7 @@ namespace Crash.Commands
 			RhinoApp.WriteLine("Model closed and saved successfully");
 
 			doc.Views.Redraw();
-			UsersForm.CloseActiveForm();
+			UsersForm.CloseActiveForm(crashDoc);
 			LoadingUtils.Close();
 
 			return Result.Success;

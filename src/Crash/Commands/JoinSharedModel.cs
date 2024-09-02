@@ -32,7 +32,6 @@ namespace Crash.Commands
 			Instance = this;
 		}
 
-
 		public static JoinSharedModel Instance { get; private set; }
 
 
@@ -139,7 +138,7 @@ namespace Crash.Commands
 		{
 			LoadingUtils.Close();
 			e.CrashDoc.Queue.OnCompletedQueue -= QueueOnOnCompleted;
-			UsersForm.CloseActiveForm();
+			UsersForm.CloseActiveForm(e.CrashDoc);
 			UsersForm.ShowForm(e.CrashDoc);
 
 			StatusBar.HideProgressMeter();

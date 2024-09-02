@@ -19,7 +19,7 @@ namespace Crash.UI.UsersView
 			var userObjects = _crashDoc.Users.Where(u => !string.IsNullOrEmpty(u.Name)).Select(u =>
 						 {
 							 var user = new UserObject(_crashDoc, u);
-							 user.OnPropertyChanged += (sender, o) => UsersForm.ReDraw();
+							 user.OnPropertyChanged += (sender, o) => UsersForm.ReDraw(crashDoc);
 							 return user;
 						 });
 			Users = new ObservableCollection<UserObject> { UserObject.CreateForCurrentUser(_crashDoc) };
@@ -43,7 +43,7 @@ namespace Crash.UI.UsersView
 			Application.Instance.Invoke(() =>
 										{
 											Users.Add(new UserObject(_crashDoc, e.User));
-											UsersForm.ReDraw();
+											UsersForm.ReDraw(_crashDoc);
 										});
 		}
 
@@ -52,7 +52,7 @@ namespace Crash.UI.UsersView
 			Application.Instance.Invoke(() =>
 										{
 											Users.Remove(new UserObject(_crashDoc, e.User));
-											UsersForm.ReDraw();
+											UsersForm.ReDraw(_crashDoc);
 										});
 		}
 
@@ -94,7 +94,7 @@ namespace Crash.UI.UsersView
 			var index = Users.IndexOf(user);
 			Users.RemoveAt(index);
 			Users.Insert(index, user);
-			UsersForm.ReDraw();
+			UsersForm.ReDraw(_crashDoc);
 		}
 
 		private static CameraState CycleState(CameraState state)

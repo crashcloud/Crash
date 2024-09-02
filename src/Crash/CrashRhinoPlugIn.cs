@@ -121,7 +121,7 @@ namespace Crash
 				RhinoApp.InvokeOnUiThread(() =>
 										  {
 											  MessageBox.Show(message, MessageBoxButtons.OK);
-											  UsersForm.CloseActiveForm();
+											  UsersForm.CloseActiveForm(args.CrashDoc);
 										  });
 
 				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.CrashDoc);
