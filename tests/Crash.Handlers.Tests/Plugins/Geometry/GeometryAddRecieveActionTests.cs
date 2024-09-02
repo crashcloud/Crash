@@ -2,6 +2,7 @@
 
 using Crash.Changes;
 using Crash.Common.Document;
+using Crash.Common.Tables;
 using Crash.Handlers.Changes;
 using Crash.Handlers.Plugins.Geometry.Recieve;
 

@@ -9,12 +9,6 @@ namespace Crash.Commands
 	[CommandStyle(Style.DoNotRepeat | Style.NotUndoable)]
 	public sealed class Release : AsyncCommand
 	{
-		public Release()
-		{
-			Instance = this;
-		}
-
-		public static Release Instance { get; private set; }
 
 		public override string EnglishName => "Release";
 
@@ -28,7 +22,7 @@ namespace Crash.Commands
 
 			var doneChange = DoneChange.GetDoneChange(crashDoc.Users.CurrentUser.Name);
 
-			await crashDoc.LocalClient.PushChangeAsync(doneChange);
+			await crashDoc.LocalClient.StreamChangesAsync(new List<Change> { doneChange }.ToAsyncEnumerable());
 
 			doc.Objects.UnselectAll();
 			doc.Views.Redraw();

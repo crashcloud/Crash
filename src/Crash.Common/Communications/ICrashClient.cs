@@ -24,30 +24,10 @@ namespace Crash.Common.Communications
 		public Task<Exception?> StartLocalClientAsync();
 
 		/// <summary>
-		///     Pushes an Update/Transform/Payload which applies to many Changes
-		///     An example of this is arraying the same item or deleting many items at once
-		/// </summary>
-		/// <param name="ids">The records to update</param>
-		/// <param name="change">The newest changes</param>
-		Task PushIdenticalChangesAsync(IEnumerable<Guid> ids, Change change);
-
-		/// <summary>Pushes a single Change</summary>
-		Task PushChangeAsync(Change change);
-
-		/// <summary>
 		///     Pushes many unique changes at once
 		///     An example of this may be copying 10 unique items
 		/// </summary>
-		Task PushChangesAsync(IEnumerable<Change> changes);
-
-		/// <summary>Pushes a single Change</summary>
-		public event Func<IEnumerable<Guid>, Change, Task> OnRecieveIdentical;
-
-		/// <summary>Pushes a single Change</summary>
-		public event Func<Change, Task> OnRecieveChange;
-
-		/// <summary>Pushes a single Change</summary>
-		public event Func<IEnumerable<Change>, Task> OnRecieveChanges;
+		public Task StreamChangesAsync(IAsyncEnumerable<Change> changeStream);
 
 		/// <summary>Local Event corresponding to a Server call for Initialize</summary>
 		public event Func<IEnumerable<Change>, Task> OnInitializeChanges;

@@ -12,14 +12,14 @@ namespace Crash.Common.Document
 	/// <summary>The Crash Document</summary>
 	public sealed class CrashDoc : IEquatable<CrashDoc>, IDisposable
 	{
-		private readonly Guid _id;
+		private Guid Id { get; }
 
 		#region constructors
 
 		/// <summary>Constructs a Crash Doc</summary>
 		public CrashDoc()
 		{
-			_id = Guid.NewGuid();
+			Id = Guid.NewGuid();
 
 			Users = new UserTable(this);
 			Tables = new CacheTable(this);
@@ -90,19 +90,17 @@ namespace Crash.Common.Document
 
 		public bool Equals(CrashDoc? other)
 		{
-			return other?.GetHashCode() == GetHashCode();
+			return other?.Id == Id;
 		}
-
 
 		public override bool Equals(object? obj)
 		{
 			return obj is CrashDoc other && Equals(other);
 		}
 
-
 		public override int GetHashCode()
 		{
-			return _id.GetHashCode();
+			return Id.GetHashCode();
 		}
 
 		#endregion

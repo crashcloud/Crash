@@ -1,10 +1,12 @@
 ﻿using Crash.Common.App;
 using Crash.Common.Changes;
+using Crash.Common.Collections;
 using Crash.Common.Communications;
 using Crash.Common.Document;
 using Crash.Common.Logging;
 using Crash.Handlers.InternalEvents;
 using Crash.Handlers.InternalEvents.Wrapping;
+using System.Linq;
 
 using Microsoft.Extensions.Logging;
 
@@ -16,7 +18,6 @@ namespace Crash.Handlers.Plugins
 		private readonly CrashDoc _crashDoc;
 		private readonly Dictionary<ChangeAction, List<IChangeCreateAction>> _createActions;
 		private readonly Dictionary<string, List<IChangeRecieveAction>> _recieveActions;
-
 		private EventWrapper _eventWrapper;
 
 		/// <summary>Default Constructor</summary>
@@ -28,7 +29,21 @@ namespace Crash.Handlers.Plugins
 		}
 
 		// TODO : How can we prevent the same events being subscribed multiple times?
-		public async Task NotifyServerAsync(ChangeAction changeAction, object sender, EventArgs args)
+
+
+		public async Task NotifyServerAsync(List<Change> changes)
+		{
+			try
+			{
+				await _crashDoc.LocalClient.StreamChangesAsync(changes.ToAsyncEnumerable());
+			}
+			catch (Exception ex)
+			{
+
+			}
+		}
+
+		internal async Task<List<Change>> TryGetChangeFromEvent(ChangeAction changeAction, object sender, EventArgs args)
 		{
 			if (!_createActions.TryGetValue(changeAction, out var actionChain))
 			{
@@ -37,7 +52,7 @@ namespace Crash.Handlers.Plugins
 					CrashLogger.Logger.LogDebug($"Could not find a CreateAction for {changeAction}");
 				}
 
-				return;
+				return new List<Change>();
 			}
 
 			var crashArgs = new CreateRecieveArgs(changeAction, args, _crashDoc);
@@ -55,31 +70,9 @@ namespace Crash.Handlers.Plugins
 					break;
 				}
 			}
+			changes ??= new List<Change>();
 
-			if (!changes.Any())
-			{
-				if (args is not CrashViewArgs)
-				{
-					CrashApp.Log("No changes created as a result", LogLevel.Trace);
-				}
-
-				return;
-			}
-
-			// Here we are essentially streaming?
-			// We need to make sure this gets broken up better.
-			await _crashDoc.LocalClient.PushChangesAsync(changes);
-
-#if DEBUG
-			// This logic is a bit slow and I'd rather it wasn't compiled unless necessary
-			foreach (var change in changes)
-			{
-				if (change.Type != CameraChange.ChangeType)
-				{
-					CrashApp.Log($"Sent Change : {change.Type} | {change.Action} | {change.Id}", LogLevel.Trace);
-				}
-			}
-#endif
+			return changes.ToList();
 		}
 
 		/// <summary>Registers a Definition and all of the Create and recieve actions within</summary>
@@ -155,43 +148,42 @@ namespace Crash.Handlers.Plugins
 
 		private async Task NotifyServerOfAddCrashObject(object? sender, CrashObjectEventArgs args)
 		{
-			// TODO : Include Update?
-			await NotifyServerAsync(ChangeAction.Add | ChangeAction.Temporary, sender, args);
+			await NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Add | ChangeAction.Temporary, sender, args));
 		}
 
 		private async Task NotifyServerOfDeleteCrashObject(object? sender, CrashObjectEventArgs crashArgs)
 		{
-			await NotifyServerAsync(ChangeAction.Remove, sender, crashArgs);
+			await NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Remove, sender, crashArgs));
 		}
 
 		private async Task NotifyServerOfTransformCrashObject(object? sender, CrashTransformEventArgs crashArgs)
 		{
-			await NotifyServerAsync(ChangeAction.Transform, sender, crashArgs);
+			await NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Transform, sender, crashArgs));
 		}
 
 		private async Task NotifyServerOfSelectCrashObjects(object? sender, CrashSelectionEventArgs crashArgs)
 		{
-			await NotifyServerAsync(ChangeAction.Locked, sender, crashArgs);
+			await NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Locked, sender, crashArgs));
 		}
 
 		private async Task NotifyServerOfDeSelectCrashObjects(object? sender, CrashSelectionEventArgs crashArgs)
 		{
-			await NotifyServerAsync(ChangeAction.Unlocked, sender, crashArgs);
+			await NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Unlocked, sender, crashArgs));
 		}
 
 		private async Task NotifyServerOfUpdateCrashObject(object? sender, CrashUpdateArgs args)
 		{
-			await NotifyServerAsync(ChangeAction.Update, sender, args);
+			await NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Update, sender, args));
 		}
 
 		private async Task NotifyServerOfCrashLayerModified(object? sender, CrashLayerArgs args)
 		{
-			await NotifyServerAsync(args.Action, sender, args);
+			await NotifyServerAsync(await TryGetChangeFromEvent(args.Action, sender, args));
 		}
 
 		private async Task NotifyServerOfCrashViewModified(object? sender, CrashViewArgs crashArgs)
 		{
-			await NotifyServerAsync(ChangeAction.Add, sender, crashArgs);
+			await NotifyServerAsync(await TryGetChangeFromEvent(ChangeAction.Add, sender, crashArgs));
 		}
 
 		/// <summary>Registers the default server notifiers</summary>
@@ -226,36 +218,20 @@ namespace Crash.Handlers.Plugins
 		/// </summary>
 		public void RegisterDefaultServerCalls(CrashDoc doc)
 		{
-			doc.LocalClient.OnRecieveChange += RecieveChangeAsync;
-			doc.LocalClient.OnRecieveChanges += RecieveChangesAsync;
-			doc.LocalClient.OnRecieveIdentical += RecieveIdenticalChangeAsync;
-
 			// OnInit is called on reconnect as well
 			doc.LocalClient.OnInitializeChanges += InitializeChangesAsync;
 		}
 
-		private async Task RecieveChangeAsync(Change change)
-		{
-			await NotifyClientAsync(_crashDoc, change);
-		}
-
-		private async Task RecieveChangesAsync(IEnumerable<Change> changes)
-		{
-			await Task.WhenAll(changes.Select(c => NotifyClientAsync(_crashDoc, c)));
-		}
-
-		private async Task RecieveIdenticalChangeAsync(IEnumerable<Guid> ids, Change change)
-		{
-			await Task.WhenAll(ids.Select(c => NotifyClientAsync(_crashDoc, new Change(change) { Id = c })));
-		}
-
-		private async Task InitializeChangesAsync(IEnumerable<Change> changes)
+		private async Task InitializeChangesAsync(IEnumerable<Change> changeStream)
 		{
 			_crashDoc.LocalClient.OnInitializeChanges -= InitializeChangesAsync;
 
 			CrashLogger.Logger.LogDebug($"{nameof(_crashDoc.LocalClient.OnInitializeChanges)}");
 
-			await Task.WhenAll(changes.Select(c => NotifyClientAsync(_crashDoc, c)));
+			foreach (var change in changeStream)
+			{
+				await NotifyClientAsync(_crashDoc, change);
+			}
 		}
 	}
 }

@@ -6,7 +6,7 @@ namespace Crash.Plugins
 {
 	public class CrashPluginLoader
 	{
-		public const string Extension = ".mup";
+		public const string Extension = ".op";
 
 		internal CrashPluginLoader(IEnumerable<string>? crashPluginLocations)
 		{
@@ -27,7 +27,7 @@ namespace Crash.Plugins
 				}
 
 				var crashPluginExtensions = Directory.EnumerateFiles(pluginDirectory, $"*{Extension}")?.ToArray() ??
-				                            Array.Empty<string>();
+											Array.Empty<string>();
 
 				if (crashPluginExtensions.Length == 0)
 				{

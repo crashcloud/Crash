@@ -66,7 +66,7 @@ namespace Crash.Common.Tests.Tables
 			var userTable = new UserTable(crashDoc);
 			var user = new User("user1");
 			var eventRaised = false;
-			UserTable.OnUserAdded += (sender, args) => eventRaised = true;
+			userTable.OnUserAdded += (sender, args) => eventRaised = true;
 
 			// Act
 			var result = userTable.Add(user);
@@ -107,7 +107,7 @@ namespace Crash.Common.Tests.Tables
 			var user = new User("user1");
 			userTable.Add(user);
 			var eventRaised = false;
-			UserTable.OnUserRemoved += (sender, args) => eventRaised = true;
+			userTable.OnUserRemoved += (sender, args) => eventRaised = true;
 
 			// Act
 			userTable.Remove(user);

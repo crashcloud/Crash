@@ -2,6 +2,7 @@
 
 using Crash.Changes;
 using Crash.Common.Document;
+using Crash.Common.Tables;
 using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
 using Crash.Handlers.Plugins;
@@ -104,7 +105,7 @@ namespace Crash.Handlers.Tests.Plugins
 			var cache = GeometryChange.CreateNew(createRecieveArgs.Geometry, "Test");
 			cache.Id = createRecieveArgs.ChangeId;
 
-			Assert.True(_cdoc.Tables.TryGetTable<TemporaryChangeTable>(out var table));
+			Assert.That(_cdoc.Tables.TryGet<TemporaryChangeTable>(out var table), Is.True);
 			table.UpdateChange(cache);
 
 			Assert.That(createAction.TryConvert(null, createArgs, out var changes), Is.True);
