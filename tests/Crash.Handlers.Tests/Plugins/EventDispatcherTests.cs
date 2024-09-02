@@ -32,26 +32,26 @@ namespace Crash.Handlers.Tests.Plugins
 				var addArgs = new CrashObjectEventArgs(null, point, rhinoId, Guid.NewGuid());
 				yield return new object[]
 							 {
-								 nameof(ICrashClient.PushChangeAsync), ChangeAction.Add | ChangeAction.Temporary,
+								 nameof(ICrashClient.StreamChangesAsync), ChangeAction.Add | ChangeAction.Temporary,
 								 addArgs
 							 };
 
 				var deleteArgs = new CrashObjectEventArgs(null, null, Guid.NewGuid(), Guid.NewGuid());
-				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Remove, deleteArgs };
+				yield return new object[] { nameof(ICrashClient.StreamChangesAsync), ChangeAction.Remove, deleteArgs };
 
 				var crashObject = new CrashObject(Guid.NewGuid(), Guid.NewGuid());
 				var selectArgs = CrashSelectionEventArgs.CreateSelectionEvent(null, new[] { crashObject });
-				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Locked, selectArgs };
+				yield return new object[] { nameof(ICrashClient.StreamChangesAsync), ChangeAction.Locked, selectArgs };
 
 
 				var deSelectArgs = CrashSelectionEventArgs.CreateDeSelectionEvent(null, new[] { crashObject });
-				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Unlocked, deSelectArgs };
+				yield return new object[] { nameof(ICrashClient.StreamChangesAsync), ChangeAction.Unlocked, deSelectArgs };
 
 				// Where do Transforms go?
 				// nameof(ICrashClient)
 
 				//
-				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Update, null };
+				yield return new object[] { nameof(ICrashClient.StreamChangesAsync), ChangeAction.Update, null };
 
 				/*
 				var args = EventArgs.Empty;
@@ -106,7 +106,8 @@ namespace Crash.Handlers.Tests.Plugins
 		[TestCaseSource(nameof(DispatchEvents))]
 		public async Task TestAddDispatch(string callName, ChangeAction action, EventArgs args)
 		{
-			await eventDispatcher.NotifyServerAsync(action, this, args);
+			var changes = await eventDispatcher.TryGetChangeFromEvent(action, this, args);
+			await eventDispatcher.NotifyServerAsync(changes);
 			AssertCallCount(callName, 1);
 		}
 
