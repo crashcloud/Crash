@@ -26,48 +26,6 @@ namespace Crash
 		/// <summary>Contains all of the Change Definitions of this PlugIn</summary>
 		private static readonly Stack<IChangeDefinition> Changes;
 
-		#region Crash Plugins
-
-		// TODO : https://learn.microsoft.com/en-us/dotnet/core/tutorials/creating-app-with-plugin-support
-		private static void LoadCrashPlugins()
-		{
-			IEnumerable<Guid> pluginIds = GetInstalledPlugIns().Keys;
-			var pluginInfos = pluginIds.Select(p => GetPlugInInfo(p));
-			foreach (var pluginInfo in pluginInfos)
-			{
-				var pluginDirectory = Path.GetDirectoryName(pluginInfo.FileName);
-				if (!Directory.Exists(pluginDirectory))
-				{
-					continue;
-				}
-
-				var crashPluginExtensions = Directory.EnumerateFiles(pluginDirectory, $"*{CrashPluginLoader.Extension}");
-				if (crashPluginExtensions?.Any() != true)
-				{
-					continue;
-				}
-
-				foreach (var pluginAssembly in crashPluginExtensions)
-				{
-					LoadCrashPlugin(pluginAssembly);
-				}
-			}
-		}
-
-		private static void LoadCrashPlugin(string crashAssembly)
-		{
-			var assembly = System.Reflection.Assembly.LoadFrom(crashAssembly);
-			var changeDefinitionTypes =
-				assembly.ExportedTypes.Where(et => et.GetInterfaces().Contains(typeof(IChangeDefinition)));
-			foreach (var changeDefinitionType in changeDefinitionTypes)
-			{
-				var changeDefinition = Activator.CreateInstance(changeDefinitionType) as IChangeDefinition;
-				Changes.Push(changeDefinition);
-			}
-		}
-
-		#endregion
-
 		#region Crash Plugin Specifics
 
 		static CrashRhinoPlugIn()
