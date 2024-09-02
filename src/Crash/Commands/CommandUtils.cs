@@ -52,7 +52,7 @@ namespace Crash.Commands
 				if (crashDoc?.LocalClient?.IsConnected == true)
 				{
 					RhinoApp.WriteLine("You are currently part of a Shared Model Session.");
-					return RhinoApp.RunScript(LeaveSharedModel.Instance.EnglishName, true);
+					return RhinoApp.RunScript(LeaveSharedModel.EnglishCommandName, true);
 				}
 
 				return true;
@@ -91,18 +91,18 @@ namespace Crash.Commands
 			var userName = crashDoc.Users?.CurrentUser.Name ?? string.Empty;
 
 			var uriResult = TryGetCleanUri(url, out var uri);
-			if (!ParseConnectionResult(uriResult, url, headless)) return false;
+			if (!ParseConnectionResult(crashDoc, uriResult, url, headless)) return false;
 
 			var connectionResult = crashDoc.LocalClient.RegisterConnection(userName, uri);
-			if (!ParseConnectionResult(connectionResult, url, headless)) return false;
+			if (!ParseConnectionResult(crashDoc, connectionResult, url, headless)) return false;
 
 			var startResult = await crashDoc.LocalClient.StartLocalClientAsync();
-			if (!ParseConnectionResult(startResult, url, headless)) return false;
+			if (!ParseConnectionResult(crashDoc, startResult, url, headless)) return false;
 
 			return true;
 		}
 
-		private static bool ParseConnectionResult(Exception result, string url, bool headless = false)
+		private static bool ParseConnectionResult(CrashDoc crashDoc, Exception result, string url, bool headless = false)
 		{
 			var message = "An unexplained exception occured, try again.";
 			var registerResult = result switch
@@ -118,7 +118,7 @@ namespace Crash.Commands
 			if (!string.IsNullOrEmpty(registerResult))
 			{
 				message = registerResult;
-				AlertUser(message, headless);
+				AlertUser(crashDoc, message, headless);
 				RhinoApp.Idle += ReOpenJoinWindow;
 
 				return false;
@@ -127,11 +127,11 @@ namespace Crash.Commands
 			return true;
 		}
 
-		internal static void AlertUser(string message, bool headless = false)
+		internal static void AlertUser(CrashDoc crashDoc, string message, bool headless = false)
 		{
 			RhinoApp.InvokeOnUiThread(() =>
 									{
-										LoadingUtils.Close();
+										LoadingUtils.Close(crashDoc);
 										if (headless)
 										{
 											RhinoApp.WriteLine(message);
@@ -146,7 +146,7 @@ namespace Crash.Commands
 		private static void ReOpenJoinWindow(object? sender, EventArgs e)
 		{
 			RhinoApp.Idle -= ReOpenJoinWindow;
-			RhinoApp.RunScript(JoinSharedModel.Instance.EnglishName, false);
+			RhinoApp.RunScript(JoinSharedModel.EnglishCommandName, false);
 		}
 
 		private static Exception? TryGetCleanUri(string url, out Uri uri)

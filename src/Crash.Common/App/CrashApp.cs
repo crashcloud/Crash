@@ -1,12 +1,16 @@
+using Crash.Common.Document;
+
 using Microsoft.Extensions.Logging;
 
 namespace Crash.Common.App
 {
+
 	/// <summary>
 	///     A global Application class to handle Application specific logic
 	/// </summary>
 	public static class CrashApp
 	{
+
 		/// <summary>The current Log Level, anything lower won't be logged</summary>
 		private static LogLevel Level { get; } = LogLevel.Information;
 

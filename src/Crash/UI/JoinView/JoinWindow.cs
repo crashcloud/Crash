@@ -41,7 +41,6 @@ namespace Crash.UI.JoinModel
 		internal string ChosenAddress { get; set; }
 
 		private JoinViewModel? Model => DataContext as JoinViewModel;
-		protected static bool IsOSX => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 
 		private event EventHandler<EventArgs> AddNewModel;
 		private event EventHandler<EventArgs> RemoveModel;

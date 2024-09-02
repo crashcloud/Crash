@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.InteropServices;
 
+using Crash.Common.App;
 using Crash.Common.Document;
 using Crash.Handlers;
 using Crash.Properties;
@@ -14,7 +15,7 @@ using Color = System.Drawing.Color;
 
 namespace Crash.UI.UsersView
 {
-	internal sealed class UsersForm : Form
+	internal sealed class UsersForm : Form, ICrashInstance
 	{
 		private CrashDoc _crashDoc { get; }
 		private UsersViewModel Model => DataContext as UsersViewModel;
@@ -34,44 +35,39 @@ namespace Crash.UI.UsersView
 
 		protected override void OnClosed(EventArgs e)
 		{
-			Instances.Remove(_crashDoc);
+			CrashInstances.RemoveInstance(_crashDoc, typeof(UsersForm));
 			base.OnClosed(e);
 		}
 
 		protected override void OnShown(EventArgs e)
 		{
-			if (!Instances.ContainsKey(_crashDoc))
-			{
-				Instances.Add(_crashDoc, this);
-			}
+			if (!CrashInstances.TryGetInstance<UsersForm>(_crashDoc, out var usersForm)) return;
+			CrashInstances.TrySetInstance(_crashDoc, this);
+
 			base.OnShown(e);
 		}
-
-		private static Dictionary<CrashDoc, UsersForm> Instances { get; set; } = new();
-
-		private static UsersForm? ActiveForm { get; set; }
 
 		internal static void ShowForm(CrashDoc crashDoc)
 		{
 			if (crashDoc is null) return;
-			if (!Instances.TryGetValue(crashDoc, out var form))
+			if (!CrashInstances.TryGetInstance<UsersForm>(crashDoc, out var usersForm))
 			{
-				form = new UsersForm(crashDoc);
+				usersForm = new UsersForm(crashDoc);
 				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
-				form.Show(rhinoDoc);
+				usersForm.Show(rhinoDoc);
 			}
 
-			form.BringToFront();
+			usersForm.BringToFront();
 		}
 
 		internal static void CloseActiveForm(CrashDoc crashDoc)
 		{
-			if (!Instances.TryGetValue(crashDoc, out var form)) return;
+			if (!CrashInstances.TryGetInstance<UsersForm>(crashDoc, out var usersForm)) return;
 
 			try
 			{
-				form.Close();
-				Instances.Remove(crashDoc);
+				usersForm.Close();
+				CrashInstances.RemoveInstance(crashDoc, typeof(UsersForm));
 			}
 			catch { }
 		}
@@ -81,7 +77,7 @@ namespace Crash.UI.UsersView
 			if (crashDoc is null) return;
 			try
 			{
-				if (!Instances.TryGetValue(crashDoc, out UsersForm? form)) return;
+				if (!CrashInstances.TryGetInstance(crashDoc, out UsersForm form)) return;
 
 				form?.Invalidate(true);
 
@@ -261,7 +257,7 @@ namespace Crash.UI.UsersView
 		protected override void OnClosing(CancelEventArgs e)
 		{
 			this.SavePosition();
-			Instances.Remove(_crashDoc);
+			CrashInstances.RemoveInstance(_crashDoc, typeof(UsersForm));
 			base.OnClosing(e);
 		}
 	}

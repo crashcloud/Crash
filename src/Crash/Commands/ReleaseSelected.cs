@@ -12,15 +12,6 @@ namespace Crash.Commands
 	[CommandStyle(Style.DoNotRepeat | Style.NotUndoable)]
 	public sealed class ReleaseSelected : AsyncCommand
 	{
-		public ReleaseSelected()
-		{
-			Instance = this;
-		}
-
-
-		public static ReleaseSelected Instance { get; private set; }
-
-
 		public override string EnglishName => "ReleaseSelected";
 
 		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)

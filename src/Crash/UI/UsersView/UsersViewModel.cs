@@ -27,8 +27,8 @@ namespace Crash.UI.UsersView
 			foreach (var userObject in userObjects)
 				Users.Add(userObject);
 
-			UserTable.OnUserRemoved += UserRemoved;
-			UserTable.OnUserAdded += AddUsers;
+			crashDoc.Users.OnUserRemoved += UserRemoved;
+			crashDoc.Users.OnUserAdded += AddUsers;
 		}
 
 		internal ObservableCollection<UserObject> Users { get; set; }

@@ -15,17 +15,8 @@ namespace Crash.Commands
 	{
 		private bool defaultValue;
 
-		public LeaveSharedModel()
-		{
-			Instance = this;
-		}
-
-
-		public static LeaveSharedModel Instance { get; private set; }
-
-
-		public override string EnglishName => "LeaveSharedModel";
-
+		public override string EnglishName => EnglishCommandName;
+		public const string EnglishCommandName = "LeaveSharedModel";
 
 		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
 		{
@@ -50,13 +41,14 @@ namespace Crash.Commands
 
 			(crashDoc.LocalClient as CrashClient).ClosedByUser = true;
 			await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
-			InteractivePipe.Active.Enabled = false;
+			var pipe = InteractivePipe.GetActive(crashDoc);
+			pipe.Enabled = false;
 
 			RhinoApp.WriteLine("Model closed and saved successfully");
 
 			doc.Views.Redraw();
 			UsersForm.CloseActiveForm(crashDoc);
-			LoadingUtils.Close();
+			LoadingUtils.Close(crashDoc);
 
 			return Result.Success;
 		}
