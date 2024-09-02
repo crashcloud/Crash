@@ -100,10 +100,10 @@ namespace Crash.Common.Tables
 		}
 
 		/// <summary>Fires each time a User is successfully added via Add</summary>
-		public static event EventHandler<UserEventArgs> OnUserAdded;
+		public event EventHandler<UserEventArgs> OnUserAdded;
 
 		/// <summary>Fires each time a User is successfuly removed via Remove</summary>
-		public static event EventHandler<UserEventArgs> OnUserRemoved;
+		public event EventHandler<UserEventArgs> OnUserRemoved;
 	}
 
 	public sealed class UserEventArgs : EventArgs

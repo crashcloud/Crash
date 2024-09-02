@@ -9,12 +9,6 @@ namespace Crash.Commands
 	[CommandStyle(Style.DoNotRepeat | Style.NotUndoable)]
 	public sealed class Release : AsyncCommand
 	{
-		public Release()
-		{
-			Instance = this;
-		}
-
-		public static Release Instance { get; private set; }
 
 		public override string EnglishName => "Release";
 

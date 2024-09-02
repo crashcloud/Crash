@@ -106,7 +106,7 @@ namespace Crash.Handlers
 				double crashCount = e.Changes.Count();
 				double percentage = changeLoadAmount + (count / crashCount * changeLoadAmount);
 
-				LoadingUtils.SetState((LoadingUtils.LoadingState)(int)percentage, false);
+				LoadingUtils.SetState(itemArgs.CrashDoc, (LoadingUtils.LoadingState)(int)percentage, false);
 
 				if (count < crashCount) return;
 				e.CrashDoc.Queue.OnItemProcessed -= initialLoadingBar;

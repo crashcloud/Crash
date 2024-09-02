@@ -14,6 +14,7 @@ using Eto.Forms;
 
 using Rhino.PlugIns;
 using Crash.Common.App;
+using Crash.Common.Document;
 
 namespace Crash
 {
@@ -24,17 +25,11 @@ namespace Crash
 		private const string CrashPluginId = "53CB2393-C71F-4079-9CEC-97464FF9D14E";
 
 		/// <summary>Contains all of the Change Definitions of this PlugIn</summary>
-		private static readonly Stack<IChangeDefinition> Changes;
+		private Stack<IChangeDefinition> Changes { get; set; }
 
 		#region Crash Plugin Specifics
 
-		static CrashRhinoPlugIn()
-		{
-			Changes = new Stack<IChangeDefinition>();
-			RhinoApp.Idle += LoadCrashPlugins;
-		}
-
-		private static void LoadCrashPlugins(object? sender, EventArgs e)
+		private void LoadCrashPlugins(object? sender, EventArgs e)
 		{
 			RhinoApp.Idle -= LoadCrashPlugins;
 
@@ -60,8 +55,9 @@ namespace Crash
 			var dispatcher = e.CrashDoc.Dispatcher as EventDispatcher;
 			dispatcher?.DeregisterDefaultServerCalls();
 			e.CrashDoc.Dispatcher = null;
-			InteractivePipe.Active.Enabled = false;
-			InteractivePipe.ClearChangeDefinitions();
+			var pipe = InteractivePipe.GetActive(e.CrashDoc);
+			pipe.Enabled = false;
+			pipe.ClearChangeDefinitions();
 		}
 
 		private void CrashDocRegistryOnDocumentRegistered(object? sender, CrashEventArgs e)
@@ -69,10 +65,11 @@ namespace Crash
 			var dispatcher = new EventDispatcher(e.CrashDoc);
 			dispatcher.RegisterDefaultServerNotifiers();
 			dispatcher.RegisterDefaultServerCalls(e.CrashDoc);
-			RegisterDefinitions(dispatcher);
+			RegisterDefinitions(e.CrashDoc, dispatcher);
 			e.CrashDoc.Dispatcher = dispatcher;
 			RegisterExceptions(e.CrashDoc.LocalClient as CrashClient);
-			InteractivePipe.Active.Enabled = true;
+			var pipe = InteractivePipe.GetActive(e.CrashDoc);
+			pipe.Enabled = true;
 			badPipe = new BadChangePipeline(e.CrashDoc);
 		}
 
@@ -99,14 +96,14 @@ namespace Crash
 			{
 				Title = "Changes failed to send!",
 				Message = "Any changes highlighted in red will not be communicated\n" +
-											   "It is advised to delete them.\n" +
-											   "It may be because the Change is > 1Mb."
+												 "It is advised to delete them.\n" +
+												 "It may be because the Change is > 1Mb."
 			};
 
 			RhinoApp.InvokeOnUiThread(() =>
-									  {
-										  badChangeToast.Show();
-									  });
+										{
+											badChangeToast.Show();
+										});
 		}
 
 #pragma warning disable VSTHRD100 // Avoid async void methods
@@ -114,15 +111,15 @@ namespace Crash
 
 		{
 			var message = "The server connection has been lost.\n" +
-						  "Your model will be closed.\n" +
-						  "Objects highlighted in Red have not transmitted all of their data and will be lost.";
+							"Your model will be closed.\n" +
+							"Objects highlighted in Red have not transmitted all of their data and will be lost.";
 			try
 			{
 				RhinoApp.InvokeOnUiThread(() =>
-										  {
-											  MessageBox.Show(message, MessageBoxButtons.OK);
-											  UsersForm.CloseActiveForm();
-										  });
+											{
+												MessageBox.Show(message, MessageBoxButtons.OK);
+												UsersForm.CloseActiveForm(args.CrashDoc);
+											});
 
 				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(args.CrashDoc);
 				await CrashDocRegistry.DisposeOfDocumentAsync(args.CrashDoc);
@@ -135,7 +132,7 @@ namespace Crash
 		}
 #pragma warning restore VSTHRD100 // Avoid async void methods
 
-		private void RegisterDefinitions(EventDispatcher dispatcher)
+		private void RegisterDefinitions(CrashDoc crashDoc, EventDispatcher dispatcher)
 		{
 			var changeEnuner = Changes.GetEnumerator();
 
@@ -143,7 +140,10 @@ namespace Crash
 			{
 				var changeDefinition = changeEnuner.Current;
 				dispatcher.RegisterDefinition(changeDefinition);
-				InteractivePipe.RegisterChangeDefinition(changeDefinition);
+
+				var pipe = InteractivePipe.GetActive(crashDoc);
+				pipe.Enabled = true;
+				pipe.RegisterChangeDefinition(changeDefinition);
 			}
 		}
 
@@ -168,6 +168,8 @@ namespace Crash
 		{
 			Instance = this;
 
+			Changes = new Stack<IChangeDefinition>();
+
 			// Register the Defaults!
 			Changes.Push(new GeometryChangeDefinition());
 			Changes.Push(new CameraChangeDefinition());
@@ -187,10 +189,9 @@ namespace Crash
 
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
-			// Add feature flags as advanced settings here!
-			InteractivePipe.Active = new InteractivePipe { Enabled = false };
-
 			CrashApp.UserMessage += (_, m) => RhinoApp.WriteLine(m);
+
+			RhinoApp.Idle += LoadCrashPlugins;
 
 			return base.OnLoad(ref errorMessage);
 		}

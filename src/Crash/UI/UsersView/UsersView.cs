@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.InteropServices;
 
+using Crash.Common.App;
 using Crash.Common.Document;
 using Crash.Handlers;
 using Crash.Properties;
@@ -14,70 +15,74 @@ using Color = System.Drawing.Color;
 
 namespace Crash.UI.UsersView
 {
-	internal sealed class UsersForm : Form
+	internal sealed class UsersForm : Form, ICrashInstance
 	{
-		private readonly CrashDoc _crashDoc;
-		private readonly UsersViewModel _viewModel;
+		private CrashDoc _crashDoc { get; }
+		private UsersViewModel Model => DataContext as UsersViewModel;
 
 		private UsersForm(CrashDoc crashDoc)
 		{
 			_crashDoc = crashDoc;
-			_viewModel = new UsersViewModel(crashDoc);
-			_viewModel.OnInvalidate += (sender, args) =>
+			var model = new UsersViewModel(crashDoc);
+			model.OnInvalidate += (sender, args) =>
 									   {
 										   Invalidate(true);
 									   };
 
-
+			DataContext = model;
 			CreateForm();
-			RhinoDoc.ActiveDocumentChanged += (_, _) => { Close(); };
 		}
 
-		private static UsersForm? ActiveForm { get; set; }
+		protected override void OnClosed(EventArgs e)
+		{
+			CrashInstances.RemoveInstance(_crashDoc, typeof(UsersForm));
+			base.OnClosed(e);
+		}
+
+		protected override void OnShown(EventArgs e)
+		{
+			if (!CrashInstances.TryGetInstance<UsersForm>(_crashDoc, out var usersForm))
+				CrashInstances.TrySetInstance(_crashDoc, this);
+
+			base.OnShown(e);
+		}
 
 		internal static void ShowForm(CrashDoc crashDoc)
 		{
-			if (ActiveForm is not null)
+			if (crashDoc is null) return;
+			if (!CrashInstances.TryGetInstance<UsersForm>(crashDoc, out var usersForm))
 			{
-				return;
+				usersForm = new UsersForm(crashDoc);
+				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
+				CrashInstances.TrySetInstance(crashDoc, usersForm);
+				usersForm.Show(rhinoDoc);
 			}
 
-			var form = new UsersForm(crashDoc);
-
-			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
-			form.Show(rhinoDoc);
-			form.BringToFront();
-
-			ActiveForm = form;
+			usersForm.BringToFront();
 		}
 
-		internal static void CloseActiveForm()
+		internal static void CloseActiveForm(CrashDoc crashDoc)
 		{
-			if (ActiveForm is null)
-			{
-				return;
-			}
+			if (!CrashInstances.TryGetInstance<UsersForm>(crashDoc, out var usersForm)) return;
 
 			try
 			{
-				ActiveForm.Close();
-				ActiveForm = null;
+				usersForm.Close();
+				CrashInstances.RemoveInstance(crashDoc, typeof(UsersForm));
 			}
 			catch { }
 		}
 
-		internal static void ReDraw()
+		internal static void ReDraw(CrashDoc crashDoc)
 		{
+			if (crashDoc is null) return;
 			try
 			{
-				if (ActiveForm is null)
-				{
-					return;
-				}
+				if (!CrashInstances.TryGetInstance(crashDoc, out UsersForm form)) return;
 
-				ActiveForm?.Invalidate(true);
+				form?.Invalidate(true);
 
-				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(ActiveForm._crashDoc);
+				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
 				rhinoDoc?.Views.Redraw();
 			}
 			catch
@@ -113,7 +118,7 @@ namespace Crash.UI.UsersView
 			{
 				AllowMultipleSelection = false,
 				AllowEmptySelection = true,
-				DataStore = _viewModel.Users,
+				DataStore = Model.Users,
 				ShowHeader = false,
 				Border = BorderType.None,
 				RowHeight = 24,
@@ -126,7 +131,7 @@ namespace Crash.UI.UsersView
 							   }
 			};
 
-			gridView.CellClick += _viewModel.CycleCameraSetting;
+			gridView.CellClick += Model.CycleCameraSetting;
 
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
@@ -253,7 +258,7 @@ namespace Crash.UI.UsersView
 		protected override void OnClosing(CancelEventArgs e)
 		{
 			this.SavePosition();
-			ActiveForm = null;
+			CrashInstances.RemoveInstance(_crashDoc, typeof(UsersForm));
 			base.OnClosing(e);
 		}
 	}

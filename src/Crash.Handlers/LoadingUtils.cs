@@ -1,10 +1,33 @@
-﻿using Rhino.UI;
+﻿using Crash.Common.App;
+using Crash.Common.Document;
+
+using Rhino.UI;
 
 namespace Crash.Commands
 {
 
 	public static class LoadingUtils
 	{
+
+		internal class CrashStatusBar : ICrashInstance
+		{
+			public bool Enabled { get; set; }
+
+			public int _progress { get; set; } = 0;
+			public int Progress
+			{
+				get => _progress;
+				set
+				{
+					_progress = value;
+					if (Enabled)
+						StatusBar.UpdateProgressMeter(_progress, true);
+				}
+			}
+
+
+		}
+
 		public enum LoadingState
 		{
 			None = -1,
@@ -14,40 +37,32 @@ namespace Crash.Commands
 			Done = 100,
 		}
 
-		private static bool Enabled { get; set; }
 
-		private static int _progress { get; set; } = 0;
-		private static int Progress
+		public static void Start(CrashDoc crashDoc)
 		{
-			get => _progress;
-			set
-			{
-				_progress = value;
-				if (Enabled)
-					StatusBar.UpdateProgressMeter(_progress, true);
-			}
-		}
+			Close(crashDoc);
 
-		public static void Start()
-		{
-			Close();
+			var statusBar = new CrashStatusBar();
 
-			Progress = 0;
-			Enabled = true;
+			statusBar.Progress = 0;
+			statusBar.Enabled = true;
+			CrashInstances.TrySetInstance(crashDoc, statusBar);
 
 			StatusBar.ShowProgressMeter(0, 100, "Loading Crash", true, true);
-			SetState(LoadingState.CheckingServer);
+			SetState(crashDoc, LoadingState.CheckingServer);
 		}
 
-		public static void SetState(LoadingState state, bool slowlyUpdate = true)
+		public static void SetState(CrashDoc crashDoc, LoadingState state, bool slowlyUpdate = true)
 		{
 			if (state == LoadingState.None)
 			{
-				Close();
+				Close(crashDoc);
 				return;
 			}
 
-			Progress = (int)state;
+			if (!CrashInstances.TryGetInstance(crashDoc, out CrashStatusBar statusBar)) return;
+
+			statusBar.Progress = (int)state;
 			LoadingState nextState = LoadingState.None;
 
 			if (state == LoadingState.CheckingServer)
@@ -65,26 +80,27 @@ namespace Crash.Commands
 
 #pragma warning disable CS4014, VSTHRD110 // Because this call is not awaited, execution of the current method continues before the call is completed
 			if (slowlyUpdate)
-				SlowlyUpdate((int)nextState);
+				SlowlyUpdate(statusBar, (int)nextState);
 #pragma warning restore CS4014, VSTHRD110 // Because this call is not awaited, execution of the current method continues before the call is completed
 
 		}
 
-		private static async Task SlowlyUpdate(int end)
+		private static async Task SlowlyUpdate(CrashStatusBar statusBar, int end)
 		{
 			await Task.Run(async () =>
 			{
-				while (Enabled && Progress < end)
+				while (statusBar.Enabled && statusBar.Progress < end)
 				{
 					await Task.Delay(600);
-					Progress++;
+					statusBar.Progress++;
 				}
 			});
 		}
 
-		public static void Close()
+		public static void Close(CrashDoc crashDoc)
 		{
-			Enabled = false;
+			if (!CrashInstances.TryGetInstance(crashDoc, out CrashStatusBar statusBar)) return;
+			statusBar.Enabled = false;
 			StatusBar.HideProgressMeter();
 			StatusBar.ClearMessagePane();
 		}

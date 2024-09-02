@@ -26,17 +26,9 @@ namespace Crash.Commands
 		private string? _lastUrl = $"{CrashClient.DefaultURL}:{CrashClient.DefaultPort}";
 		private RhinoDoc _rhinoDoc;
 
-		/// <summary>Default Constructor</summary>
-		public JoinSharedModel()
-		{
-			Instance = this;
-		}
+		public override string EnglishName => EnglishCommandName;
 
-
-		public static JoinSharedModel Instance { get; private set; }
-
-
-		public override string EnglishName => "JoinSharedModel";
+		public const string EnglishCommandName = "JoinSharedModel";
 
 
 		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
@@ -46,7 +38,7 @@ namespace Crash.Commands
 
 			if (crashDoc?.LocalClient?.IsConnected == true)
 			{
-				CommandUtils.AlertUser($"You are already connected to a model ({crashDoc.LocalClient.Url}). Please disconnect first.", mode == RunMode.Scripted);
+				CommandUtils.AlertUser(crashDoc, $"You are already connected to a model ({crashDoc.LocalClient.Url}). Please disconnect first.", mode == RunMode.Scripted);
 				return Result.Cancel;
 			}
 
@@ -70,13 +62,13 @@ namespace Crash.Commands
 			{
 				if (!CommandUtils.GetUserName(out name))
 				{
-					CommandUtils.AlertUser("Invalid Name Input. Avoid empty values", true);
+					CommandUtils.AlertUser(crashDoc, "Invalid Name Input. Avoid empty values", true);
 					return Result.Cancel;
 				}
 
 				if (!_GetServerURL(ref _lastUrl))
 				{
-					CommandUtils.AlertUser($"{_lastUrl} is an invalid URL.", true);
+					CommandUtils.AlertUser(crashDoc, $"{_lastUrl} is an invalid URL.", true);
 					return Result.Nothing;
 				}
 			}
@@ -93,7 +85,7 @@ namespace Crash.Commands
 
 		private async Task StartServer()
 		{
-			LoadingUtils.Start();
+			LoadingUtils.Start(_crashDoc);
 
 			var settings = new ObjectEnumeratorSettings
 			{
@@ -105,13 +97,14 @@ namespace Crash.Commands
 			};
 			var currentObjects = _rhinoDoc.Objects.GetObjectList(settings);
 
-			LoadingUtils.SetState(LoadingUtils.LoadingState.CheckingServer);
+			LoadingUtils.SetState(_crashDoc, LoadingUtils.LoadingState.CheckingServer);
 			_crashDoc.Queue.OnCompletedQueue += QueueOnOnCompleted;
 			if (await CommandUtils.StartLocalClient(_crashDoc, _lastUrl))
 			{
-				LoadingUtils.SetState(LoadingUtils.LoadingState.ConnectingToServer);
+				LoadingUtils.SetState(_crashDoc, LoadingUtils.LoadingState.ConnectingToServer);
 
-				InteractivePipe.Active.Enabled = true;
+				var pipe = InteractivePipe.GetActive(_crashDoc);
+				pipe.Enabled = true;
 
 				// Sends pre-existing Geometry
 				List<Change> changes = new List<Change>(currentObjects.Count());
@@ -124,22 +117,19 @@ namespace Crash.Commands
 
 				await _crashDoc.Dispatcher.NotifyServerAsync(changes);
 
-				UsersForm.ShowForm(_crashDoc);
-
 				return;
 			}
 
 			_crashDoc.Queue.OnCompletedQueue -= QueueOnOnCompleted;
 			await _crashDoc.LocalClient.StopAsync();
 
-			LoadingUtils.Close();
+			LoadingUtils.Close(_crashDoc);
 		}
 
 		private void QueueOnOnCompleted(object? sender, CrashEventArgs e)
 		{
-			LoadingUtils.Close();
+			LoadingUtils.Close(_crashDoc);
 			e.CrashDoc.Queue.OnCompletedQueue -= QueueOnOnCompleted;
-			UsersForm.CloseActiveForm();
 			UsersForm.ShowForm(e.CrashDoc);
 
 			StatusBar.HideProgressMeter();

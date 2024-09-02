@@ -32,26 +32,26 @@ namespace Crash.Handlers.Tests.Plugins
 				var addArgs = new CrashObjectEventArgs(null, point, rhinoId, Guid.NewGuid());
 				yield return new object[]
 							 {
-								 nameof(ICrashClient.PushChangeAsync), ChangeAction.Add | ChangeAction.Temporary,
+								 nameof(ICrashClient.StreamChangesAsync), ChangeAction.Add | ChangeAction.Temporary,
 								 addArgs
 							 };
 
 				var deleteArgs = new CrashObjectEventArgs(null, null, Guid.NewGuid(), Guid.NewGuid());
-				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Remove, deleteArgs };
+				yield return new object[] { nameof(ICrashClient.StreamChangesAsync), ChangeAction.Remove, deleteArgs };
 
 				var crashObject = new CrashObject(Guid.NewGuid(), Guid.NewGuid());
 				var selectArgs = CrashSelectionEventArgs.CreateSelectionEvent(null, new[] { crashObject });
-				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Locked, selectArgs };
+				yield return new object[] { nameof(ICrashClient.StreamChangesAsync), ChangeAction.Locked, selectArgs };
 
 
 				var deSelectArgs = CrashSelectionEventArgs.CreateDeSelectionEvent(null, new[] { crashObject });
-				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Unlocked, deSelectArgs };
+				yield return new object[] { nameof(ICrashClient.StreamChangesAsync), ChangeAction.Unlocked, deSelectArgs };
 
 				// Where do Transforms go?
 				// nameof(ICrashClient)
 
 				//
-				yield return new object[] { nameof(ICrashClient.PushChangeAsync), ChangeAction.Update, null };
+				yield return new object[] { nameof(ICrashClient.StreamChangesAsync), ChangeAction.Update, null };
 
 				/*
 				var args = EventArgs.Empty;
@@ -106,7 +106,8 @@ namespace Crash.Handlers.Tests.Plugins
 		[TestCaseSource(nameof(DispatchEvents))]
 		public async Task TestAddDispatch(string callName, ChangeAction action, EventArgs args)
 		{
-			await eventDispatcher.NotifyServerAsync(action, this, args);
+			var changes = await eventDispatcher.TryGetChangeFromEvent(action, this, args);
+			await eventDispatcher.NotifyServerAsync(changes);
 			AssertCallCount(callName, 1);
 		}
 
@@ -123,15 +124,12 @@ namespace Crash.Handlers.Tests.Plugins
 												   {
 													   { nameof(ICrashClient.StopAsync), 0 },
 													   { nameof(ICrashClient.StartLocalClientAsync), 0 },
-													   { nameof(ICrashClient.PushIdenticalChangesAsync), 0 },
-													   { nameof(ICrashClient.PushChangeAsync), 0 },
-													   { nameof(ICrashClient.PushChangesAsync), 0 },
-													   { nameof(ICrashClient.OnRecieveIdentical), 0 },
-													   { nameof(ICrashClient.OnRecieveChange), 0 },
-													   { nameof(ICrashClient.OnRecieveChanges), 0 },
+													   { nameof(ICrashClient.StreamChangesAsync), 0 },
 													   { nameof(ICrashClient.OnInitializeChanges), 0 },
 													   { nameof(ICrashClient.OnInitializeUsers), 0 }
 												   };
+
+		public string Url { get; }
 
 		internal DispatcherTestClient()
 		{
@@ -153,27 +151,16 @@ namespace Crash.Handlers.Tests.Plugins
 			await Task.CompletedTask;
 		}
 
-		public async Task StartLocalClientAsync()
+		public async Task<Exception?> StartLocalClientAsync()
 		{
 			IncrementCallCount(nameof(ICrashClient.StartLocalClientAsync));
 			await Task.CompletedTask;
+			return null;
 		}
 
-		public async Task PushIdenticalChangesAsync(IEnumerable<Guid> ids, Change change)
+		public async Task StreamChangesAsync(IAsyncEnumerable<Change> changes)
 		{
-			IncrementCallCount(nameof(ICrashClient.PushIdenticalChangesAsync));
-			await Task.CompletedTask;
-		}
-
-		public async Task PushChangeAsync(Change change)
-		{
-			IncrementCallCount(nameof(ICrashClient.PushChangeAsync));
-			await Task.CompletedTask;
-		}
-
-		public async Task PushChangesAsync(IEnumerable<Change> changes)
-		{
-			IncrementCallCount(nameof(ICrashClient.PushChangesAsync));
+			IncrementCallCount(nameof(ICrashClient.StreamChangesAsync));
 			await Task.CompletedTask;
 		}
 
