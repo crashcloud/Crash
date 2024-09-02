@@ -52,12 +52,12 @@ namespace Crash.Commands
 				if (crashDoc?.LocalClient?.IsConnected == true)
 				{
 					RhinoApp.WriteLine("You are currently part of a Shared Model Session.");
-					return RhinoApp.RunScript(LeaveSharedModel.Instance.EnglishName, true);
+					return RhinoApp.RunScript(LeaveSharedModel.EnglishCommandName, true);
 				}
 
 				return true;
 			}
-			catch (Exception e)
+			catch
 			{
 				await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 				return true;
@@ -87,15 +87,29 @@ namespace Crash.Commands
 
 		internal static async Task<bool> StartLocalClient(CrashDoc crashDoc, string url, bool headless = false)
 		{
-			var userName = crashDoc.Users.CurrentUser.Name;
-			var message = "An unexplained exception occured, try again.";
+			if (crashDoc is null) return false;
+			var userName = crashDoc.Users?.CurrentUser.Name ?? string.Empty;
 
-			var uri = GetCleanUri(url);
-			var result = crashDoc.LocalClient.RegisterConnection(userName, uri);
+			var uriResult = TryGetCleanUri(url, out var uri);
+			if (!ParseConnectionResult(crashDoc, uriResult, url, headless)) return false;
+
+			var connectionResult = crashDoc.LocalClient.RegisterConnection(userName, uri);
+			if (!ParseConnectionResult(crashDoc, connectionResult, url, headless)) return false;
+
+			var startResult = await crashDoc.LocalClient.StartLocalClientAsync();
+			if (!ParseConnectionResult(crashDoc, startResult, url, headless)) return false;
+
+			return true;
+		}
+
+		private static bool ParseConnectionResult(CrashDoc crashDoc, Exception result, string url, bool headless = false)
+		{
+			var message = "An unexplained exception occured, try again.";
 			var registerResult = result switch
 			{
-				HttpRequestException => "Server was not found at {url}! Please try retyping the address.",
-				UriFormatException => "The given address ({url}) was invalid! Please try retying the address",
+				HttpRequestException => $"Server was not found at {url}! Please try retyping the address.",
+				UriFormatException => $"The given address ({url}) was invalid! Please try retying the address",
+				NotSupportedException => $"The given address ({url}) was invalid! Please try retying the address",
 				InvalidOperationException => "There was an issue with the local client",
 				Exception ex => $"An unexplained exception occured, try again. ({ex.Message}), please contact a developer for assistance.",
 				_ => string.Empty
@@ -104,23 +118,7 @@ namespace Crash.Commands
 			if (!string.IsNullOrEmpty(registerResult))
 			{
 				message = registerResult;
-				AlertUser(message, headless);
-				RhinoApp.Idle += ReOpenJoinWindow;
-
-				return false;
-			}
-
-			var startResult = await crashDoc.LocalClient.StartLocalClientAsync();
-			var startMessage = startResult switch
-			{
-				Exception ex => $"An unexplained exception occured, try again. ({ex.Message}), please contact a developer for assistance.",
-				_ => string.Empty
-			};
-
-			if (!string.IsNullOrEmpty(startMessage))
-			{
-				message = startMessage;
-				AlertUser(message, headless);
+				AlertUser(crashDoc, message, headless);
 				RhinoApp.Idle += ReOpenJoinWindow;
 
 				return false;
@@ -129,11 +127,11 @@ namespace Crash.Commands
 			return true;
 		}
 
-		internal static void AlertUser(string message, bool headless = false)
+		internal static void AlertUser(CrashDoc crashDoc, string message, bool headless = false)
 		{
 			RhinoApp.InvokeOnUiThread(() =>
 									{
-										LoadingUtils.Close();
+										LoadingUtils.Close(crashDoc);
 										if (headless)
 										{
 											RhinoApp.WriteLine(message);
@@ -148,27 +146,37 @@ namespace Crash.Commands
 		private static void ReOpenJoinWindow(object? sender, EventArgs e)
 		{
 			RhinoApp.Idle -= ReOpenJoinWindow;
-			RhinoApp.RunScript(JoinSharedModel.Instance.EnglishName, false);
+			RhinoApp.RunScript(JoinSharedModel.EnglishCommandName, false);
 		}
 
-		private static Uri GetCleanUri(string url)
+		private static Exception? TryGetCleanUri(string url, out Uri uri)
 		{
-			if (string.IsNullOrEmpty(url))
+			try
 			{
-				throw new UriFormatException("Url is empty");
+				if (string.IsNullOrEmpty(url))
+				{
+					uri = null;
+					return new UriFormatException("Url is empty");
+				}
+
+				var cleanUrl = url;
+
+				if (!cleanUrl.EndsWith("/Crash") &&
+					!cleanUrl.EndsWith("\\Crash"))
+				{
+					cleanUrl = $"{cleanUrl}/Crash";
+				}
+
+				cleanUrl = cleanUrl.Replace("//Crash", "/Crash");
+
+				uri = new Uri(cleanUrl);
+				return null;
 			}
-
-			var cleanUrl = url;
-
-			if (!cleanUrl.EndsWith("/Crash") &&
-				!cleanUrl.EndsWith("\\Crash"))
+			catch (Exception ex)
 			{
-				cleanUrl = $"{cleanUrl}/Crash";
+				uri = null;
+				return ex;
 			}
-
-			cleanUrl = cleanUrl.Replace("//Crash", "/Crash");
-
-			return new Uri(cleanUrl, false);
 		}
 
 		/// <summary>Prompts the User for a Port with validatiobn</summary>

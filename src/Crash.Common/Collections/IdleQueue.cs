@@ -53,6 +53,7 @@ namespace Crash.Events
 			}
 
 			action?.Invoke();
+			OnItemProcessed?.Invoke(this, new CrashEventArgs(_hostDoc));
 
 			if (_idleQueue.IsEmpty)
 			{
@@ -71,5 +72,7 @@ namespace Crash.Events
 
 		/// <summary>Fires when the queue has finished parsing more than 1 item.</summary>
 		public event EventHandler<CrashEventArgs> OnCompletedQueue;
+
+		public event EventHandler<CrashEventArgs> OnItemProcessed;
 	}
 }

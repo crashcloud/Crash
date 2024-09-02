@@ -18,7 +18,10 @@ namespace Crash.Commands
 
 			try
 			{
+#pragma warning disable VSTHRD110 // Observe result of async calls
 				RunCommandAsync(doc, crashDoc, mode);
+#pragma warning restore VSTHRD110 // Observe result of async calls
+
 				return Result.Success;
 			}
 			catch (Exception ex)

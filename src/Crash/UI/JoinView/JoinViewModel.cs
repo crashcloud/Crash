@@ -13,11 +13,11 @@ namespace Crash.UI.JoinModel
 
 
 		private readonly JsonSerializerOptions opts = new()
-		                                              {
-			                                              IgnoreReadOnlyFields = true,
-			                                              IgnoreReadOnlyProperties = true,
-			                                              IncludeFields = false
-		                                              };
+		{
+			IgnoreReadOnlyFields = true,
+			IgnoreReadOnlyProperties = true,
+			IncludeFields = false
+		};
 
 		internal JoinViewModel()
 		{
@@ -34,8 +34,6 @@ namespace Crash.UI.JoinModel
 		{
 			RhinoDoc.BeginSaveDocument -= SaveSharedModels;
 		}
-
-		public event EventHandler OnLoaded;
 
 		internal void SaveSharedModels(object? sender, DocumentSaveEventArgs args)
 		{
@@ -80,7 +78,7 @@ namespace Crash.UI.JoinModel
 		internal bool ModelIsNew(SharedModel model)
 		{
 			var alreadyExists = SharedModels.Select(sm => sm.ModelAddress.ToUpperInvariant())
-			                                .Contains(model.ModelAddress.ToUpperInvariant());
+											.Contains(model.ModelAddress.ToUpperInvariant());
 			if (alreadyExists)
 			{
 				return false;

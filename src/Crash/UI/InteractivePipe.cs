@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 
+using Crash.Common.App;
 using Crash.Common.Changes;
 using Crash.Common.Document;
 using Crash.Common.Tables;
@@ -14,16 +15,20 @@ namespace Crash.UI
 	/// <summary>
 	///     Interactive pipeline for crash geometry display
 	/// </summary>
-	// TODO : Make this static, and turn it into a template that just
-	// grabs things from the CrashDoc
-	// There's no need to recreate the same class again and again
-	// and store so much geometry.
-	internal sealed class InteractivePipe : IDisposable
+	internal sealed class InteractivePipe : ICrashInstance
 	{
-		private static readonly Dictionary<string, IChangeDefinition> definitionRegistry;
+		private readonly Dictionary<string, IChangeDefinition> definitionRegistry;
 
-
-		internal static InteractivePipe Active;
+		internal static InteractivePipe GetActive(CrashDoc crashDoc)
+		{
+			CrashInstances.TryGetInstance(crashDoc, out InteractivePipe activePipe);
+			if (activePipe is null)
+			{
+				activePipe = new InteractivePipe(crashDoc);
+				CrashInstances.TrySetInstance(crashDoc, activePipe);
+			}
+			return activePipe;
+		}
 
 		private readonly DisplayMaterial cachedMaterial = new(Color.Blue);
 
@@ -31,26 +36,15 @@ namespace Crash.UI
 		// TODO : Don't draw things not in the view port
 		private BoundingBox bbox;
 
-		static InteractivePipe()
-		{
-			definitionRegistry = new Dictionary<string, IChangeDefinition>();
-		}
-
 		/// <summary>
 		///     Empty constructor
 		/// </summary>
-		internal InteractivePipe()
+		internal InteractivePipe(CrashDoc crashDoc)
 		{
 			bbox = new BoundingBox(-100, -100, -100, 100, 100, 100);
-			Active = this;
+			CrashInstances.TrySetInstance(crashDoc, this);
+			definitionRegistry = new Dictionary<string, IChangeDefinition>();
 		}
-
-		private double scale => RhinoDoc.ActiveDoc is not null
-									? RhinoMath.UnitScale(UnitSystem.Meters, RhinoDoc.ActiveDoc.ModelUnitSystem)
-									: 0;
-
-		private int FAR_AWAY => (int)scale * 1_5000;
-		private int VERY_FAR_AWAY => (int)scale * 7_5000;
 
 		private bool enabled { get; set; }
 
@@ -82,16 +76,12 @@ namespace Crash.UI
 			}
 		}
 
-		public void Dispose()
-		{
-		}
-
 		/// <summary>
 		///     Method to calculate the bounding box
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void CalculateBoundingBox(object sender, CalculateBoundingBoxEventArgs e)
+		private void CalculateBoundingBox(object? sender, CalculateBoundingBoxEventArgs e)
 		{
 			e.IncludeBoundingBox(bbox);
 		}
@@ -101,13 +91,10 @@ namespace Crash.UI
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
-		private void PostDrawObjects(object sender, DrawEventArgs e)
+		private void PostDrawObjects(object? sender, DrawEventArgs e)
 		{
-			var rhinoDoc = RhinoDoc.ActiveDoc;
-			if (rhinoDoc is null)
-			{
-				return;
-			}
+			var rhinoDoc = e.RhinoDoc;
+			if (rhinoDoc is null) return;
 
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(rhinoDoc);
 			if (!crashDoc.Tables.TryGet<TemporaryChangeTable>(out var tempTable)) return;
@@ -118,7 +105,8 @@ namespace Crash.UI
 			}
 
 			var caches = tempTable.GetChanges().ToList();
-			foreach (var change in caches)
+			var orderedCaches = caches.OrderBy(c => c.Owner);
+			foreach (var change in orderedCaches)
 			{
 				if (e.Display.InterruptDrawing())
 				{
@@ -200,12 +188,12 @@ namespace Crash.UI
 			bbox.Union(changeBox);
 		}
 
-		internal static void RegisterChangeDefinition(IChangeDefinition changeDefinition)
+		internal void RegisterChangeDefinition(IChangeDefinition changeDefinition)
 		{
 			definitionRegistry.Add(changeDefinition.ChangeName, changeDefinition);
 		}
 
-		public static void ClearChangeDefinitions()
+		public void ClearChangeDefinitions()
 		{
 			definitionRegistry.Clear();
 		}

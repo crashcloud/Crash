@@ -10,9 +10,6 @@ namespace Crash.UI.JoinModel
 {
 	public partial class JoinWindow : Dialog<SharedModel>, IDisposable
 	{
-		// internal JoinViewModel ViewModel { get; set; }
-
-		internal static JoinWindow ActiveForm;
 
 		internal JoinWindow()
 		{
@@ -31,21 +28,19 @@ namespace Crash.UI.JoinModel
 			SubscribeToEvents();
 			try
 			{
-				Model = new JoinViewModel();
+				DataContext = new JoinViewModel();
 				InitializeComponent();
-				ActiveForm = this;
 				Closed += JoinWindow_Closed;
 			}
-			catch (Exception ex)
+			catch
 			{
-				;
+
 			}
 		}
 
 		internal string ChosenAddress { get; set; }
 
-		private JoinViewModel Model { get; }
-		protected static bool IsOSX => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+		private JoinViewModel? Model => DataContext as JoinViewModel;
 
 		private event EventHandler<EventArgs> AddNewModel;
 		private event EventHandler<EventArgs> RemoveModel;
@@ -53,7 +48,7 @@ namespace Crash.UI.JoinModel
 
 		private void JoinWindow_Closed(object? sender, EventArgs e)
 		{
-			Model.SaveSharedModels(null, null);
+			Model?.SaveSharedModels(null, null);
 		}
 
 		private void SubscribeToEvents()

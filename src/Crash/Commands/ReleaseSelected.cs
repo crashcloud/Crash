@@ -12,15 +12,6 @@ namespace Crash.Commands
 	[CommandStyle(Style.DoNotRepeat | Style.NotUndoable)]
 	public sealed class ReleaseSelected : AsyncCommand
 	{
-		public ReleaseSelected()
-		{
-			Instance = this;
-		}
-
-
-		public static ReleaseSelected Instance { get; private set; }
-
-
 		public override string EnglishName => "ReleaseSelected";
 
 		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
@@ -37,8 +28,15 @@ namespace Crash.Commands
 				return Result.Cancel;
 			}
 
-			await crashDoc.LocalClient.PushIdenticalChangesAsync(selectedChanges,
-																 DoneChange.GetDoneChange(string.Empty));
+			List<Change> changes = new List<Change>();
+			foreach (var changeId in selectedChanges)
+			{
+				var change = DoneChange.GetDoneChange(string.Empty);
+				change.Id = changeId;
+				changes.Add(change);
+			}
+
+			await crashDoc.LocalClient.StreamChangesAsync(changes.ToAsyncEnumerable());
 
 			doc.Objects.UnselectAll();
 			doc.Views.Redraw();

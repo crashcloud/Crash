@@ -29,13 +29,15 @@ namespace Crash.Handlers.Plugins.Camera.Recieve
 
 			if (args.Doc.Users.Get(args.Change.Owner).Camera == CameraState.Follow)
 			{
-				FollowCamera(convertedChange);
+				FollowCamera(convertedChange, args.Doc);
 			}
 		}
 
-		private void FollowCamera(CameraChange change)
+		private void FollowCamera(CameraChange change, CrashDoc doc)
 		{
-			var activeView = RhinoDoc.ActiveDoc.Views.ActiveView;
+			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(doc);
+			var activeView = rhinoDoc?.Views?.ActiveView;
+			if (activeView is null) return;
 
 			var cameraTarget = change.Camera.Target.ToRhino();
 			var cameraLocation = change.Camera.Location.ToRhino();

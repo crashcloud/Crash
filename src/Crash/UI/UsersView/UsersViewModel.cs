@@ -19,13 +19,16 @@ namespace Crash.UI.UsersView
 			var userObjects = _crashDoc.Users.Where(u => !string.IsNullOrEmpty(u.Name)).Select(u =>
 						 {
 							 var user = new UserObject(_crashDoc, u);
-							 user.OnPropertyChanged += (sender, o) => UsersForm.ReDraw();
+							 user.OnPropertyChanged += (sender, o) => UsersForm.ReDraw(crashDoc);
 							 return user;
 						 });
-			Users = new ObservableCollection<UserObject>(userObjects);
+			Users = new ObservableCollection<UserObject> { UserObject.CreateForCurrentUser(_crashDoc) };
 
-			UserTable.OnUserRemoved += UserRemoved;
-			UserTable.OnUserAdded += AddUsers;
+			foreach (var userObject in userObjects)
+				Users.Add(userObject);
+
+			crashDoc.Users.OnUserRemoved += UserRemoved;
+			crashDoc.Users.OnUserAdded += AddUsers;
 		}
 
 		internal ObservableCollection<UserObject> Users { get; set; }
@@ -38,19 +41,19 @@ namespace Crash.UI.UsersView
 			}
 
 			Application.Instance.Invoke(() =>
-			                            {
-				                            Users.Add(new UserObject(_crashDoc, e.User));
-				                            UsersForm.ReDraw();
-			                            });
+										{
+											Users.Add(new UserObject(_crashDoc, e.User));
+											UsersForm.ReDraw(_crashDoc);
+										});
 		}
 
 		private void UserRemoved(object? sender, UserEventArgs e)
 		{
 			Application.Instance.Invoke(() =>
-			                            {
-				                            Users.Remove(new UserObject(_crashDoc, e.User));
-				                            UsersForm.ReDraw();
-			                            });
+										{
+											Users.Remove(new UserObject(_crashDoc, e.User));
+											UsersForm.ReDraw(_crashDoc);
+										});
 		}
 
 		internal void CycleCameraSetting(object? sender, GridCellMouseEventArgs e)
@@ -73,6 +76,8 @@ namespace Crash.UI.UsersView
 				return;
 			}
 
+			if (user.IsCurrentUser) return;
+
 			var state = CycleState(user.Camera);
 			if (state == CameraState.Follow)
 			{
@@ -89,7 +94,7 @@ namespace Crash.UI.UsersView
 			var index = Users.IndexOf(user);
 			Users.RemoveAt(index);
 			Users.Insert(index, user);
-			UsersForm.ReDraw();
+			UsersForm.ReDraw(_crashDoc);
 		}
 
 		private static CameraState CycleState(CameraState state)

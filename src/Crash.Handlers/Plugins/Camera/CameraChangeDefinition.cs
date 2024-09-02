@@ -35,6 +35,10 @@ namespace Crash.Handlers.Plugins.Camera
 				return;
 			}
 
+			var modelSystem = drawArgs?.RhinoDoc.ModelUnitSystem;
+			if (modelSystem is null) return;
+
+			var scale = RhinoMath.UnitScale(modelSystem.Value, UnitSystem.Millimeters);
 			Active = new CameraGraphic(cameraChange.Camera);
 			Active.Draw(drawArgs, material);
 		}
@@ -56,26 +60,22 @@ namespace Crash.Handlers.Plugins.Camera
 		/// <summary>The Camera Graphic for the Pipeline</summary>
 		private readonly struct CameraGraphic
 		{
-			internal readonly Line[] Lines;
-			internal readonly Plane Plane;
-			private static double Length => GetRelativeSize(260);
-			private static double Width => GetRelativeSize(192);
-			private static double Height => GetRelativeSize(108);
-			private static double CrossHairLength => GetRelativeSize(8);
+			internal Line[] Lines { get; }
+			internal Plane Plane { get; }
+			private double Length => GetRelativeSize(260);
+			private double Width => GetRelativeSize(192);
+			private double Height => GetRelativeSize(108);
+			private double CrossHairLength => GetRelativeSize(8);
+			private double Scale { get; }
+			private Interval WidthInterval => new(-Width / 2, Width / 2);
+			private Interval HeightInterval => new(-Height / 2, Height / 2);
 
-			private static readonly Interval WidthInterval = new(-Width / 2, Width / 2);
-			private static readonly Interval HeightInterval = new(-Height / 2, Height / 2);
-
-			private static double GetRelativeSize(double size)
-			{
-				var modelSystem = RhinoDoc.ActiveDoc.ModelUnitSystem;
-				var scale = RhinoMath.UnitScale(modelSystem, UnitSystem.Millimeters);
-				return size * scale;
-			}
+			private double GetRelativeSize(double size) => size * Scale;
 
 			// TODO : Scale correctly!
-			internal CameraGraphic(Common.View.Camera camera)
+			internal CameraGraphic(Common.View.Camera camera, double scale = 1.0)
 			{
+				Scale = scale;
 				var location = camera.Location.ToRhino();
 				var target = camera.Target.ToRhino();
 				var normal = target - location;

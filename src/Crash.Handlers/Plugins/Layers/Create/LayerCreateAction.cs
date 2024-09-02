@@ -16,12 +16,12 @@ namespace Crash.Handlers.Plugins.Layers.Create
 
 			var owner = crashArgs.Doc.Users.CurrentUser.Name;
 			changes = new[]
-			          {
-				          LayerChange.CreateChange(owner,
-				                                   layerArgs.CrashLayer,
-				                                   ChangeAction.Add,
-				                                   layerArgs.Updates)
-			          };
+					  {
+						  LayerChange.CreateChange(owner,
+												   layerArgs.CrashLayer,
+												   ChangeAction.Add,
+												   layerArgs.Updates)
+					  };
 
 			var layerTable = crashArgs.Doc.Tables.Get<LayerTable>();
 			layerTable.AddLayer(layerArgs.CrashLayer);

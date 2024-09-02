@@ -3,6 +3,7 @@
 using Crash.Common.App;
 using Crash.Common.Document;
 using Crash.Common.Events;
+using Crash.Commands;
 
 using Rhino;
 using Rhino.DocObjects;
@@ -83,6 +84,7 @@ namespace Crash.Handlers
 			DocumentRegistered?.Invoke(null, new CrashEventArgs(crashDoc));
 
 			crashDoc.Queue.OnCompletedQueue += RedrawOncompleted;
+			crashDoc.Queue.OnItemProcessed += RedrawEverySoOften;
 			crashDoc.LocalClient.OnInit += RegisterQueue;
 
 			return crashDoc;
@@ -93,6 +95,23 @@ namespace Crash.Handlers
 			e.CrashDoc.LocalClient.OnInit -= RegisterQueue;
 			RhinoApp.WriteLine($"Connected to Crash Server {e.CrashDoc.LocalClient.Url} successfully.");
 			RhinoApp.WriteLine("Loading Changes from the server ...");
+
+			double count = 0.0;
+			double changeLoadAmount = 50.0;
+
+			EventHandler<CrashEventArgs> initialLoadingBar = null;
+			initialLoadingBar = (_, itemArgs) =>
+			{
+				count++;
+				double crashCount = e.Changes.Count();
+				double percentage = changeLoadAmount + (count / crashCount * changeLoadAmount);
+
+				LoadingUtils.SetState(itemArgs.CrashDoc, (LoadingUtils.LoadingState)(int)percentage, false);
+
+				if (count < crashCount) return;
+				e.CrashDoc.Queue.OnItemProcessed -= initialLoadingBar;
+			};
+			e.CrashDoc.Queue.OnItemProcessed += initialLoadingBar;
 
 			EventHandler cycleQueueDelegate = null;
 			cycleQueueDelegate = (o, args) =>
@@ -119,6 +138,17 @@ namespace Crash.Handlers
 		{
 			var rhinoDoc = GetRelatedDocument(e.CrashDoc);
 			rhinoDoc.Views.Redraw();
+			ProessedCount = 0;
+		}
+
+		private static int ProessedCount { get; set; } = 0;
+		private static void RedrawEverySoOften(object? sender, CrashEventArgs e)
+		{
+			ProessedCount++;
+			if (ProessedCount >= 10)
+			{
+				RedrawOncompleted(sender, e);
+			}
 		}
 
 		private static void Register(CrashDoc crashDoc,
@@ -132,41 +162,52 @@ namespace Crash.Handlers
 		/// </summary>
 		public static async Task DisposeOfDocumentAsync(CrashDoc crashDoc)
 		{
-			if (crashDoc is null)
+			if (crashDoc is null) return;
+
+			try
 			{
-				return;
+				if (crashDoc.Queue is not null)
+				{
+					crashDoc.Queue.ForceCycleQueue();
+					// DeRegister Events
+					crashDoc.Queue.OnCompletedQueue -= RedrawOncompleted;
+				}
+
+				if (crashDoc.LocalClient is not null)
+				{
+					await crashDoc.LocalClient.StopAsync();
+				}
+
+				// Remove Geometry
+				var rhinoDoc = GetRelatedDocument(crashDoc);
+				if (rhinoDoc is not null)
+				{
+					s_documentRelationship.Remove(rhinoDoc);
+
+					var settings = new ObjectEnumeratorSettings
+					{
+						ActiveObjects = false,
+						LockedObjects = true,
+						HiddenObjects = true
+					};
+					var rhinoObjects = rhinoDoc.Objects.GetObjectList(settings);
+					foreach (var rhinoObject in rhinoObjects)
+					{
+						rhinoDoc.Objects.Unlock(rhinoObject, true);
+						rhinoDoc.Objects.Show(rhinoObject, true);
+					}
+
+					rhinoDoc.Objects.Clear();
+				}
+
+				// Dispose
+				crashDoc?.Dispose();
+				DocumentDisposed?.Invoke(null, new CrashEventArgs(crashDoc));
 			}
-
-			crashDoc.Queue.ForceCycleQueue();
-			// DeRegister Events
-			crashDoc.Queue.OnCompletedQueue -= RedrawOncompleted;
-			if (crashDoc.LocalClient is not null)
+			catch
 			{
-				await crashDoc.LocalClient?.StopAsync();
+
 			}
-
-			// Remove Geometry
-			var rhinoDoc = GetRelatedDocument(crashDoc);
-			s_documentRelationship.Remove(rhinoDoc);
-
-			var settings = new ObjectEnumeratorSettings
-			{
-				ActiveObjects = false,
-				LockedObjects = true,
-				HiddenObjects = true
-			};
-			var rhinoObjects = rhinoDoc.Objects.GetObjectList(settings);
-			foreach (var rhinoObject in rhinoObjects)
-			{
-				rhinoDoc.Objects.Unlock(rhinoObject, true);
-				rhinoDoc.Objects.Show(rhinoObject, true);
-			}
-
-			rhinoDoc.Objects.Clear();
-
-			// Dispose
-			crashDoc?.Dispose();
-			DocumentDisposed?.Invoke(null, new CrashEventArgs(crashDoc));
 		}
 
 		/// <summary>
