@@ -24,17 +24,11 @@ namespace Crash
 		private const string CrashPluginId = "53CB2393-C71F-4079-9CEC-97464FF9D14E";
 
 		/// <summary>Contains all of the Change Definitions of this PlugIn</summary>
-		private static readonly Stack<IChangeDefinition> Changes;
+		private Stack<IChangeDefinition> Changes { get; set; }
 
 		#region Crash Plugin Specifics
 
-		static CrashRhinoPlugIn()
-		{
-			Changes = new Stack<IChangeDefinition>();
-			RhinoApp.Idle += LoadCrashPlugins;
-		}
-
-		private static void LoadCrashPlugins(object? sender, EventArgs e)
+		private void LoadCrashPlugins(object? sender, EventArgs e)
 		{
 			RhinoApp.Idle -= LoadCrashPlugins;
 
@@ -168,6 +162,8 @@ namespace Crash
 		{
 			Instance = this;
 
+			Changes = new Stack<IChangeDefinition>();
+
 			// Register the Defaults!
 			Changes.Push(new GeometryChangeDefinition());
 			Changes.Push(new CameraChangeDefinition());
@@ -191,6 +187,8 @@ namespace Crash
 			InteractivePipe.Active = new InteractivePipe { Enabled = false };
 
 			CrashApp.UserMessage += (_, m) => RhinoApp.WriteLine(m);
+
+			RhinoApp.Idle += LoadCrashPlugins;
 
 			return base.OnLoad(ref errorMessage);
 		}
