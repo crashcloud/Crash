@@ -128,6 +128,8 @@ namespace Crash.Handlers.Tests.Plugins
 													   { nameof(ICrashClient.OnInitializeUsers), 0 }
 												   };
 
+		public string Url { get; }
+
 		internal DispatcherTestClient()
 		{
 			// On InitialiseChanges
@@ -148,10 +150,11 @@ namespace Crash.Handlers.Tests.Plugins
 			await Task.CompletedTask;
 		}
 
-		public async Task StartLocalClientAsync()
+		public async Task<Exception?> StartLocalClientAsync()
 		{
 			IncrementCallCount(nameof(ICrashClient.StartLocalClientAsync));
 			await Task.CompletedTask;
+			return null;
 		}
 
 		public async Task StreamChangesAsync(IAsyncEnumerable<Change> changes)
