@@ -41,8 +41,8 @@ namespace Crash.UI.UsersView
 
 		protected override void OnShown(EventArgs e)
 		{
-			if (!CrashInstances.TryGetInstance<UsersForm>(_crashDoc, out var usersForm)) return;
-			CrashInstances.TrySetInstance(_crashDoc, this);
+			if (!CrashInstances.TryGetInstance<UsersForm>(_crashDoc, out var usersForm))
+				CrashInstances.TrySetInstance(_crashDoc, this);
 
 			base.OnShown(e);
 		}
@@ -54,6 +54,7 @@ namespace Crash.UI.UsersView
 			{
 				usersForm = new UsersForm(crashDoc);
 				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
+				CrashInstances.TrySetInstance(crashDoc, usersForm);
 				usersForm.Show(rhinoDoc);
 			}
 

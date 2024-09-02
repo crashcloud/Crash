@@ -93,12 +93,10 @@ namespace Crash.Common.Document
 			return other?.Id == Id;
 		}
 
-
 		public override bool Equals(object? obj)
 		{
 			return obj is CrashDoc other && Equals(other);
 		}
-
 
 		public override int GetHashCode()
 		{

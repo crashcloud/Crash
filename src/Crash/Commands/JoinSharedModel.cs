@@ -117,8 +117,6 @@ namespace Crash.Commands
 
 				await _crashDoc.Dispatcher.NotifyServerAsync(changes);
 
-				UsersForm.ShowForm(_crashDoc);
-
 				return;
 			}
 
@@ -132,7 +130,6 @@ namespace Crash.Commands
 		{
 			LoadingUtils.Close(_crashDoc);
 			e.CrashDoc.Queue.OnCompletedQueue -= QueueOnOnCompleted;
-			UsersForm.CloseActiveForm(e.CrashDoc);
 			UsersForm.ShowForm(e.CrashDoc);
 
 			StatusBar.HideProgressMeter();
