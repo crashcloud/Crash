@@ -55,7 +55,7 @@ Thanks again for checking out CRASH! Please follow the steps below to get starte
 * [.NET Framework 4.8](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net48) and [.NET Core 7.0](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
 * [Rider](https://www.jetbrains.com/rider/) or [Visual Studio 2022](https://visualstudio.microsoft.com/vs/) or [Visual Studio Code](https://code.visualstudio.com/)
 * [crash.server](https://github.com/crashcloud/crash.server)
-* [Rhino 7.21+](https://www.rhino3d.com/download/) (win/mac) or [Rhino 8.3+](https://www.rhino3d.com/download/) (mac)
+* [Rhino 7.21+](https://www.rhino3d.com/download/) (win) or [Rhino 8.3+](https://www.rhino3d.com/download/) (win/mac)
 
 
 ### Building and Running
