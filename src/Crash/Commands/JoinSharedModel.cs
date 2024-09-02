@@ -5,6 +5,7 @@ using Crash.Handlers;
 using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
 using Crash.UI.JoinModel;
+using Crash.UI.JoinView;
 using Crash.UI.UsersView;
 
 using Eto.Forms;
@@ -35,6 +36,11 @@ namespace Crash.Commands
 		{
 			_crashDoc = null;
 			_rhinoDoc = doc;
+
+			var jwn = new JoinWindowNew();
+			var result = jwn.ShowModal();
+
+			return Result.Cancel;
 
 			if (crashDoc?.LocalClient?.IsConnected == true)
 			{

@@ -4,10 +4,10 @@ using System.Text.Json;
 
 [assembly: InternalsVisibleTo("Crash.UI.Tests")]
 
-namespace Crash.UI.JoinModel
+namespace Crash.UI.JoinView
 {
 	/// <summary>The Join View Model</summary>
-	internal sealed class JoinViewModel : BaseViewModel, IDisposable
+	internal sealed class JoinViewModel
 	{
 		private const string PREVIOUS_MODELS_KEY = "PREVIOUS_SHARED_MODELS";
 

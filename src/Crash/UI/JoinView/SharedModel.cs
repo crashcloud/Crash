@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Crash.Common.Communications;
 using Crash.Properties;
@@ -9,48 +10,68 @@ using Rhino.UI;
 
 namespace Crash.UI
 {
-	[Serializable]
+	
+	[JsonConverter(typeof(SharedModelConverter))]
 	public sealed class SharedModel
 	{
 		public SharedModel() { }
 
-		internal SharedModel(SharedModel sharedModel)
-		{
-			Loaded = sharedModel.Loaded;
-			modelAddress = sharedModel.ModelAddress;
-			Users = sharedModel.Users;
-		}
-
-		// Conditionals
-		[JsonIgnore] internal bool? Loaded { get; set; } = false;
-
-		[JsonIgnore]
-		public Bitmap Signal => Loaded switch
-		                        {
-			                        true  => (Crash.UI.Palette.DarkMode ? Icons.Wifi_Light : Icons.Wifi_Dark).ToEto(),
-			                        false => (Crash.UI.Palette.DarkMode ? Icons.WifiOff_Light : Icons.WifiOff_Dark).ToEto(),
-			                        null => (Crash.UI.Palette.DarkMode ? Icons.WifiUnstable_Light : Icons.WifiUnstable_Dark)
-				                        .ToEto()
-		                        };
-
-		[JsonIgnore] public Bitmap UserIcon => (Crash.UI.Palette.DarkMode ? Icons.User_Light : Icons.User_Dark).ToEto();
-
-		[JsonIgnore] public string UserCount => Users?.Length.ToString() ?? "0";
+		public double UserCount { get; set; }
 
 		public Bitmap Thumbnail { get; set; }
 
-		private string modelAddress { get; set; }
+		public string ModelAddress { get; set; }
 
-		public string ModelAddress
+	}
+
+	public class SharedModelConverter : JsonConverter<SharedModel>
+	{
+		public override SharedModel? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
-			get => modelAddress;
-			set
+			var model = new SharedModel();
+			reader.Read();
+
+			model.ModelAddress = reader.GetString();
+			reader.Read();
+
+			model.UserCount = reader.GetDouble();
+			reader.Read();
+
+			var thumbnailString = reader.GetString();
+			if (!string.IsNullOrEmpty(thumbnailString))
 			{
-				modelAddress = value;
+				var thumbnail = Convert.FromBase64String(thumbnailString);
+				model.Thumbnail = new Bitmap(thumbnail);
+				reader.Read();
 			}
+
+			reader.Read();
+			return model;
 		}
 
-		public string[] Users { get; set; } = Array.Empty<string>();
+		public override void Write(Utf8JsonWriter writer, SharedModel model, JsonSerializerOptions options)
+		{
+			if (string.IsNullOrEmpty(model.ModelAddress))
+			{
+				writer.WriteStringValue("No Model Address Found");
+			}
+			else
+			{
+				writer.WriteStringValue(model.ModelAddress);
+			}
 
+			writer.WriteNumberValue(model.UserCount);
+
+			if (model.Thumbnail == null || model.Thumbnail.IsDisposed)
+			{
+				var byteImage = model.Thumbnail.ToByteArray(ImageFormat.Png);
+				var base64String = Convert.ToBase64String(byteImage);
+				writer.WriteStringValue(base64String);
+			}
+			else
+			{
+				writer.WriteStringValue("");
+			}
+		}
 	}
 }

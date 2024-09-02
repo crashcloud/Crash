@@ -242,7 +242,7 @@ namespace Crash.UI.JoinModel
 			{
 				Width = UserIconCellWidth,
 				Resizable = false,
-				DataCell = new ImageViewCell { Binding = Binding.Property<SharedModel, Image>(s => s.UserIcon) }
+				DataCell = new ImageViewCell { Binding = Binding.Property<SharedModel, Image>(s => null) }
 			};
 		}
 
@@ -254,8 +254,7 @@ namespace Crash.UI.JoinModel
 				Resizable = false,
 				DataCell = new TextBoxCell
 				{
-					Binding =
-											Binding.Property<SharedModel, string>(s => "") //s => s.UserCount)
+					Binding = Binding.Property<SharedModel, string>(s => "") //s => s.UserCount)
 				}
 			};
 		}
@@ -266,7 +265,7 @@ namespace Crash.UI.JoinModel
 			{
 				Width = SignalCellWidth,
 				Resizable = false,
-				DataCell = new ImageViewCell { Binding = Binding.Property<SharedModel, Image>(s => s.Signal) }
+				DataCell = new ImageViewCell { Binding = Binding.Property<SharedModel, Image>(s => null) }
 			};
 		}
 	}
