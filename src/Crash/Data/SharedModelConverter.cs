@@ -1,29 +1,10 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
-
-using Crash.Common.Communications;
-using Crash.Properties;
 
 using Eto.Drawing;
 
-using Rhino.UI;
-
-namespace Crash.UI
+namespace Crash.Data
 {
-
-	[JsonConverter(typeof(SharedModelConverter))]
-	public sealed class SharedModel
-	{
-		public SharedModel() { }
-
-		public double UserCount { get; set; }
-
-		public Bitmap Thumbnail { get; set; }
-
-		public string ModelAddress { get; set; }
-
-	}
-
 	public class SharedModelConverter : JsonConverter<SharedModel>
 	{
 		private void SetValue(ref Utf8JsonReader reader, SharedModel model)
@@ -53,20 +34,28 @@ namespace Crash.UI
 		public override SharedModel? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 		{
 			var model = new SharedModel();
-
-			while (reader.Read())
+			try
 			{
-				if (reader.TokenType == JsonTokenType.EndObject)
+				while (reader.Read())
 				{
-					return model;
+					if (reader.TokenType == JsonTokenType.EndObject)
+					{
+						return model;
+					}
+					else if (reader.TokenType == JsonTokenType.PropertyName)
+					{
+						SetValue(ref reader, model);
+					}
 				}
-				else if (reader.TokenType == JsonTokenType.PropertyName)
-				{
-					SetValue(ref reader, model);
-				}
+
+				return model;
+			}
+			catch
+			{
+
 			}
 
-			return model;
+			return null;
 		}
 
 		public override void Write(Utf8JsonWriter writer, SharedModel model, JsonSerializerOptions options)
@@ -83,7 +72,7 @@ namespace Crash.UI
 			writer.WriteNumber(nameof(SharedModel.UserCount), model.UserCount);
 
 
-			if (model.Thumbnail == null || model.Thumbnail.IsDisposed)
+			if (model.Thumbnail is not null && !model.Thumbnail.IsDisposed)
 			{
 				var byteImage = model.Thumbnail.ToByteArray(ImageFormat.Png);
 				var base64String = Convert.ToBase64String(byteImage);

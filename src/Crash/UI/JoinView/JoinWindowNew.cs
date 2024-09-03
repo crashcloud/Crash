@@ -1,3 +1,5 @@
+using Crash.Data;
+
 using Eto.Drawing;
 using Eto.Forms;
 
@@ -13,7 +15,7 @@ namespace Crash.UI.JoinView
 
 		public JoinWindowNew()
 		{
-			Size = new Size(600, 300);
+			Size = new Size(400, 200);
 			DataContext = new JoinViewModel();
 			InitLayout();
 			InitBindings();
@@ -46,9 +48,22 @@ namespace Crash.UI.JoinView
 				Height = 26,
 			};
 			layout.BeginHorizontal();
-			layout.Add(GetButton("Add ->", new Size(100, layout.Height)));
+			var addButton = GetButton("Add ->", new Size(100, layout.Height));
+			addButton.MouseDown += (s, e) =>
+			{
+				if (Model is null) return;
+				if (addButton.DataContext is not SharedModel sharedModel) return;
+				Model.AddSharedModel(sharedModel);
+			};
+			layout.Add(addButton);
 			layout.Add(textInput, true, false);
-			layout.Add(GetButton("Helo ->", new Size(100, layout.Height)));
+			var helpButton = GetButton("Help ->", new Size(100, layout.Height));
+			helpButton.MouseDown += (s, e) =>
+			{
+				var discourseUrl = "http://crsh.cloud/docs/";
+				System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(discourseUrl) { UseShellExecute = true });
+			};
+			layout.Add(helpButton);
 			layout.EndHorizontal();
 
 			return layout;
@@ -72,9 +87,10 @@ namespace Crash.UI.JoinView
 			buttonCell.CreateCell = (args) =>
 			{
 				var button = GetButton("Join", new Size(100, 26));
-				button.MouseUp += (s, e) =>
+				button.MouseDown += (s, e) =>
 				{
-					// JoinModel(row);
+					if (args.Item is not SharedModel sharedModel) return;
+					Close(sharedModel);
 				};
 				return button;
 			};
@@ -172,7 +188,6 @@ namespace Crash.UI.JoinView
 
 			return button;
 		}
-
 
 	}
 }

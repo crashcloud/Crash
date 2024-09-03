@@ -2,6 +2,8 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 
+using Crash.Data;
+
 using Rhino.UI;
 
 [assembly: InternalsVisibleTo("Crash.UI.Tests")]
@@ -14,7 +16,7 @@ namespace Crash.UI.JoinView
 		private const string PREVIOUS_MODELS_KEY = "PREVIOUS_SHARED_MODELS";
 
 
-		private readonly JsonSerializerOptions opts = new()
+		private static JsonSerializerOptions JsonOptions => new()
 		{
 			IgnoreReadOnlyFields = true,
 			IgnoreReadOnlyProperties = true,
@@ -23,59 +25,18 @@ namespace Crash.UI.JoinView
 
 		internal JoinViewModel()
 		{
-			SharedModels = new ObservableCollection<SharedModel>();
-
-			LoadSharedModels();
-
-			RhinoDoc.BeginSaveDocument += SaveSharedModels;
-		}
-
-		internal ObservableCollection<SharedModel> SharedModels { get; }
-
-		public void Dispose()
-		{
-			RhinoDoc.BeginSaveDocument -= SaveSharedModels;
-		}
-
-		internal void SaveSharedModels(object? sender, DocumentSaveEventArgs args)
-		{
-			var json = JsonSerializer.Serialize(SharedModels, opts);
-
-			if (string.IsNullOrEmpty(json))
+			if (SharedModelCache.TryLoadSharedModels(out var sharedModels))
 			{
-				return;
-			}
-
-			CrashRhinoPlugIn.Instance.Settings.SetString(PREVIOUS_MODELS_KEY, json);
-		}
-
-		private void LoadSharedModels()
-		{
-			var inst = CrashRhinoPlugIn.Instance;
-			if (inst is null)
-			{
-				return;
-			}
-
-			if (inst.Settings.TryGetString(PREVIOUS_MODELS_KEY, out var json))
-			{
-				var deserial = JsonSerializer.Deserialize<List<SharedModel>>(json, opts);
-				if (deserial is null)
-				{
-					return;
-				}
-
-				foreach (var sharedModel in deserial)
-				{
-					AddSharedModel(sharedModel);
-				}
+				var notNull = (sharedModels?.Where(sm => sm is not null) ?? Array.Empty<SharedModel>())!.ToList();
+				SharedModels = new ObservableCollection<SharedModel>(notNull);
 			}
 			else
 			{
-				// Default if empty
-				AddSharedModel(new SharedModel { ModelAddress = "http://localhost:8080" });
+				SharedModels = new ObservableCollection<SharedModel>();
 			}
 		}
+
+		internal ObservableCollection<SharedModel> SharedModels { get; }
 
 		internal bool ModelIsNew(SharedModel model)
 		{
