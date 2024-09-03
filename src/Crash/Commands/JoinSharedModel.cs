@@ -1,7 +1,7 @@
 ﻿using Crash.Common.Communications;
 using Crash.Common.Document;
 using Crash.Common.Events;
-using Crash.Data;
+using Crash.Handlers.Data;
 using Crash.Handlers;
 using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
@@ -11,6 +11,7 @@ using Crash.UI.UsersView;
 using Eto.Forms;
 
 using Rhino.Commands;
+using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.UI;
 
@@ -73,41 +74,11 @@ namespace Crash.Commands
 			await CrashDocRegistry.DisposeOfDocumentAsync(crashDoc);
 			_crashDoc ??= CrashDocRegistry.CreateAndRegisterDocument(doc);
 
-			// TODO : Will this be too regular?
-			_crashDoc.Queue.OnCompletedQueue += SaveModelScreenshotToCache;
-
 			_CreateCurrentUser(_crashDoc, name);
 
 			await StartServer();
 
 			return Result.Success;
-		}
-
-		private void SaveModelScreenshotToCache(object? sender, CrashEventArgs e)
-		{
-			try
-			{
-				if (!SharedModelCache.TryGetSharedModelsData(e.CrashDoc, out var models)) return;
-
-				var url = e?.CrashDoc?.LocalClient?.Url ?? string.Empty;
-				if (string.IsNullOrEmpty(url)) return;
-
-				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(e.CrashDoc);
-				if (rhinoDoc is null) return;
-
-				var bitmap = rhinoDoc.Views.ActiveView.CaptureToBitmap(new System.Drawing.Size(100, 26));
-				if (bitmap is null) return;
-
-				var nonNullModels = models.Where(m => m is not null).ToList();
-				foreach (var model in nonNullModels)
-				{
-					if (string.Equals(model.ModelAddress, url)) continue;
-					model.Thumbnail = bitmap.ToEto();
-				}
-
-				SharedModelCache.TrySaveSharedModels(nonNullModels);
-			}
-			catch { }
 		}
 
 		private async Task StartServer()

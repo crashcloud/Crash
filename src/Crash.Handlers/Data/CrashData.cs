@@ -1,9 +1,10 @@
+using System.Text;
 using System.Text.Json;
 
 using Crash.Common.App;
 using Crash.Common.Document;
 
-namespace Crash.Data
+namespace Crash.Handlers.Data
 {
 	public class CrashData : ICrashInstance
 	{
@@ -24,9 +25,9 @@ namespace Crash.Data
 				var crashDataDir = CrashData.CrashDataDirectory;
 				var path = System.IO.Path.Combine(crashDataDir, filename);
 
-				if (!Directory.Exists(path))
+				if (!Directory.Exists(crashDataDir))
 				{
-					Directory.CreateDirectory(path);
+					Directory.CreateDirectory(crashDataDir);
 				}
 
 				System.IO.File.WriteAllText(path, data);
@@ -48,6 +49,12 @@ namespace Crash.Data
 				if (System.IO.File.Exists(path))
 				{
 					var json = System.IO.File.ReadAllText(path);
+					var options = new JsonDocumentOptions
+					{
+						AllowTrailingCommas = true,
+						CommentHandling = JsonCommentHandling.Skip,
+					};
+
 					data = JsonSerializer.Deserialize<TData>(json);
 					return data is not null;
 				}

@@ -2,19 +2,20 @@
 
 using Eto.Drawing;
 
-namespace Crash.Data
+namespace Crash.Handlers.Data
 {
 
-	[JsonConverter(typeof(SharedModelConverter))]
-	public record class SharedModel
+	public sealed class SharedModel
 	{
 		public SharedModel() { }
 
 		public double UserCount { get; set; }
 
+		[JsonConverter(typeof(BitmapConverter))]
 		public Bitmap Thumbnail { get; set; }
 
 		public string ModelAddress { get; set; }
 
 	}
+
 }

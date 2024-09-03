@@ -7,6 +7,8 @@ using Crash.Commands;
 
 using Rhino;
 using Rhino.DocObjects;
+using Crash.Handlers.Data;
+using Eto.Forms;
 
 namespace Crash.Handlers
 {
@@ -142,6 +144,7 @@ namespace Crash.Handlers
 		}
 
 		private static int ProessedCount { get; set; } = 0;
+
 		private static void RedrawEverySoOften(object? sender, CrashEventArgs e)
 		{
 			ProessedCount++;
@@ -151,8 +154,7 @@ namespace Crash.Handlers
 			}
 		}
 
-		private static void Register(CrashDoc crashDoc,
-			RhinoDoc rhinoDoc)
+		private static void Register(CrashDoc crashDoc, RhinoDoc rhinoDoc)
 		{
 			s_documentRelationship.Add(rhinoDoc, crashDoc);
 		}

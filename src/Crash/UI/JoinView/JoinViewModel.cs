@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 
-using Crash.Data;
+using Crash.Handlers.Data;
 
 using Rhino.UI;
 
@@ -38,6 +38,8 @@ namespace Crash.UI.JoinView
 
 		internal ObservableCollection<SharedModel> SharedModels { get; }
 
+		internal SharedModel TemporaryModel { get; set; }
+
 		internal bool ModelIsNew(SharedModel model)
 		{
 			var alreadyExists = SharedModels.Select(sm => sm.ModelAddress.ToUpperInvariant())
@@ -55,12 +57,15 @@ namespace Crash.UI.JoinView
 			return true;
 		}
 
-		internal void AddSharedModel(SharedModel model)
+		internal bool AddSharedModel(SharedModel model)
 		{
 			if (ModelIsNew(model))
 			{
 				SharedModels.Add(model);
+				return true;
 			}
+
+			return false;
 		}
 	}
 }
