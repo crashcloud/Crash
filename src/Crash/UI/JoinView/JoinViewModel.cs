@@ -11,7 +11,7 @@ using Rhino.UI;
 namespace Crash.UI.JoinView
 {
 	/// <summary>The Join View Model</summary>
-	internal sealed class JoinViewModel
+	internal sealed class JoinViewModel : BaseViewModel
 	{
 		private const string PREVIOUS_MODELS_KEY = "PREVIOUS_SHARED_MODELS";
 
@@ -66,6 +66,16 @@ namespace Crash.UI.JoinView
 			}
 
 			return false;
+		}
+
+		internal string VersionText
+		{
+			get
+			{
+				var assem = typeof(JoinViewModel).Assembly;
+				var name = assem.GetName();
+				return $"Version {name.Version} - wip";
+			}
 		}
 	}
 }

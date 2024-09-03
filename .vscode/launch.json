@@ -7,7 +7,11 @@
 			"request": "launch",
 			"preLaunchTask": "build-plugin-netcore",
 			"program": "/Applications/Rhino 8.app/Contents/MacOS/Rhinoceros",
-			"args": [],
+			"args": [
+				"-nosplash",
+				"-notemplate",
+				"-runscript=JoinSharedModel"
+			],
 			"cwd": "${workspaceFolder}",
 			"stopAtEntry": false,
 			"console": "internalConsole",

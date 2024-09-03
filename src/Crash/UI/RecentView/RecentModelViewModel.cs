@@ -1,4 +1,6 @@
+using Crash.Common.Communications;
 using Crash.Common.Document;
+using Crash.Handlers;
 using Crash.Handlers.Data;
 
 namespace Crash.UI;
@@ -7,7 +9,16 @@ internal class RecentModelViewModel : BaseViewModel
 {
 	public SharedModel Model { get; }
 
-	public ModelRenderState State { get; private set; }
+	private ModelRenderState _state { get; set; }
+	public ModelRenderState State
+	{
+		get => _state;
+		set
+		{
+			_state = value;
+			NotifyPropertyChanged(nameof(State));
+		}
+	}
 
 	private CrashDoc Doc { get; }
 
@@ -22,20 +33,25 @@ internal class RecentModelViewModel : BaseViewModel
 		State = Model switch
 		{
 			null => ModelRenderState.Add,
-			_ => ModelRenderState.Loading;
-			};
+			_ => ModelRenderState.Loading,
+		};
 	}
 
 	public async Task AttemptToConnect()
 	{
-		var client = Doc.LocalClient;
-		client.RegisterConnection(UserName, new Uri(Model.ModelAddress));
+		// Makes a Docile client
+		var client = Doc.LocalClient = new CrashClient(Doc, new IClientOptions(true));
+		client.RegisterConnection(UserName, new Uri($"{Model.ModelAddress}/Crash"));
+
 		var result = await client.StartLocalClientAsync();
 		State = result switch
 		{
 			null => ModelRenderState.Loaded,
 			_ => ModelRenderState.FailedToLoad
 		};
+
+		// We can dispose unless we wish to stay connected. Which I think is unecessary
+		await CrashDocRegistry.DisposeOfDocumentAsync(Doc);
 	}
 
 	private CrashDoc GetCrashDoc()
