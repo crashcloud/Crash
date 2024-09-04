@@ -16,15 +16,33 @@ namespace Crash.UI
 		public static Color SubtleGrey => DarkMode ? s_lightGrey : s_darkGrey;
 
 		// Crash Colours
-		public static Color NavyBlue => Color.FromArgb(29, 48, 146);
-		public static Color SeaGreen => Color.FromArgb(129, 226, 200);
 
-		public static TextureBrush GetHashedTexture(int size)
+		// public static Color SeaGreen => Color.FromArgb(0, 38, 38);
+
+		public static Color White => Color.FromArgb(233, 241, 247);
+
+		public static Color Yellow => Color.FromArgb(246, 174, 45);
+
+		public static Color Black => Color.FromArgb(0, 21, 20); // 19, 27, 35
+		public static Color DarkGray => Color.FromArgb(33, 39, 56);
+		public static Color Gray => Color.FromArgb(65, 67, 97);
+
+		public static Color Green => Color.FromArgb(9, 129, 74);
+
+		public static Color Lime => Color.FromArgb(209, 214, 70);
+
+		public static Color Purple => Color.FromArgb(109, 89, 122);
+
+		public static Color Red => Color.FromArgb(215, 38, 56);
+
+		public static Color Blue => Color.FromArgb(90, 177, 187);
+
+		public static TextureBrush GetHashedTexture(int size = 6, float opaciy = 0.5f)
 		{
 			var image = new Bitmap(new Size(size * 4, size * 4), PixelFormat.Format32bppRgba);
 			using (var g = new Graphics(image))
 			{
-				g.Clear(Colors.Black);
+				g.Clear(Palette.Black);
 				int i = 1;
 				for (int y = -4; y < size * 8; y++)
 				{
@@ -35,12 +53,12 @@ namespace Crash.UI
 						draw = !draw;
 						if (!draw) continue;
 
-						g.FillRectangle(Colors.DarkSlateGray, new Rectangle(x + i, y, size, 1));
+						g.FillRectangle(Palette.Gray, new Rectangle(x + i, y, size, 1));
 					}
 				}
 			}
 
-			TextureBrush brush = new TextureBrush(image, 0.5f);
+			TextureBrush brush = new TextureBrush(image, opaciy);
 			return brush;
 		}
 	}

@@ -214,12 +214,12 @@ namespace Crash.UI.JoinView
 			button.Paint += (s, e) =>
 			{
 				var rect = new RectangleF(0, 0, 100, button.Size.Height);
-				e.Graphics.FillRectangle(Colors.Blue, rect);
+				e.Graphics.FillRectangle(Palette.Blue, rect);
 
 				var font = new Font(SystemFont.Default, 12);
 				var size = e.Graphics.MeasureString(font, text);
 				var textRect = new RectangleF((button.Size.Width - size.Width) / 2, (button.Size.Height - size.Height) / 2, size.Width, size.Height);
-				e.Graphics.DrawText(font, new SolidBrush(Colors.White), textRect, text);
+				e.Graphics.DrawText(font, new SolidBrush(Palette.White), textRect, text);
 
 			};
 

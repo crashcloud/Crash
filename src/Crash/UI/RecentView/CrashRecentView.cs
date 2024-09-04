@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Net.NetworkInformation;
 using System.Security.Cryptography.X509Certificates;
 
 using Crash.Common.Communications;
@@ -17,7 +18,8 @@ namespace Crash.UI;
 public partial class CrashRecentView : Dialog<SharedModel>
 {
 	private PixelLayout RecentModelContainer { get; set; }
-	private StackLayout RecentModelGallery { get; set; }
+	private DynamicLayout RecentModelGallery { get; set; }
+	private Drawable EmptySpaceRightClick { get; set; }
 	internal Drawable ModelInputBar { get; private set; }
 	private DynamicLayout StatusBar { get; set; }
 
@@ -36,7 +38,7 @@ public partial class CrashRecentView : Dialog<SharedModel>
 
 		Resizable = false;
 		MinimumSize = new Size(800, 400);
-		Size = new Size(1200, 600);
+		Size = new Size(1296, 600);
 		Padding = new Padding(0);
 
 		DataContext = new JoinViewModel();
@@ -51,7 +53,7 @@ public partial class CrashRecentView : Dialog<SharedModel>
 		var headerLabel = new Label()
 		{
 			Text = "Recent Models",
-			TextColor = Colors.DarkGray,
+			TextColor = Palette.White,
 			Font = SystemFonts.Default(24),
 			Height = 32,
 			TextAlignment = TextAlignment.Left,
@@ -59,14 +61,25 @@ public partial class CrashRecentView : Dialog<SharedModel>
 
 		var recentModelLayout = new DynamicLayout()
 		{
-			Spacing = new Size(12, 12),
-			Padding = new Padding(12, 4),
+			Spacing = new Size(16, 16),
+			Padding = new Padding(16, 16),
 		};
 		recentModelLayout.BeginVertical();
 
 		recentModelLayout.AddRow(headerLabel);
-		recentModelLayout.Add(InitRecentModelGallery(), true, true);
+		recentModelLayout.Add(new Scrollable()
+		{
+			Border = BorderType.None,
+			BackgroundColor = Colors.Transparent,
+			AllowDrop = false,
+			Content = InitRecentModelGallery(),
+			ExpandContentHeight = false,
+			ExpandContentWidth = true,
+			Height = 500,
+		}, true, true);
 		recentModelLayout.EndVertical();
+
+		EmptySpaceRightClick = GetEmptySpaceRightClick();
 
 		ModelInputBar = GetModelInputBar();
 
@@ -76,7 +89,18 @@ public partial class CrashRecentView : Dialog<SharedModel>
 			Height = -1,
 		};
 		pixelLayout.Add(recentModelLayout, 0, 0);
+		pixelLayout.Add(EmptySpaceRightClick, 0, 0);
 		pixelLayout.Add(ModelInputBar, 0, 0);
+
+		pixelLayout.MouseDown += (s, e) =>
+		{
+			// TODO : Make sure this only appears when clicking the empty area
+			return;
+			if (e.Buttons != MouseButtons.Alternate) return;
+			EmptySpaceRightClick.Visible = !EmptySpaceRightClick.Visible;
+			EmptySpaceRightClick.Tag = e.Location;
+			EmptySpaceRightClick.Invalidate(true);
+		};
 
 		var layout = new DynamicLayout()
 		{
@@ -92,6 +116,30 @@ public partial class CrashRecentView : Dialog<SharedModel>
 		Content = layout;
 	}
 
+	private Drawable GetEmptySpaceRightClick()
+	{
+		var menu = new Drawable()
+		{
+			Visible = false,
+			Tag = new PointF(0, 0)
+		};
+		menu.Paint += (s, e) =>
+		{
+			if (menu.Parent is null) return;
+
+			menu.Width = menu.Parent.Width;
+			menu.Height = menu.Parent.Height;
+
+			if (menu.Tag is not PointF location) return;
+
+			e.Graphics.TranslateTransform(location.X, location.Y);
+
+			e.Graphics.FillRectangle(Palette.White, new RectangleF(0, 0, 120, 240));
+		};
+
+		return menu;
+	}
+
 	private DynamicLayout InitStatusBar()
 	{
 		StatusBar = new DynamicLayout()
@@ -105,13 +153,13 @@ public partial class CrashRecentView : Dialog<SharedModel>
 		var copyrightLabel = new Label()
 		{
 			Text = "Copyright Crash Cloud 2021 - 2024",
-			TextColor = Colors.DarkGray,
+			TextColor = Palette.White,
 			Font = SystemFonts.Default(12),
 			TextAlignment = TextAlignment.Left
 		};
 		var versionLabel = new Label()
 		{
-			TextColor = Colors.DarkGray,
+			TextColor = Palette.White,
 			Font = SystemFonts.Default(12),
 			TextAlignment = TextAlignment.Left
 		};
@@ -125,15 +173,17 @@ public partial class CrashRecentView : Dialog<SharedModel>
 		var status1 = new Label()
 		{
 			Text = "AAA",
-			TextColor = Colors.DarkGray,
+			TextColor = Palette.White,
 			Font = SystemFonts.Default(12),
 			TextAlignment = TextAlignment.Left
 		};
 
+		UpdateStatusOne(status1);
+
 		var status2 = new Label()
 		{
-			Text = "BBB",
-			TextColor = Colors.DarkGray,
+			Text = Environment.UserName,
+			TextColor = Palette.White,
 			Font = SystemFonts.Default(12),
 			TextAlignment = TextAlignment.Left
 		};
@@ -141,8 +191,8 @@ public partial class CrashRecentView : Dialog<SharedModel>
 
 		var status3 = new Label()
 		{
-			Text = "CCC",
-			TextColor = Colors.DarkGray,
+			Text = "</>",
+			TextColor = Palette.White,
 			Font = SystemFonts.Default(12),
 			TextAlignment = TextAlignment.Left
 		};
@@ -156,17 +206,33 @@ public partial class CrashRecentView : Dialog<SharedModel>
 		return StatusBar;
 	}
 
-	private StackLayout InitRecentModelGallery()
+	private async Task UpdateStatusOne(Label status1)
 	{
-		RecentModelGallery = new StackLayout()
+		Ping ping = new Ping();
+
+		while (true)
 		{
-			Orientation = Orientation.Horizontal,
-			Spacing = 16,
+			await Task.Delay(2500);
+			var reply = await ping.SendPingAsync("1.1.1.1");
+			var status = reply?.Status ?? IPStatus.Unknown;
+			status1.Text = status switch
+			{
+				IPStatus.Success => $"Ping: {reply?.RoundtripTime}ms",
+				_ => $"No Connection"
+			};
+		}
+	}
+
+	private DynamicLayout InitRecentModelGallery()
+	{
+		RecentModelGallery = new DynamicLayout()
+		{
+			Spacing = new Size(16, 16),
 			Width = -1,
 			Height = -1,
-			VerticalContentAlignment = VerticalAlignment.Top,
-			HorizontalContentAlignment = HorizontalAlignment.Left
+			MinimumSize = new Size(800, 500),
 		};
+		RecentModelGallery.Focus();
 
 		return RecentModelGallery;
 	}
@@ -188,16 +254,16 @@ public partial class CrashRecentView : Dialog<SharedModel>
 			inputBar.Width = inputBar.Parent.Width;
 			inputBar.Height = inputBar.Parent.Height;
 
-			var brush = new SolidBrush(Color.FromArgb(120, 120, 120, 120));
-			e.Graphics.FillRectangle(Palette.GetHashedTexture(6), e.ClipRectangle);
+			var brush = new SolidBrush(Color.FromArgb(160, 160, 160, 160));
+			e.Graphics.FillRectangle(Palette.GetHashedTexture(6, 0.75f), e.ClipRectangle);
 
 			var bar = RectangleF.FromCenter(inputBar.Parent.Bounds.Center, new SizeF(600, 80));
 			bar.Y -= 60f;
-			var b = new SolidBrush(Colors.White);
+			var b = new SolidBrush(Palette.White);
 			e.Graphics.FillRectangle(b, bar);
 
 			// var font = SystemFonts.Default(24f);
-			// e.Graphics.DrawText(font, new SolidBrush(Colors.Black), bar, Model.TemporaryModel.ModelAddress, alignment: FormattedTextAlignment.Center);
+			// e.Graphics.DrawText(font, new SolidBrush(Palette.Black), bar, Model.TemporaryModel.ModelAddress, alignment: FormattedTextAlignment.Center);
 			e.Graphics.TranslateTransform(300, -300);
 			RecentModelControl.RenderAddress(e, Model.TemporaryModel.ModelAddress);
 		};
@@ -289,13 +355,34 @@ public partial class CrashRecentView : Dialog<SharedModel>
 
 	private void InitBindings()
 	{
-		RecentModelGallery.Items.Clear();
-		// RecentModelGallery.BindDataContext(c => c.Controls, Binding.Property((JoinViewModel m) => m.SharedModels).Convert((models) => ConvetModelsToControls(models)));
-		var controls = ConvertModelsToControls(Model.SharedModels);
-		foreach (var control in controls)
+		RecentModelGallery.Clear();
+		RecentModelGallery.BeginVertical();
+
+		var controls = ConvertModelsToControls(Model.SharedModels).ToList();
+
+		for (int i = 0; i < controls.Count; i += 5)
 		{
-			RecentModelGallery.Items.Add(control);
+			var stackLayout = new StackLayout()
+			{
+				VerticalContentAlignment = VerticalAlignment.Center,
+				Spacing = 16,
+				HorizontalContentAlignment = HorizontalAlignment.Left,
+				Orientation = Orientation.Horizontal,
+				Padding = new Padding(0, 8),
+			};
+			for (int j = 0; j < 5; j++)
+			{
+				int index = i + j;
+				if (index >= controls.Count) break;
+				stackLayout.Items.Add(controls[index]);
+			}
+
+			RecentModelGallery.Add(stackLayout, true, false);
 		}
+
+		// RecentModelGallery.Height = (int)(controls.Count / 5.0) * 200;
+		RecentModelGallery.AddSpace(true, true);
+		RecentModelGallery.EndVertical();
 	}
 
 	private IEnumerable<Control>? ConvertModelsToControls(ObservableCollection<SharedModel> models)
@@ -312,10 +399,27 @@ public partial class CrashRecentView : Dialog<SharedModel>
 			controls.Add(control);
 		}
 
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.google.com" }));
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.text.com" }));
-		// controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.words.com" }));
-		// controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.yes.com" }));
+		// TODO : Does not scroll
+
+		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.zxcad.com" }));
+		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.tyu.com" }));
+		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.vbn.com" }));
+		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.yes.com" }));
+		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.dsdf.com" }));
+
+		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.345345.com" }));
+		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.fghvbn.com" }));
+		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.kjljkl.com" }));
+		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.iopoip.com" }));
+		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.bmertyui.com" }));
+
+		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.cvfghvbn.com" }));
+		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.kjfdgfdljkl.com" }));
+		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.iopqweoip.com" }));
+		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.bmdfgghjrtyui.com" }));
+		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.456fghdsf.com" }));
+
+		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "1.1.1.1" }));
 
 		return controls;
 	}

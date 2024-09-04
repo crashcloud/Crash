@@ -39,19 +39,25 @@ internal class RecentModelViewModel : BaseViewModel
 
 	public async Task AttemptToConnect()
 	{
-		// Makes a Docile client
+		if (Model is null) return;
+
+		// Makes a Docile client	
 		var client = Doc.LocalClient = new CrashClient(Doc, new IClientOptions(true));
-		client.RegisterConnection(UserName, new Uri($"{Model.ModelAddress}/Crash"));
-
-		var result = await client.StartLocalClientAsync();
-		State = result switch
+		try
 		{
-			null => ModelRenderState.Loaded,
-			_ => ModelRenderState.FailedToLoad
-		};
+			client.RegisterConnection(UserName, new Uri($"{Model.ModelAddress}/Crash"));
 
-		// We can dispose unless we wish to stay connected. Which I think is unecessary
-		await CrashDocRegistry.DisposeOfDocumentAsync(Doc);
+			var result = await client.StartLocalClientAsync();
+			State = result switch
+			{
+				null => ModelRenderState.Loaded,
+				_ => ModelRenderState.FailedToLoad
+			};
+
+			// We can dispose unless we wish to stay connected. Which I think is unecessary
+			await CrashDocRegistry.DisposeOfDocumentAsync(Doc);
+		}
+		catch { }
 	}
 
 	private CrashDoc GetCrashDoc()

@@ -14,6 +14,9 @@ internal class RecentModelControl : Drawable
 	private RecentModelViewModel ViewModel => DataContext as RecentModelViewModel;
 	private CrashRecentView HostView { get; }
 
+	private int Frame { get; set; } = 0;
+	private UITimer FrameTimer { get; }
+
 	public RecentModelControl(CrashRecentView crashRecentView, SharedModel model)
 	{
 		HostView = crashRecentView;
@@ -27,7 +30,23 @@ internal class RecentModelControl : Drawable
 			HostView.Invalidate(true);
 		});
 
-		ViewModel.AttemptToConnect();
+		HostView.Shown += async (s, e) =>
+		{
+			await ViewModel.AttemptToConnect();
+		};
+
+		FrameTimer = new UITimer
+		{
+			Interval = 0.1,
+		};
+		FrameTimer.Elapsed += (s, _) =>
+		{
+			Frame++;
+			Invalidate();
+		};
+		FrameTimer.Start();
+
+		ToolTip = "Double Click to Join. Right Click for Options.";
 	}
 
 	protected override void OnMouseUp(MouseEventArgs e)
@@ -67,6 +86,20 @@ internal class RecentModelControl : Drawable
 		base.OnMouseUp(e);
 	}
 
+	private bool MouseOver { get; set; }
+	protected override void OnMouseEnter(MouseEventArgs e)
+	{
+		base.OnMouseMove(e);
+		Invalidate(true);
+		MouseOver = true;
+	}
+	protected override void OnMouseLeave(MouseEventArgs e)
+	{
+		base.OnMouseLeave(e);
+		Invalidate(true);
+		MouseOver = false;
+	}
+
 	protected override void OnMouseDoubleClick(MouseEventArgs e)
 	{
 		if (e.Buttons == MouseButtons.Primary &&
@@ -81,6 +114,12 @@ internal class RecentModelControl : Drawable
 	protected override void OnPaint(PaintEventArgs e)
 	{
 		e.Graphics.SaveTransform();
+
+		if (!MouseOver)
+		{
+			e.Graphics.TranslateTransform(12f, 6f);
+			e.Graphics.ScaleTransform(0.9f, 0.9f);
+		}
 
 		if (ViewModel.State.HasFlag(ModelRenderState.Add))
 		{
@@ -111,24 +150,24 @@ internal class RecentModelControl : Drawable
 	private void RenderRightClick(PaintEventArgs e)
 	{
 		// var overlay = Color.FromArgb(40, 40, 40, 120);
-		var overlay = Palette.GetHashedTexture(6);
+		var overlay = Palette.GetHashedTexture(6, 0.75f);
 		e.Graphics.FillRectangle(overlay, e.ClipRectangle);
 
 		float inset = 20f;
 		var rect = new RectangleF(inset, inset, Size.Width - (inset * 2), Size.Height - (inset * 2));
-		e.Graphics.FillRectangle(Colors.White, rect);
+		e.Graphics.FillRectangle(Palette.White, rect);
 
-		string[] options = new[] { "Join", "Delete", "Refresh" };
+		string[] options = new[] { "Refresh", "Delete", "Join" };
 		for (int i = 0; i < 3; i++)
 		{
 			float y = rect.Height / 3f * i;
 			e.Graphics.DrawLine(Color.FromArgb(40, 40, 40, 40), rect.Left + 4f, rect.Top + y, rect.Right - 4f, rect.Top + y);
 
-			var color = Colors.Black;
-			if (i == 0 && !ViewModel.State.HasFlag(ModelRenderState.Loaded))
+			var color = Palette.Black;
+			if (i == 2 && !ViewModel.State.HasFlag(ModelRenderState.Loaded))
 			{
 				// Draw faded out
-				color = Colors.LightSlateGray;
+				color = Palette.Gray;
 			}
 
 			e.Graphics.DrawText(SystemFonts.Default(14f), new SolidBrush(color), new RectangleF(rect.Left + 4f, rect.Top + y + 6f, rect.Width - 8f, rect.Height / 3f), options[i], alignment: FormattedTextAlignment.Center);
@@ -137,13 +176,25 @@ internal class RecentModelControl : Drawable
 
 	private void RenderFailedToLoad(PaintEventArgs e)
 	{
-		e.Graphics.FillRectangle(Colors.Red, e.ClipRectangle);
+		e.Graphics.FillRectangle(Palette.Red, e.ClipRectangle);
+		e.Graphics.SaveTransform();
+		e.Graphics.TranslateTransform(e.ClipRectangle.Center);
+
+		var crossRect = RectangleF.FromCenter(new PointF(0, 0), new SizeF(30f, 8f));
+		var crossRect90 = RectangleF.FromCenter(new PointF(0, 0), new SizeF(8f, 30f));
+
+		e.Graphics.RotateTransform(45f);
+
+		e.Graphics.FillRectangle(Palette.White, crossRect);
+		e.Graphics.FillRectangle(Palette.White, crossRect90);
+
+		e.Graphics.RestoreTransform();
 		RenderAddressBar(e);
 	}
 
 	private void RenderLoaded(PaintEventArgs e)
 	{
-		e.Graphics.FillRectangle(Colors.Green, e.ClipRectangle);
+		e.Graphics.FillRectangle(Palette.Green, e.ClipRectangle);
 		if (ViewModel.Model is null) return;
 		if (ViewModel.Model.Thumbnail is null) return;
 
@@ -151,9 +202,25 @@ internal class RecentModelControl : Drawable
 		RenderAddressBar(e);
 	}
 
+
 	private void RenderLoading(PaintEventArgs e)
 	{
-		e.Graphics.FillRectangle(Colors.Blue, e.ClipRectangle);
+		e.Graphics.FillRectangle(Palette.Blue, e.ClipRectangle);
+
+		var circleRect = RectangleF.FromCenter(e.ClipRectangle.Center, new SizeF(30f, 30f));
+		circleRect.Y -= 14f;
+
+		int startArc = 0 + (Frame * 4);
+		int endArc = 120 + (Frame * 6);
+
+		if (startArc > 360)
+			startArc = 0;
+
+		if (endArc > 360)
+			endArc = 120;
+
+		e.Graphics.DrawArc(new Pen(Palette.White, 4f), circleRect, startArc, endArc);
+
 		RenderAddressBar(e);
 	}
 
@@ -161,10 +228,10 @@ internal class RecentModelControl : Drawable
 	{
 		var rect = e.ClipRectangle;
 		var bar = new RectangleF(rect.Left, rect.Bottom - 30f, rect.Width, 30f);
-		e.Graphics.FillRectangle(Colors.White, bar);
+		e.Graphics.FillRectangle(Palette.White, bar);
 
 		var font = SystemFonts.Default(20f);
-		var brush = new SolidBrush(Colors.Black);
+		var brush = new SolidBrush(Palette.Black);
 		// e.Graphics.DrawText(font, brush, bar, ViewModel.Model.ModelAddress, alignment: FormattedTextAlignment.Center);
 		RenderAddress(e, ViewModel.Model.ModelAddress);
 	}
@@ -220,14 +287,14 @@ internal class RecentModelControl : Drawable
 			args.Graphics.TranslateTransform(4f, 0);
 
 			var font = SystemFonts.Default(14f);
-			var brush = new SolidBrush(Colors.Black);
+			var brush = new SolidBrush(Palette.Black);
 
 			var size = args.Graphics.MeasureString(font, part);
 
 			var pillSize = new RectangleF(4f, args.ClipRectangle.Height - 26f, size.Width + 12f, 22f);
 
 			var roundedRect = GraphicsPath.GetRoundRect(pillSize, 6f);
-			args.Graphics.FillPath(Colors.LimeGreen, roundedRect);
+			args.Graphics.FillPath(Palette.Yellow, roundedRect);
 			args.Graphics.DrawText(font, brush, pillSize, part, alignment: FormattedTextAlignment.Center);
 
 			args.Graphics.TranslateTransform(pillSize.Width, 0);
@@ -240,21 +307,26 @@ internal class RecentModelControl : Drawable
 		float radius = 6f;
 		var rect = new RectangleF(inset, inset, Size.Width - (inset * 2), Size.Height - (inset * 2));
 		var path = GraphicsPath.GetRoundRect(rect, radius);
-		var pen = new Pen(Color.FromArgb(40, 40, 40), 4f);
+
+		e.Graphics.FillPath(Palette.GetHashedTexture(6, 0.1f), path);
+
+		var pen = new Pen(Color.FromArgb(19, 27, 35), 4f);
 		pen.DashStyle = new DashStyle(4, 4);
 		e.Graphics.DrawPath(pen, path);
 
 		float centerBox = 40f;
 		var plusBox = RectangleF.FromCenter(rect.Center, new SizeF(centerBox, centerBox));
 		var centerBoxPath = GraphicsPath.GetRoundRect(plusBox, radius);
-		e.Graphics.FillPath(Colors.BlueViolet, centerBoxPath);
 
+		var color = Palette.Purple;
+
+		e.Graphics.FillPath(color, centerBoxPath);
 
 		var plusPathVert = RectangleF.FromCenter(rect.Center, new SizeF(20f, 5f));
 		var plusPathHoz = RectangleF.FromCenter(rect.Center, new SizeF(5f, 20f));
 
-		e.Graphics.FillRectangle(Colors.White, plusPathVert);
-		e.Graphics.FillRectangle(Colors.White, plusPathHoz);
+		e.Graphics.FillRectangle(Palette.White, plusPathVert);
+		e.Graphics.FillRectangle(Palette.White, plusPathHoz);
 	}
 
 }
