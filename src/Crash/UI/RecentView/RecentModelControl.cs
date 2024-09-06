@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 
 using Crash.Handlers.Data;
 using Crash.UI.JoinView;
+using Crash.UI.RecentView.Layers;
 
 using Eto.Drawing;
 using Eto.Forms;
@@ -35,16 +36,30 @@ internal class RecentModelControl : Drawable
 			await ViewModel.AttemptToConnect();
 		};
 
-		FrameTimer = new UITimer
+		if (ViewModel.State != ModelRenderState.Add)
 		{
-			Interval = 0.1,
-		};
-		FrameTimer.Elapsed += (s, _) =>
-		{
-			Frame++;
-			Invalidate();
-		};
-		FrameTimer.Start();
+			var previousState = ViewModel.State;
+			FrameTimer = new UITimer
+			{
+				Interval = 0.1,
+			};
+			FrameTimer.Elapsed += (s, _) =>
+			{
+				if (previousState == ViewModel.State)
+				{
+					if (ViewModel.State == ModelRenderState.FailedToLoad) return;
+					if (ViewModel.State == ModelRenderState.Loaded) return;
+				}
+				else
+				{
+					previousState = ViewModel.State;
+				}
+
+				Frame++;
+				Invalidate();
+			};
+			FrameTimer.Start();
+		}
 
 		ToolTip = "Double Click to Join. Right Click for Options.";
 	}
@@ -86,6 +101,26 @@ internal class RecentModelControl : Drawable
 		base.OnMouseUp(e);
 	}
 
+	protected override void OnMouseDown(MouseEventArgs e)
+	{
+		if (HostView.Model.TemporaryModel is not null) return;
+		if (e.Buttons == MouseButtons.Primary)
+		{
+			if (!ViewModel.State.HasFlag(ModelRenderState.Selected))
+			{
+				ViewModel.State = ViewModel.State |= ModelRenderState.Selected;
+			}
+			else
+			{
+				ViewModel.State = ViewModel.State &= ~ModelRenderState.Selected;
+			}
+
+			Invalidate(true);
+		}
+
+		base.OnMouseUp(e);
+	}
+
 	private bool MouseOver { get; set; }
 	protected override void OnMouseEnter(MouseEventArgs e)
 	{
@@ -113,35 +148,34 @@ internal class RecentModelControl : Drawable
 
 	protected override void OnPaint(PaintEventArgs e)
 	{
-		e.Graphics.SaveTransform();
-
-		if (!MouseOver)
-		{
-			e.Graphics.TranslateTransform(12f, 6f);
-			e.Graphics.ScaleTransform(0.9f, 0.9f);
-		}
-
 		if (ViewModel.State.HasFlag(ModelRenderState.Add))
 		{
 			RenderAdd(e);
 		}
-		else if (ViewModel.State.HasFlag(ModelRenderState.Loading))
+		else
 		{
-			RenderLoading(e);
-		}
-		else if (ViewModel.State.HasFlag(ModelRenderState.Loaded))
-		{
-			RenderLoaded(e);
-		}
-		else if (ViewModel.State.HasFlag(ModelRenderState.FailedToLoad))
-		{
-			RenderFailedToLoad(e);
-		}
+			if (ViewModel.State.HasFlag(ModelRenderState.Loading))
+			{
+				RenderLoading(e);
+			}
+			else if (ViewModel.State.HasFlag(ModelRenderState.Loaded))
+			{
+				RenderLoaded(e);
+			}
+			else if (ViewModel.State.HasFlag(ModelRenderState.FailedToLoad))
+			{
+				RenderFailedToLoad(e);
+			}
 
-		e.Graphics.RestoreTransform();
-		if (ViewModel.State.HasFlag(ModelRenderState.RightClick))
-		{
-			RenderRightClick(e);
+			if (ViewModel.State.HasFlag(ModelRenderState.Selected) && !ViewModel.State.HasFlag(ModelRenderState.Add))
+			{
+				e.Graphics.DrawRectangle(new Pen(Palette.Yellow, 4f), Bounds);
+			}
+
+			if (ViewModel.State.HasFlag(ModelRenderState.RightClick))
+			{
+				RenderRightClick(e);
+			}
 		}
 
 		base.OnPaint(e);
@@ -219,6 +253,7 @@ internal class RecentModelControl : Drawable
 		if (endArc > 360)
 			endArc = 120;
 
+		// TODO : Draw a cicle and move the line pattern instead
 		e.Graphics.DrawArc(new Pen(Palette.White, 4f), circleRect, startArc, endArc);
 
 		RenderAddressBar(e);
@@ -230,75 +265,7 @@ internal class RecentModelControl : Drawable
 		var bar = new RectangleF(rect.Left, rect.Bottom - 30f, rect.Width, 30f);
 		e.Graphics.FillRectangle(Palette.White, bar);
 
-		var font = SystemFonts.Default(20f);
-		var brush = new SolidBrush(Palette.Black);
-		// e.Graphics.DrawText(font, brush, bar, ViewModel.Model.ModelAddress, alignment: FormattedTextAlignment.Center);
-		RenderAddress(e, ViewModel.Model.ModelAddress);
-	}
-
-	private const string httpRegex = "(http|https)://";
-	private const string portRegex = ":[0-9]+";
-	private const string pathRegex = "/[^/]+";
-	internal static readonly string[] separator = new[] { "." };
-
-	//private const string extensionRegex = "\\.[a-zA-Z]+";
-
-	public static void RenderAddress(PaintEventArgs args, string text)
-	{
-		if (string.IsNullOrEmpty(text)) return;
-
-		var httpText = Regex.Match(text, httpRegex).Value;
-		// var pathText = Regex.Match(text, pathRegex).Value;
-		var portText = Regex.Match(text, portRegex).Value;
-		var wwwText = Regex.Match(text, "www\\.").Value;
-
-		var urlBits = text;
-		if (!string.IsNullOrEmpty(httpText))
-			urlBits = text.Replace(httpText, string.Empty);
-
-		// if (!string.IsNullOrEmpty(pathText))
-		//	urlBits = urlBits.Replace(pathText, string.Empty);
-
-		if (!string.IsNullOrEmpty(portText))
-			urlBits = urlBits.Replace(portText, string.Empty);
-
-		if (!string.IsNullOrEmpty(wwwText))
-			urlBits = urlBits.Replace(wwwText, string.Empty);
-
-		if (string.IsNullOrEmpty(urlBits)) return;
-
-		var parts = urlBits.Split(separator, StringSplitOptions.RemoveEmptyEntries)
-		.Where(p => !string.IsNullOrEmpty(p))
-		.Select(p => $".{p}")
-		.ToList();
-		parts[0] = parts[0].Substring(1);
-
-		if (!string.IsNullOrEmpty(httpText))
-			parts.Insert(0, httpText);
-
-		if (!string.IsNullOrEmpty(portText))
-			parts.Add(portText);
-
-		// if (!string.IsNullOrEmpty(pathText))
-		// 	parts.Add(pathText);
-
-		foreach (var part in parts)
-		{
-			args.Graphics.TranslateTransform(4f, 0);
-
-			var font = SystemFonts.Default(14f);
-			var brush = new SolidBrush(Palette.Black);
-
-			var size = args.Graphics.MeasureString(font, part);
-
-			var pillSize = new RectangleF(4f, args.ClipRectangle.Height - 26f, size.Width + 12f, 22f);
-
-			var roundedRect = GraphicsPath.GetRoundRect(pillSize, 6f);
-			args.Graphics.FillPath(Palette.Yellow, roundedRect);
-			args.Graphics.DrawText(font, brush, pillSize, part, alignment: FormattedTextAlignment.Center);
-
-			args.Graphics.TranslateTransform(pillSize.Width, 0);
-		}
+		PillLayer.RenderAddress(e, ViewModel.Model.ModelAddress, bar);
 	}
 
 	private void RenderAdd(PaintEventArgs e)
@@ -309,10 +276,7 @@ internal class RecentModelControl : Drawable
 		var path = GraphicsPath.GetRoundRect(rect, radius);
 
 		e.Graphics.FillPath(Palette.GetHashedTexture(6, 0.1f), path);
-
-		var pen = new Pen(Color.FromArgb(19, 27, 35), 4f);
-		pen.DashStyle = new DashStyle(4, 4);
-		e.Graphics.DrawPath(pen, path);
+		e.Graphics.DrawPath(Palette.GetDashedPen(Color.FromArgb(19, 27, 35)), path);
 
 		float centerBox = 40f;
 		var plusBox = RectangleF.FromCenter(rect.Center, new SizeF(centerBox, centerBox));

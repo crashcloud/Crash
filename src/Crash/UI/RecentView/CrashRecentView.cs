@@ -2,12 +2,10 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Net.NetworkInformation;
-using System.Security.Cryptography.X509Certificates;
 
-using Crash.Common.Communications;
-using Crash.Common.Document;
 using Crash.Handlers.Data;
 using Crash.UI.JoinView;
+using Crash.UI.RecentView.Layers;
 using Crash.UI.UsersView;
 
 using Eto.Drawing;
@@ -15,7 +13,12 @@ using Eto.Forms;
 
 namespace Crash.UI;
 
-public partial class CrashRecentView : Dialog<SharedModel>
+
+/// <summary>
+/// View for showing Recent Crash Models
+/// Summoned by using <see cref="Crash.Commands.JoinSharedModel"/>
+/// </summary>
+internal sealed class CrashRecentView : Dialog<SharedModel>
 {
 	private PixelLayout RecentModelContainer { get; set; }
 	private DynamicLayout RecentModelGallery { get; set; }
@@ -59,15 +62,7 @@ public partial class CrashRecentView : Dialog<SharedModel>
 			TextAlignment = TextAlignment.Left,
 		};
 
-		var recentModelLayout = new DynamicLayout()
-		{
-			Spacing = new Size(16, 16),
-			Padding = new Padding(16, 16),
-		};
-		recentModelLayout.BeginVertical();
-
-		recentModelLayout.AddRow(headerLabel);
-		recentModelLayout.Add(new Scrollable()
+		var scrollable = new Scrollable()
 		{
 			Border = BorderType.None,
 			BackgroundColor = Colors.Transparent,
@@ -76,8 +71,23 @@ public partial class CrashRecentView : Dialog<SharedModel>
 			ExpandContentHeight = false,
 			ExpandContentWidth = true,
 			Height = 500,
-		}, true, true);
+		};
+
+		var recentModelLayout = new DynamicLayout()
+		{
+			Spacing = new Size(16, 16),
+			Padding = new Padding(16, 16),
+		};
+		recentModelLayout.BeginVertical();
+
+		recentModelLayout.AddRow(headerLabel);
+		recentModelLayout.Add(scrollable, true, true);
 		recentModelLayout.EndVertical();
+
+		scrollable.MouseWheel += (s, e) =>
+		{
+			RecentModelGallery.Invalidate(true);
+		};
 
 		EmptySpaceRightClick = GetEmptySpaceRightClick();
 
@@ -244,6 +254,7 @@ public partial class CrashRecentView : Dialog<SharedModel>
 			CanFocus = true,
 			AllowDrop = false,
 		};
+
 		inputBar.Paint += (s, e) =>
 		{
 			e.Graphics.Clear(Colors.Transparent);
@@ -264,8 +275,7 @@ public partial class CrashRecentView : Dialog<SharedModel>
 
 			// var font = SystemFonts.Default(24f);
 			// e.Graphics.DrawText(font, new SolidBrush(Palette.Black), bar, Model.TemporaryModel.ModelAddress, alignment: FormattedTextAlignment.Center);
-			e.Graphics.TranslateTransform(300, -300);
-			RecentModelControl.RenderAddress(e, Model.TemporaryModel.ModelAddress);
+			PillLayer.RenderAddress(e, Model.TemporaryModel.ModelAddress, bar, true);
 		};
 
 		inputBar.MouseDown += (s, e) =>
@@ -321,12 +331,17 @@ public partial class CrashRecentView : Dialog<SharedModel>
 					return;
 
 				// Attempt to connect
-				Model.AddSharedModel(Model.TemporaryModel);
+				if (Model.AddSharedModel(Model.TemporaryModel))
+				{
+					Model.NotifyPropertyChanged(nameof(Model.SharedModels));
+					InitBindings();
+
+					// var controls = ConvertModelsToControls(Model.SharedModels).ToList();
+				}
 				Model.TemporaryModel = null;
 				inputBar.Invalidate(true);
 				Invalidate(true);
-				Model.NotifyPropertyChanged(nameof(Model.SharedModels));
-				InitBindings();
+
 				e.Handled = true;
 				return;
 			}
@@ -398,28 +413,6 @@ public partial class CrashRecentView : Dialog<SharedModel>
 			var control = new RecentModelControl(this, model);
 			controls.Add(control);
 		}
-
-		// TODO : Does not scroll
-
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.zxcad.com" }));
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.tyu.com" }));
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.vbn.com" }));
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.yes.com" }));
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.dsdf.com" }));
-
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.345345.com" }));
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.fghvbn.com" }));
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.kjljkl.com" }));
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.iopoip.com" }));
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.bmertyui.com" }));
-
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.cvfghvbn.com" }));
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.kjfdgfdljkl.com" }));
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.iopqweoip.com" }));
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.bmdfgghjrtyui.com" }));
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "https://www.456fghdsf.com" }));
-
-		controls.Add(new RecentModelControl(this, new SharedModel() { ModelAddress = "1.1.1.1" }));
 
 		return controls;
 	}

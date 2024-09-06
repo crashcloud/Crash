@@ -101,7 +101,7 @@ namespace Crash.Common.Communications
 		}
 
 		/// <summary>Creates a connection to the Crash Server</summary>
-		public static HubConnection GetHubConnection(Uri url)
+		private static HubConnection GetHubConnection(Uri url)
 		{
 			return new HubConnectionBuilder()
 				   .WithUrl(url)

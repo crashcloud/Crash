@@ -37,6 +37,13 @@ namespace Crash.UI
 
 		public static Color Blue => Color.FromArgb(90, 177, 187);
 
+		public static Pen GetDashedPen(Color color, float width = 4f)
+		{
+			var pen = new Pen(color, width);
+			pen.DashStyle = new DashStyle(4, 4);
+			return pen;
+		}
+
 		public static TextureBrush GetHashedTexture(int size = 6, float opaciy = 0.5f)
 		{
 			var image = new Bitmap(new Size(size * 4, size * 4), PixelFormat.Format32bppRgba);

@@ -9,4 +9,5 @@ internal enum ModelRenderState
 	Loaded = 1 << 2,
 	FailedToLoad = 1 << 3,
 	RightClick = 1 << 4,
+	Selected = 1 << 5,
 }
