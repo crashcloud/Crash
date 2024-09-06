@@ -66,6 +66,7 @@ internal class RecentModelControl : Drawable
 
 	protected override void OnMouseUp(MouseEventArgs e)
 	{
+		e.Handled = true;
 		if (e.Buttons == MouseButtons.Alternate && !ViewModel.State.HasFlag(ModelRenderState.Add))
 		{
 			if (!ViewModel.State.HasFlag(ModelRenderState.RightClick))
@@ -103,6 +104,7 @@ internal class RecentModelControl : Drawable
 
 	protected override void OnMouseDown(MouseEventArgs e)
 	{
+		e.Handled = true;
 		if (HostView.Model.TemporaryModel is not null) return;
 		if (e.Buttons == MouseButtons.Primary)
 		{
@@ -124,12 +126,14 @@ internal class RecentModelControl : Drawable
 	private bool MouseOver { get; set; }
 	protected override void OnMouseEnter(MouseEventArgs e)
 	{
+		e.Handled = true;
 		base.OnMouseMove(e);
 		Invalidate(true);
 		MouseOver = true;
 	}
 	protected override void OnMouseLeave(MouseEventArgs e)
 	{
+		e.Handled = true;
 		base.OnMouseLeave(e);
 		Invalidate(true);
 		MouseOver = false;
@@ -137,6 +141,7 @@ internal class RecentModelControl : Drawable
 
 	protected override void OnMouseDoubleClick(MouseEventArgs e)
 	{
+		e.Handled = true;
 		if (e.Buttons == MouseButtons.Primary &&
 			ViewModel.State == ModelRenderState.Loaded)
 		{

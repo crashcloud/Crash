@@ -32,8 +32,12 @@ namespace Crash.UI.JoinView
 			}
 			else
 			{
+				// TODO : Only in Debug Mode?
 				SharedModels = new ObservableCollection<SharedModel>();
 			}
+
+			if (SharedModels.Count == 0)
+				SharedModels.Add(new SharedModel() { ModelAddress = "http://localhost:8080" });
 		}
 
 		internal ObservableCollection<SharedModel> SharedModels { get; }

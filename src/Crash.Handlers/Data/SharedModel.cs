@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿
+using System.Text.Json.Serialization;
 
 using Eto.Drawing;
 
@@ -15,6 +16,11 @@ namespace Crash.Handlers.Data
 		public Bitmap Thumbnail { get; set; }
 
 		public string ModelAddress { get; set; }
+
+		public DateTime LastOpened { get; set; } = DateTime.UtcNow;
+
+		// Should prevent unecessary loadings on recalc!
+		// public enumThingy State
 
 	}
 
