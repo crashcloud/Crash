@@ -11,16 +11,43 @@ namespace Crash.Commands
 	/// </summary>
 	public abstract class AsyncCommand : Command
 	{
+		private bool Await { get; }
+
+		internal AsyncCommand(bool await = false)
+		{
+			Await = await;
+		}
+
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
 			var crashDoc = CrashDocRegistry.GetRelatedDocument(doc);
-			// var commandTask = RunCommandAsync(doc, crashDoc, mode);
 
 			try
 			{
+				if (Await)
+				{
+					Result result = Result.Failure;
+#pragma warning disable VSTHRD101 // Avoid unsupported async delegates
+					Eto.Forms.Application.Instance.AsyncInvoke(async () =>
+					{
+						try
+						{
+							result = await RunCommandAsync(doc, crashDoc, mode);
+						}
+						catch
+						{
+
+						}
+					});
+#pragma warning restore VSTHRD101 // Avoid unsupported async delegates
+					return result;
+				}
+				else
+				{
 #pragma warning disable VSTHRD110 // Observe result of async calls
-				RunCommandAsync(doc, crashDoc, mode);
+					RunCommandAsync(doc, crashDoc, mode);
 #pragma warning restore VSTHRD110 // Observe result of async calls
+				}
 
 				return Result.Success;
 			}

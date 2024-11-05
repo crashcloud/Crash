@@ -32,6 +32,9 @@ namespace Crash.Commands
 
 		public const string EnglishCommandName = "JoinSharedModel";
 
+		public JoinSharedModel() : base(true)
+		{
+		}
 
 		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
 		{
