@@ -19,7 +19,7 @@ namespace Crash.UI;
 /// View for showing Recent Crash Models
 /// Summoned by using <see cref="Crash.Commands.JoinSharedModel"/>
 /// </summary>
-internal sealed class CrashRecentView : Dialog<SharedModel>
+internal sealed class RecentModelDialog : Dialog<SharedModel>
 {
 	private OverflowLayout<SharedModel> RecentModelGallery { get; set; }
 	private Drawable EmptySpaceRightClick { get; set; }
@@ -28,7 +28,7 @@ internal sealed class CrashRecentView : Dialog<SharedModel>
 
 	internal JoinViewModel Model => DataContext as JoinViewModel;
 
-	public CrashRecentView()
+	public RecentModelDialog()
 	{
 		WindowStyle = WindowStyle.Utility;
 		Minimizable = false;

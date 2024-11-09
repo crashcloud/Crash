@@ -13,12 +13,12 @@ internal class RecentModelControl : Drawable
 {
 
 	private RecentModelViewModel ViewModel => DataContext as RecentModelViewModel;
-	private CrashRecentView HostView { get; }
+	private RecentModelDialog HostView { get; }
 
 	private int Frame { get; set; } = 0;
 	private UITimer FrameTimer { get; }
 
-	public RecentModelControl(CrashRecentView crashRecentView, SharedModel model)
+	public RecentModelControl(RecentModelDialog crashRecentView, SharedModel model)
 	{
 		HostView = crashRecentView;
 		DataContext = new RecentModelViewModel(model);

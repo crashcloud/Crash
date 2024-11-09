@@ -51,7 +51,7 @@ namespace Crash.Commands
 			SharedModel chosenModel = null;
 			if (mode == RunMode.Interactive)
 			{
-				var dialog = new CrashRecentView();
+				var dialog = new RecentModelDialog();
 				chosenModel = await dialog.ShowModalAsync(RhinoEtoApp.MainWindowForDocument(doc));
 				if (chosenModel is null) return Result.Cancel;
 

@@ -16,7 +16,7 @@ namespace Crash.UI.RecentView
 	{
 		private JoinViewModel Model { get; }
 
-		private CrashRecentView ParentControl => ParentWindow as CrashRecentView;
+		private RecentModelDialog ParentControl => ParentWindow as RecentModelDialog;
 
 		public AddressInputBar(JoinViewModel model)
 		{
