@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading.Tasks;
 
 using Eto.Drawing;
 using Eto.Forms;
@@ -12,7 +11,7 @@ namespace Crash.UI
 
 	internal class OverflowLayout<TItem> : DynamicLayout
 	{
-		private int ControlWidth { get; }
+		public int ControlWidth { get; set; }
 
 		public ObservableCollection<TItem> DataStore { get; set; } = new ObservableCollection<TItem>();
 		private Func<TItem, Control> ControlFactory { get; }
@@ -21,68 +20,79 @@ namespace Crash.UI
 		{
 			ControlFactory = controlFactory;
 			ControlWidth = controlWidth;
-			BackgroundColor = Colors.Orange;
-		}
+			Width = Width;
+			Height = Width;
+			Spacing = new Size(16, 16);
+			MinimumSize = new Size(800, 500);
 
-		override protected void OnShown(EventArgs e)
-		{
-			InitLayout();
 			InitBindings();
-			var t = this;
-			base.OnPreLoad(e);
+			InitLayout();
 		}
 
 		private void InitBindings()
 		{
+			SizeChanged += (s, e) =>
+			{
+				InitLayout();
+				Invalidate();
+			};
 			DataStore.CollectionChanged += (s, e) =>
 			{
 				InitLayout();
+				Invalidate();
 			};
 		}
 
-		private void InitLayout()
+		public void InitLayout()
 		{
+			return;
 			Clear();
 			var width = this.GetPreferredSize().Width;
-			int HorizontalControlCount = (int)(width / (this.ControlWidth + Spacing.Value.Width));
+			int HorizontalControlCount = (int)(width / (this.ControlWidth)); // + Spacing.Value.Width));
 
 			BeginVertical();
+			Add(new Button() { Text = "Test" }, false, false);
 
 			for (int i = 0; i < DataStore.Count; i++)
 			{
 				int controlWidth = 0;
-				var stackLayout = new StackLayout()
+				var stackLayout = new DynamicLayout()
 				{
-					VerticalContentAlignment = VerticalAlignment.Center,
-					Spacing = this.Spacing.Value.Width,
-					HorizontalContentAlignment = HorizontalAlignment.Left,
-					Orientation = Orientation.Horizontal,
+					// VerticalContentAlignment = VerticalAlignment.Center,
+					// Spacing = Spacing.Value.Width,
 					Padding = new Padding(0, 8),
 					Width = this.Width,
+					Height = 120,
+					BackgroundColor = Colors.Green,
+					MinimumSize = new Size(this.Width, 20),
 				};
 
+				stackLayout.BeginHorizontal();
+				stackLayout.Add(new Button() { Text = "Test" }, false, false);
 				while (controlWidth < width)
 				{
 					if (i >= DataStore.Count)
 					{
-						// Done
 						i = int.MaxValue / 2;
 						controlWidth = int.MaxValue / 2;
 						break;
 					}
 					var control = ControlFactory(DataStore[i]);
-					stackLayout.Items.Add(control);
+					stackLayout.Add(control, true, false);
 					stackLayout.Height = control.Height;
-					controlWidth += control.Width + stackLayout.Spacing;
+					controlWidth += control.Width;
 					i++;
 				}
+				stackLayout.AddSpace(true, true);
+				stackLayout.EndHorizontal();
 
-				Add(stackLayout, true, false);
+				Add(stackLayout, false, false);
 			}
 
 			AddSpace(true, true);
 
-			EndVertical(); ;
+			EndVertical();
+			Invalidate();
 		}
 
 	}

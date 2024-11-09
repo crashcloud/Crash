@@ -38,6 +38,17 @@ namespace Crash.UI.JoinView
 
 			if (SharedModels.Count == 0)
 				SharedModels.Add(new SharedModel() { ModelAddress = "http://localhost:8080" });
+
+#if DEBUG
+
+			SharedModels.Add(new() { ModelAddress = "https://cheddar.com" });
+			SharedModels.Add(new() { ModelAddress = "https://192.168.1.1:7070" });
+			SharedModels.Add(new() { ModelAddress = "https://edam.com/" });
+			SharedModels.Add(new() { ModelAddress = "https://brie.co.uk" });
+			SharedModels.Add(new() { ModelAddress = "https://gorgonzola.io/tasty/" });
+			SharedModels.Add(new() { ModelAddress = "https://parmesan.app" });
+
+#endif
 		}
 
 		internal ObservableCollection<SharedModel> SharedModels { get; }

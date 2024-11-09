@@ -22,7 +22,9 @@ internal class RecentModelControl : Drawable
 	{
 		HostView = crashRecentView;
 		DataContext = new RecentModelViewModel(model);
-		Size = new Eto.Drawing.Size(240, 135);
+		Width = 240;
+		Height = 135;
+		BackgroundColor = Colors.Crimson;
 
 		ViewModel.PropertyChanged += (s, e) => Invalidate(true);
 
@@ -31,10 +33,19 @@ internal class RecentModelControl : Drawable
 			HostView.Invalidate(true);
 		});
 
+#pragma warning disable VSTHRD101 // Avoid unsupported async delegates
 		HostView.Shown += async (s, e) =>
 		{
-			await ViewModel.AttemptToConnect();
+			try
+			{
+				await ViewModel.AttemptToConnect();
+			}
+			catch (Exception ex)
+			{
+				;
+			}
 		};
+#pragma warning restore VSTHRD101 // Avoid unsupported async delegates
 
 		if (ViewModel.State != ModelRenderState.Add)
 		{
@@ -297,5 +308,7 @@ internal class RecentModelControl : Drawable
 		e.Graphics.FillRectangle(Palette.White, plusPathVert);
 		e.Graphics.FillRectangle(Palette.White, plusPathHoz);
 	}
+
+	public override string ToString() => $"{this.ViewModel.Model.ModelAddress}";
 
 }

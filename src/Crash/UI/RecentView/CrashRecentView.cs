@@ -39,7 +39,7 @@ internal sealed class CrashRecentView : Dialog<SharedModel>
 		AbortButton = null;
 		DefaultButton = null;
 
-		Resizable = false;
+		Resizable = true;
 		MinimumSize = new Size(800, 400);
 		Size = new Size(1296, 600);
 		Padding = new Padding(0);
@@ -69,14 +69,11 @@ internal sealed class CrashRecentView : Dialog<SharedModel>
 			Content = InitRecentModelGallery(),
 			ExpandContentHeight = false,
 			ExpandContentWidth = true,
-			Height = 500,
+			Height = -1,
+			Width = -1,
 		};
 
-		var recentModelLayout = new DynamicLayout()
-		{
-			Spacing = new Size(16, 16),
-			Padding = new Padding(16, 16),
-		};
+		var recentModelLayout = new DynamicLayout();
 		recentModelLayout.BeginVertical();
 
 		recentModelLayout.AddRow(headerLabel);
@@ -235,12 +232,56 @@ internal sealed class CrashRecentView : Dialog<SharedModel>
 		RecentModelGallery = new OverflowLayout<SharedModel>(240, (model) => new RecentModelControl(this, model))
 		{
 			Spacing = new Size(16, 16),
-			Width = 1264,
+			Width = -1,
 			Height = -1,
+			Padding = new Padding(16),
 			MinimumSize = new Size(800, 500),
 			DataStore = Model.SharedModels,
+			BackgroundColor = Colors.Blue,
 		};
 		RecentModelGallery.Focus();
+
+		RecentModelGallery.Clear();
+		var width = this.GetPreferredSize().Width;
+		int HorizontalControlCount = (int)(width / (RecentModelGallery.ControlWidth)); // + Spacing.Value.Width));
+
+		RecentModelGallery.BeginVertical();
+
+		for (int i = 0; i < RecentModelGallery.DataStore.Count; i++)
+		{
+			int controlWidth = 0;
+			var stackLayout = new DynamicLayout()
+			{
+				Padding = new Padding(0, 4),
+				Width = -1,
+				Spacing = new Size(8, 0),
+			};
+
+			stackLayout.BeginHorizontal();
+			while (controlWidth < width)
+			{
+				if (i >= RecentModelGallery.DataStore.Count)
+					break;
+
+				var control = new RecentModelControl(this, RecentModelGallery.DataStore[i]);
+				if (control.Width + controlWidth > width)
+					break;
+
+				stackLayout.Add(control, false, false);
+				stackLayout.Height = control.Height;
+				controlWidth += control.Width;
+				i++;
+			}
+			stackLayout.AddSpace(true, false);
+			stackLayout.EndHorizontal();
+
+			RecentModelGallery.Add(stackLayout, true, false);
+		}
+
+		RecentModelGallery.AddSpace(true, true);
+
+		RecentModelGallery.EndVertical();
+		RecentModelGallery.Invalidate();
 
 		return RecentModelGallery;
 	}
