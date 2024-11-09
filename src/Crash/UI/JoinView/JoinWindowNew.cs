@@ -21,7 +21,9 @@ namespace Crash.UI.JoinView
 			DataContext = new JoinViewModel();
 			InitLayout();
 			InitBindings();
+#if NET7_0_OR_GREATER
 			this.UseRhinoStyle();
+#endif
 		}
 
 		private void InitLayout()

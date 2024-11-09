@@ -40,6 +40,7 @@ internal sealed class CrashRecentView : Dialog<SharedModel>
 		DefaultButton = null;
 
 		Resizable = true;
+		AutoSize = true;
 		MinimumSize = new Size(800, 400);
 		Size = new Size(1296, 600);
 		Padding = new Padding(0);
@@ -67,13 +68,17 @@ internal sealed class CrashRecentView : Dialog<SharedModel>
 			BackgroundColor = Colors.Transparent,
 			AllowDrop = false,
 			Content = InitRecentModelGallery(),
-			ExpandContentHeight = false,
+			ExpandContentHeight = true,
 			ExpandContentWidth = true,
 			Height = -1,
 			Width = -1,
 		};
 
-		var recentModelLayout = new DynamicLayout();
+		var recentModelLayout = new DynamicLayout()
+		{
+			Width = -1,
+			Height = -1,
+		};
 		recentModelLayout.BeginVertical();
 
 		recentModelLayout.AddRow(headerLabel);
@@ -110,6 +115,8 @@ internal sealed class CrashRecentView : Dialog<SharedModel>
 		{
 			Spacing = new Size(0, 0),
 			Padding = 0,
+			Width = -1,
+			Height = -1,
 		};
 		layout.BeginVertical();
 
@@ -229,15 +236,13 @@ internal sealed class CrashRecentView : Dialog<SharedModel>
 
 	private OverflowLayout<SharedModel> InitRecentModelGallery()
 	{
-		RecentModelGallery = new OverflowLayout<SharedModel>(240, (model) => new RecentModelControl(this, model))
+		RecentModelGallery = new OverflowLayout<SharedModel>(240, Model.SharedModels, (model) => new RecentModelControl(this, model))
 		{
 			Spacing = new Size(16, 16),
 			Width = -1,
 			Height = -1,
 			Padding = new Padding(16),
 			MinimumSize = new Size(800, 500),
-			DataStore = Model.SharedModels,
-			BackgroundColor = Colors.Blue,
 		};
 		RecentModelGallery.Focus();
 
@@ -247,7 +252,7 @@ internal sealed class CrashRecentView : Dialog<SharedModel>
 
 		RecentModelGallery.BeginVertical();
 
-		for (int i = 0; i < RecentModelGallery.DataStore.Count; i++)
+		for (int i = 0; i < RecentModelGallery.DataControls.Count; i++)
 		{
 			int controlWidth = 0;
 			var stackLayout = new DynamicLayout()
@@ -263,7 +268,7 @@ internal sealed class CrashRecentView : Dialog<SharedModel>
 				if (i >= RecentModelGallery.DataStore.Count)
 					break;
 
-				var control = new RecentModelControl(this, RecentModelGallery.DataStore[i]);
+				var control = RecentModelGallery.DataControls[i];
 				if (control.Width + controlWidth > width)
 					break;
 

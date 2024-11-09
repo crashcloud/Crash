@@ -50,15 +50,21 @@ namespace Crash.Handlers.Data
 						if (sharedModel is null) continue;
 						sharedModels.Add(sharedModel);
 					}
-					return true;
 				}
 			}
-			catch { }
+			catch
+			{
+				return false;
+			}
 
-			sharedModels = new();
-			sharedModels.Add(new SharedModel { ModelAddress = "http://localhost:8080" });
+			if (!sharedModels.Contains(null))
+				sharedModels.Insert(0, null);
 
-			return sharedModels is not null && sharedModels.Count > 0;
+			var debugMode = new SharedModel { ModelAddress = "http://localhost:8080" };
+			if (!sharedModels.Contains(debugMode))
+				sharedModels.Insert(1, debugMode);
+
+			return true;
 		}
 
 

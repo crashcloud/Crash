@@ -22,6 +22,8 @@ namespace Crash.Handlers.Data
 		// Should prevent unecessary loadings on recalc!
 		// public enumThingy State
 
+		public override string ToString() => ModelAddress ?? "+";
+
 	}
 
 }
