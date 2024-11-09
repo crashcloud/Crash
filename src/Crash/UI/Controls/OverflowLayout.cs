@@ -15,6 +15,8 @@ namespace Crash.UI
 
 		public ObservableCollection<TItem> DataStore { get; set; } = new ObservableCollection<TItem>();
 		public ObservableCollection<Control> DataControls { get; set; } = new ObservableCollection<Control>();
+		private List<DynamicLayout> CachedRows { get; set; }
+
 		private Func<TItem, Control> ControlFactory { get; }
 
 		public OverflowLayout(int controlWidth, ObservableCollection<TItem> sharedModels, Func<TItem, Control> controlFactory)
@@ -22,6 +24,7 @@ namespace Crash.UI
 			ControlFactory = controlFactory;
 			ControlWidth = controlWidth;
 			DataStore = sharedModels;
+			CachedRows = new();
 			Width = Width;
 			Height = Width;
 			Spacing = new Size(16, 16);
@@ -44,61 +47,76 @@ namespace Crash.UI
 			};
 		}
 
+		internal float RealWidth => Width < 0 ? GetPreferredSize().Width : Width;
+		internal int HorizontalControlCount => (int)(RealWidth / (ControlWidth));
+		internal int VerticalControlCount => (int)Math.Ceiling(DataControls.Count / (float)HorizontalControlCount);
+
 		public void InitLayout()
 		{
 			return;
-			Clear();
-			var width = this.GetPreferredSize().Width;
-			int HorizontalControlCount = (int)(width / (this.ControlWidth)); // + Spacing.Value.Width));
-
-			BeginVertical();
-			Add(new Button() { Text = "Test" }, false, false);
-
-			for (int i = 0; i < DataStore.Count; i++)
+			int max = Math.Max(VerticalControlCount, CachedRows.Count);
+			for (int i = 0; i < max; i++)
 			{
-				int controlWidth = 0;
-				var stackLayout = new DynamicLayout()
+				if (i >= VerticalControlCount)
 				{
-					// VerticalContentAlignment = VerticalAlignment.Center,
-					// Spacing = Spacing.Value.Width,
-					Padding = new Padding(0, 8),
-					Width = this.Width,
-					Height = 120,
-					BackgroundColor = Colors.Green,
-					MinimumSize = new Size(this.Width, 20),
-				};
-
-				stackLayout.BeginHorizontal();
-				stackLayout.Add(new Button() { Text = "Test" }, false, false);
-				while (controlWidth < width)
-				{
-					if (i >= DataStore.Count)
-					{
-						i = int.MaxValue / 2;
-						controlWidth = int.MaxValue / 2;
-						break;
-					}
-					var control = ControlFactory(DataStore[i]);
-					stackLayout.Add(control, true, false);
-					stackLayout.Height = control.Height;
-					controlWidth += control.Width;
-					i++;
+					var row = GetRow(i);
+					row.Clear();
+					continue;
 				}
-				stackLayout.AddSpace(true, true);
-				stackLayout.EndHorizontal();
+				else
+				{
+					var row = GetRow(i);
+					FillRow(row, i);
+				}
+				Invalidate(true);
+			}
+		}
 
-				Add(stackLayout, false, false);
+		internal void FillRow(DynamicLayout row, int i)
+		{
+			row.Clear();
+			row.BeginHorizontal();
+
+			for (int j = 0; j < HorizontalControlCount; j++)
+			{
+				var index = i * HorizontalControlCount + j;
+				if (index >= DataControls.Count)
+					break;
+
+				var control = DataControls[index];
+				row.Add(control, false, false);
+				row.Height = control.Height;
 			}
 
-			AddSpace(true, true);
+			row.AddSpace(true, true);
+			row.EndHorizontal();
+		}
 
-			EndVertical();
-			Invalidate();
+		internal DynamicLayout GetRow(int index)
+		{
+			if (index < CachedRows.Count)
+			{
+				var row = CachedRows[index];
+				row.Clear();
+				return row;
+			}
+			else
+			{
+				var row = new DynamicLayout()
+				{
+					Padding = new Padding(0, 4),
+					Width = -1,
+					Spacing = new Size(8, 0),
+				};
+
+				Add(row, false, false);
+				return row;
+			}
 		}
 
 		private void CreateControls()
 		{
-			if (DataStore.Count == DataControls.Count) return;
+			if (DataControls?.Count > 0) return;
 
 			if (DataStore.Count > DataControls.Count)
 			{
