@@ -48,7 +48,7 @@ namespace Crash.Commands
 			}
 
 			var name = Environment.UserName;
-			SharedModel chosenModel = null;
+			ISharedModel chosenModel = null;
 			if (mode == RunMode.Interactive)
 			{
 				var dialog = new RecentModelDialog();

@@ -25,33 +25,35 @@ namespace Crash.UI.JoinView
 
 		internal JoinViewModel()
 		{
-			if (SharedModelCache.TryLoadSharedModels(out var sharedModels))
+			var sharedModels = new List<ISharedModel>();
+			sharedModels.Add(new AddModel());
+			sharedModels.Add(new SandboxModel());
+
+			if (SharedModelCache.TryLoadSharedModels(out var loadedSharedModels))
 			{
-				SharedModels = new ObservableCollection<SharedModel>(sharedModels);
-			}
-			else
-			{
-				// TODO : Only in Debug Mode?
-				SharedModels = new ObservableCollection<SharedModel>();
+				sharedModels.AddRange(loadedSharedModels);
 			}
 
 #if DEBUG
-			SharedModels.Add(new() { ModelAddress = "https://cheddar.com" });
-			SharedModels.Add(new() { ModelAddress = "https://192.168.1.1:7070" });
-			SharedModels.Add(new() { ModelAddress = "https://edam.com/" });
-			SharedModels.Add(new() { ModelAddress = "https://brie.co.uk" });
-			SharedModels.Add(new() { ModelAddress = "https://gorgonzola.io/tasty/" });
-			SharedModels.Add(new() { ModelAddress = "https://parmesan.app" });
+			sharedModels.Add(new DebugModel());
+			sharedModels.Add(new SharedModel() { ModelAddress = "https://cheddar.com" });
+			sharedModels.Add(new SharedModel() { ModelAddress = "https://192.168.1.1:7070" });
+			sharedModels.Add(new SharedModel() { ModelAddress = "https://edam.com/" });
+			sharedModels.Add(new SharedModel() { ModelAddress = "https://brie.co.uk" });
+			sharedModels.Add(new SharedModel() { ModelAddress = "https://gorgonzola.io/tasty/" });
+			sharedModels.Add(new SharedModel() { ModelAddress = "https://parmesan.app" });
 #endif
+
+			SharedModels = new(sharedModels);
 		}
 
-		internal ObservableCollection<SharedModel> SharedModels { get; }
+		internal ObservableCollection<ISharedModel> SharedModels { get; }
 
 		internal SharedModel TemporaryModel { get; set; }
 
-		internal bool ModelIsNew(SharedModel model)
+		internal bool ModelIsNew(ISharedModel model)
 		{
-			var alreadyExists = SharedModels.Select(sm => sm.ModelAddress.ToUpperInvariant())
+			var alreadyExists = SharedModels.Select(sm => sm.ModelAddress?.ToUpperInvariant() ?? string.Empty)
 											.Contains(model.ModelAddress.ToUpperInvariant());
 			if (alreadyExists)
 			{
@@ -66,7 +68,7 @@ namespace Crash.UI.JoinView
 			return true;
 		}
 
-		internal bool AddSharedModel(SharedModel model)
+		internal bool AddSharedModel(ISharedModel model)
 		{
 			if (ModelIsNew(model))
 			{

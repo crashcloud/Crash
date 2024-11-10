@@ -19,7 +19,7 @@ namespace Crash.UI;
 /// View for showing Recent Crash Models
 /// Summoned by using <see cref="Crash.Commands.JoinSharedModel"/>
 /// </summary>
-internal sealed class RecentModelDialog : Dialog<SharedModel>
+internal sealed class RecentModelDialog : Dialog<ISharedModel>
 {
 
 	public static int PreviewWidth = 240;
@@ -33,7 +33,7 @@ internal sealed class RecentModelDialog : Dialog<SharedModel>
 		return width;
 	}
 
-	private OverflowLayout<SharedModel> RecentModelGallery { get; set; }
+	private OverflowLayout<ISharedModel> RecentModelGallery { get; set; }
 	internal Drawable ModelInputBar { get; private set; }
 	private DynamicLayout StatusBar { get; set; }
 
@@ -208,11 +208,11 @@ internal sealed class RecentModelDialog : Dialog<SharedModel>
 		}
 	}
 
-	private OverflowLayout<SharedModel> InitRecentModelGallery()
+	private OverflowLayout<ISharedModel> InitRecentModelGallery()
 	{
 		// TODO : Dynamic Layouts are Shit
 		// Use PixelLayouts
-		RecentModelGallery = new OverflowLayout<SharedModel>(Model.SharedModels, (model) => new RecentModelControl(this, model));
+		RecentModelGallery = new OverflowLayout<ISharedModel>(Model.SharedModels, (model) => new RecentModelControl(this, model));
 		RecentModelGallery.Focus();
 		RecentModelGallery.Invalidate();
 

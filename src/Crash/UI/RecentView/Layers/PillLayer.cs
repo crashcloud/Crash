@@ -26,13 +26,17 @@ namespace Crash.UI.RecentView.Layers
 			args.Graphics.TranslateTransform(container.Left, container.Top);
 
 			var font = SystemFonts.Default(container.Height / 2f);
-			var brush = new SolidBrush(Palette.Black);
+			var brush = new SolidBrush(Palette.White);
 
 			float padding = container.Height * 0.10f;
 
 			List<string> parts = new();
 			if (!string.IsNullOrEmpty(text))
 			{
+				var fullSize = args.Graphics.MeasureString(font, text);
+				var fullBox = new RectangleF(padding / 2f, padding, fullSize.Width + (padding * 2f), container.Height - (padding * 2f));
+				args.Graphics.DrawText(font, brush, fullBox, text, alignment: FormattedTextAlignment.Center);
+				return;
 
 				var httpText = Regex.Match(text, httpRegex).Value;
 				// var pathText = Regex.Match(text, pathRegex).Value;
@@ -70,6 +74,7 @@ namespace Crash.UI.RecentView.Layers
 				// if (!string.IsNullOrEmpty(pathText))
 				// 	parts.Add(pathText);
 
+
 				foreach (var part in parts)
 				{
 					args.Graphics.TranslateTransform(padding, 0);
@@ -79,7 +84,7 @@ namespace Crash.UI.RecentView.Layers
 					var pillSize = new RectangleF(padding / 2f, padding, size.Width + (padding * 2f), container.Height - (padding * 2f));
 
 					var roundedRect = GraphicsPath.GetRoundRect(pillSize, 6f);
-					args.Graphics.FillPath(Palette.Yellow, roundedRect);
+					// args.Graphics.FillPath(Palette.Yellow, roundedRect);
 					args.Graphics.DrawText(font, brush, pillSize, part, alignment: FormattedTextAlignment.Center);
 
 					args.Graphics.TranslateTransform(pillSize.Width, 0);

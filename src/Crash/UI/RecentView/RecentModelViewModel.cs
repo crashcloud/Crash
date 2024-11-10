@@ -7,7 +7,7 @@ namespace Crash.UI;
 
 internal class RecentModelViewModel : BaseViewModel
 {
-	public SharedModel Model { get; }
+	public ISharedModel Model { get; }
 
 	private ModelRenderState _state { get; set; }
 	public ModelRenderState State
@@ -24,15 +24,16 @@ internal class RecentModelViewModel : BaseViewModel
 
 	private string UserName { get; }
 
-	public RecentModelViewModel(SharedModel model)
+	public RecentModelViewModel(ISharedModel model)
 	{
 		Model = model;
 		UserName = Guid.NewGuid().ToString();
 		Doc = GetCrashDoc();
 
-		State = Model switch
+		State = model switch
 		{
-			null => ModelRenderState.Add,
+			AddModel => ModelRenderState.Add,
+			SandboxModel => ModelRenderState.Sandbox,
 			_ => ModelRenderState.Loading,
 		};
 	}
@@ -40,6 +41,8 @@ internal class RecentModelViewModel : BaseViewModel
 	public async Task AttemptToConnect()
 	{
 		if (Model is null) return;
+		if (State == ModelRenderState.Add) return;
+		if (State == ModelRenderState.Sandbox) return;
 
 		// Makes a Docile client	
 		var client = Doc.LocalClient = new CrashClient(Doc, new IClientOptions(true));

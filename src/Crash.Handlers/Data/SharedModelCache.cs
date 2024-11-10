@@ -47,7 +47,8 @@ namespace Crash.Handlers.Data
 				{
 					foreach (var sharedModel in data.Models)
 					{
-						if (sharedModel is null) continue;
+						if (string.IsNullOrEmpty(sharedModel?.ModelAddress)) continue;
+						if (sharedModels.Contains(sharedModel)) continue;
 						sharedModels.Add(sharedModel);
 					}
 				}
@@ -56,13 +57,6 @@ namespace Crash.Handlers.Data
 			{
 				return false;
 			}
-
-			if (!sharedModels.Contains(null))
-				sharedModels.Insert(0, null);
-
-			var debugMode = new SharedModel { ModelAddress = "http://localhost:8080" };
-			if (!sharedModels.Contains(debugMode))
-				sharedModels.Insert(1, debugMode);
 
 			return true;
 		}

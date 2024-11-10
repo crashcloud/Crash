@@ -203,7 +203,9 @@ namespace Crash
 			CrashDocRegistry.DocumentRegistered += ScreenshotView;
 		}
 
+#pragma warning disable VSTHRD100 // Avoid async void methods
 		private static async void ScreenshotView(object sender, CrashEventArgs e)
+#pragma warning restore VSTHRD100 // Avoid async void methods
 		{
 			if (e.CrashDoc is null) return;
 			try

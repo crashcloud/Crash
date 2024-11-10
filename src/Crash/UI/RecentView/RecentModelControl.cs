@@ -18,15 +18,14 @@ internal class RecentModelControl : Drawable
 	private int Frame { get; set; } = 0;
 	private UITimer FrameTimer { get; }
 
-	private RectangleF Rect => new RectangleF(0, 0, Width, Height);
+	private RectangleF MaximumRectangle => new RectangleF(0, 0, Width, Height);
 
-	public RecentModelControl(RecentModelDialog crashRecentView, SharedModel model)
+	public RecentModelControl(RecentModelDialog crashRecentView, ISharedModel model)
 	{
 		HostView = crashRecentView;
 		DataContext = new RecentModelViewModel(model);
 		Width = RecentModelDialog.PreviewWidth;
 		Height = RecentModelDialog.PreviewHeight;
-		BackgroundColor = Colors.Crimson;
 
 		ViewModel.PropertyChanged += (s, e) => Invalidate(true);
 
@@ -136,20 +135,20 @@ internal class RecentModelControl : Drawable
 		base.OnMouseUp(e);
 	}
 
-	private bool MouseOver { get; set; }
 	protected override void OnMouseEnter(MouseEventArgs e)
 	{
+		ViewModel.State |= ModelRenderState.MouseOver;
 		e.Handled = true;
 		base.OnMouseMove(e);
 		Invalidate(true);
-		MouseOver = true;
 	}
+
 	protected override void OnMouseLeave(MouseEventArgs e)
 	{
 		e.Handled = true;
+		ViewModel.State &= ~ModelRenderState.MouseOver;
 		base.OnMouseLeave(e);
 		Invalidate(true);
-		MouseOver = false;
 	}
 
 	protected override void OnMouseDoubleClick(MouseEventArgs e)
@@ -166,9 +165,15 @@ internal class RecentModelControl : Drawable
 
 	protected override void OnPaint(PaintEventArgs e)
 	{
+		RenderBase(e);
+
 		if (ViewModel.State.HasFlag(ModelRenderState.Add))
 		{
 			RenderAdd(e);
+		}
+		else if (ViewModel.State.HasFlag(ModelRenderState.Sandbox))
+		{
+			RenderSandbox(e);
 		}
 		else
 		{
@@ -185,11 +190,6 @@ internal class RecentModelControl : Drawable
 				RenderFailedToLoad(e);
 			}
 
-			if (ViewModel.State.HasFlag(ModelRenderState.Selected) && !ViewModel.State.HasFlag(ModelRenderState.Add))
-			{
-				e.Graphics.DrawRectangle(new Pen(Palette.Yellow, 4f), Bounds);
-			}
-
 			if (ViewModel.State.HasFlag(ModelRenderState.RightClick))
 			{
 				RenderRightClick(e);
@@ -199,11 +199,62 @@ internal class RecentModelControl : Drawable
 		base.OnPaint(e);
 	}
 
+	#region Base
+
+	private const float Inset = 10f;
+	private const float Radius = 6f;
+	private IGraphicsPath BoundingPath => GraphicsPath.GetRoundRect(MaximumRectangle, Radius);
+	private RectangleF PreviewRectNoAddress => new RectangleF(Inset, Inset, MaximumRectangle.Width - (Inset * 2f), MaximumRectangle.Height - (Inset * 2f));
+	private RectangleF PreviewRect => new RectangleF(Inset, Inset, MaximumRectangle.Width - (Inset * 2f), MaximumRectangle.Height - (Inset * 5f));
+	private IGraphicsPath PreviewPath => GraphicsPath.GetRoundRect(PreviewRect, Radius);
+
+	private void RenderBase(PaintEventArgs e)
+	{
+		float inset = 8f;
+		float radius = 6f;
+		var rect = MaximumRectangle;
+
+		if (ViewModel.State.HasFlag(ModelRenderState.MouseOver))
+		{
+			// Highlight
+			e.Graphics.FillPath(Palette.Shadow, BoundingPath);
+
+			// Show a slight shadow
+			e.Graphics.TranslateTransform(1f, 2f);
+			e.Graphics.FillPath(Palette.Shadow, PreviewPath);
+			e.Graphics.TranslateTransform(-1f, -2f);
+		}
+
+		if (ViewModel.State.HasFlag(ModelRenderState.FailedToLoad))
+			e.Graphics.FillPath(Palette.Red, PreviewPath);
+
+		else if (ViewModel.State.HasFlag(ModelRenderState.Loaded))
+			e.Graphics.FillPath(Palette.Green, PreviewPath);
+
+		else if (ViewModel.State.HasFlag(ModelRenderState.Loading))
+			e.Graphics.FillPath(Palette.Blue, PreviewPath);
+
+		else if (ViewModel.State.HasFlag(ModelRenderState.Add))
+			e.Graphics.FillPath(Palette.Lime, PreviewPath);
+
+		else if (ViewModel.State.HasFlag(ModelRenderState.Sandbox))
+			e.Graphics.FillPath(Palette.Purple, PreviewPath);
+	}
+
+	#endregion
+
+	private void RenderSandbox(PaintEventArgs e)
+	{
+		var box = RectangleF.FromCenter(PreviewRect.Center, new SizeF(30f, 30f));
+		e.Graphics.FillRectangle(Palette.White, box);
+		RenderAddressBar(e);
+	}
+
 	private void RenderRightClick(PaintEventArgs e)
 	{
 		// var overlay = Color.FromArgb(40, 40, 40, 120);
 		var overlay = Palette.GetHashedTexture(6, 0.75f);
-		e.Graphics.FillRectangle(overlay, Rect);
+		e.Graphics.FillPath(overlay, PreviewPath);
 
 		float inset = 20f;
 		var rect = new RectangleF(inset, inset, Size.Width - (inset * 2), Size.Height - (inset * 2));
@@ -226,40 +277,44 @@ internal class RecentModelControl : Drawable
 		}
 	}
 
-	private void RenderFailedToLoad(PaintEventArgs e)
+	private void RenderPlus(PaintEventArgs e, float roationInDegrees = 0)
 	{
-		e.Graphics.FillRectangle(Palette.Red, Rect);
 		e.Graphics.SaveTransform();
-		e.Graphics.TranslateTransform(Rect.Center);
+		e.Graphics.TranslateTransform(PreviewRect.Center);
 
 		var crossRect = RectangleF.FromCenter(new PointF(0, 0), new SizeF(30f, 8f));
 		var crossRect90 = RectangleF.FromCenter(new PointF(0, 0), new SizeF(8f, 30f));
 
-		e.Graphics.RotateTransform(45f);
+		e.Graphics.RotateTransform(roationInDegrees);
 
 		e.Graphics.FillRectangle(Palette.White, crossRect);
 		e.Graphics.FillRectangle(Palette.White, crossRect90);
 
 		e.Graphics.RestoreTransform();
+	}
+
+	private void RenderFailedToLoad(PaintEventArgs e)
+	{
+		RenderPlus(e, 45f);
 		RenderAddressBar(e);
 	}
 
 	private void RenderLoaded(PaintEventArgs e)
 	{
-		e.Graphics.FillRectangle(Palette.Green, Rect);
-		if (ViewModel.Model is null) return;
-		if (ViewModel.Model.Thumbnail is null) return;
+		if (ViewModel.Model is not SharedModel sharedModel) return;
+		if (sharedModel.Thumbnail is null) return;
 
-		e.Graphics.DrawImage(ViewModel.Model.Thumbnail, 0, -((ViewModel.Model.Thumbnail.Height - (Rect.Height - 28f)) / 2f));
+		var textureBrush = new TextureBrush(sharedModel.Thumbnail, 1f);
+		e.Graphics.FillPath(textureBrush, PreviewPath);
+		// e.Graphics.DrawImage(sharedModel.Thumbnail, 0, -((sharedModel.Thumbnail.Height - (MaximumRectangle.Height - 28f)) / 2f));
 		RenderAddressBar(e);
 	}
 
 
 	private void RenderLoading(PaintEventArgs e)
 	{
-		e.Graphics.FillRectangle(Palette.Blue, Rect);
 
-		var circleRect = RectangleF.FromCenter(Rect.Center, new SizeF(30f, 30f));
+		var circleRect = RectangleF.FromCenter(MaximumRectangle.Center, new SizeF(30f, 30f));
 		circleRect.Y -= 14f;
 
 		int startArc = 0 + (Frame * 4);
@@ -279,36 +334,21 @@ internal class RecentModelControl : Drawable
 
 	private void RenderAddressBar(PaintEventArgs e)
 	{
-		var rect = Rect;
-		var bar = new RectangleF(rect.Left, rect.Bottom - 30f, rect.Width, 30f);
-		e.Graphics.FillRectangle(Palette.White, bar);
+		var address = ViewModel?.Model?.ModelAddress;
+		if (string.IsNullOrEmpty(address)) return;
+		var textContainer = new RectangleF(PreviewRect.Left, PreviewRect.Bottom + 10f, PreviewRect.Width, MaximumRectangle.Bottom - PreviewRect.Bottom);
 
-		PillLayer.RenderAddress(e, ViewModel.Model.ModelAddress, bar);
+		var font = SystemFonts.Default(16f);
+		var brush = new SolidBrush(Palette.White);
+
+		var fullSize = e.Graphics.MeasureString(font, address);
+		e.Graphics.DrawText(font, brush, textContainer, address, alignment: FormattedTextAlignment.Left, wrap: FormattedTextWrapMode.Word, trimming: FormattedTextTrimming.CharacterEllipsis);
 	}
 
 	private void RenderAdd(PaintEventArgs e)
 	{
-		float inset = 4f;
-		float radius = 6f;
-		var rect = new RectangleF(inset, inset, Size.Width - (inset * 2), Size.Height - (inset * 2));
-		var path = GraphicsPath.GetRoundRect(rect, radius);
-
-		e.Graphics.FillPath(Palette.GetHashedTexture(6, 0.1f), path);
-		e.Graphics.DrawPath(Palette.GetDashedPen(Color.FromArgb(19, 27, 35)), path);
-
-		float centerBox = 40f;
-		var plusBox = RectangleF.FromCenter(rect.Center, new SizeF(centerBox, centerBox));
-		var centerBoxPath = GraphicsPath.GetRoundRect(plusBox, radius);
-
-		var color = Palette.Purple;
-
-		e.Graphics.FillPath(color, centerBoxPath);
-
-		var plusPathVert = RectangleF.FromCenter(rect.Center, new SizeF(20f, 5f));
-		var plusPathHoz = RectangleF.FromCenter(rect.Center, new SizeF(5f, 20f));
-
-		e.Graphics.FillRectangle(Palette.White, plusPathVert);
-		e.Graphics.FillRectangle(Palette.White, plusPathHoz);
+		RenderPlus(e, 0f);
+		RenderAddressBar(e);
 	}
 
 	public override string ToString() => $"{this.ViewModel.Model.ModelAddress}";
