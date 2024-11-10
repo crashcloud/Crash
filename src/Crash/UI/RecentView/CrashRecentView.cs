@@ -68,8 +68,8 @@ internal sealed class RecentModelDialog : Dialog<SharedModel>
 			BackgroundColor = Colors.Green,
 			AllowDrop = false,
 			Content = InitRecentModelGallery(),
-			ExpandContentHeight = false,
-			ExpandContentWidth = false,
+			ExpandContentHeight = true,
+			ExpandContentWidth = true,
 		};
 
 		var recentModelLayout = new DynamicLayout()
