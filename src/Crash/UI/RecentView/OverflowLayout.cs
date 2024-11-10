@@ -3,8 +3,15 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
+using Crash.Handlers.Data;
+using Crash.UI.RecentView;
+
 using Eto.Drawing;
 using Eto.Forms;
+
+using Rhino.UI;
+
+using static Crash.UI.RecentView.CrashCommands;
 
 namespace Crash.UI
 {
@@ -20,6 +27,8 @@ namespace Crash.UI
 
 		private RightClickMenu RightClickMenu { get; }
 
+		private CrashCommands CommandsInstance => (ParentWindow as RecentModelDialog)?.CommandsInstance!;
+
 		public OverflowLayout(ObservableCollection<TItem> sharedModels, Func<TItem, Control> controlFactory)
 		{
 			ControlFactory = (i) =>
@@ -30,18 +39,14 @@ namespace Crash.UI
 			};
 			DataStore = sharedModels;
 
-			RightClickMenu = new RightClickMenu(new() {
-				new ("Join", "join.png", () => {}),
-				new ("Remove", "close.png", () => {}),
-				new ("Reload", "reload.png",  () => {}),
-			});
+			RightClickMenu = new RightClickMenu(new());
 
 			// Width = Width;
 			// Height = Width;
 
 			InitLayout();
 			InitBindings();
-			SubscribeObjectToEvents(this);
+			// SubscribeObjectToEvents(this);
 		}
 
 		// TODO : Use Parent to get the width
@@ -133,9 +138,41 @@ namespace Crash.UI
 			control.MouseDown += (s, e) =>
 			{
 				if (e.Buttons == MouseButtons.Alternate)
-					ShowRightClick(e);
+				{
+					if (control is RecentModelControl recent)
+					{
+						var point = this.PointFromScreen(control.PointToScreen(e.Location));
+						var model = recent.ViewModel.Model;
+
+						var commands = new List<CrashCommand>() { CommandsInstance.Remove, CommandsInstance.Reload, };
+
+						if (model is AddModel)
+						{
+							commands = new List<CrashCommand> { CommandsInstance.Add };
+						}
+						else if (model is SandboxModel)
+						{
+							commands.Remove(CommandsInstance.Remove);
+						}
+
+						if (model is not AddModel)
+						{
+							var join = CommandsInstance.Join;
+							join.Enabled = false;
+							if (recent.ViewModel.State.HasFlag(ModelRenderState.Loaded))
+							{
+								join.Enabled = true;
+							}
+							commands.Insert(0, join);
+						}
+
+						ShowRightClick(point, commands);
+					}
+				}
 				else
+				{
 					HideRightClick();
+				}
 			};
 
 			control.KeyDown += (s, e) =>
@@ -143,6 +180,36 @@ namespace Crash.UI
 				if (e.Key == Keys.Escape)
 					HideRightClick();
 			};
+
+			this.Shown += (s, e) =>
+			{
+				ParentWindow.KeyDown += (s, e) =>
+				{
+					if (e.Key == Keys.Escape)
+						HideRightClick();
+				};
+			};
+		}
+
+		protected override void OnMouseDown(MouseEventArgs e)
+		{
+			if (e.Buttons == MouseButtons.Alternate)
+			{
+				ShowRightClick(e.Location, new() { CommandsInstance.ReloadAll });
+			}
+			else
+			{
+				HideRightClick();
+			}
+
+			base.OnMouseDown(e);
+		}
+		protected override void OnKeyDown(KeyEventArgs e)
+		{
+			if (e.Key == Keys.Escape)
+				HideRightClick();
+
+			base.OnKeyDown(e);
 		}
 
 		private void HideRightClick()
@@ -150,10 +217,20 @@ namespace Crash.UI
 			Remove(RightClickMenu);
 		}
 
-		private void ShowRightClick(MouseEventArgs e)
+		private void ShowRightClick(PointF point, List<CrashCommand> commands)
 		{
-			var point = e.Location;
-			Add(RightClickMenu, (int)e.Location.X, (int)e.Location.Y);
+			RightClickMenu.Items.Clear();
+			RightClickMenu.AddItems(commands);
+
+			var right = point.X + RightClickMenu.Width;
+			var bottom = point.Y + RightClickMenu.Height;
+			if (right > ParentWindow.Width)
+				point.X -= RightClickMenu.Width;
+
+			if (bottom > ParentWindow.Height - 80f)
+				point.Y -= RightClickMenu.Height;
+
+			Add(RightClickMenu, (int)point.X, (int)point.Y);
 		}
 	}
 }

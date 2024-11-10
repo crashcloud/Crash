@@ -7,15 +7,13 @@ namespace Crash.UI
 	public static class Palette
 	{
 		private static readonly Color s_darkGrey = Color.FromArgb(125, 125, 125);
-		private static readonly Color s_lightGrey = Color.FromArgb(200, 200, 200);
 
 		internal static bool DarkMode => HostUtils.RunningInDarkMode;
 
 		// Text & Highlights
 
-		public static Color SubtleGrey => DarkMode ? s_lightGrey : s_darkGrey;
-
-		public static Color TextColour => HostUtils.RunningInDarkMode ? Color.FromArgb(233, 241, 247) : Color.FromArgb(0, 21, 20);
+		public static Color TextColour => DarkMode ? White : Black;
+		public static Color DisabledTextColour => DarkMode ? Color.FromArgb(222, 226, 230) : Color.FromArgb(73, 80, 87);
 
 		// Crash Colours
 
@@ -28,6 +26,7 @@ namespace Crash.UI
 		public static Color Black => Color.FromArgb(0, 21, 20); // 19, 27, 35
 		public static Color DarkGray => Color.FromArgb(33, 39, 56);
 		public static Color Gray => Color.FromArgb(65, 67, 97);
+		public static Color LightGray => Color.FromArgb(200, 200, 200);
 
 		public static Color Shadow => new Color(0f, 0f, 0f, 0.2f);
 

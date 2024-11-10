@@ -3,15 +3,10 @@ using Eto.Forms;
 
 using Crash.Resources;
 
-using Item = Crash.UI.RightClickMenuItem;
+using Crash.UI.RecentView;
 
 namespace Crash.UI
 {
-
-	internal record struct RightClickMenuItem(string Text, string IconKey, Action Command)
-	{
-		internal bool Hover { get; set; }
-	}
 
 	internal class RightClickMenu : Drawable
 	{
@@ -23,13 +18,25 @@ namespace Crash.UI
 		private IGraphicsPath InsetPath => GraphicsPath.GetRoundRect(InsetBounds, Radius);
 		private IGraphicsPath FullPath => GraphicsPath.GetRoundRect(new RectangleF(0f, 0f, Width, Height), Radius);
 
-		private List<Item> Items { get; } = new();
+		public List<CrashCommands.CrashCommand> Items { get; } = new();
 
-		public RightClickMenu(List<Item> items)
+		public RightClickMenu(List<CrashCommands.CrashCommand> commands)
 		{
+			AddItems(commands);
+		}
+
+		public void AddItem(CrashCommands.CrashCommand command)
+		{
+			Items.Add(command);
+
 			Width = (RowHeight * 4) + (Inset * 2);
-			Height = (items.Count * RowHeight) + (Inset * 2);
-			Items.AddRange(items);
+			Height = (Items.Count * RowHeight) + (Inset * 2);
+		}
+
+		public void AddItems(List<CrashCommands.CrashCommand> commands)
+		{
+			foreach (var command in commands)
+				AddItem(command);
 		}
 
 		protected override void OnPaint(PaintEventArgs e)
@@ -37,7 +44,6 @@ namespace Crash.UI
 			if (Items is null) return;
 
 			var font = SystemFonts.Default(18f);
-			var brush = new SolidBrush(Palette.TextColour);
 
 			e.Graphics.FillPath(Palette.Shadow, FullPath);
 			e.Graphics.FillPath(ParentWindow.BackgroundColor, InsetPath);
@@ -47,28 +53,30 @@ namespace Crash.UI
 
 			for (int i = 0; i < Items.Count; i++)
 			{
-				var menuItem = Items[i];
+				var command = Items[i];
+				var colour = command.Enabled ? Palette.TextColour : Palette.DisabledTextColour;
+
 				var menuBounds = new RectangleF(0f, 0f, InsetBounds.Width, RowHeight);
-				if (menuItem.Hover)
+				if (command.Hover)
 					e.Graphics.FillRectangle(Palette.Shadow, menuBounds);
 
-				var image = CrashIcons.Icon(menuItem.IconKey, IconSize);
+				var image = command.GetIcon(IconSize, colour);
 				var imagePoint = new PointF(Inset, (RowHeight - IconSize) / 2f);
 				e.Graphics.DrawImage(image, imagePoint);
 
-				e.Graphics.DrawText(font, brush, textBounds, menuItem.Text);
+				e.Graphics.DrawText(font, new SolidBrush(colour), textBounds, command.MenuText);
 				e.Graphics.TranslateTransform(0f, RowHeight);
 			}
 
 			base.OnPaint(e);
 		}
 
-		private bool TryGetItemAtLocation(PointF location, out Item item)
+		private bool TryGetItemAtLocation(PointF location, out CrashCommands.CrashCommand command)
 		{
-			item = default;
+			command = default;
 			for (int i = 0; i < Items.Count; i++)
 			{
-				item = Items[i];
+				command = Items[i];
 				var bounds = new RectangleF(Inset, (RowHeight * i) + Inset, InsetBounds.Width, RowHeight);
 				if (bounds.Contains(location))
 					return true;
@@ -77,12 +85,36 @@ namespace Crash.UI
 			return false;
 		}
 
-		protected override void OnMouseUp(MouseEventArgs e)
+		protected override void OnMouseDown(MouseEventArgs e)
 		{
-			TryGetItemAtLocation(e.Location, out var item);
-			item.Command?.Invoke();
+			TryGetItemAtLocation(e.Location, out var command);
+			command?.Execute();
 
-			base.OnMouseUp(e);
+			base.OnMouseDown(e);
+		}
+
+		protected override void OnMouseLeave(MouseEventArgs e)
+		{
+			for (int i = 0; i < Items.Count; i++)
+			{
+				var item = Items[i];
+				item.Hover = false;
+				Items[i] = item;
+			}
+
+			base.OnMouseLeave(e);
+		}
+
+		protected override void OnLostFocus(EventArgs e)
+		{
+			for (int i = 0; i < Items.Count; i++)
+			{
+				var item = Items[i];
+				item.Hover = false;
+				Items[i] = item;
+			}
+
+			base.OnLostFocus(e);
 		}
 
 		protected override void OnMouseMove(MouseEventArgs e)

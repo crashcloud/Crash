@@ -12,6 +12,8 @@ using Crash.UI.UsersView;
 using Eto.Drawing;
 using Eto.Forms;
 
+using Rhino.Runtime;
+
 namespace Crash.UI;
 
 
@@ -39,6 +41,7 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 
 	internal JoinViewModel Model => DataContext as JoinViewModel;
 
+	internal CrashCommands CommandsInstance { get; }
 	public RecentModelDialog()
 	{
 		WindowStyle = WindowStyle.Utility;
@@ -58,8 +61,17 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 
 		DataContext = new JoinViewModel();
 
+		CommandsInstance = new CrashCommands(this);
 		InitLayout();
 		InitBindings();
+
+		this.StyleChanged += (s, e) =>
+		{
+			foreach (var label in this.Children.OfType<TextControl>())
+			{
+				label.TextColor = Palette.TextColour;
+			}
+		};
 	}
 
 	private void InitLayout()
@@ -118,6 +130,9 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 		};
 		layout.BeginVertical();
 
+		var drawableCanary = new Drawable();
+		drawableCanary.Paint += (s, e) => this.OnStyleChanged(EventArgs.Empty);
+		layout.Add(drawableCanary);
 		layout.Add(pixelLayout, true, true);
 		layout.AddRow(InitStatusBar());
 		layout.EndVertical();
@@ -130,7 +145,7 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 		StatusBar = new DynamicLayout()
 		{
 			Spacing = new Size(32, 0),
-			BackgroundColor = Color.FromArgb(36, 36, 36),
+			BackgroundColor = HostUtils.RunningInDarkMode ? Palette.DarkGray : Palette.LightGray,
 			Padding = 4,
 		};
 		StatusBar.BeginHorizontal();
@@ -138,7 +153,7 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 		var copyrightLabel = new Label()
 		{
 			Text = "Crash Cloud",
-			TextColor = Palette.White,
+			TextColor = Palette.TextColour,
 			Font = SystemFonts.Default(12),
 			TextAlignment = TextAlignment.Left
 		};
@@ -187,6 +202,11 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 		StatusBar.Add(status3, false);
 
 		StatusBar.EndHorizontal();
+
+		this.StyleChanged += (s, e) =>
+		{
+			StatusBar.BackgroundColor = HostUtils.RunningInDarkMode ? Palette.DarkGray : Palette.LightGray;
+		};
 
 		return StatusBar;
 	}

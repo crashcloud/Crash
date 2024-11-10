@@ -4,6 +4,7 @@ using Crash.Handlers.Data;
 using Crash.Properties;
 using Crash.Resources;
 using Crash.UI.JoinView;
+using Crash.UI.RecentView;
 using Crash.UI.RecentView.Layers;
 
 using Eto.Drawing;
@@ -16,7 +17,7 @@ namespace Crash.UI;
 internal class RecentModelControl : Drawable
 {
 
-	private RecentModelViewModel ViewModel => DataContext as RecentModelViewModel;
+	internal RecentModelViewModel ViewModel => DataContext as RecentModelViewModel;
 	private RecentModelDialog HostView { get; }
 
 	private int Frame { get; set; } = 0;
@@ -159,7 +160,7 @@ internal class RecentModelControl : Drawable
 	{
 		e.Handled = true;
 		if (e.Buttons == MouseButtons.Primary &&
-			ViewModel.State == ModelRenderState.Loaded)
+			ViewModel.State.HasFlag(ModelRenderState.Loaded))
 		{
 			HostView.Close(ViewModel.Model);
 		}

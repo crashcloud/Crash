@@ -1,10 +1,8 @@
-using System;
-using System.Diagnostics.Contracts;
-using System.Reflection.Metadata.Ecma335;
-
 using Eto.Drawing;
 
 using Rhino.Runtime;
+
+using CPalette = Crash.UI.Palette;
 
 namespace Crash.Resources;
 
@@ -12,7 +10,7 @@ public static class CrashIcons
 {
 	private const int DefaultSize = 64;
 
-	private record struct IconKey(string Key, int Size, bool DarkMode);
+	private record struct IconKey(string Key, int Size, Color Colour);
 
 	// TODO : Improve Icon Size Caching
 	static Dictionary<IconKey, Bitmap> Icons { get; set; }
@@ -33,25 +31,22 @@ public static class CrashIcons
 			using (Stream stream = assembly.GetManifestResourceStream(resourceName))
 			{
 				var bitmap = new Bitmap(stream);
-				Icons.Add(new(key, DefaultSize, false), bitmap);
+				Icons.Add(new(key, DefaultSize, LightColour), bitmap);
 			}
 		}
 
 	}
 
-	public static Bitmap Icon(string key, int size) => GetIconAtSize(key, size);
-
-	public static Bitmap Close(int size) => GetIconAtSize("close.png", size);
-	public static Bitmap Join(int size) => GetIconAtSize("join.png", size);
-	public static Bitmap Reload(int size) => GetIconAtSize("reload.png", size);
+	public static Bitmap Icon(string key, int size, Eto.Drawing.Color color) => GetIconAtSize(key, size, color);
+	public static Bitmap Icon(string key, int size) => GetIconAtSize(key, size, Default);
 
 	private static Bitmap Empty(int size) => new Bitmap(size, size, PixelFormat.Format32bppRgba);
 
-	private static Bitmap GetIconAtSize(string key, int size)
+	private static Bitmap GetIconAtSize(string key, int size, Color colour)
 	{
 		try
 		{
-			var iconKey = new IconKey(key, size, HostUtils.RunningInDarkMode);
+			var iconKey = new IconKey(key, size, colour);
 			if (!Icons.TryGetValue(iconKey, out var bitmap))
 			{
 				var resized = Resize(iconKey);
@@ -72,16 +67,17 @@ public static class CrashIcons
 	private static Bitmap Resize(IconKey key)
 	{
 		if (Icons.TryGetValue(key, out var bitmap)) return bitmap;
-		if (!Icons.TryGetValue(new(key.Key, DefaultSize, false), out var defaultBitmap)) return Empty(key.Size);
-		if (HostUtils.RunningInDarkMode)
-		{
-			RecolourImage(defaultBitmap);
-		}
+		if (!Icons.TryGetValue(new(key.Key, DefaultSize, LightColour), out var defaultBitmap)) return Empty(key.Size);
+		RecolourImage(defaultBitmap, key.Colour);
 
 		return new Bitmap(defaultBitmap, key.Size, key.Size, ImageInterpolation.High);
 	}
 
-	private static void RecolourImage(Bitmap bitmap)
+	private static Color DarkColour => CPalette.LightGray;
+	private static Color LightColour => CPalette.Black;
+	private static Color Default => HostUtils.RunningInDarkMode ? DarkColour : LightColour;
+
+	private static void RecolourImage(Bitmap bitmap, Color color)
 	{
 		using (var data = bitmap.Lock())
 		{
@@ -93,7 +89,7 @@ public static class CrashIcons
 					if (pixel.Ab < 10) continue;
 					if (pixel.Rb < 50 && pixel.Gb < 50 && pixel.Bb < 50)
 					{
-						data.SetPixel(x, y, Colors.White);
+						data.SetPixel(x, y, color);
 					}
 				}
 			}
