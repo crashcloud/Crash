@@ -6,7 +6,6 @@
 		<Title>Crash</Title>
 		<Description>A multi-user collaborative environment for Rhino</Description>
 		<TargetExt>.rhp</TargetExt>
-		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
 	</PropertyGroup>

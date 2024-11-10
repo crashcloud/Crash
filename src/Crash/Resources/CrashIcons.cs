@@ -8,11 +8,12 @@ namespace Crash.Resources;
 
 public static class CrashIcons
 {
+	private const int DefaultSize = 64;
 
-	private record struct IconCache(Bitmap Image, int Size);
+	private record struct IconKey(string Key, int Size);
 
 	// TODO : Improve Icon Size Caching
-	static Dictionary<string, Bitmap> Icons { get; set; }
+	static Dictionary<IconKey, Bitmap> Icons { get; set; }
 
 	static CrashIcons()
 	{
@@ -30,9 +31,8 @@ public static class CrashIcons
 			using (Stream stream = assembly.GetManifestResourceStream(resourceName))
 			{
 				var bitmap = new Bitmap(stream);
-				Icons.Add(key, bitmap);
+				Icons.Add(new(key, DefaultSize), bitmap);
 			}
-
 		}
 
 	}
@@ -47,12 +47,25 @@ public static class CrashIcons
 	{
 		try
 		{
-			if (!Icons.TryGetValue(key, out var bitmap)) return Empty(size);
+			if (!Icons.TryGetValue(new(key, size), out var bitmap))
+			{
+				var resized = Resize(key, size);
+				if (resized is null) return Empty(size);
+				return resized;
+			}
 			if (bitmap.Width == size) return bitmap;
 			return new Bitmap(bitmap, size, size, ImageInterpolation.High);
-
 		}
 		catch { }
 		return Empty(size);
 	}
+
+	private static Bitmap Resize(string key, int newSize)
+	{
+		if (Icons.TryGetValue(new(key, newSize), out var bitmap)) return bitmap;
+		if (!Icons.TryGetValue(new(key, DefaultSize), out var defaultBitmap)) return Empty(newSize);
+
+		return new Bitmap(defaultBitmap, newSize, newSize, ImageInterpolation.High);
+	}
+
 }
