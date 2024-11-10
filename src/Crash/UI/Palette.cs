@@ -29,7 +29,7 @@ namespace Crash.UI
 
 		public static Color Shadow => new Color(0f, 0f, 0f, 0.2f);
 
-		public static Color Green => Color.FromArgb(9, 129, 74);
+		public static Color Green => Color.FromArgb(64, 192, 87);
 
 		public static Color Lime => Color.FromArgb(209, 214, 70);
 
@@ -38,6 +38,8 @@ namespace Crash.UI
 		public static Color Red => Color.FromArgb(215, 38, 56);
 
 		public static Color Blue => Color.FromArgb(90, 177, 187);
+
+		public static Color Pink => Color.FromArgb(247, 131, 172);
 
 		public static Pen GetDashedPen(Color color, float width = 4f)
 		{

@@ -206,6 +206,9 @@ internal class RecentModelControl : Drawable
 	private RectangleF PreviewRect => new RectangleF(Inset, Inset, MaximumRectangle.Width - (Inset * 2f), MaximumRectangle.Height - (Inset * 5f));
 	private IGraphicsPath PreviewPath => GraphicsPath.GetRoundRect(PreviewRect, Radius);
 
+	private RectangleF StatusRect => RectangleF.FromCenter(PreviewRect.Center, new SizeF(40f, 40f));
+	private IGraphicsPath StatusPath => GraphicsPath.GetRoundRect(StatusRect, Radius);
+
 	private record struct PushIcon(Bitmap Image, Color Colour);
 
 	private void RenderBase(PaintEventArgs e)
@@ -226,21 +229,16 @@ internal class RecentModelControl : Drawable
 			e.Graphics.TranslateTransform(-1f, -2f);
 		}
 
-		if (state.HasFlag(ModelRenderState.FailedToLoad))
-			e.Graphics.FillPath(Palette.Red, PreviewPath);
+		e.Graphics.FillPath(Palette.DarkGray, PreviewPath);
 
-		else if (state.HasFlag(ModelRenderState.Loaded))
-			e.Graphics.FillPath(Palette.Green, PreviewPath);
-
-		else if (state.HasFlag(ModelRenderState.Loading))
+		if (state.HasFlag(ModelRenderState.Loading))
 			e.Graphics.FillPath(Palette.Blue, PreviewPath);
 
 		else if (state.HasFlag(ModelRenderState.Add))
-			e.Graphics.FillPath(Palette.Lime, PreviewPath);
+			e.Graphics.FillPath(Palette.Pink, PreviewPath);
 
 		else if (state.HasFlag(ModelRenderState.Sandbox))
 			e.Graphics.FillPath(Palette.Purple, PreviewPath);
-
 	}
 
 	private void RenderOverlay(PaintEventArgs e)
@@ -297,7 +295,7 @@ internal class RecentModelControl : Drawable
 		RenderAddressBar(e);
 	}
 
-	private void RenderPlus(PaintEventArgs e, float roationInDegrees = 0)
+	private void RenderPlus(PaintEventArgs e, Color color, float roationInDegrees = 0)
 	{
 		e.Graphics.SaveTransform();
 		e.Graphics.TranslateTransform(PreviewRect.Center);
@@ -307,15 +305,15 @@ internal class RecentModelControl : Drawable
 
 		e.Graphics.RotateTransform(roationInDegrees);
 
-		e.Graphics.FillRectangle(Palette.White, crossRect);
-		e.Graphics.FillRectangle(Palette.White, crossRect90);
+		e.Graphics.FillRectangle(color, crossRect);
+		e.Graphics.FillRectangle(color, crossRect90);
 
 		e.Graphics.RestoreTransform();
 	}
 
 	private void RenderFailedToLoad(PaintEventArgs e)
 	{
-		RenderPlus(e, 45f);
+		RenderPlus(e, Palette.Red, 45f);
 		RenderAddressBar(e);
 	}
 
@@ -336,10 +334,6 @@ internal class RecentModelControl : Drawable
 
 	private void RenderLoading(PaintEventArgs e)
 	{
-
-		var circleRect = RectangleF.FromCenter(MaximumRectangle.Center, new SizeF(30f, 30f));
-		circleRect.Y -= 14f;
-
 		int startArc = 0 + (Frame * 4);
 		int endArc = 120 + (Frame * 6);
 
@@ -350,7 +344,7 @@ internal class RecentModelControl : Drawable
 			endArc = 120;
 
 		// TODO : Draw a cicle and move the line pattern instead
-		e.Graphics.DrawArc(new Pen(Palette.White, 4f), circleRect, startArc, endArc);
+		e.Graphics.DrawArc(new Pen(Palette.White, 4f), StatusRect, startArc, endArc);
 
 		RenderAddressBar(e);
 	}
@@ -370,7 +364,7 @@ internal class RecentModelControl : Drawable
 
 	private void RenderAdd(PaintEventArgs e)
 	{
-		RenderPlus(e, 0f);
+		RenderPlus(e, Palette.White, 0f);
 		RenderAddressBar(e);
 	}
 
