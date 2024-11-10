@@ -19,16 +19,29 @@ namespace Crash.UI
 		public List<DynamicLayout> CachedRows { get; set; }
 		private Func<TItem, Control> ControlFactory { get; }
 
+		private RightClickMenu RightClickMenu { get; }
+
 		public OverflowLayout(ObservableCollection<TItem> sharedModels, Func<TItem, Control> controlFactory)
 		{
-			ControlFactory = controlFactory;
+			ControlFactory = (i) =>
+			{
+				var control = controlFactory(i);
+				SubscribeObjectToEvents(control);
+				return control;
+			};
 			DataStore = sharedModels;
 			CachedRows = new();
+			RightClickMenu = new RightClickMenu(new() {
+				new ("Join", "join.png", () => {}),
+				new ("Remove", "close.png", () => {}),
+				new ("Reload", "reload.png",  () => {}),
+			});
 			Width = Width;
 			Height = Width;
 
 			InitLayout();
 			InitBindings();
+			SubscribeObjectToEvents(this);
 		}
 
 		// TODO : Use Parent to get the width
@@ -114,5 +127,32 @@ namespace Crash.UI
 			Invalidate(true);
 		}
 
+		private void SubscribeObjectToEvents(Control control)
+		{
+			control.MouseDown += (s, e) =>
+			{
+				if (e.Buttons == MouseButtons.Alternate)
+					ShowRightClick(e);
+				else
+					HideRightClick();
+			};
+
+			control.KeyDown += (s, e) =>
+			{
+				if (e.Key == Keys.Escape)
+					HideRightClick();
+			};
+		}
+
+		private void HideRightClick()
+		{
+			Remove(RightClickMenu);
+		}
+
+		private void ShowRightClick(MouseEventArgs e)
+		{
+			var point = e.Location;
+			Add(RightClickMenu, (int)e.Location.X, (int)e.Location.Y);
+		}
 	}
 }

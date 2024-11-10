@@ -134,14 +134,14 @@ internal class RecentModelControl : Drawable
 			Invalidate(true);
 		}
 
-		base.OnMouseUp(e);
+		base.OnMouseDown(e);
 	}
 
 	protected override void OnMouseEnter(MouseEventArgs e)
 	{
 		ViewModel.State |= ModelRenderState.MouseOver;
 		e.Handled = true;
-		base.OnMouseMove(e);
+		base.OnMouseEnter(e);
 		Invalidate(true);
 	}
 
@@ -243,6 +243,8 @@ internal class RecentModelControl : Drawable
 
 	private void RenderOverlay(PaintEventArgs e)
 	{
+		// NOTE : Not using currently
+		return;
 		var state = ViewModel.State;
 		if (!state.HasFlag(ModelRenderState.MouseOver)) return;
 		if (state.HasFlag(ModelRenderState.Add)) return;
