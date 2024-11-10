@@ -1,6 +1,8 @@
 using System.Text.RegularExpressions;
 
 using Crash.Handlers.Data;
+using Crash.Properties;
+using Crash.Resources;
 using Crash.UI.JoinView;
 using Crash.UI.RecentView.Layers;
 
@@ -189,13 +191,9 @@ internal class RecentModelControl : Drawable
 			{
 				RenderFailedToLoad(e);
 			}
-
-			if (ViewModel.State.HasFlag(ModelRenderState.RightClick))
-			{
-				RenderRightClick(e);
-			}
 		}
 
+		RenderOverlay(e);
 		base.OnPaint(e);
 	}
 
@@ -208,13 +206,16 @@ internal class RecentModelControl : Drawable
 	private RectangleF PreviewRect => new RectangleF(Inset, Inset, MaximumRectangle.Width - (Inset * 2f), MaximumRectangle.Height - (Inset * 5f));
 	private IGraphicsPath PreviewPath => GraphicsPath.GetRoundRect(PreviewRect, Radius);
 
+	private record struct PushIcon(Bitmap Image, Color Colour);
+
 	private void RenderBase(PaintEventArgs e)
 	{
 		float inset = 8f;
 		float radius = 6f;
 		var rect = MaximumRectangle;
+		var state = ViewModel.State;
 
-		if (ViewModel.State.HasFlag(ModelRenderState.MouseOver))
+		if (state.HasFlag(ModelRenderState.MouseOver))
 		{
 			// Highlight
 			e.Graphics.FillPath(Palette.Shadow, BoundingPath);
@@ -225,20 +226,65 @@ internal class RecentModelControl : Drawable
 			e.Graphics.TranslateTransform(-1f, -2f);
 		}
 
-		if (ViewModel.State.HasFlag(ModelRenderState.FailedToLoad))
+		if (state.HasFlag(ModelRenderState.FailedToLoad))
 			e.Graphics.FillPath(Palette.Red, PreviewPath);
 
-		else if (ViewModel.State.HasFlag(ModelRenderState.Loaded))
+		else if (state.HasFlag(ModelRenderState.Loaded))
 			e.Graphics.FillPath(Palette.Green, PreviewPath);
 
-		else if (ViewModel.State.HasFlag(ModelRenderState.Loading))
+		else if (state.HasFlag(ModelRenderState.Loading))
 			e.Graphics.FillPath(Palette.Blue, PreviewPath);
 
-		else if (ViewModel.State.HasFlag(ModelRenderState.Add))
+		else if (state.HasFlag(ModelRenderState.Add))
 			e.Graphics.FillPath(Palette.Lime, PreviewPath);
 
-		else if (ViewModel.State.HasFlag(ModelRenderState.Sandbox))
+		else if (state.HasFlag(ModelRenderState.Sandbox))
 			e.Graphics.FillPath(Palette.Purple, PreviewPath);
+
+	}
+
+	private void RenderOverlay(PaintEventArgs e)
+	{
+		var state = ViewModel.State;
+		if (!state.HasFlag(ModelRenderState.MouseOver)) return;
+		if (state.HasFlag(ModelRenderState.Add)) return;
+
+		bool hasClose = !state.HasFlag(ModelRenderState.Sandbox);
+		bool canReload = !state.HasFlag(ModelRenderState.Loading);
+		bool canJoin = !state.HasFlag(ModelRenderState.FailedToLoad) &&
+					   !state.HasFlag(ModelRenderState.Loading);
+
+		e.Graphics.SaveTransform();
+
+		var pushSize = 24f;
+		var box = new RectangleF(0f, 0f, pushSize, pushSize);
+		var shadowBox = new RectangleF(-1f, 2f, pushSize, pushSize);
+		int iconSize = 16;
+		var icon = RectangleF.FromCenter(box.Center, new(iconSize, iconSize));
+
+		var pushes = new List<PushIcon>();
+		if (hasClose)
+			pushes.Add(new PushIcon(CrashIcons.Close(iconSize), Palette.Red));
+
+		if (canReload)
+			pushes.Add(new PushIcon(CrashIcons.Reload(iconSize), Palette.Yellow));
+
+		if (canJoin)
+			pushes.Add(new PushIcon(CrashIcons.Join(iconSize), Palette.Green));
+
+		e.Graphics.SaveTransform();
+		float xMove = pushSize + (iconSize / 4f);
+		e.Graphics.TranslateTransform(MaximumRectangle.Width - xMove, 5f);
+
+		foreach (var push in pushes)
+		{
+			e.Graphics.FillEllipse(Palette.Shadow, shadowBox);
+			e.Graphics.FillEllipse(push.Colour, box);
+			e.Graphics.DrawImage(push.Image, icon.TopLeft);
+			e.Graphics.TranslateTransform(-xMove, 0f);
+		}
+
+		e.Graphics.RestoreTransform();
 	}
 
 	#endregion
@@ -247,34 +293,8 @@ internal class RecentModelControl : Drawable
 	{
 		var box = RectangleF.FromCenter(PreviewRect.Center, new SizeF(30f, 30f));
 		e.Graphics.FillRectangle(Palette.White, box);
+
 		RenderAddressBar(e);
-	}
-
-	private void RenderRightClick(PaintEventArgs e)
-	{
-		// var overlay = Color.FromArgb(40, 40, 40, 120);
-		var overlay = Palette.GetHashedTexture(6, 0.75f);
-		e.Graphics.FillPath(overlay, PreviewPath);
-
-		float inset = 20f;
-		var rect = new RectangleF(inset, inset, Size.Width - (inset * 2), Size.Height - (inset * 2));
-		e.Graphics.FillRectangle(Palette.White, rect);
-
-		string[] options = new[] { "Refresh", "Delete", "Join" };
-		for (int i = 0; i < 3; i++)
-		{
-			float y = rect.Height / 3f * i;
-			e.Graphics.DrawLine(Color.FromArgb(40, 40, 40, 40), rect.Left + 4f, rect.Top + y, rect.Right - 4f, rect.Top + y);
-
-			var color = Palette.Black;
-			if (i == 2 && !ViewModel.State.HasFlag(ModelRenderState.Loaded))
-			{
-				// Draw faded out
-				color = Palette.Gray;
-			}
-
-			e.Graphics.DrawText(SystemFonts.Default(14f), new SolidBrush(color), new RectangleF(rect.Left + 4f, rect.Top + y + 6f, rect.Width - 8f, rect.Height / 3f), options[i], alignment: FormattedTextAlignment.Center);
-		}
 	}
 
 	private void RenderPlus(PaintEventArgs e, float roationInDegrees = 0)
@@ -305,8 +325,11 @@ internal class RecentModelControl : Drawable
 		if (sharedModel.Thumbnail is null) return;
 
 		var textureBrush = new TextureBrush(sharedModel.Thumbnail, 1f);
+		var yHeight = -((sharedModel.Thumbnail.Height - (MaximumRectangle.Height - 28f)) / 2f);
+		var matrix = Matrix.FromTranslation(0, yHeight);
+		textureBrush.Transform = matrix;
+
 		e.Graphics.FillPath(textureBrush, PreviewPath);
-		// e.Graphics.DrawImage(sharedModel.Thumbnail, 0, -((sharedModel.Thumbnail.Height - (MaximumRectangle.Height - 28f)) / 2f));
 		RenderAddressBar(e);
 	}
 

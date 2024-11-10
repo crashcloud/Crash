@@ -137,7 +137,7 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 
 		var copyrightLabel = new Label()
 		{
-			Text = "Copyright Crash Cloud 2021 - 2024",
+			Text = "Crash Cloud",
 			TextColor = Palette.White,
 			Font = SystemFonts.Default(12),
 			TextAlignment = TextAlignment.Left

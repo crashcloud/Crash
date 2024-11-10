@@ -55,6 +55,7 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>ServerSettings.settings</DependentUpon>
 		</Compile>
+		<EmbeddedResource Include="Resources\*.png" />
 	</ItemGroup>
 
 	<ItemGroup>
