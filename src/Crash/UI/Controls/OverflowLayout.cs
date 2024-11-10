@@ -67,6 +67,7 @@ namespace Crash.UI
 			Shown += (s, e) =>
 			{
 				RepositionLayout();
+
 				ParentWindow.SizeChanged += (s, e) =>
 				{
 					Width = ParentWindow.Width;
