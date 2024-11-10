@@ -9,6 +9,8 @@ using Crash.UI.RecentView.Layers;
 using Eto.Drawing;
 using Eto.Forms;
 
+using Rhino.Runtime;
+
 namespace Crash.UI;
 
 internal class RecentModelControl : Drawable
@@ -193,7 +195,6 @@ internal class RecentModelControl : Drawable
 			}
 		}
 
-		RenderOverlay(e);
 		base.OnPaint(e);
 	}
 
@@ -239,52 +240,6 @@ internal class RecentModelControl : Drawable
 
 		else if (state.HasFlag(ModelRenderState.Sandbox))
 			e.Graphics.FillPath(Palette.Purple, PreviewPath);
-	}
-
-	private void RenderOverlay(PaintEventArgs e)
-	{
-		// NOTE : Not using currently
-		return;
-		var state = ViewModel.State;
-		if (!state.HasFlag(ModelRenderState.MouseOver)) return;
-		if (state.HasFlag(ModelRenderState.Add)) return;
-
-		bool hasClose = !state.HasFlag(ModelRenderState.Sandbox);
-		bool canReload = !state.HasFlag(ModelRenderState.Loading);
-		bool canJoin = !state.HasFlag(ModelRenderState.FailedToLoad) &&
-					   !state.HasFlag(ModelRenderState.Loading);
-
-		e.Graphics.SaveTransform();
-
-		var pushSize = 24f;
-		var box = new RectangleF(0f, 0f, pushSize, pushSize);
-		var shadowBox = new RectangleF(-1f, 2f, pushSize, pushSize);
-		int iconSize = 16;
-		var icon = RectangleF.FromCenter(box.Center, new(iconSize, iconSize));
-
-		var pushes = new List<PushIcon>();
-		if (hasClose)
-			pushes.Add(new PushIcon(CrashIcons.Close(iconSize), Palette.Red));
-
-		if (canReload)
-			pushes.Add(new PushIcon(CrashIcons.Reload(iconSize), Palette.Yellow));
-
-		if (canJoin)
-			pushes.Add(new PushIcon(CrashIcons.Join(iconSize), Palette.Green));
-
-		e.Graphics.SaveTransform();
-		float xMove = pushSize + (iconSize / 4f);
-		e.Graphics.TranslateTransform(MaximumRectangle.Width - xMove, 5f);
-
-		foreach (var push in pushes)
-		{
-			e.Graphics.FillEllipse(Palette.Shadow, shadowBox);
-			e.Graphics.FillEllipse(push.Colour, box);
-			e.Graphics.DrawImage(push.Image, icon.TopLeft);
-			e.Graphics.TranslateTransform(-xMove, 0f);
-		}
-
-		e.Graphics.RestoreTransform();
 	}
 
 	#endregion
@@ -333,7 +288,6 @@ internal class RecentModelControl : Drawable
 		RenderAddressBar(e);
 	}
 
-
 	private void RenderLoading(PaintEventArgs e)
 	{
 		int startArc = 0 + (Frame * 4);
@@ -358,7 +312,7 @@ internal class RecentModelControl : Drawable
 		var textContainer = new RectangleF(PreviewRect.Left, PreviewRect.Bottom + 10f, PreviewRect.Width, MaximumRectangle.Bottom - PreviewRect.Bottom);
 
 		var font = SystemFonts.Default(16f);
-		var brush = new SolidBrush(Palette.White);
+		var brush = new SolidBrush(Palette.TextColour);
 
 		var fullSize = e.Graphics.MeasureString(font, address);
 		e.Graphics.DrawText(font, brush, textContainer, address, alignment: FormattedTextAlignment.Left, wrap: FormattedTextWrapMode.Word, trimming: FormattedTextTrimming.CharacterEllipsis);

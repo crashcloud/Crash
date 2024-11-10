@@ -15,6 +15,8 @@ namespace Crash.UI
 
 		public static Color SubtleGrey => DarkMode ? s_lightGrey : s_darkGrey;
 
+		public static Color TextColour => HostUtils.RunningInDarkMode ? Color.FromArgb(233, 241, 247) : Color.FromArgb(0, 21, 20);
+
 		// Crash Colours
 
 		// public static Color SeaGreen => Color.FromArgb(0, 38, 38);

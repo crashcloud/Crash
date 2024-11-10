@@ -16,7 +16,6 @@ namespace Crash.UI
 		public int Padding => RecentModelDialog.PreviewPadding;
 
 		public ObservableCollection<TItem> DataStore { get; set; }
-		public List<DynamicLayout> CachedRows { get; set; }
 		private Func<TItem, Control> ControlFactory { get; }
 
 		private RightClickMenu RightClickMenu { get; }
@@ -30,14 +29,15 @@ namespace Crash.UI
 				return control;
 			};
 			DataStore = sharedModels;
-			CachedRows = new();
+
 			RightClickMenu = new RightClickMenu(new() {
 				new ("Join", "join.png", () => {}),
 				new ("Remove", "close.png", () => {}),
 				new ("Reload", "reload.png",  () => {}),
 			});
-			Width = Width;
-			Height = Width;
+
+			// Width = Width;
+			// Height = Width;
 
 			InitLayout();
 			InitBindings();
@@ -85,6 +85,7 @@ namespace Crash.UI
 				{
 					Width = ParentWindow.Width;
 					RepositionLayout();
+					HideRightClick();
 				};
 				DataStore.CollectionChanged += (s, e) =>
 				{

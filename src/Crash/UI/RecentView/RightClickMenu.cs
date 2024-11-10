@@ -37,7 +37,7 @@ namespace Crash.UI
 			if (Items is null) return;
 
 			var font = SystemFonts.Default(18f);
-			var brush = new SolidBrush(Palette.White);
+			var brush = new SolidBrush(Palette.TextColour);
 
 			e.Graphics.FillPath(Palette.Shadow, FullPath);
 			e.Graphics.FillPath(ParentWindow.BackgroundColor, InsetPath);
