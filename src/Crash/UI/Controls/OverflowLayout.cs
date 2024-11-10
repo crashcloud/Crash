@@ -9,132 +9,109 @@ using Eto.Forms;
 namespace Crash.UI
 {
 
-	internal class OverflowLayout<TItem> : DynamicLayout
+	internal class OverflowLayout<TItem> : PixelLayout
 	{
-		public int ControlWidth { get; set; }
+		public int ControlWidth { get; set; } = -1;
+		public int ControlHeight { get; set; } = -1;
+		public int Padding { get; set; } = 8;
 
-		public ObservableCollection<TItem> DataStore { get; set; } = new ObservableCollection<TItem>();
-		public ObservableCollection<Control> DataControls { get; set; } = new ObservableCollection<Control>();
-		private List<DynamicLayout> CachedRows { get; set; }
-
+		public ObservableCollection<TItem> DataStore { get; set; }
+		public List<DynamicLayout> CachedRows { get; set; }
 		private Func<TItem, Control> ControlFactory { get; }
 
-		public OverflowLayout(int controlWidth, ObservableCollection<TItem> sharedModels, Func<TItem, Control> controlFactory)
+		public OverflowLayout(ObservableCollection<TItem> sharedModels, Func<TItem, Control> controlFactory)
 		{
 			ControlFactory = controlFactory;
-			ControlWidth = controlWidth;
 			DataStore = sharedModels;
 			CachedRows = new();
 			Width = Width;
 			Height = Width;
-			Spacing = new Size(16, 16);
-			MinimumSize = new Size(800, 500);
 
-			CreateControls();
-			InitBindings();
 			InitLayout();
+			InitBindings();
 		}
 
-		private void InitBindings()
+		// TODO : Use Parent to get the width
+		private void InitLayout()
 		{
-			SizeChanged += (s, e) =>
+			if (Controls is not IList<Control> controls) return;
+			if (controls?.Count > 0) return;
+
+			if (DataStore.Count > controls.Count)
 			{
-				InitLayout();
-			};
-			DataStore.CollectionChanged += (s, e) =>
-			{
-				CreateControls();
-			};
-		}
-
-		internal float RealWidth => Width < 0 ? GetPreferredSize().Width : Width;
-		internal int HorizontalControlCount => (int)(RealWidth / (ControlWidth));
-		internal int VerticalControlCount => (int)Math.Ceiling(DataControls.Count / (float)HorizontalControlCount);
-
-		public void InitLayout()
-		{
-			return;
-			int max = Math.Max(VerticalControlCount, CachedRows.Count);
-			for (int i = 0; i < max; i++)
-			{
-				if (i >= VerticalControlCount)
-				{
-					var row = GetRow(i);
-					row.Clear();
-					continue;
-				}
-				else
-				{
-					var row = GetRow(i);
-					FillRow(row, i);
-				}
-				Invalidate(true);
-			}
-		}
-
-		internal void FillRow(DynamicLayout row, int i)
-		{
-			row.Clear();
-			row.BeginHorizontal();
-
-			for (int j = 0; j < HorizontalControlCount; j++)
-			{
-				var index = i * HorizontalControlCount + j;
-				if (index >= DataControls.Count)
-					break;
-
-				var control = DataControls[index];
-				row.Add(control, false, false);
-				row.Height = control.Height;
-			}
-
-			row.AddSpace(true, true);
-			row.EndHorizontal();
-		}
-
-		internal DynamicLayout GetRow(int index)
-		{
-			if (index < CachedRows.Count)
-			{
-				var row = CachedRows[index];
-				row.Clear();
-				return row;
-			}
-			else
-			{
-				var row = new DynamicLayout()
-				{
-					Padding = new Padding(0, 4),
-					Width = -1,
-					Spacing = new Size(8, 0),
-				};
-
-				Add(row, false, false);
-				return row;
-			}
-		}
-
-		private void CreateControls()
-		{
-			if (DataControls?.Count > 0) return;
-
-			if (DataStore.Count > DataControls.Count)
-			{
-				for (int i = DataControls.Count; i < DataStore.Count; i++)
+				for (int i = controls.Count; i < DataStore.Count; i++)
 				{
 					var control = ControlFactory(DataStore[i]);
-					DataControls.Add(control);
+					ControlWidth = control.Width;
+					ControlHeight = control.Height;
+					Add(control, 0, 0);
 				}
 
 				return;
 			}
 
-			DataControls.Clear();
+			controls.Clear();
 			foreach (var item in DataStore)
 			{
 				var control = ControlFactory(item);
-				DataControls.Add(control);
+				ControlWidth = control.Width;
+				ControlHeight = control.Height;
+				Add(control, 0, 0);
 			}
+
+			RepositionLayout();
 		}
+
+		private void InitBindings()
+		{
+			Shown += (s, e) =>
+			{
+				RepositionLayout();
+				ParentWindow.SizeChanged += (s, e) =>
+				{
+					Width = ParentWindow.Width;
+					RepositionLayout();
+				};
+				DataStore.CollectionChanged += (s, e) =>
+				{
+					// TODO : Implement
+				};
+			};
+		}
+
+		internal float RealWidth => ParentWindow?.Width ?? this.GetPreferredSize().Width;
+		internal int HorizontalControlCount => (int)((RealWidth - Padding) / (ControlWidth + Padding));
+		internal int VerticalControlCount => (int)Math.Ceiling(Controls.Count() / (float)HorizontalControlCount);
+
+		public void RepositionLayout()
+		{
+			// TODO : Use Parent to get the width
+			if (Controls is not IList<Control> controls) return;
+			if (controls.Count == 0) return;
+
+			for (int i = 0; i < HorizontalControlCount; i++)
+			{
+				for (int j = 0; j < VerticalControlCount; j++)
+				{
+					var index = i + j * HorizontalControlCount;
+					if (index >= controls.Count) break;
+
+					var control = controls[index];
+					int x = (i * (ControlWidth + Padding)) + Padding;
+					int y = (j * (ControlHeight + Padding)) + Padding;
+					var point = new Point(x, y);
+					SetLocation(control, point);
+				}
+			}
+
+			if (Parent is not Scrollable scrollable) return;
+			if (ParentWindow is null) return;
+			scrollable.Height = ParentWindow.Height - 90;
+
+			RhinoApp.WriteLine($"sH:{scrollable.Height} - H:{Height}");
+
+			Invalidate(true);
+		}
+
 	}
 }

@@ -18,6 +18,8 @@ internal class RecentModelControl : Drawable
 	private int Frame { get; set; } = 0;
 	private UITimer FrameTimer { get; }
 
+	private RectangleF Rect => new RectangleF(0, 0, Width, Height);
+
 	public RecentModelControl(RecentModelDialog crashRecentView, SharedModel model)
 	{
 		HostView = crashRecentView;
@@ -201,7 +203,7 @@ internal class RecentModelControl : Drawable
 	{
 		// var overlay = Color.FromArgb(40, 40, 40, 120);
 		var overlay = Palette.GetHashedTexture(6, 0.75f);
-		e.Graphics.FillRectangle(overlay, e.ClipRectangle);
+		e.Graphics.FillRectangle(overlay, Rect);
 
 		float inset = 20f;
 		var rect = new RectangleF(inset, inset, Size.Width - (inset * 2), Size.Height - (inset * 2));
@@ -226,9 +228,9 @@ internal class RecentModelControl : Drawable
 
 	private void RenderFailedToLoad(PaintEventArgs e)
 	{
-		e.Graphics.FillRectangle(Palette.Red, e.ClipRectangle);
+		e.Graphics.FillRectangle(Palette.Red, Rect);
 		e.Graphics.SaveTransform();
-		e.Graphics.TranslateTransform(e.ClipRectangle.Center);
+		e.Graphics.TranslateTransform(Rect.Center);
 
 		var crossRect = RectangleF.FromCenter(new PointF(0, 0), new SizeF(30f, 8f));
 		var crossRect90 = RectangleF.FromCenter(new PointF(0, 0), new SizeF(8f, 30f));
@@ -244,20 +246,20 @@ internal class RecentModelControl : Drawable
 
 	private void RenderLoaded(PaintEventArgs e)
 	{
-		e.Graphics.FillRectangle(Palette.Green, e.ClipRectangle);
+		e.Graphics.FillRectangle(Palette.Green, Rect);
 		if (ViewModel.Model is null) return;
 		if (ViewModel.Model.Thumbnail is null) return;
 
-		e.Graphics.DrawImage(ViewModel.Model.Thumbnail, 0, -((ViewModel.Model.Thumbnail.Height - (e.ClipRectangle.Height - 28f)) / 2f));
+		e.Graphics.DrawImage(ViewModel.Model.Thumbnail, 0, -((ViewModel.Model.Thumbnail.Height - (Rect.Height - 28f)) / 2f));
 		RenderAddressBar(e);
 	}
 
 
 	private void RenderLoading(PaintEventArgs e)
 	{
-		e.Graphics.FillRectangle(Palette.Blue, e.ClipRectangle);
+		e.Graphics.FillRectangle(Palette.Blue, Rect);
 
-		var circleRect = RectangleF.FromCenter(e.ClipRectangle.Center, new SizeF(30f, 30f));
+		var circleRect = RectangleF.FromCenter(Rect.Center, new SizeF(30f, 30f));
 		circleRect.Y -= 14f;
 
 		int startArc = 0 + (Frame * 4);
@@ -277,7 +279,7 @@ internal class RecentModelControl : Drawable
 
 	private void RenderAddressBar(PaintEventArgs e)
 	{
-		var rect = e.ClipRectangle;
+		var rect = Rect;
 		var bar = new RectangleF(rect.Left, rect.Bottom - 30f, rect.Width, 30f);
 		e.Graphics.FillRectangle(Palette.White, bar);
 
