@@ -21,8 +21,19 @@ namespace Crash.UI;
 /// </summary>
 internal sealed class RecentModelDialog : Dialog<SharedModel>
 {
+
+	public static int PreviewWidth = 240;
+	public static int PreviewPadding = 8;
+	public static int PreviewHeight = 135;
+
+	public static int WidthForPreviews(int count)
+	{
+		var width = (count * (PreviewWidth + PreviewPadding)) + PreviewPadding;
+		// TODO : Check Current Screen Width
+		return width;
+	}
+
 	private OverflowLayout<SharedModel> RecentModelGallery { get; set; }
-	private Drawable EmptySpaceRightClick { get; set; }
 	internal Drawable ModelInputBar { get; private set; }
 	private DynamicLayout StatusBar { get; set; }
 
@@ -41,8 +52,8 @@ internal sealed class RecentModelDialog : Dialog<SharedModel>
 
 		Resizable = true;
 		AutoSize = true;
-		MinimumSize = new Size(800, 400);
-		Size = new Size(1296, 600);
+		MinimumSize = new Size(WidthForPreviews(3), 400);
+		Size = new Size(WidthForPreviews(5), 600);
 		Padding = new Padding(0);
 
 		DataContext = new JoinViewModel();
@@ -55,7 +66,7 @@ internal sealed class RecentModelDialog : Dialog<SharedModel>
 	{
 		var headerLabel = new Label()
 		{
-			Text = "Recent Models",
+			Text = " Recent Models",
 			TextColor = Palette.White,
 			Font = SystemFonts.Default(24),
 			Height = 32,
@@ -65,7 +76,7 @@ internal sealed class RecentModelDialog : Dialog<SharedModel>
 		var scrollable = new Scrollable()
 		{
 			Border = BorderType.None,
-			BackgroundColor = Colors.Green,
+
 			AllowDrop = false,
 			Content = InitRecentModelGallery(),
 			ExpandContentHeight = true,
@@ -88,8 +99,6 @@ internal sealed class RecentModelDialog : Dialog<SharedModel>
 			RecentModelGallery.Invalidate(true);
 		};
 
-		EmptySpaceRightClick = GetEmptySpaceRightClick();
-
 		ModelInputBar = new AddressInputBar(Model);
 
 		var pixelLayout = new PixelLayout()
@@ -98,16 +107,7 @@ internal sealed class RecentModelDialog : Dialog<SharedModel>
 			Height = -1,
 		};
 		pixelLayout.Add(recentModelLayout, 0, 0);
-		pixelLayout.Add(EmptySpaceRightClick, 0, 0);
 		pixelLayout.Add(ModelInputBar, 0, 0);
-
-		pixelLayout.MouseDown += (s, e) =>
-		{
-			if (e.Buttons != MouseButtons.Alternate) return;
-			EmptySpaceRightClick.Visible = !EmptySpaceRightClick.Visible;
-			EmptySpaceRightClick.Tag = e.Location;
-			EmptySpaceRightClick.Invalidate(true);
-		};
 
 		var layout = new DynamicLayout()
 		{
@@ -123,30 +123,6 @@ internal sealed class RecentModelDialog : Dialog<SharedModel>
 		layout.EndVertical();
 
 		Content = layout;
-	}
-
-	private Drawable GetEmptySpaceRightClick()
-	{
-		var menu = new Drawable()
-		{
-			Visible = false,
-			Tag = new PointF(0, 0)
-		};
-		menu.Paint += (s, e) =>
-		{
-			if (menu.Parent is null) return;
-
-			menu.Width = menu.Parent.Width;
-			menu.Height = menu.Parent.Height;
-
-			if (menu.Tag is not PointF location) return;
-
-			e.Graphics.TranslateTransform(location.X, location.Y);
-
-			e.Graphics.FillRectangle(Palette.White, new RectangleF(0, 0, 120, 240));
-		};
-
-		return menu;
 	}
 
 	private DynamicLayout InitStatusBar()

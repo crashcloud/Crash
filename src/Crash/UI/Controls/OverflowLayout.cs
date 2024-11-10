@@ -13,7 +13,7 @@ namespace Crash.UI
 	{
 		public int ControlWidth { get; set; } = -1;
 		public int ControlHeight { get; set; } = -1;
-		public int Padding { get; set; } = 8;
+		public int Padding => RecentModelDialog.PreviewPadding;
 
 		public ObservableCollection<TItem> DataStore { get; set; }
 		public List<DynamicLayout> CachedRows { get; set; }
@@ -104,11 +104,11 @@ namespace Crash.UI
 				}
 			}
 
+			// TODO : Sizing is flimsy
 			if (Parent is not Scrollable scrollable) return;
 			if (ParentWindow is null) return;
-			scrollable.Height = ParentWindow.Height - 90;
-
-			RhinoApp.WriteLine($"sH:{scrollable.Height} - H:{Height}");
+			scrollable.Height = ParentWindow.Height - 80;
+			Height = (VerticalControlCount * (ControlHeight + Padding)) + Padding;
 
 			Invalidate(true);
 		}

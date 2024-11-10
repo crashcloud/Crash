@@ -151,7 +151,7 @@ namespace Crash.UI.UsersView
 		private void SetSizeAndLocation()
 		{
 			MinimumSize = new Size(200, 40);
-			Size = new Size(240, 140);
+			Size = new Size(RecentModelDialog.PreviewWidth, 140);
 			var rhinoDoc = CrashDocRegistry.GetRelatedDocument(_crashDoc);
 			if (rhinoDoc is null) return;
 

@@ -225,7 +225,7 @@ namespace Crash
 					var url = e.CrashDoc?.LocalClient?.Url ?? string.Empty;
 					if (string.IsNullOrEmpty(url)) return;
 
-					var bitmap = rhinoDoc.Views.ActiveView.CaptureToBitmap(new System.Drawing.Size(240, 240));
+					var bitmap = rhinoDoc.Views.ActiveView.CaptureToBitmap(new System.Drawing.Size(RecentModelDialog.PreviewWidth, RecentModelDialog.PreviewWidth));
 					if (bitmap is null) return;
 
 					var nonNullModels = models.Where(m => m is not null).ToList();

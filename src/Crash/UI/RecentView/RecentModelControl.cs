@@ -24,8 +24,8 @@ internal class RecentModelControl : Drawable
 	{
 		HostView = crashRecentView;
 		DataContext = new RecentModelViewModel(model);
-		Width = 240;
-		Height = 135;
+		Width = RecentModelDialog.PreviewWidth;
+		Height = RecentModelDialog.PreviewHeight;
 		BackgroundColor = Colors.Crimson;
 
 		ViewModel.PropertyChanged += (s, e) => Invalidate(true);
