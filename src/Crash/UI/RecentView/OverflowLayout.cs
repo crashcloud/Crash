@@ -80,7 +80,7 @@ namespace Crash.UI
 
 		private void InitBindings()
 		{
-			Shown += (s, e) =>
+			LoadComplete += (s, e) =>
 			{
 				RepositionLayout();
 

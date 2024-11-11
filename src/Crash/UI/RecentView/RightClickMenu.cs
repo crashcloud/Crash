@@ -87,6 +87,7 @@ namespace Crash.UI
 
 		protected override void OnMouseDown(MouseEventArgs e)
 		{
+			e.Handled = true;
 			TryGetItemAtLocation(e.Location, out var command);
 			Visible = false;
 			Invalidate();
