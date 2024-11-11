@@ -24,7 +24,7 @@ namespace Crash.UI
 		public static Color Yellow => Color.FromArgb(246, 174, 45);
 
 		public static Color Black => Color.FromArgb(0, 21, 20); // 19, 27, 35
-		public static Color DarkGray => Color.FromArgb(33, 39, 56);
+		public static Color DarkGray => Color.FromArgb(30, 30, 32);
 		public static Color Gray => Color.FromArgb(65, 67, 97);
 		public static Color LightGray => Color.FromArgb(200, 200, 200);
 

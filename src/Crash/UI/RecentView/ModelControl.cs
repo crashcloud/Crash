@@ -1,8 +1,12 @@
+using System.Diagnostics.Eventing.Reader;
+
 using Crash.Handlers.Data;
 using Crash.UI.JoinView;
 
 using Eto.Drawing;
 using Eto.Forms;
+
+using Rhino.Runtime;
 
 namespace Crash.UI;
 
@@ -76,9 +80,9 @@ internal class ModelControl : Drawable
 
 	protected override void OnMouseUp(MouseEventArgs e)
 	{
-		if (e.Buttons == MouseButtons.Alternate && Model is not AddModel)
+		e.Handled = true;
+		if (e.Buttons == MouseButtons.Alternate)
 		{
-			e.Handled = true;
 			if (!Model.State.HasFlag(ModelRenderState.RightClick))
 			{
 				Model.State = Model.State |= ModelRenderState.RightClick;
@@ -91,25 +95,19 @@ internal class ModelControl : Drawable
 			}
 		}
 
-		if (e.Buttons == MouseButtons.Primary)
-		{
-			if (Model is AddModel)
-			{
-				e.Handled = true;
-				HostView.CommandsInstance.Add?.Execute();
-			}
-		}
-
 		base.OnMouseUp(e);
 	}
 
 	protected override void OnMouseDown(MouseEventArgs e)
 	{
-		if (HostView.Model.TemporaryModel is not null) return;
+		e.Handled = true;
 		if (e.Buttons == MouseButtons.Primary)
 		{
-			e.Handled = true;
-			if (!Model.State.HasFlag(ModelRenderState.Selected))
+			if (Model is AddModel)
+			{
+				HostView.CommandsInstance.Add?.Execute();
+			}
+			else if (!Model.State.HasFlag(ModelRenderState.Selected))
 			{
 				Model.State = Model.State |= ModelRenderState.Selected;
 			}
@@ -126,39 +124,27 @@ internal class ModelControl : Drawable
 
 	protected override void OnMouseEnter(MouseEventArgs e)
 	{
+		e.Handled = true;
 		if (Disabled)
 		{
 			base.OnMouseEnter(e);
 			return;
 		}
 		Model.State |= ModelRenderState.MouseOver;
-		e.Handled = true;
 		base.OnMouseEnter(e);
 		Invalidate(true);
 	}
 
 	protected override void OnMouseLeave(MouseEventArgs e)
 	{
+		e.Handled = true;
 		if (Disabled)
 		{
 			base.OnMouseLeave(e);
 			return;
 		}
-		e.Handled = true;
 		Model.State &= ~ModelRenderState.MouseOver;
 		Invalidate(true);
-	}
-
-	protected override void OnMouseDoubleClick(MouseEventArgs e)
-	{
-		e.Handled = true;
-		if (e.Buttons == MouseButtons.Primary)
-		{
-			if (Model.State.HasFlag(ModelRenderState.Loaded))
-				HostView.Close(Model);
-		}
-
-		base.OnMouseDoubleClick(e);
 	}
 
 	protected override void OnPaint(PaintEventArgs e)
@@ -185,6 +171,7 @@ internal class ModelControl : Drawable
 			}
 			else if (Model.State.HasFlag(ModelRenderState.FailedToLoad))
 			{
+				RenderLoaded(e);
 				RenderFailedToLoad(e);
 			}
 		}
@@ -222,7 +209,7 @@ internal class ModelControl : Drawable
 			e.Graphics.TranslateTransform(-1f, -2f);
 		}
 
-		e.Graphics.FillPath(Palette.DarkGray, PreviewPath);
+		e.Graphics.FillPath(HostUtils.RunningInDarkMode ? Palette.DarkGray : Palette.LightGray, PreviewPath);
 
 		if (state.HasFlag(ModelRenderState.Loading))
 			e.Graphics.FillPath(Palette.Blue, PreviewPath);

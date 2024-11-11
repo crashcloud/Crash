@@ -57,7 +57,7 @@ namespace Crash.Handlers.Data
 		public override string ToString() => "<Debug>";
 	}
 
-	public sealed class SharedModel : ISharedModel, IEquatable<SharedModel>
+	public sealed class SharedModel : ISharedModel, IEquatable<ISharedModel>
 	{
 		public double UserCount { get; set; }
 
@@ -77,15 +77,15 @@ namespace Crash.Handlers.Data
 			ModelAddress = address;
 		}
 
-		public bool Equals(object? other) => other is SharedModel model && Equals(model);
+		public bool Equals(object? other) => other is ISharedModel model && Equals(model);
 
-		public bool Equals(SharedModel? other)
+		public bool Equals(ISharedModel? other) => Equals(this, other);
+
+		public static bool Equals(ISharedModel left, ISharedModel right)
 		{
-			if (other is null) return false;
-			if (!AddressIsSame(ModelAddress, other.ModelAddress)) return false;
+			if (!AddressIsSame(left?.ModelAddress, right?.ModelAddress)) return false;
 			// C Sykes 10th Nov 2024
 			// I think Last Opened and the Bitmap are irrelivent
-
 			return true;
 		}
 
@@ -94,11 +94,15 @@ namespace Crash.Handlers.Data
 		private const string pattern = @"[\/\\";
 		private static bool AddressIsSame(string addr1, string addr2)
 		{
+			if (!string.Equals(addr1, addr2, StringComparison.CurrentCultureIgnoreCase)) return false;
+			if (string.IsNullOrEmpty(addr1)) return false;
+			if (string.IsNullOrEmpty(addr2)) return false;
+			// Note : This is very slow
 			try
 			{
-				var uri1 = new Uri(addr1);
-				var uri2 = new Uri(addr2);
-				return uri1.Equals(uri2);
+				Uri.TryCreate(addr1, UriKind.Absolute, out var uri1);
+				Uri.TryCreate(addr2, UriKind.Absolute, out var uri2);
+				return uri1?.Equals(uri2) == true;
 			}
 			catch { }
 			return false;

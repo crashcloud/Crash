@@ -25,7 +25,7 @@ namespace Crash.UI
 		public ObservableCollection<TItem> DataStore { get; set; }
 		private Func<TItem, Control> ControlFactory { get; }
 
-		internal RightClickMenu RightClickMenu { get; }
+		internal RightClickMenu RightClickMenu { get; private set; }
 
 		private CrashCommands CommandsInstance => (ParentWindow as RecentModelDialog)?.CommandsInstance!;
 
@@ -190,6 +190,7 @@ namespace Crash.UI
 
 		protected override void OnMouseDown(MouseEventArgs e)
 		{
+			e.Handled = true;
 			if (e.Buttons == MouseButtons.Alternate)
 			{
 				ShowRightClick(e.Location, new() { CommandsInstance.ReloadAll });
@@ -212,16 +213,20 @@ namespace Crash.UI
 		private void HideRightClick()
 		{
 			RightClickMenu.Visible = false;
-			// Remove(RightClickMenu);
+			Remove(RightClickMenu);
 
 			Invalidate(true);
 		}
 
 		private void ShowRightClick(PointF point, List<CrashCommand> commands)
 		{
-			RightClickMenu.Items.Clear();
-			RightClickMenu.Visible = true;
-			RightClickMenu.AddItems(commands);
+			if (RightClickMenu is not null)
+			{
+				Remove(RightClickMenu);
+				RightClickMenu?.Dispose();
+			}
+
+			RightClickMenu = new RightClickMenu(commands);
 
 			foreach (var child in Children.OfType<ModelControl>())
 			{
@@ -240,7 +245,7 @@ namespace Crash.UI
 			if (bottom > ParentWindow.Height - 80f)
 				point.Y -= RightClickMenu.Height;
 
-			Move(RightClickMenu, (int)point.X, (int)point.Y);
+			Add(RightClickMenu, (int)point.X, (int)point.Y);
 			Invalidate(true);
 		}
 	}

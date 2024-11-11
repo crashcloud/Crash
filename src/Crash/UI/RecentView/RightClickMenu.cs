@@ -89,6 +89,7 @@ namespace Crash.UI
 		{
 			TryGetItemAtLocation(e.Location, out var command);
 			Visible = false;
+			Invalidate();
 			command?.Execute();
 
 			base.OnMouseDown(e);

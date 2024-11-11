@@ -141,6 +141,8 @@ namespace Crash.UI.JoinView
 			try
 			{
 				var model = SharedModels.FirstOrDefault(sm => sm.State.HasFlag(ModelRenderState.MouseOver));
+				if (model is SandboxModel)
+					model = new SharedModel("https://sandbox.getoasis.app");
 				Host.Close(model);
 			}
 			catch { }

@@ -126,10 +126,18 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 		};
 		layout.BeginVertical();
 
+		var barLine = new Drawable() { Height = 1 };
+		barLine.Paint += (s, e) =>
+		{
+			var col = HostUtils.RunningInDarkMode ? Palette.Black : Palette.DarkGray;
+			e.Graphics.FillRectangle(col, e.ClipRectangle);
+		};
+
 		var drawableCanary = new Drawable();
 		drawableCanary.Paint += (s, e) => this.OnStyleChanged(EventArgs.Empty);
 		layout.Add(drawableCanary);
 		layout.Add(MainLayout, true, true);
+		layout.AddRow(barLine);
 		layout.AddRow(InitStatusBar());
 		layout.EndVertical();
 

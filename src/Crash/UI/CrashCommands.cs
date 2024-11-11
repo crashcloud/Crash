@@ -40,6 +40,8 @@ internal class CrashCommands : ICrashInstance
 
 		public Bitmap GetIcon(int size, Color colour) => CrashIcons.Icon(IconKey, size, colour);
 
+		public override string ToString() => $"{Name}";
+
 	}
 
 	private RecentModelDialog Host { get; }
