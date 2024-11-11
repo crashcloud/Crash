@@ -18,7 +18,7 @@ namespace Crash.UI.JoinView
 		public JoinWindowNew()
 		{
 			Size = new Size(600, 300);
-			DataContext = new JoinViewModel();
+			DataContext = new JoinViewModel(this);
 			InitLayout();
 			InitBindings();
 #if NET7_0_OR_GREATER

@@ -16,7 +16,8 @@ namespace Crash.UI;
 internal class RecentModelControl : Drawable
 {
 
-	internal RecentModelViewModel ViewModel => DataContext as RecentModelViewModel;
+	internal JoinViewModel ViewModel { get; }
+	internal ISharedModel Model => DataContext as ISharedModel;
 	private RecentModelDialog HostView { get; }
 	private bool Disabled
 	{
@@ -35,8 +36,9 @@ internal class RecentModelControl : Drawable
 
 	public RecentModelControl(RecentModelDialog crashRecentView, ISharedModel model)
 	{
+		ViewModel = crashRecentView.Model;
+		DataContext = model;
 		HostView = crashRecentView;
-		DataContext = new RecentModelViewModel(model);
 		Width = RecentModelDialog.PreviewWidth;
 		Height = RecentModelDialog.PreviewHeight;
 
@@ -52,32 +54,29 @@ internal class RecentModelControl : Drawable
 		{
 			try
 			{
-				await ViewModel.AttemptToConnect();
+				await ViewModel.GetConnectionStatus(Model);
 			}
-			catch (Exception ex)
-			{
-				;
-			}
+			catch { }
 		};
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
 
-		if (ViewModel.State != ModelRenderState.Add)
+		if (Model is not AddModel)
 		{
-			var previousState = ViewModel.State;
+			var previousState = Model.State;
 			FrameTimer = new UITimer
 			{
 				Interval = 0.1,
 			};
 			FrameTimer.Elapsed += (s, _) =>
 			{
-				if (previousState == ViewModel.State)
+				if (previousState == Model.State)
 				{
-					if (ViewModel.State == ModelRenderState.FailedToLoad) return;
-					if (ViewModel.State == ModelRenderState.Loaded) return;
+					if (Model.State == ModelRenderState.FailedToLoad) return;
+					if (Model.State == ModelRenderState.Loaded) return;
 				}
 				else
 				{
-					previousState = ViewModel.State;
+					previousState = Model.State;
 				}
 
 				Frame++;
@@ -92,23 +91,23 @@ internal class RecentModelControl : Drawable
 	protected override void OnMouseUp(MouseEventArgs e)
 	{
 		e.Handled = true;
-		if (e.Buttons == MouseButtons.Alternate && !ViewModel.State.HasFlag(ModelRenderState.Add))
+		if (e.Buttons == MouseButtons.Alternate && Model is not AddModel)
 		{
-			if (!ViewModel.State.HasFlag(ModelRenderState.RightClick))
+			if (!Model.State.HasFlag(ModelRenderState.RightClick))
 			{
-				ViewModel.State = ViewModel.State |= ModelRenderState.RightClick;
+				Model.State = Model.State |= ModelRenderState.RightClick;
 				Invalidate();
 			}
 			else
 			{
-				ViewModel.State = ViewModel.State &= ~ModelRenderState.RightClick;
+				Model.State = Model.State &= ~ModelRenderState.RightClick;
 				Invalidate();
 			}
 		}
 
 		if (e.Buttons == MouseButtons.Primary)
 		{
-			if (ViewModel.Model is AddModel)
+			if (Model is AddModel)
 				HostView.CommandsInstance.Add?.Execute();
 		}
 
@@ -121,13 +120,13 @@ internal class RecentModelControl : Drawable
 		if (HostView.Model.TemporaryModel is not null) return;
 		if (e.Buttons == MouseButtons.Primary)
 		{
-			if (!ViewModel.State.HasFlag(ModelRenderState.Selected))
+			if (!Model.State.HasFlag(ModelRenderState.Selected))
 			{
-				ViewModel.State = ViewModel.State |= ModelRenderState.Selected;
+				Model.State = Model.State |= ModelRenderState.Selected;
 			}
 			else
 			{
-				ViewModel.State = ViewModel.State &= ~ModelRenderState.Selected;
+				Model.State = Model.State &= ~ModelRenderState.Selected;
 			}
 
 			Invalidate(true);
@@ -143,7 +142,7 @@ internal class RecentModelControl : Drawable
 			base.OnMouseEnter(e);
 			return;
 		}
-		ViewModel.State |= ModelRenderState.MouseOver;
+		Model.State |= ModelRenderState.MouseOver;
 		e.Handled = true;
 		base.OnMouseEnter(e);
 		Invalidate(true);
@@ -157,7 +156,7 @@ internal class RecentModelControl : Drawable
 			return;
 		}
 		e.Handled = true;
-		ViewModel.State &= ~ModelRenderState.MouseOver;
+		Model.State &= ~ModelRenderState.MouseOver;
 		Invalidate(true);
 	}
 
@@ -166,8 +165,8 @@ internal class RecentModelControl : Drawable
 		e.Handled = true;
 		if (e.Buttons == MouseButtons.Primary)
 		{
-			if (ViewModel.State.HasFlag(ModelRenderState.Loaded))
-				HostView.Close(ViewModel.Model);
+			if (Model.State.HasFlag(ModelRenderState.Loaded))
+				HostView.Close(Model);
 		}
 
 		base.OnMouseDoubleClick(e);
@@ -177,25 +176,25 @@ internal class RecentModelControl : Drawable
 	{
 		RenderBase(e);
 
-		if (ViewModel.State.HasFlag(ModelRenderState.Add))
+		if (Model is AddModel)
 		{
 			RenderAdd(e);
 		}
-		else if (ViewModel.State.HasFlag(ModelRenderState.Sandbox))
+		else if (Model is SandboxModel)
 		{
 			RenderSandbox(e);
 		}
 		else
 		{
-			if (ViewModel.State.HasFlag(ModelRenderState.Loading))
+			if (Model.State.HasFlag(ModelRenderState.Loading))
 			{
 				RenderLoading(e);
 			}
-			else if (ViewModel.State.HasFlag(ModelRenderState.Loaded))
+			else if (Model.State.HasFlag(ModelRenderState.Loaded))
 			{
 				RenderLoaded(e);
 			}
-			else if (ViewModel.State.HasFlag(ModelRenderState.FailedToLoad))
+			else if (Model.State.HasFlag(ModelRenderState.FailedToLoad))
 			{
 				RenderFailedToLoad(e);
 			}
@@ -223,7 +222,7 @@ internal class RecentModelControl : Drawable
 		float inset = 8f;
 		float radius = 6f;
 		var rect = MaximumRectangle;
-		var state = ViewModel.State;
+		var state = Model.State;
 
 		if (state.HasFlag(ModelRenderState.MouseOver))
 		{
@@ -241,10 +240,10 @@ internal class RecentModelControl : Drawable
 		if (state.HasFlag(ModelRenderState.Loading))
 			e.Graphics.FillPath(Palette.Blue, PreviewPath);
 
-		else if (state.HasFlag(ModelRenderState.Add))
+		else if (Model is AddModel)
 			e.Graphics.FillPath(Palette.Pink, PreviewPath);
 
-		else if (state.HasFlag(ModelRenderState.Sandbox))
+		else if (Model is SandboxModel)
 			e.Graphics.FillPath(Palette.Purple, PreviewPath);
 	}
 
@@ -282,7 +281,7 @@ internal class RecentModelControl : Drawable
 
 	private void RenderLoaded(PaintEventArgs e)
 	{
-		if (ViewModel.Model is not SharedModel sharedModel) return;
+		if (Model is not SharedModel sharedModel) return;
 		if (sharedModel.Thumbnail is null) return;
 
 		var textureBrush = new TextureBrush(sharedModel.Thumbnail, 1f);
@@ -313,7 +312,7 @@ internal class RecentModelControl : Drawable
 
 	private void RenderAddressBar(PaintEventArgs e)
 	{
-		var address = ViewModel?.Model?.ModelAddress;
+		var address = Model?.ModelAddress;
 		if (string.IsNullOrEmpty(address)) return;
 		var textContainer = new RectangleF(PreviewRect.Left, PreviewRect.Bottom + 10f, PreviewRect.Width, MaximumRectangle.Bottom - PreviewRect.Bottom);
 
@@ -330,6 +329,6 @@ internal class RecentModelControl : Drawable
 		RenderAddressBar(e);
 	}
 
-	public override string ToString() => $"{this.ViewModel.Model.ModelAddress}";
+	public override string ToString() => $"{this.Model.ModelAddress}";
 
 }

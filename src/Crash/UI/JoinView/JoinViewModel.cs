@@ -2,7 +2,12 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 
+using Crash.Common.Communications;
+using Crash.Common.Document;
+using Crash.Handlers;
 using Crash.Handlers.Data;
+
+using Eto.Forms;
 
 using Rhino.UI;
 
@@ -13,8 +18,8 @@ namespace Crash.UI.JoinView
 	/// <summary>The Join View Model</summary>
 	internal sealed class JoinViewModel : BaseViewModel
 	{
+		public Dialog<ISharedModel> Host { get; }
 		private const string PREVIOUS_MODELS_KEY = "PREVIOUS_SHARED_MODELS";
-
 
 		private static JsonSerializerOptions JsonOptions => new()
 		{
@@ -23,7 +28,7 @@ namespace Crash.UI.JoinView
 			IncludeFields = false
 		};
 
-		internal JoinViewModel()
+		internal JoinViewModel(Control host)
 		{
 			var sharedModels = new List<ISharedModel>();
 			sharedModels.Add(new AddModel());
@@ -45,6 +50,7 @@ namespace Crash.UI.JoinView
 #endif
 
 			SharedModels = new(sharedModels);
+			Host = host.ParentWindow as Dialog<ISharedModel>;
 		}
 
 		internal ObservableCollection<ISharedModel> SharedModels { get; }
@@ -79,14 +85,100 @@ namespace Crash.UI.JoinView
 			return false;
 		}
 
-		internal void JoinSelected()
+		private bool TryGetSelected(out ISharedModel selected)
 		{
-			throw new NotImplementedException();
+			selected = null;
+			var models = SharedModels.Where(sm => sm.State.HasFlag(ModelRenderState.MouseOver))?.ToList();
+			if (models is null) return false;
+			if (models.Count != 1) return false;
+
+			selected = models[0];
+			return true;
+		}
+
+		public async Task GetConnectionStatus(ISharedModel model)
+		{
+			try
+			{
+				if (model is null or AddModel) return;
+				if (string.IsNullOrEmpty(model.ModelAddress)) return;
+
+				var doc = new CrashDoc();
+				var userName = Guid.NewGuid().ToString();
+				doc.Users.CurrentUser = new User(userName);
+				var client = doc.LocalClient = new CrashClient(doc, new IClientOptions(true));
+				client.RegisterConnection(userName, new Uri($"{model.ModelAddress}/Crash"));
+
+				var state = model.State;
+				state &= ~ModelRenderState.FailedToLoad;
+				state &= ~ModelRenderState.Loaded;
+				state |= ModelRenderState.Loading;
+				model.State = state;
+				Invalidate();
+
+				var result = await client.StartLocalClientAsync();
+				state |= result switch
+				{
+					null => ModelRenderState.Loaded,
+					_ => ModelRenderState.FailedToLoad
+				};
+				state &= ~ModelRenderState.Loading;
+
+				await CrashDocRegistry.DisposeOfDocumentAsync(doc);
+
+				model.State = state;
+			}
+			catch { model.State = ModelRenderState.FailedToLoad; }
+
+			Invalidate();
+		}
+
+		private void Invalidate()
+		{
+			Host.ParentWindow.Invalidate(true);
+		}
+
+		internal async void JoinSelected()
+		{
+			try
+			{
+				var model = SharedModels.FirstOrDefault(sm => sm.State.HasFlag(ModelRenderState.MouseOver));
+				Host.Close(model);
+			}
+			catch { }
+			finally { Invalidate(); }
 		}
 
 		internal void ReloadAll()
 		{
-			throw new NotImplementedException();
+			foreach (var model in SharedModels)
+			{
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+				GetConnectionStatus(model);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+			}
+
+			Invalidate();
+		}
+
+		internal void ReloadSelected()
+		{
+			try
+			{
+				if (!TryGetSelected(out var sharedModel)) return;
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+				GetConnectionStatus(sharedModel);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+			}
+			catch { }
+			finally { Invalidate(); }
+		}
+
+		internal void RemoveSelected()
+		{
+			// TODO : How are controls updated??
+			// this.SharedModels.Remove();
+			// throw new NotImplementedException();
 		}
 
 		internal string VersionText
@@ -98,5 +190,6 @@ namespace Crash.UI.JoinView
 				return $"Version {name.Version} - wip";
 			}
 		}
+
 	}
 }

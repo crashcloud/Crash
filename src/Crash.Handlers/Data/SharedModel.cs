@@ -14,6 +14,8 @@ namespace Crash.Handlers.Data
 		string ModelAddress { get; }
 
 		DateTime LastOpened { get; }
+
+		ModelRenderState State { get; set; }
 	}
 
 	public record AddModel : ISharedModel
@@ -23,6 +25,8 @@ namespace Crash.Handlers.Data
 		public string ModelAddress => "Add New Model";
 
 		public DateTime LastOpened => DateTime.UtcNow;
+
+		public ModelRenderState State { get; set; }
 
 		public override string ToString() => "Add";
 	}
@@ -35,6 +39,8 @@ namespace Crash.Handlers.Data
 
 		public DateTime LastOpened { get; set; } = DateTime.UtcNow;
 
+		public ModelRenderState State { get; set; }
+
 		public override string ToString() => "[Sandbox]";
 	}
 
@@ -45,6 +51,8 @@ namespace Crash.Handlers.Data
 		public string ModelAddress => "http://0.0.0.0:8080";
 
 		public DateTime LastOpened { get; set; } = DateTime.UtcNow;
+
+		public ModelRenderState State { get; set; }
 
 		public override string ToString() => "<Debug>";
 	}
@@ -60,12 +68,16 @@ namespace Crash.Handlers.Data
 
 		public DateTime LastOpened { get; set; } = DateTime.UtcNow;
 
+		public ModelRenderState State { get; set; }
+
 		public SharedModel() { }
 
 		public SharedModel(string address)
 		{
 			ModelAddress = address;
 		}
+
+		public bool Equals(object? other) => other is SharedModel model && Equals(model);
 
 		public bool Equals(SharedModel? other)
 		{

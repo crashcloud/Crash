@@ -139,7 +139,7 @@ namespace Crash.UI
 					if (control is RecentModelControl recent)
 					{
 						var point = this.PointFromScreen(control.PointToScreen(e.Location));
-						var model = recent.ViewModel.Model;
+						var model = recent.Model;
 
 						var commands = new List<CrashCommand>() { CommandsInstance.Remove, CommandsInstance.Reload, };
 
@@ -156,7 +156,7 @@ namespace Crash.UI
 						{
 							var join = CommandsInstance.Join;
 							join.Enabled = false;
-							if (recent.ViewModel.State.HasFlag(ModelRenderState.Loaded))
+							if (recent.Model.State.HasFlag(ModelRenderState.Loaded))
 							{
 								join.Enabled = true;
 							}
@@ -225,10 +225,10 @@ namespace Crash.UI
 
 			foreach (var child in Children.OfType<RecentModelControl>())
 			{
-				child.ViewModel.State &= ~ModelRenderState.MouseOver;
+				child.Model.State &= ~ModelRenderState.MouseOver;
 				if (child.Bounds.Contains((Point)point))
 				{
-					child.ViewModel.State |= ModelRenderState.MouseOver;
+					child.Model.State |= ModelRenderState.MouseOver;
 				}
 			}
 

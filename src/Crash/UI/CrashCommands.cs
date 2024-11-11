@@ -50,12 +50,14 @@ internal class CrashCommands : ICrashInstance
 		Add = new("Add", "plus", Host.ShowNewModelDialog);
 		Join = new("Join", "join", Host.Model.JoinSelected);
 		ReloadAll = new("Reload All", "reload", Host.Model.ReloadAll);
+		Reload = new("Reload", "reload", Host.Model.ReloadSelected);
+		Remove = new("Remove", "close", Host.Model.RemoveSelected) { ColourOverride = Palette.Red };
 	}
 
 	public CrashCommand Add { get; }
 	public CrashCommand Join { get; }
-	public CrashCommand Reload { get; } = new("Reload", "reload", () => { });
-	public CrashCommand Remove { get; } = new("Remove", "close", () => { }) { ColourOverride = Palette.Red };
+	public CrashCommand Reload { get; }
+	public CrashCommand Remove { get; }
 	public CrashCommand ReloadAll { get; }
 
 }

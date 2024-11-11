@@ -60,7 +60,7 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 		Size = new Size(WidthForPreviews(5), 600);
 		Padding = new Padding(0);
 
-		DataContext = new JoinViewModel();
+		DataContext = new JoinViewModel(this);
 
 		CommandsInstance = new CrashCommands(this);
 		InitLayout();
