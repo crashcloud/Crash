@@ -16,7 +16,7 @@ using Rhino.UI;
 namespace Crash.UI.JoinView
 {
 	/// <summary>The Join View Model</summary>
-	internal sealed class JoinViewModel : BaseViewModel
+	internal sealed class RecentViewModel : BaseViewModel
 	{
 		public Dialog<ISharedModel> Host { get; }
 		private const string PREVIOUS_MODELS_KEY = "PREVIOUS_SHARED_MODELS";
@@ -28,7 +28,7 @@ namespace Crash.UI.JoinView
 			IncludeFields = false
 		};
 
-		internal JoinViewModel(Control host)
+		internal RecentViewModel(Control host)
 		{
 			var sharedModels = new List<ISharedModel>();
 			sharedModels.Add(new AddModel());
@@ -185,7 +185,7 @@ namespace Crash.UI.JoinView
 		{
 			get
 			{
-				var assem = typeof(JoinViewModel).Assembly;
+				var assem = typeof(RecentViewModel).Assembly;
 				var name = assem.GetName();
 				return $"Version {name.Version} - wip";
 			}

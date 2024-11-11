@@ -136,7 +136,7 @@ namespace Crash.UI
 			{
 				if (e.Buttons == MouseButtons.Alternate)
 				{
-					if (control is RecentModelControl recent)
+					if (control is ModelControl recent)
 					{
 						var point = this.PointFromScreen(control.PointToScreen(e.Location));
 						var model = recent.Model;
@@ -223,7 +223,7 @@ namespace Crash.UI
 			RightClickMenu.Visible = true;
 			RightClickMenu.AddItems(commands);
 
-			foreach (var child in Children.OfType<RecentModelControl>())
+			foreach (var child in Children.OfType<ModelControl>())
 			{
 				child.Model.State &= ~ModelRenderState.MouseOver;
 				if (child.Bounds.Contains((Point)point))

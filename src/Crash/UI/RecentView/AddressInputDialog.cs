@@ -18,7 +18,7 @@ public class AddressInputDialog : Dialog<string>
 	private Button DoneButton { get; set; }
 	private Drawable Fade { get; set; }
 
-	private JoinViewModel Model => DataContext as JoinViewModel;
+	private RecentViewModel Model => DataContext as RecentViewModel;
 
 	public AddressInputDialog(Control parent)
 	{

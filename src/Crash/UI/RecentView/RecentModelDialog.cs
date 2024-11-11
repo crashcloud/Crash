@@ -6,8 +6,6 @@ using System.Net.NetworkInformation;
 using Crash.Handlers.Data;
 using Crash.UI.JoinView;
 using Crash.UI.RecentView;
-using Crash.UI.RecentView.Layers;
-using Crash.UI.UsersView;
 
 using Eto.Drawing;
 using Eto.Forms;
@@ -38,7 +36,7 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 	private OverflowLayout<ISharedModel> RecentModelGallery { get; set; }
 	private DynamicLayout StatusBar { get; set; }
 
-	internal JoinViewModel Model => DataContext as JoinViewModel;
+	internal RecentViewModel Model => DataContext as RecentViewModel;
 
 	internal CrashCommands CommandsInstance { get; }
 	private PixelLayout MainLayout { get; set; }
@@ -60,7 +58,7 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 		Size = new Size(WidthForPreviews(5), 600);
 		Padding = new Padding(0);
 
-		DataContext = new JoinViewModel(this);
+		DataContext = new RecentViewModel(this);
 
 		CommandsInstance = new CrashCommands(this);
 		InitLayout();
@@ -161,7 +159,7 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 			Font = SystemFonts.Default(12),
 			TextAlignment = TextAlignment.Left
 		};
-		versionLabel.BindDataContext(c => c.Text, Binding.Property((JoinViewModel m) => m.VersionText));
+		versionLabel.BindDataContext(c => c.Text, Binding.Property((RecentViewModel m) => m.VersionText));
 
 		StatusBar.Add(copyrightLabel, false);
 		StatusBar.Add(versionLabel, false);
@@ -230,7 +228,7 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 	{
 		// TODO : Dynamic Layouts are Shit
 		// Use PixelLayouts
-		RecentModelGallery = new OverflowLayout<ISharedModel>(Model.SharedModels, (model) => new RecentModelControl(this, model));
+		RecentModelGallery = new OverflowLayout<ISharedModel>(Model.SharedModels, (model) => new ModelControl(this, model));
 		RecentModelGallery.Focus();
 		RecentModelGallery.Invalidate();
 

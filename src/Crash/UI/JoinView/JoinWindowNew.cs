@@ -13,18 +13,7 @@ namespace Crash.UI.JoinView
 		private Control ModelList { get; set; }
 		private Control AddModelBar { get; set; }
 
-		private JoinViewModel Model => DataContext as JoinViewModel;
-
-		public JoinWindowNew()
-		{
-			Size = new Size(600, 300);
-			DataContext = new JoinViewModel(this);
-			InitLayout();
-			InitBindings();
-#if NET7_0_OR_GREATER
-			this.UseRhinoStyle();
-#endif
-		}
+		private RecentViewModel Model => DataContext as RecentViewModel;
 
 		private void InitLayout()
 		{

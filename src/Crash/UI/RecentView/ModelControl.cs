@@ -3,8 +3,6 @@ using System.Text.RegularExpressions;
 using Crash.Handlers.Data;
 using Crash.Resources;
 using Crash.UI.JoinView;
-using Crash.UI.RecentView;
-using Crash.UI.RecentView.Layers;
 
 using Eto.Drawing;
 using Eto.Forms;
@@ -13,10 +11,10 @@ using Rhino.Runtime;
 
 namespace Crash.UI;
 
-internal class RecentModelControl : Drawable
+internal class ModelControl : Drawable
 {
 
-	internal JoinViewModel ViewModel { get; }
+	internal RecentViewModel ViewModel { get; }
 	internal ISharedModel Model => DataContext as ISharedModel;
 	private RecentModelDialog HostView { get; }
 	private bool Disabled
@@ -34,7 +32,7 @@ internal class RecentModelControl : Drawable
 
 	private RectangleF MaximumRectangle => new RectangleF(0, 0, Width, Height);
 
-	public RecentModelControl(RecentModelDialog crashRecentView, ISharedModel model)
+	public ModelControl(RecentModelDialog crashRecentView, ISharedModel model)
 	{
 		ViewModel = crashRecentView.Model;
 		DataContext = model;
@@ -44,7 +42,7 @@ internal class RecentModelControl : Drawable
 
 		ViewModel.PropertyChanged += (s, e) => Invalidate(true);
 
-		HostView.Model.ListenToProperty(nameof(JoinViewModel.TemporaryModel), () =>
+		HostView.Model.ListenToProperty(nameof(RecentViewModel.TemporaryModel), () =>
 		{
 			HostView.Invalidate(true);
 		});
