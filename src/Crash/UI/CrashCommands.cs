@@ -47,9 +47,9 @@ internal class CrashCommands : ICrashInstance
 	{
 		Host = host;
 
-		Add = new("Add", "plus.png", () => Host.Model.AddSharedModel(new SharedModel() { ModelAddress = "Yep!" }));
-		Join = new("Join", "join.png", () => { });
-		ReloadAll = new("Reload All", "reload.png", () =>
+		Add = new("Add", "plus", () => Host.Model.AddSharedModel(new SharedModel() { ModelAddress = "Yep!" }));
+		Join = new("Join", "join", () => { });
+		ReloadAll = new("Reload All", "reload", () =>
 		{
 			foreach (var rmc in Host.Children.OfType<RecentModelControl>())
 			{
@@ -62,8 +62,8 @@ internal class CrashCommands : ICrashInstance
 
 	public CrashCommand Add { get; }
 	public CrashCommand Join { get; }
-	public CrashCommand Reload { get; } = new("Reload", "reload.png", () => { });
-	public CrashCommand Remove { get; } = new("Remove", "close.png", () => { }) { ColourOverride = Palette.Red };
+	public CrashCommand Reload { get; } = new("Reload", "reload", () => { });
+	public CrashCommand Remove { get; } = new("Remove", "close", () => { }) { ColourOverride = Palette.Red };
 	public CrashCommand ReloadAll { get; }
 
 }

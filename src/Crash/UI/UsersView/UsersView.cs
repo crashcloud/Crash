@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using Crash.Common.App;
 using Crash.Common.Document;
 using Crash.Handlers;
-using Crash.Properties;
+using Crash.Resources;
 
 using Eto.Drawing;
 using Eto.Forms;
@@ -93,7 +93,7 @@ namespace Crash.UI.UsersView
 
 		private void CreateForm()
 		{
-			Icon = Icons.crashlogo.ToEto();
+			Icon = new Icon(1f, CrashIcons.Icon("logo", 16));
 			Title = "Collaborators";
 			Padding = 0;
 			Topmost = false;

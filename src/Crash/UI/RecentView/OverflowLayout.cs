@@ -64,17 +64,17 @@ namespace Crash.UI
 					ControlHeight = control.Height;
 					Add(control, 0, 0);
 				}
-
-				return;
 			}
-
-			controls.Clear();
-			foreach (var item in DataStore)
+			else
 			{
-				var control = ControlFactory(item);
-				ControlWidth = control.Width;
-				ControlHeight = control.Height;
-				Add(control, 0, 0);
+				controls.Clear();
+				foreach (var item in DataStore)
+				{
+					var control = ControlFactory(item);
+					ControlWidth = control.Width;
+					ControlHeight = control.Height;
+					Add(control, 0, 0);
+				}
 			}
 
 			RepositionLayout();

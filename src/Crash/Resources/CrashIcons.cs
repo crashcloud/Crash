@@ -15,6 +15,8 @@ public static class CrashIcons
 	// TODO : Improve Icon Size Caching
 	static Dictionary<IconKey, Bitmap> Icons { get; set; }
 
+	private static string[] Extensions { get; } = new[] { ".png", ".ico", ".jpg", ".bmp" };
+
 	static CrashIcons()
 	{
 		Icons = new();
@@ -25,8 +27,16 @@ public static class CrashIcons
 		{
 			var splitName = resourceName.Split(new[] { "Crash.Resources." }, StringSplitOptions.RemoveEmptyEntries)?.LastOrDefault();
 			if (string.IsNullOrEmpty(splitName)) continue;
-			if (!splitName.Contains(".png")) continue;
-			var key = splitName;
+			bool validExtension = false;
+			foreach (var ext in Extensions)
+			{
+				if (!string.Equals(Path.GetExtension(splitName), ext, StringComparison.OrdinalIgnoreCase)) continue;
+				validExtension = true;
+				break;
+			}
+			if (!validExtension) continue;
+
+			var key = Path.GetFileNameWithoutExtension(splitName);
 
 			using (Stream stream = assembly.GetManifestResourceStream(resourceName))
 			{

@@ -55,6 +55,7 @@
 			<DependentUpon>ServerSettings.settings</DependentUpon>
 		</Compile>
 		<EmbeddedResource Include="Resources\*.png" />
+		<EmbeddedResource Include="Resources\*.ico" />
 	</ItemGroup>
 
 	<ItemGroup>

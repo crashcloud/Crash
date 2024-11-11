@@ -1,14 +1,14 @@
-using System.Drawing;
-
 using Crash.Common.Document;
-using Crash.Properties;
+using Crash.Resources;
+
+using Eto.Drawing;
 
 using Rhino.UI;
 
-using Image = Eto.Drawing.Image;
-
 namespace Crash.UI.UsersView
 {
+
+	// TODO : This is messy
 	internal sealed class UserObject
 	{
 		private CrashDoc _crashDoc { get; set; }
@@ -48,7 +48,7 @@ namespace Crash.UI.UsersView
 		}
 
 		public string Name { get; private set; }
-		public Color Colour { get; private set; }
+		public System.Drawing.Color Colour { get; private set; }
 
 		public CameraState Camera
 		{
@@ -62,17 +62,13 @@ namespace Crash.UI.UsersView
 			}
 		}
 
-		public Image Image => ((Camera, Palette.DarkMode) switch
+		public Bitmap Image => Camera switch
 		{
-			(CameraState.Follow, true) => Icons.CameraFollow_Light,
-			(CameraState.Follow, false) => Icons.CameraFollow_Dark,
-			(CameraState.Visible, true) => Icons.CameraVisible_Light,
-			(CameraState.Visible, false) => Icons.CameraVisible_Dark,
-			(CameraState.None, true) => Icons.CameraNone_Light,
-			(CameraState.None, false) => Icons.CameraNone_Dark,
+			CameraState.Follow => CrashIcons.Icon("camera-follow", 24),
+			CameraState.Visible => CrashIcons.Icon("camera", 24),
 
-			_ => Icons.CameraNone_Dark
-		}).ToEto();
+			_ => CrashIcons.Icon("camera-off", 24)
+		};
 
 		public bool Visible
 		{

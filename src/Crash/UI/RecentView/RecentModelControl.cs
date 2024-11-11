@@ -1,7 +1,6 @@
 using System.Text.RegularExpressions;
 
 using Crash.Handlers.Data;
-using Crash.Properties;
 using Crash.Resources;
 using Crash.UI.JoinView;
 using Crash.UI.RecentView;
