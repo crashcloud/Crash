@@ -47,17 +47,9 @@ internal class CrashCommands : ICrashInstance
 	{
 		Host = host;
 
-		Add = new("Add", "plus", () => Host.Model.AddSharedModel(new SharedModel() { ModelAddress = "Yep!" }));
-		Join = new("Join", "join", () => { });
-		ReloadAll = new("Reload All", "reload", () =>
-		{
-			foreach (var rmc in Host.Children.OfType<RecentModelControl>())
-			{
-				rmc.ViewModel.AttemptToConnect();
-				rmc.Invalidate(true);
-			}
-			// Host.Model.SharedModels
-		});
+		Add = new("Add", "plus", Host.ShowNewModelDialog);
+		Join = new("Join", "join", Host.Model.JoinSelected);
+		ReloadAll = new("Reload All", "reload", Host.Model.ReloadAll);
 	}
 
 	public CrashCommand Add { get; }

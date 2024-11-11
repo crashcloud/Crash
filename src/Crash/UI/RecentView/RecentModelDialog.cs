@@ -36,12 +36,13 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 	}
 
 	private OverflowLayout<ISharedModel> RecentModelGallery { get; set; }
-	internal Drawable ModelInputBar { get; private set; }
 	private DynamicLayout StatusBar { get; set; }
 
 	internal JoinViewModel Model => DataContext as JoinViewModel;
 
 	internal CrashCommands CommandsInstance { get; }
+	private PixelLayout MainLayout { get; set; }
+
 	public RecentModelDialog()
 	{
 		WindowStyle = WindowStyle.Utility;
@@ -111,15 +112,12 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 			RecentModelGallery.Invalidate(true);
 		};
 
-		ModelInputBar = new AddressInputBar(Model);
-
-		var pixelLayout = new PixelLayout()
+		MainLayout = new PixelLayout()
 		{
 			Width = -1,
 			Height = -1,
 		};
-		pixelLayout.Add(recentModelLayout, 0, 0);
-		pixelLayout.Add(ModelInputBar, 0, 0);
+		MainLayout.Add(recentModelLayout, 0, 0);
 
 		var layout = new DynamicLayout()
 		{
@@ -133,7 +131,7 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 		var drawableCanary = new Drawable();
 		drawableCanary.Paint += (s, e) => this.OnStyleChanged(EventArgs.Empty);
 		layout.Add(drawableCanary);
-		layout.Add(pixelLayout, true, true);
+		layout.Add(MainLayout, true, true);
 		layout.AddRow(InitStatusBar());
 		layout.EndVertical();
 
@@ -242,6 +240,23 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 	private void InitBindings()
 	{
 
+	}
+
+	private AddressInputDialog ActiveAddressInput { get; set; }
+	internal void ShowNewModelDialog()
+	{
+		if (ActiveAddressInput is not null) return;
+		try
+		{
+			ActiveAddressInput = new AddressInputDialog(this);
+			var newModelAddress = ActiveAddressInput.ShowModal(this);
+			// this.Model.AddSharedModel(new SharedModel() { ModelAddress = newModelAddress });
+		}
+		catch { }
+		finally
+		{
+			ActiveAddressInput = null;
+		}
 	}
 
 }

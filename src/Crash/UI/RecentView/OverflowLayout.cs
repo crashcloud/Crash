@@ -25,7 +25,7 @@ namespace Crash.UI
 		public ObservableCollection<TItem> DataStore { get; set; }
 		private Func<TItem, Control> ControlFactory { get; }
 
-		private RightClickMenu RightClickMenu { get; }
+		internal RightClickMenu RightClickMenu { get; }
 
 		private CrashCommands CommandsInstance => (ParentWindow as RecentModelDialog)?.CommandsInstance!;
 
@@ -39,14 +39,10 @@ namespace Crash.UI
 			};
 			DataStore = sharedModels;
 
-			RightClickMenu = new RightClickMenu(new());
-
-			// Width = Width;
-			// Height = Width;
+			RightClickMenu = new RightClickMenu(new()) { Visible = false };
 
 			InitLayout();
 			InitBindings();
-			// SubscribeObjectToEvents(this);
 		}
 
 		// TODO : Use Parent to get the width
@@ -77,6 +73,8 @@ namespace Crash.UI
 				}
 			}
 
+			Add(RightClickMenu, 0, 0);
+
 			RepositionLayout();
 		}
 
@@ -105,7 +103,6 @@ namespace Crash.UI
 
 		public void RepositionLayout()
 		{
-			// TODO : Use Parent to get the width
 			if (Controls is not IList<Control> controls) return;
 			if (controls.Count == 0) return;
 
@@ -214,13 +211,26 @@ namespace Crash.UI
 
 		private void HideRightClick()
 		{
-			Remove(RightClickMenu);
+			RightClickMenu.Visible = false;
+			// Remove(RightClickMenu);
+
+			Invalidate(true);
 		}
 
 		private void ShowRightClick(PointF point, List<CrashCommand> commands)
 		{
 			RightClickMenu.Items.Clear();
+			RightClickMenu.Visible = true;
 			RightClickMenu.AddItems(commands);
+
+			foreach (var child in Children.OfType<RecentModelControl>())
+			{
+				child.ViewModel.State &= ~ModelRenderState.MouseOver;
+				if (child.Bounds.Contains((Point)point))
+				{
+					child.ViewModel.State |= ModelRenderState.MouseOver;
+				}
+			}
 
 			var right = point.X + RightClickMenu.Width;
 			var bottom = point.Y + RightClickMenu.Height;
@@ -230,7 +240,8 @@ namespace Crash.UI
 			if (bottom > ParentWindow.Height - 80f)
 				point.Y -= RightClickMenu.Height;
 
-			Add(RightClickMenu, (int)point.X, (int)point.Y);
+			Move(RightClickMenu, (int)point.X, (int)point.Y);
+			Invalidate(true);
 		}
 	}
 }

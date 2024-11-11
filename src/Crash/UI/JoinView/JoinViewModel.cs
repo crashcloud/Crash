@@ -36,12 +36,12 @@ namespace Crash.UI.JoinView
 
 #if DEBUG
 			sharedModels.Add(new DebugModel());
-			sharedModels.Add(new SharedModel() { ModelAddress = "https://cheddar.com" });
-			sharedModels.Add(new SharedModel() { ModelAddress = "https://192.168.1.1:7070" });
-			sharedModels.Add(new SharedModel() { ModelAddress = "https://edam.com/" });
-			sharedModels.Add(new SharedModel() { ModelAddress = "https://brie.co.uk" });
-			sharedModels.Add(new SharedModel() { ModelAddress = "https://gorgonzola.io/tasty/" });
-			sharedModels.Add(new SharedModel() { ModelAddress = "https://parmesan.app" });
+			sharedModels.Add(new SharedModel("https://cheddar.com"));
+			sharedModels.Add(new SharedModel("https://192.168.1.1:7070"));
+			sharedModels.Add(new SharedModel("https://edam.com/"));
+			sharedModels.Add(new SharedModel("https://brie.co.uk"));
+			sharedModels.Add(new SharedModel("https://gorgonzola.io/tasty/"));
+			sharedModels.Add(new SharedModel("https://parmesan.app"));
 #endif
 
 			SharedModels = new(sharedModels);
@@ -77,6 +77,16 @@ namespace Crash.UI.JoinView
 			}
 
 			return false;
+		}
+
+		internal void JoinSelected()
+		{
+			throw new NotImplementedException();
+		}
+
+		internal void ReloadAll()
+		{
+			throw new NotImplementedException();
 		}
 
 		internal string VersionText

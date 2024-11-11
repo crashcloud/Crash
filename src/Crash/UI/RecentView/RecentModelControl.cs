@@ -18,6 +18,15 @@ internal class RecentModelControl : Drawable
 
 	internal RecentModelViewModel ViewModel => DataContext as RecentModelViewModel;
 	private RecentModelDialog HostView { get; }
+	private bool Disabled
+	{
+		get
+		{
+			var parent = (Parent as OverflowLayout<ISharedModel>);
+			var menu = parent?.RightClickMenu;
+			return menu?.Visible ?? false;
+		}
+	}
 
 	private int Frame { get; set; } = 0;
 	private UITimer FrameTimer { get; }
@@ -97,22 +106,10 @@ internal class RecentModelControl : Drawable
 			}
 		}
 
-		if (e.Buttons == MouseButtons.Primary && ViewModel.State == ModelRenderState.Loaded)
+		if (e.Buttons == MouseButtons.Primary)
 		{
-			// Join
-			// HostView.Close(ViewModel.Model);
-
-			// Remove
-			// ...
-
-			// Refresh
-			// ...
-		}
-
-		if (e.Buttons == MouseButtons.Primary && ViewModel.State == ModelRenderState.Add)
-		{
-			HostView.Model.TemporaryModel = new SharedModel();
-			HostView.ModelInputBar.Invalidate();
+			if (ViewModel.Model is AddModel)
+				HostView.CommandsInstance.Add?.Execute();
 		}
 
 		base.OnMouseUp(e);
@@ -141,6 +138,11 @@ internal class RecentModelControl : Drawable
 
 	protected override void OnMouseEnter(MouseEventArgs e)
 	{
+		if (Disabled)
+		{
+			base.OnMouseEnter(e);
+			return;
+		}
 		ViewModel.State |= ModelRenderState.MouseOver;
 		e.Handled = true;
 		base.OnMouseEnter(e);
@@ -149,19 +151,23 @@ internal class RecentModelControl : Drawable
 
 	protected override void OnMouseLeave(MouseEventArgs e)
 	{
+		if (Disabled)
+		{
+			base.OnMouseLeave(e);
+			return;
+		}
 		e.Handled = true;
 		ViewModel.State &= ~ModelRenderState.MouseOver;
-		base.OnMouseLeave(e);
 		Invalidate(true);
 	}
 
 	protected override void OnMouseDoubleClick(MouseEventArgs e)
 	{
 		e.Handled = true;
-		if (e.Buttons == MouseButtons.Primary &&
-			ViewModel.State.HasFlag(ModelRenderState.Loaded))
+		if (e.Buttons == MouseButtons.Primary)
 		{
-			HostView.Close(ViewModel.Model);
+			if (ViewModel.State.HasFlag(ModelRenderState.Loaded))
+				HostView.Close(ViewModel.Model);
 		}
 
 		base.OnMouseDoubleClick(e);

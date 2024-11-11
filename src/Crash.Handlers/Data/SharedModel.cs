@@ -60,6 +60,13 @@ namespace Crash.Handlers.Data
 
 		public DateTime LastOpened { get; set; } = DateTime.UtcNow;
 
+		public SharedModel() { }
+
+		public SharedModel(string address)
+		{
+			ModelAddress = address;
+		}
+
 		public bool Equals(SharedModel? other)
 		{
 			if (other is null) return false;
