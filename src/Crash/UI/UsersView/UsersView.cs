@@ -53,13 +53,9 @@ namespace Crash.UI.UsersView
 			if (!CrashInstances.TryGetInstance<UsersForm>(crashDoc, out var usersForm))
 			{
 				usersForm = new UsersForm(crashDoc);
-				usersForm.RestorePosition();
-
 				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
 				CrashInstances.TrySetInstance(crashDoc, usersForm);
-
 				usersForm.Show(rhinoDoc);
-				usersForm.SavePosition();
 			}
 
 			usersForm.BringToFront();
