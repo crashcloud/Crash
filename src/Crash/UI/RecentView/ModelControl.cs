@@ -20,7 +20,7 @@ internal class ModelControl : Drawable
 	{
 		get
 		{
-			var parent = (Parent as OverflowLayout<ISharedModel>);
+			var parent = (Parent as OverflowLayout);
 			var menu = parent?.RightClickMenu;
 			return menu?.Visible ?? false;
 		}
@@ -59,6 +59,12 @@ internal class ModelControl : Drawable
 			};
 			FrameTimer.Elapsed += (s, _) =>
 			{
+				if (IsDisposed)
+				{
+					FrameTimer.Stop();
+					Frame = 0;
+					return;
+				}
 				if (previousState == Model.State)
 				{
 					if (Model.State == ModelRenderState.FailedToLoad) return;
@@ -70,6 +76,7 @@ internal class ModelControl : Drawable
 				}
 
 				Frame++;
+
 				Invalidate();
 			};
 			FrameTimer.Start();
@@ -145,6 +152,18 @@ internal class ModelControl : Drawable
 		}
 		Model.State &= ~ModelRenderState.MouseOver;
 		Invalidate(true);
+	}
+
+	protected override void OnMouseDoubleClick(MouseEventArgs e)
+	{
+		e.Handled = true;
+		if (e.Buttons == MouseButtons.Primary)
+		{
+			if (Model is not AddModel)
+				HostView.CommandsInstance.Join?.Execute();
+		}
+
+		base.OnMouseDoubleClick(e);
 	}
 
 	protected override void OnPaint(PaintEventArgs e)

@@ -39,16 +39,6 @@ namespace Crash.UI.JoinView
 				sharedModels.AddRange(loadedSharedModels);
 			}
 
-#if DEBUG
-			sharedModels.Add(new DebugModel());
-			sharedModels.Add(new SharedModel("https://cheddar.com"));
-			sharedModels.Add(new SharedModel("https://192.168.1.1:7070"));
-			sharedModels.Add(new SharedModel("https://edam.com/"));
-			sharedModels.Add(new SharedModel("https://brie.co.uk"));
-			sharedModels.Add(new SharedModel("https://gorgonzola.io/tasty/"));
-			sharedModels.Add(new SharedModel("https://parmesan.app"));
-#endif
-
 			SharedModels = new(sharedModels);
 			Host = host.ParentWindow as Dialog<ISharedModel>;
 		}
@@ -76,7 +66,10 @@ namespace Crash.UI.JoinView
 		{
 			if (ModelIsNew(model))
 			{
+				model.State = ModelRenderState.FailedToLoad;
 				SharedModels.Add(model);
+				NewModel?.Invoke(this, model);
+				GetConnectionStatus(model);
 				return true;
 			}
 
@@ -176,9 +169,9 @@ namespace Crash.UI.JoinView
 
 		internal void RemoveSelected()
 		{
-			// TODO : How are controls updated??
-			// this.SharedModels.Remove();
-			// throw new NotImplementedException();
+			if (!TryGetSelected(out var selected)) return;
+			SharedModels.Remove(selected);
+			RemoveModel?.Invoke(this, selected);
 		}
 
 		internal string VersionText
@@ -190,6 +183,9 @@ namespace Crash.UI.JoinView
 				return $"Version {name.Version} - wip";
 			}
 		}
+
+		internal event EventHandler<ISharedModel> NewModel;
+		internal event EventHandler<ISharedModel> RemoveModel;
 
 	}
 }

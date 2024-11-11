@@ -35,7 +35,7 @@ namespace Crash.Handlers.Data
 	{
 		public double UserCount { get; set; }
 
-		public string ModelAddress => "Try Crash";
+		public string ModelAddress => "Try Crash Free!";
 
 		public DateTime LastOpened { get; set; } = DateTime.UtcNow;
 
@@ -48,7 +48,7 @@ namespace Crash.Handlers.Data
 	{
 		public double UserCount { get; set; }
 
-		public string ModelAddress => "http://0.0.0.0:8080";
+		public string ModelAddress => "http://localhost:8080";
 
 		public DateTime LastOpened { get; set; } = DateTime.UtcNow;
 
@@ -94,7 +94,7 @@ namespace Crash.Handlers.Data
 		private const string pattern = @"[\/\\";
 		private static bool AddressIsSame(string addr1, string addr2)
 		{
-			if (!string.Equals(addr1, addr2, StringComparison.CurrentCultureIgnoreCase)) return false;
+			if (string.Equals(addr1, addr2, StringComparison.CurrentCultureIgnoreCase)) return true;
 			if (string.IsNullOrEmpty(addr1)) return false;
 			if (string.IsNullOrEmpty(addr2)) return false;
 			// Note : This is very slow

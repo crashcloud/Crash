@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 
 using Crash.Handlers.Data;
+using Crash.UI.JoinView;
 using Crash.UI.RecentView;
 
 using Eto.Drawing;
@@ -16,20 +17,22 @@ using static Crash.UI.RecentView.CrashCommands;
 namespace Crash.UI
 {
 
-	internal class OverflowLayout<TItem> : PixelLayout
+	internal class OverflowLayout : PixelLayout
 	{
 		public int ControlWidth { get; set; } = -1;
 		public int ControlHeight { get; set; } = -1;
 		public int Padding => RecentModelDialog.PreviewPadding;
 
-		public ObservableCollection<TItem> DataStore { get; set; }
-		private Func<TItem, Control> ControlFactory { get; }
+		public ObservableCollection<ISharedModel> DataStore { get; set; }
+		private Func<ISharedModel, Control> ControlFactory { get; }
 
 		internal RightClickMenu RightClickMenu { get; private set; }
 
+		private RecentViewModel Model => DataContext as RecentViewModel;
+
 		private CrashCommands CommandsInstance => (ParentWindow as RecentModelDialog)?.CommandsInstance!;
 
-		public OverflowLayout(ObservableCollection<TItem> sharedModels, Func<TItem, Control> controlFactory)
+		public OverflowLayout(List<ISharedModel> sharedModels, Func<ISharedModel, Control> controlFactory)
 		{
 			ControlFactory = (i) =>
 			{
@@ -37,7 +40,7 @@ namespace Crash.UI
 				SubscribeObjectToEvents(control);
 				return control;
 			};
-			DataStore = sharedModels;
+			DataStore = new(sharedModels);
 
 			RightClickMenu = new RightClickMenu(new()) { Visible = false };
 
@@ -94,6 +97,32 @@ namespace Crash.UI
 				{
 					// TODO : Implement
 				};
+				Model.NewModel += (s, e) =>
+				{
+					if (e is null) return;
+					DataStore.Add(e);
+					var control = ControlFactory(e);
+					ControlWidth = control.Width;
+					ControlHeight = control.Height;
+					Add(control, 0, 0);
+					RepositionLayout();
+				};
+				Model.RemoveModel += (s, e) =>
+				{
+					if (e is null) return;
+					DataStore.Remove(e);
+					foreach (var child in Controls.OfType<ModelControl>().ToArray())
+					{
+						if (!SharedModel.Equals(child?.Model, e)) continue;
+						Remove(child);
+						child.Visible = false;
+						ControlWidth = child.Width;
+						ControlHeight = child.Height;
+						child.Dispose();
+						break;
+					}
+					RepositionLayout();
+				};
 			};
 		}
 
@@ -105,6 +134,7 @@ namespace Crash.UI
 		{
 			if (Controls is not IList<Control> controls) return;
 			if (controls.Count == 0) return;
+			controls = controls.Where(c => !c.IsDisposed && c.Visible).ToList();
 
 			for (int i = 0; i < HorizontalControlCount; i++)
 			{
@@ -150,17 +180,12 @@ namespace Crash.UI
 						else if (model is SandboxModel)
 						{
 							commands.Remove(CommandsInstance.Remove);
+							commands.Remove(CommandsInstance.Reload);
 						}
 
 						if (model is not AddModel)
 						{
-							var join = CommandsInstance.Join;
-							join.Enabled = false;
-							if (recent.Model.State.HasFlag(ModelRenderState.Loaded))
-							{
-								join.Enabled = true;
-							}
-							commands.Insert(0, join);
+							commands.Insert(0, CommandsInstance.Join);
 						}
 
 						ShowRightClick(point, commands);

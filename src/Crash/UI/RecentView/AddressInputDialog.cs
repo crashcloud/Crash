@@ -71,7 +71,6 @@ public class AddressInputDialog : Dialog<string>
 		DoneButton.Click += ExitWithResult;
 		AddressInput.KeyDown += HandleKeyDown;
 		KeyDown += HandleKeyDown;
-		LostFocus += ExitWithNoResult;
 		Shown += (s, e) => { AddressInput.Focus(); };
 		parent.ParentWindow.LocationChanged += (s, e) =>
 		{
@@ -171,9 +170,10 @@ public class AddressInputDialog : Dialog<string>
 
 	private void HandleKeyDown(object sender, KeyEventArgs e)
 	{
-		if (e.Key == Keys.Enter && DoneButton.Enabled)
-			Close(AddressInput.Text);
+		if (e.Key == Keys.Enter)
+			ExitWithResult(sender, e);
+
 		else if (e.Key == Keys.Escape)
-			Close(string.Empty);
+			ExitWithNoResult(sender, e);
 	}
 }

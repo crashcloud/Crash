@@ -54,6 +54,7 @@ internal class CrashCommands : ICrashInstance
 		ReloadAll = new("Reload All", "reload", Host.Model.ReloadAll);
 		Reload = new("Reload", "reload", Host.Model.ReloadSelected);
 		Remove = new("Remove", "close", Host.Model.RemoveSelected) { ColourOverride = Palette.Red };
+		// TODO : Add Pin command
 	}
 
 	public CrashCommand Add { get; }

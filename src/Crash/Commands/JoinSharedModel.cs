@@ -53,8 +53,6 @@ namespace Crash.Commands
 			{
 				var dialog = new RecentModelDialog();
 				chosenModel = await dialog.ShowModalAsync(RhinoEtoApp.MainWindowForDocument(doc));
-				if (chosenModel is null) return Result.Cancel;
-
 				if (string.IsNullOrEmpty(chosenModel?.ModelAddress)) return Result.Cancel;
 
 				_lastUrl = chosenModel?.ModelAddress;

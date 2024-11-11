@@ -48,7 +48,7 @@ namespace Crash.Handlers.Data
 					foreach (var sharedModel in data.Models)
 					{
 						if (string.IsNullOrEmpty(sharedModel?.ModelAddress)) continue;
-						if (sharedModels.Contains(sharedModel)) continue;
+						if (sharedModels.Any(sm => SharedModel.Equals(sm, sharedModel))) continue;
 						sharedModels.Add(sharedModel);
 					}
 				}
@@ -66,12 +66,14 @@ namespace Crash.Handlers.Data
 		{
 			try
 			{
+				if (sharedModels is null) return false;
 				var crashDataDir = CrashData.CrashDataDirectory;
 				var options = GetJsonOptions();
 				var json = JsonSerializer.Serialize(new SharedModelData(sharedModels), options);
 				if (string.IsNullOrEmpty(json)) return false;
 
 				CrashData.WriteFile(json, SharedModelCacheFileName);
+				return true;
 			}
 			catch { }
 			return false;

@@ -33,7 +33,7 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 		return width;
 	}
 
-	private OverflowLayout<ISharedModel> RecentModelGallery { get; set; }
+	private OverflowLayout RecentModelGallery { get; set; }
 	private DynamicLayout StatusBar { get; set; }
 
 	internal RecentViewModel Model => DataContext as RecentViewModel;
@@ -232,11 +232,11 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 		}
 	}
 
-	private OverflowLayout<ISharedModel> InitRecentModelGallery()
+	private OverflowLayout InitRecentModelGallery()
 	{
 		// TODO : Dynamic Layouts are Shit
 		// Use PixelLayouts
-		RecentModelGallery = new OverflowLayout<ISharedModel>(Model.SharedModels, (model) => new ModelControl(this, model));
+		RecentModelGallery = new OverflowLayout(Model.SharedModels.ToList(), (model) => new ModelControl(this, model));
 		RecentModelGallery.Focus();
 		RecentModelGallery.Invalidate();
 
@@ -248,6 +248,16 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 
 	}
 
+	protected override void OnClosed(EventArgs e)
+	{
+		try
+		{
+			SharedModelCache.TrySaveSharedModels(Model.SharedModels.OfType<SharedModel>().ToList());
+		}
+		catch { }
+		base.OnClosed(e);
+	}
+
 	private AddressInputDialog ActiveAddressInput { get; set; }
 	internal void ShowNewModelDialog()
 	{
@@ -256,7 +266,7 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 		{
 			ActiveAddressInput = new AddressInputDialog(this);
 			var newModelAddress = ActiveAddressInput.ShowModal(this);
-			// this.Model.AddSharedModel(new SharedModel() { ModelAddress = newModelAddress });
+			Model.AddSharedModel(new SharedModel(newModelAddress));
 		}
 		catch { }
 		finally

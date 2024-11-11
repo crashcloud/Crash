@@ -41,7 +41,7 @@ public static class CrashIcons
 			using (Stream stream = assembly.GetManifestResourceStream(resourceName))
 			{
 				var bitmap = new Bitmap(stream);
-				Icons.Add(new(key, DefaultSize, LightColour), bitmap);
+				Icons.Add(new(key, DefaultSize, Colors.Transparent), bitmap);
 			}
 		}
 
@@ -67,28 +67,25 @@ public static class CrashIcons
 			if (bitmap.Width == size) return bitmap;
 			return new Bitmap(bitmap, size, size, ImageInterpolation.High);
 		}
-		catch (Exception ex)
-		{
-			;
-		}
+		catch { }
 		return Empty(size);
 	}
 
 	private static Bitmap Resize(IconKey key)
 	{
 		if (Icons.TryGetValue(key, out var bitmap)) return bitmap;
-		if (!Icons.TryGetValue(new(key.Key, DefaultSize, LightColour), out var defaultBitmap)) return Empty(key.Size);
+		if (!Icons.TryGetValue(new(key.Key, DefaultSize, Colors.Transparent), out var defaultBitmap)) return Empty(key.Size);
 		RecolourImage(defaultBitmap, key.Colour);
 
 		return new Bitmap(defaultBitmap, key.Size, key.Size, ImageInterpolation.High);
 	}
 
-	private static Color DarkColour => CPalette.LightGray;
-	private static Color LightColour => CPalette.Black;
-	private static Color Default => HostUtils.RunningInDarkMode ? DarkColour : LightColour;
+	private static Color Default => HostUtils.RunningInDarkMode ? CPalette.LightGray : CPalette.Black;
 
 	private static void RecolourImage(Bitmap bitmap, Color color)
 	{
+		if (color.Ab < 10) return;
+
 		using (var data = bitmap.Lock())
 		{
 			for (int x = 0; x < bitmap.Width; x++)

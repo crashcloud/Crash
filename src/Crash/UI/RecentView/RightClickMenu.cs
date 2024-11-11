@@ -54,7 +54,7 @@ namespace Crash.UI
 			for (int i = 0; i < Items.Count; i++)
 			{
 				var command = Items[i];
-				var colour = command.Enabled ? Palette.TextColour : Palette.DisabledTextColour;
+				var colour = GetColor(command);
 
 				var menuBounds = new RectangleF(0f, 0f, InsetBounds.Width, RowHeight);
 				if (command.Hover)
@@ -69,6 +69,15 @@ namespace Crash.UI
 			}
 
 			base.OnPaint(e);
+		}
+
+		private static Color GetColor(CrashCommands.CrashCommand command)
+		{
+			if (command.ColourOverride != Colors.Transparent)
+				return command.ColourOverride;
+
+			// var colour = command.Enabled ? Palette.TextColour : Palette.DisabledTextColour;
+			return Palette.TextColour;
 		}
 
 		private bool TryGetItemAtLocation(PointF location, out CrashCommands.CrashCommand command)
