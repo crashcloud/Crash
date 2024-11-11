@@ -1,13 +1,8 @@
-using System.Text.RegularExpressions;
-
 using Crash.Handlers.Data;
-using Crash.Resources;
 using Crash.UI.JoinView;
 
 using Eto.Drawing;
 using Eto.Forms;
-
-using Rhino.Runtime;
 
 namespace Crash.UI;
 
@@ -39,13 +34,6 @@ internal class ModelControl : Drawable
 		HostView = crashRecentView;
 		Width = RecentModelDialog.PreviewWidth;
 		Height = RecentModelDialog.PreviewHeight;
-
-		ViewModel.PropertyChanged += (s, e) => Invalidate(true);
-
-		HostView.Model.ListenToProperty(nameof(RecentViewModel.TemporaryModel), () =>
-		{
-			HostView.Invalidate(true);
-		});
 
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates
 		HostView.Shown += async (s, e) =>
@@ -88,9 +76,9 @@ internal class ModelControl : Drawable
 
 	protected override void OnMouseUp(MouseEventArgs e)
 	{
-		e.Handled = true;
 		if (e.Buttons == MouseButtons.Alternate && Model is not AddModel)
 		{
+			e.Handled = true;
 			if (!Model.State.HasFlag(ModelRenderState.RightClick))
 			{
 				Model.State = Model.State |= ModelRenderState.RightClick;
@@ -106,7 +94,10 @@ internal class ModelControl : Drawable
 		if (e.Buttons == MouseButtons.Primary)
 		{
 			if (Model is AddModel)
+			{
+				e.Handled = true;
 				HostView.CommandsInstance.Add?.Execute();
+			}
 		}
 
 		base.OnMouseUp(e);
@@ -114,10 +105,10 @@ internal class ModelControl : Drawable
 
 	protected override void OnMouseDown(MouseEventArgs e)
 	{
-		e.Handled = true;
 		if (HostView.Model.TemporaryModel is not null) return;
 		if (e.Buttons == MouseButtons.Primary)
 		{
+			e.Handled = true;
 			if (!Model.State.HasFlag(ModelRenderState.Selected))
 			{
 				Model.State = Model.State |= ModelRenderState.Selected;
@@ -217,8 +208,6 @@ internal class ModelControl : Drawable
 
 	private void RenderBase(PaintEventArgs e)
 	{
-		float inset = 8f;
-		float radius = 6f;
 		var rect = MaximumRectangle;
 		var state = Model.State;
 

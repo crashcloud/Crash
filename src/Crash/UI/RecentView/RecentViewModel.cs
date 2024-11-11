@@ -55,8 +55,6 @@ namespace Crash.UI.JoinView
 
 		internal ObservableCollection<ISharedModel> SharedModels { get; }
 
-		internal SharedModel TemporaryModel { get; set; }
-
 		internal bool ModelIsNew(ISharedModel model)
 		{
 			var alreadyExists = SharedModels.Select(sm => sm.ModelAddress?.ToUpperInvariant() ?? string.Empty)
