@@ -36,6 +36,10 @@ namespace Crash.Commands
 		{
 		}
 
+
+		private static int OldWidth { get; set; } = -1;
+		private static int OldHeight { get; set; } = -1;
+
 		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
 		{
 			_crashDoc = null;
@@ -52,7 +56,11 @@ namespace Crash.Commands
 			if (mode == RunMode.Interactive)
 			{
 				var dialog = new RecentModelDialog();
+				RestoreDialogSize(dialog);
+
 				chosenModel = await dialog.ShowModalAsync(RhinoEtoApp.MainWindowForDocument(doc));
+				SaveDialogSize(dialog);
+
 				if (string.IsNullOrEmpty(chosenModel?.ModelAddress)) return Result.Cancel;
 
 				_lastUrl = chosenModel?.ModelAddress;
@@ -80,6 +88,22 @@ namespace Crash.Commands
 			await StartServer();
 
 			return Result.Success;
+		}
+
+		private void RestoreDialogSize(Dialog dialog)
+		{
+			dialog.RestorePosition();
+			if (OldWidth > 0 && OldHeight > 0)
+			{
+				dialog.ClientSize = new Eto.Drawing.Size(OldWidth, OldHeight);
+			}
+		}
+
+		private void SaveDialogSize(Dialog dialog)
+		{
+			OldWidth = dialog.ClientSize.Width;
+			OldHeight = dialog.ClientSize.Height;
+			dialog.SavePosition();
 		}
 
 		private async Task StartServer()
