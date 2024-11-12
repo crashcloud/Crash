@@ -25,7 +25,6 @@ public class AddressInputDialog : Dialog<string>
 		Width = 600;
 		Height = 180;
 		Padding = 20;
-		WindowStyle = WindowStyle.None;
 		MovableByWindowBackground = false;
 		Maximizable = false;
 		Minimizable = false;
