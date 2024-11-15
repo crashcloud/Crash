@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<Version>1.4.0</Version>
 		<Nullable>enable</Nullable>
-		<LangVersion>11</LangVersion>
+		<LangVersion>12</LangVersion>
 		<Company>Crash Cloud</Company>
 		<Copyright>Crash Cloud</Copyright>
 		<FileVersion>$(Version)</FileVersion>

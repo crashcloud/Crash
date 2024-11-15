@@ -1,15 +1,17 @@
 ﻿using Crash.Common.Communications;
 using Crash.Common.Document;
 using Crash.Common.Events;
+using Crash.Handlers.Data;
 using Crash.Handlers;
 using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
-using Crash.UI.JoinModel;
+using Crash.UI.JoinView;
 using Crash.UI.UsersView;
 
 using Eto.Forms;
 
 using Rhino.Commands;
+using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.UI;
 
@@ -30,6 +32,13 @@ namespace Crash.Commands
 
 		public const string EnglishCommandName = "JoinSharedModel";
 
+		public JoinSharedModel() : base(true)
+		{
+		}
+
+
+		private static int OldWidth { get; set; } = -1;
+		private static int OldHeight { get; set; } = -1;
 
 		protected override async Task<Result> RunCommandAsync(RhinoDoc doc, CrashDoc crashDoc, RunMode mode)
 		{
@@ -43,18 +52,16 @@ namespace Crash.Commands
 			}
 
 			var name = Environment.UserName;
+			ISharedModel chosenModel = null;
 			if (mode == RunMode.Interactive)
 			{
-				var dialog = new JoinWindow();
+				var dialog = new RecentModelDialog();
+				RestoreDialogSize(dialog);
 
-				var chosenModel = await dialog.ShowModalAsync(RhinoEtoApp.MainWindowForDocument(doc));
+				chosenModel = await dialog.ShowModalAsync(RhinoEtoApp.MainWindowForDocument(doc));
+				SaveDialogSize(dialog);
 
-				if (chosenModel is null) return Result.Cancel;
-
-				if (string.IsNullOrEmpty(chosenModel?.ModelAddress))
-				{
-					return Result.Cancel;
-				}
+				if (string.IsNullOrEmpty(chosenModel?.ModelAddress)) return Result.Cancel;
 
 				_lastUrl = chosenModel?.ModelAddress;
 			}
@@ -83,6 +90,22 @@ namespace Crash.Commands
 			return Result.Success;
 		}
 
+		private void RestoreDialogSize(Dialog dialog)
+		{
+			dialog.RestorePosition();
+			if (OldWidth > 0 && OldHeight > 0)
+			{
+				dialog.ClientSize = new Eto.Drawing.Size(OldWidth, OldHeight);
+			}
+		}
+
+		private void SaveDialogSize(Dialog dialog)
+		{
+			OldWidth = dialog.ClientSize.Width;
+			OldHeight = dialog.ClientSize.Height;
+			dialog.SavePosition();
+		}
+
 		private async Task StartServer()
 		{
 			LoadingUtils.Start(_crashDoc);
@@ -99,6 +122,7 @@ namespace Crash.Commands
 
 			LoadingUtils.SetState(_crashDoc, LoadingUtils.LoadingState.CheckingServer);
 			_crashDoc.Queue.OnCompletedQueue += QueueOnOnCompleted;
+
 			if (await CommandUtils.StartLocalClient(_crashDoc, _lastUrl))
 			{
 				LoadingUtils.SetState(_crashDoc, LoadingUtils.LoadingState.ConnectingToServer);
@@ -117,6 +141,7 @@ namespace Crash.Commands
 
 				await _crashDoc.Dispatcher.NotifyServerAsync(changes);
 
+				UsersForm.ShowForm(_crashDoc);
 				return;
 			}
 

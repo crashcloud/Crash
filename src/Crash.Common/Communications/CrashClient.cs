@@ -8,6 +8,7 @@ using Crash.Common.App;
 using Crash.Common.Document;
 using Crash.Common.Events;
 using Crash.Common.Logging;
+using Crash.Common.Serialization;
 using Crash.Events;
 
 using Microsoft.AspNetCore.SignalR;
@@ -16,6 +17,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Crash.Common.Communications
 {
+
+	public record struct IClientOptions(bool DryRun = false);
+
 	/// <summary>
 	///     Crash client class
 	/// </summary>
@@ -25,7 +29,7 @@ namespace Crash.Common.Communications
 		public const string DefaultURL = "http://localhost";
 		public const string DefaultPort = "8080";
 		private CrashDoc _crashDoc { get; }
-
+		private IClientOptions Options { get; }
 		public string Url { get; private set; }
 
 		private HubConnection _connection;
@@ -37,9 +41,10 @@ namespace Crash.Common.Communications
 		///     Crash client constructor
 		/// </summary>
 		/// <param name="crashDoc">The Document to associate this Client to</param>
-		public CrashClient(CrashDoc crashDoc)
+		public CrashClient(CrashDoc crashDoc, IClientOptions options = default)
 		{
 			_crashDoc = crashDoc;
+			Options = options;
 		}
 
 		/// <summary>Stops the Connection</summary>
@@ -64,8 +69,11 @@ namespace Crash.Common.Communications
 				return new Exception("A User has not been assigned!");
 			}
 
-			OnInitializeChanges += InitChangesAsync;
-			OnInitializeUsers += InitUsersAsync;
+			if (!Options.DryRun)
+			{
+				OnInitializeChanges += InitChangesAsync;
+				OnInitializeUsers += InitUsersAsync;
+			}
 
 			try
 			{
@@ -75,6 +83,7 @@ namespace Crash.Common.Communications
 			{
 				return ex;
 			}
+
 			return null;
 		}
 
@@ -92,7 +101,7 @@ namespace Crash.Common.Communications
 		}
 
 		/// <summary>Creates a connection to the Crash Server</summary>
-		public static HubConnection GetHubConnection(Uri url)
+		private static HubConnection GetHubConnection(Uri url)
 		{
 			return new HubConnectionBuilder()
 				   .WithUrl(url)

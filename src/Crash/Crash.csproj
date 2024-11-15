@@ -6,7 +6,6 @@
 		<Title>Crash</Title>
 		<Description>A multi-user collaborative environment for Rhino</Description>
 		<TargetExt>.rhp</TargetExt>
-		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
 	</PropertyGroup>
@@ -23,25 +22,25 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="EmbeddedResources\**\*"/>
+		<EmbeddedResource Include="EmbeddedResources\**\*" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.8.0" IncludeAssets="compile;build"/>
-		<PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.5.22"/>
-		<PackageReference Include="RhinoCommon" Version="7.21.22208.13001" IncludeAssets="compile;build" Condition="'$(TargetFramework)' == 'net48'"/>
-		<PackageReference Include="RhinoCommon" Version="8.3.24009.15001" IncludeAssets="compile;build" Condition="'$(TargetFramework)' == 'net7.0'"/>
-		<PackageReference Include="System.Text.Json" Version="7.0.0"/>
+		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.8.0" IncludeAssets="compile;build" />
+		<PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.5.22" />
+		<PackageReference Include="RhinoCommon" Version="7.21.22208.13001" IncludeAssets="compile;build" Condition="'$(TargetFramework)' == 'net48'" />
+		<PackageReference Include="RhinoCommon" Version="8.3.24009.15001" IncludeAssets="compile;build" Condition="'$(TargetFramework)' == 'net7.0'" />
+		<PackageReference Include="System.Text.Json" Version="7.0.0" />
 		<PackageReference Include="Crash.Changes" Version="1.2.2">
 			<IncludeAssets>all</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="System.Resources.Extensions" Version="7.0.0"/>
-		<PackageReference Include="System.Drawing.Common" Version="7.0.0"/>
+		<PackageReference Include="System.Resources.Extensions" Version="7.0.0" />
+		<PackageReference Include="System.Drawing.Common" Version="7.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Crash.Common\Crash.Common.csproj"/>
-		<ProjectReference Include="..\Crash.Handlers\Crash.Handlers.csproj"/>
+		<ProjectReference Include="..\Crash.Common\Crash.Common.csproj" />
+		<ProjectReference Include="..\Crash.Handlers\Crash.Handlers.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -55,6 +54,8 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>ServerSettings.settings</DependentUpon>
 		</Compile>
+		<EmbeddedResource Include="Resources\*.png" />
+		<EmbeddedResource Include="Resources\*.ico" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -81,7 +82,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<InternalsVisibleTo Include="Crash.Tests"/>
+		<InternalsVisibleTo Include="Crash.Tests" />
 	</ItemGroup>
 
 	<Target Name="Replace" AfterTargets="CoreCompile">
@@ -89,7 +90,7 @@
 			<InputFile>Manifest.yml</InputFile>
 			<OutputFile>$(OutputPath)Manifest.yml</OutputFile>
 		</PropertyGroup>
-		<WriteLinesToFile File="$(OutputFile)" Lines="$([System.IO.File]::ReadAllText($(InputFile)).Replace('_YakVersion_','$(Version)'))" Overwrite="true" Encoding="Unicode"/>
+		<WriteLinesToFile File="$(OutputFile)" Lines="$([System.IO.File]::ReadAllText($(InputFile)).Replace('_YakVersion_','$(Version)'))" Overwrite="true" Encoding="Unicode" />
 	</Target>
 
 </Project>

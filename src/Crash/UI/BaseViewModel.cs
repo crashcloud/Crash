@@ -7,9 +7,17 @@ namespace Crash.UI
 	public abstract class BaseViewModel : INotifyPropertyChanged
 	{
 
-		protected void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
+		public void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
 		{
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+			if (_propertyChangedActions.TryGetValue(propertyName, out var actions))
+			{
+				foreach (var action in actions)
+				{
+					action?.Invoke();
+				}
+			}
 		}
 
 		protected bool Set<T>(ref T t, T val, [CallerMemberName] string propertyName = null)
@@ -25,6 +33,24 @@ namespace Crash.UI
 		}
 
 		public event PropertyChangedEventHandler? PropertyChanged;
+
+		public BaseViewModel()
+		{
+		}
+
+		private Dictionary<string, List<Action>> _propertyChangedActions { get; } = new Dictionary<string, List<Action>>();
+
+		public void ListenToProperty(string propertyName, Action action)
+		{
+			if (!_propertyChangedActions.TryGetValue(propertyName, out var actions))
+			{
+				_propertyChangedActions.Add(propertyName, new List<Action> { action });
+			}
+			else
+			{
+				actions.Add(action);
+			}
+		}
 
 	}
 

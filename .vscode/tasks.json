@@ -3,29 +3,39 @@
     "tasks": [
         {
             "label": "build-plugin-netcore",
-            "command": "dotnet build ${workspaceFolder}/src/Crash/Crash.csproj -f net7.0",
+            "command": "dotnet",
             "type": "shell",
-            "args": [],
+            "args": [
+							"build",
+							"-clp:NoSummary",
+							"${workspaceFolder}/src/Crash/Crash.csproj",
+						"-f", "net7.0"],
             "problemMatcher": [
                 "$msCompile"
             ],
             "presentation": {
-                "reveal": "always"
+                "reveal": "always",
+								"clear": true
             },
             "group": "build"
         },
         {
             "label": "build-plugin-netframework",
-            "command": "dotnet build ${workspaceFolder}/src/Crash/Crash.csproj -f net48",
+            "command": "dotnet",
             "type": "shell",
-            "args": [],
+            "args": [
+							"build",
+							"-clp:NoSummary",
+							"${workspaceFolder}/src/Crash/Crash.csproj",
+							"-f", "net48"],
             "problemMatcher": [
                 "$msCompile"
             ],
             "presentation": {
-                "reveal": "always"
+                "reveal": "always",
+								"clear": true
             },
             "group": "build"
-        },
+        }
     ]
 }

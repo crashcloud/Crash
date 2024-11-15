@@ -15,6 +15,8 @@ using Eto.Forms;
 using Rhino.PlugIns;
 using Crash.Common.App;
 using Crash.Common.Document;
+using Crash.Handlers.Data;
+using Rhino.UI;
 
 namespace Crash
 {
@@ -190,10 +192,57 @@ namespace Crash
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
 			CrashApp.UserMessage += (_, m) => RhinoApp.WriteLine(m);
-
 			RhinoApp.Idle += LoadCrashPlugins;
+			SetupScreenshotCaching();
 
 			return base.OnLoad(ref errorMessage);
+		}
+
+		private void SetupScreenshotCaching()
+		{
+			CrashDocRegistry.DocumentRegistered += ScreenshotView;
+		}
+
+#pragma warning disable VSTHRD100 // Avoid async void methods
+		private static async void ScreenshotView(object sender, CrashEventArgs e)
+#pragma warning restore VSTHRD100 // Avoid async void methods
+		{
+			if (e.CrashDoc is null) return;
+			try
+			{
+				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(e.CrashDoc);
+				if (rhinoDoc is null) return;
+
+				while (true)
+				{
+					if (e?.CrashDoc is null) break;
+					if (!e.CrashDoc.LocalClient.IsConnected)
+					{
+						await Task.Delay(TimeSpan.FromSeconds(2));
+						continue;
+					}
+
+					if (!SharedModelCache.TryGetSharedModelsData(e.CrashDoc, out var models)) return;
+
+					var url = e.CrashDoc?.LocalClient?.Url ?? string.Empty;
+					if (string.IsNullOrEmpty(url)) return;
+
+					var bitmap = rhinoDoc.Views.ActiveView.CaptureToBitmap(new System.Drawing.Size(RecentModelDialog.PreviewWidth, RecentModelDialog.PreviewWidth));
+					if (bitmap is null) return;
+
+					var nonNullModels = models.Where(m => m is not null).ToList();
+					foreach (var model in nonNullModels)
+					{
+						if (string.Equals(model.ModelAddress, url)) continue;
+						model.Thumbnail = bitmap.ToEto();
+					}
+
+					SharedModelCache.TrySaveSharedModels(nonNullModels);
+
+					await Task.Delay(TimeSpan.FromMinutes(10));
+				}
+			}
+			catch { }
 		}
 
 		#endregion
