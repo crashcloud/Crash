@@ -93,7 +93,8 @@ namespace Crash.UI.UsersView
 
 		private void CreateForm()
 		{
-			Icon = new Icon(1f, CrashIcons.Icon("logo", 16));
+			// TOOD : Loading .ico as png causes issue on windows
+			// Icon = new Icon(1f, CrashIcons.Icon("logo", 16));
 			Title = "Collaborators";
 			Padding = 0;
 			Topmost = false;
