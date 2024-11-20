@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Net.WebSockets;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Channels;
@@ -25,6 +26,8 @@ namespace Crash.Common.Communications
 	/// </summary>
 	public sealed class CrashClient : ICrashClient
 	{
+		private const string PUSH_STREAM = "PushChangesThroughStream";
+
 		// TODO : Move to https
 		public const string DefaultURL = "http://localhost";
 		public const string DefaultPort = "8080";
@@ -139,14 +142,37 @@ namespace Crash.Common.Communications
 		/// <summary>Registers Local Events responding to Server calls</summary>
 		private void RegisterConnections()
 		{
-			_connection.On<IEnumerable<Change>>(INITIALIZE, InitializeChangesAsync);
-			_connection.On<IEnumerable<string>>(INITIALIZEUSERS, InitializeUsersAsync);
-			_connection.On<IAsyncEnumerable<Change>>(PUSH_STREAM, SendChangesThroughStream);
+			RegisterEndpoint<IEnumerable<Change>>(_connection, "InitializeChanges", null, InitializeChangesAsync);
+			RegisterEndpoint<IEnumerable<string>>(_connection, "InitializeUsers", null, InitializeUsersAsync);
+			RegisterEndpoint<IAsyncEnumerable<Change>>(_connection, PUSH_STREAM, OnRecieveChangeStream, SendChangesThroughStream);
 
 			_connection.Reconnected += ConnectionReconnectedAsync;
 			_connection.Closed += ConnectionClosedAsync;
 			_connection.Reconnecting += ConnectionReconnectingAsync;
 		}
+
+		private void RegisterEndpoint<TValue>(HubConnection connection, string name, EventHandler<TValue> serverSender, EventHandler<TValue> clientReciever)
+		{
+			if (clientReciever is not null)
+			{
+				connection.On<TValue>(name, (changes) => clientReciever.Invoke(this, changes));
+			}
+
+			if (serverSender is not null)
+			{
+#pragma warning disable VSTHRD101 // Avoid unsupported async delegates
+				serverSender += async (sender, args) =>
+				{
+					try
+					{
+						await connection.InvokeAsync(name, args);
+					}
+					catch { }
+				};
+#pragma warning restore VSTHRD101 // Avoid unsupported async delegates
+			}
+		}
+
 
 		/// <summary>Start the async connection</summary>
 		private async Task StartAsync()
@@ -154,9 +180,10 @@ namespace Crash.Common.Communications
 			await _connection.StartAsync();
 		}
 
-		private async Task SendChangesThroughStream(IAsyncEnumerable<Change> changeStream)
+		private void SendChangesThroughStream(object? sender, IAsyncEnumerable<Change> changeStream)
 		{
-			await _connection.SendAsync(PUSH_STREAM, changeStream);
+			if (OnRecieveChangeStream is null) return;
+			OnRecieveChangeStream?.Invoke(this, changeStream);
 		}
 
 
@@ -296,21 +323,20 @@ namespace Crash.Common.Communications
 
 		#region Recieve from Server
 
-		public event Func<IEnumerable<Change>, Task> OnInitializeChanges;
+		public event EventHandler<IAsyncEnumerable<Change>> OnRecieveChangeStream;
 
-		public event Func<IEnumerable<string>, Task> OnInitializeUsers;
+		public event EventHandler<IEnumerable<Change>> OnInitializeChanges;
+
+		public event EventHandler<IEnumerable<string>> OnInitializeUsers;
 
 		public event EventHandler<CrashInitArgs> OnInit;
 
-		private async Task InitializeChangesAsync(IEnumerable<Change> changes)
+		private void InitializeChangesAsync(object? sender, IEnumerable<Change> changes)
 		{
-			if (OnInitializeChanges is null)
-			{
-				return;
-			}
+			if (OnInitializeChanges is null) return;
+			OnInitializeChanges.Invoke(this, changes);
 
-			await OnInitializeChanges.Invoke(changes);
-
+			// TODO : Seems Janky
 			_crashDoc.Queue.AddAction(new DummyAction());
 		}
 
@@ -319,26 +345,20 @@ namespace Crash.Common.Communications
 			public DummyAction() : base((args) => { }, new IdleArgs(null, null), nameof(DummyAction)) { }
 		}
 
-		private async Task InitializeUsersAsync(IEnumerable<string> users)
+		private void InitializeUsersAsync(object? sender, IEnumerable<string> users)
 		{
-			if (OnInitializeUsers is null)
-			{
-				return;
-			}
-
-			await OnInitializeUsers.Invoke(users);
+			if (OnInitializeUsers is null) return;
+			OnInitializeUsers.Invoke(this, users);
 		}
 
-		// TODO : This isn't calling, and needs to call the Event Dispatcher
-		// TODO : Resolve this and Init
-		private async Task InitChangesAsync(IEnumerable<Change> changes)
+		private void InitChangesAsync(object? sender, IEnumerable<Change> changes)
 		{
 			OnInitializeChanges -= InitChangesAsync;
 
 			OnInit?.Invoke(this, new CrashInitArgs(_crashDoc, changes));
 		}
 
-		private async Task InitUsersAsync(IEnumerable<string> users)
+		private void InitUsersAsync(object? sender, IEnumerable<string> users)
 		{
 			OnInitializeUsers -= InitUsersAsync;
 			// User Init
@@ -350,13 +370,6 @@ namespace Crash.Common.Communications
 
 		#endregion
 
-		#region consts
-
-		private const string PUSH_STREAM = "PushChangesThroughStream";
-		private const string INITIALIZE = "InitializeChanges";
-		private const string INITIALIZEUSERS = "InitializeUsers";
-
-		#endregion
 	}
 
 }

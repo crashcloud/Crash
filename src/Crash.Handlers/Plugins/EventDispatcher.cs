@@ -220,9 +220,18 @@ namespace Crash.Handlers.Plugins
 		{
 			// OnInit is called on reconnect as well
 			doc.LocalClient.OnInitializeChanges += InitializeChangesAsync;
+			doc.LocalClient.OnRecieveChangeStream += RecieveChangesAsync;
 		}
 
-		private async Task InitializeChangesAsync(IEnumerable<Change> changeStream)
+		private async void RecieveChangesAsync(object? sender, IAsyncEnumerable<Change> changeStream)
+		{
+			await foreach (var change in changeStream)
+			{
+				await NotifyClientAsync(_crashDoc, change);
+			}
+		}
+
+		private async void InitializeChangesAsync(object? sender, IEnumerable<Change> changeStream)
 		{
 			_crashDoc.LocalClient.OnInitializeChanges -= InitializeChangesAsync;
 
