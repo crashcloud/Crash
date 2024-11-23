@@ -85,27 +85,28 @@ namespace Crash.Handlers
 			Register(crashDoc, rhinoDoc);
 			DocumentRegistered?.Invoke(null, new CrashEventArgs(crashDoc));
 
-			crashDoc.Queue.OnCompletedQueue += RedrawOncompleted;
+			crashDoc.Queue.OnCompletedQueue += RedrawOnCompleted;
 			crashDoc.Queue.OnItemProcessed += RedrawEverySoOften;
-			crashDoc.LocalClient.OnInit += RegisterQueue;
+			crashDoc.LocalClient.OnStartInitialization += RegisterQueue;
+			crashDoc.LocalClient.OnStartInitialization += RegisterInitialLoadingBar;
 
 			return crashDoc;
 		}
 
-		private static void RegisterQueue(object? sender, CrashInitArgs e)
+		private static void RegisterInitialLoadingBar(object? sender, CrashInitArgs e)
 		{
-			e.CrashDoc.LocalClient.OnInit -= RegisterQueue;
+			e.CrashDoc.LocalClient.OnStartInitialization -= RegisterInitialLoadingBar;
 			RhinoApp.WriteLine($"Connected to Crash Server {e.CrashDoc.LocalClient.Url} successfully.");
 			RhinoApp.WriteLine("Loading Changes from the server ...");
 
 			double count = 0.0;
 			double changeLoadAmount = 50.0;
 
-			EventHandler<CrashEventArgs> initialLoadingBar = null;
+			EventHandler<CrashEventArgs> initialLoadingBar = null!;
 			initialLoadingBar = (_, itemArgs) =>
 			{
 				count++;
-				double crashCount = e.Changes.Count();
+				double crashCount = e.ChangeCount;
 				double percentage = changeLoadAmount + (count / crashCount * changeLoadAmount);
 
 				LoadingUtils.SetState(itemArgs.CrashDoc, (LoadingUtils.LoadingState)(int)percentage, false);
@@ -114,15 +115,22 @@ namespace Crash.Handlers
 				e.CrashDoc.Queue.OnItemProcessed -= initialLoadingBar;
 			};
 			e.CrashDoc.Queue.OnItemProcessed += initialLoadingBar;
+		}
 
-			EventHandler cycleQueueDelegate = null;
+		private static void RegisterQueue(object? sender, CrashInitArgs e)
+		{
+			e.CrashDoc.LocalClient.OnStartInitialization -= RegisterQueue;
+
+			// Register Events
+			EventHandler cycleQueueDelegate = null!;
 			cycleQueueDelegate = (o, args) =>
 								 {
 									 e.CrashDoc.Queue.RunNextAction();
 								 };
 			RhinoApp.Idle += cycleQueueDelegate;
 
-			EventHandler<CrashEventArgs> deRegisterQueueCycle = null;
+			// DeRegister Events
+			EventHandler<CrashEventArgs> deRegisterQueueCycle = null!;
 			deRegisterQueueCycle = (o, args) =>
 								   {
 									   DocumentDisposed -= deRegisterQueueCycle;
@@ -132,11 +140,7 @@ namespace Crash.Handlers
 			DocumentDisposed += deRegisterQueueCycle;
 		}
 
-		private static void CycleQueue(object sender, EventArgs e)
-		{
-		}
-
-		private static void RedrawOncompleted(object? sender, CrashEventArgs e)
+		private static void RedrawOnCompleted(object? sender, CrashEventArgs e)
 		{
 			var rhinoDoc = GetRelatedDocument(e.CrashDoc);
 			rhinoDoc.Views.Redraw();
@@ -150,7 +154,7 @@ namespace Crash.Handlers
 			ProessedCount++;
 			if (ProessedCount >= 10)
 			{
-				RedrawOncompleted(sender, e);
+				RedrawOnCompleted(sender, e);
 			}
 		}
 
@@ -172,7 +176,7 @@ namespace Crash.Handlers
 				{
 					crashDoc.Queue.ForceCycleQueue();
 					// DeRegister Events
-					crashDoc.Queue.OnCompletedQueue -= RedrawOncompleted;
+					crashDoc.Queue.OnCompletedQueue -= RedrawOnCompleted;
 				}
 
 				if (crashDoc.LocalClient is not null)

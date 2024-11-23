@@ -15,30 +15,23 @@ namespace Crash.Common.Communications
 		/// <param name="url">url of the server the client will talk to</param>
 		Exception RegisterConnection(string userName, Uri url);
 
-		/// <summary>Stops the Connection</summary>
-		public Task StopAsync();
-
 		/// <summary>Starts the Client</summary>
 		/// <exception cref="NullReferenceException">If CrashDoc is null</exception>
 		/// <exception cref="Exception">If UserName is empty</exception>
 		public Task<Exception?> StartLocalClientAsync();
 
+		/// <summary>Stops the Connection</summary>
+		public Task StopAsync();
+
 		/// <summary>
 		///     Pushes many unique changes at once
 		///     An example of this may be copying 10 unique items
 		/// </summary>
-		public Task StreamChangesAsync(IAsyncEnumerable<Change> changeStream);
+		public Task SendChangesToServerAsync(IAsyncEnumerable<Change> changeStream);
 
-		/// <summary>Local Event corresponding to a server call for streaming</summary>
-		public event EventHandler<IAsyncEnumerable<Change>> OnRecieveChangeStream;
+		public event EventHandler<CrashInitArgs> OnStartInitialization;
 
-		/// <summary>Local Event corresponding to a Server call for Initialize</summary>
-		public event EventHandler<IEnumerable<Change>> OnInitializeChanges;
+		public event EventHandler OnFinishInitialization;
 
-		/// <summary>Local Event corresponding to a Server call for Initialize Users</summary>
-		public event EventHandler<IEnumerable<string>> OnInitializeUsers;
-
-		/// <summary>Local event wrapping Crash Args with Initialization</summary>
-		public event EventHandler<CrashInitArgs> OnInit;
 	}
 }

@@ -1,4 +1,6 @@
-﻿namespace Crash.Common.Communications
+﻿using Crash.Common.Document;
+
+namespace Crash.Common.Communications
 {
 	/// <summary>Abstracted Server Notification Contract</summary>
 	public interface IEventDispatcher
@@ -11,7 +13,9 @@
 		/// <param name="changeAction">The ChangeAction</param>
 		/// <param name="sender">The sender of the Event</param>
 		/// <param name="args">The EventArgs</param>
-		Task NotifyServerAsync(List<Change> changes);
+		Task NotifyServerAsync(IEnumerable<Change> changes);
+
+		Task NotifyClientAsync(IEnumerable<Change> changes);
 
 	}
 }
