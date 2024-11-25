@@ -66,10 +66,11 @@ namespace Crash
 		{
 			var dispatcher = new EventDispatcher(e.CrashDoc);
 			dispatcher.RegisterDefaultServerNotifiers();
-			dispatcher.RegisterDefaultServerCalls(e.CrashDoc);
 			RegisterDefinitions(e.CrashDoc, dispatcher);
 			e.CrashDoc.Dispatcher = dispatcher;
-			RegisterExceptions(e.CrashDoc.LocalClient as CrashClient);
+			if (e.CrashDoc.LocalClient is CrashClient crashClient)
+				RegisterExceptions(crashClient);
+
 			var pipe = InteractivePipe.GetActive(e.CrashDoc);
 			pipe.Enabled = true;
 			badPipe = new BadChangePipeline(e.CrashDoc);
