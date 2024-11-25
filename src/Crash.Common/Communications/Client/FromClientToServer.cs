@@ -10,7 +10,11 @@ namespace Crash.Common.Communications;
 public sealed partial class CrashClient
 {
 
-	public Exception RegisterConnection(string userName, Uri url)
+	internal Func<Uri, IRetryPolicy, HubConnection> GetHubConnection { get; set; }
+
+	internal static IRetryPolicy RetryPolicy => new CrashRetryPolicy();
+
+	public async Task<Exception> RegisterConnection(string userName, Uri url)
 	{
 		if (string.IsNullOrEmpty(userName?.Replace(" ", "")))
 		{
@@ -30,7 +34,7 @@ public sealed partial class CrashClient
 		try
 		{
 			_user = userName;
-			_connection = GetHubConnection(url);
+			_connection = GetHubConnection(url, RetryPolicy);
 			_connection.Reconnecting += InformUserOfReconnect;
 			Url = url.AbsoluteUri;
 			RegisterConnections();

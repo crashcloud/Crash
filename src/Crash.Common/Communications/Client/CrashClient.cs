@@ -64,24 +64,6 @@ public sealed partial class CrashClient : ICrashClient
 
 	#region Create Connection
 
-	private static TimeSpan[] ReconnectTimes => new[]
-	{
-		TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100),
-		TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(10)
-	};
-
-	/// <summary>Creates a connection to the Crash Server</summary>
-	private static HubConnection GetHubConnection(Uri url)
-	{
-		// TODO : A UI Could be created to let the user pause and await the server?
-		// TODO : Can we approximate _which_ changes were sent?
-		return new HubConnectionBuilder()
-			   .WithUrl(url)
-			   // .ConfigureLogging(LoggingConfigurer)
-			   .WithAutomaticReconnect(ReconnectTimes)
-			   .Build();
-	}
-
 	private static JsonHubProtocolOptions JsonOptions()
 	{
 		return new JsonHubProtocolOptions

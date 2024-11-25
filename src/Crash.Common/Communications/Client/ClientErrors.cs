@@ -61,7 +61,7 @@ public sealed partial class CrashClient
 
 	private async Task InformUserOfReconnect(Exception? exception)
 	{
-		var timeoutTime = new TimeSpan(ReconnectTimes.Sum(s => s.Ticks)).Milliseconds;
+		var timeoutTime = new TimeSpan(4).Seconds;
 		await Task.Delay(timeoutTime / 2);
 		if (_connection.State == HubConnectionState.Connected) return;
 

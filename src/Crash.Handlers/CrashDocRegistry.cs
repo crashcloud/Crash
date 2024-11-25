@@ -9,6 +9,7 @@ using Rhino;
 using Rhino.DocObjects;
 using Crash.Handlers.Data;
 using Eto.Forms;
+using Crash.Common.Communications;
 
 namespace Crash.Handlers
 {
@@ -85,6 +86,8 @@ namespace Crash.Handlers
 			Register(crashDoc, rhinoDoc);
 			DocumentRegistered?.Invoke(null, new CrashEventArgs(crashDoc));
 
+			InjectHubConnection(crashDoc.LocalClient as CrashClient);
+
 			crashDoc.Queue.OnCompletedQueue += RedrawOnCompleted;
 			crashDoc.Queue.OnItemProcessed += RedrawEverySoOften;
 			crashDoc.LocalClient.OnStartInitialization += RegisterQueue;
@@ -92,6 +95,14 @@ namespace Crash.Handlers
 
 			return crashDoc;
 		}
+
+		private static void InjectHubConnection(CrashClient? crashClient)
+		{
+			var property = typeof(CrashClient).GetProperty("GetHubConnection", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+			var hubConnection = Crash.Handlers.Auth.CrashConnectionBuilder.GetHubConnection;
+			property.SetValue(crashClient, hubConnection);
+		}
+
 
 		private static void RegisterInitialLoadingBar(object? sender, CrashInitArgs e)
 		{

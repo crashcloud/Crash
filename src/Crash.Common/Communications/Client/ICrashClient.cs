@@ -13,7 +13,7 @@ namespace Crash.Common.Communications
 		/// <summary>Registers the client and its connection url</summary>
 		/// <param name="userName">The User of the Client</param>
 		/// <param name="url">url of the server the client will talk to</param>
-		Exception RegisterConnection(string userName, Uri url);
+		Task<Exception> RegisterConnection(string userName, Uri url);
 
 		/// <summary>Starts the Client</summary>
 		/// <exception cref="NullReferenceException">If CrashDoc is null</exception>

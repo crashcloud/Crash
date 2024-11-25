@@ -93,7 +93,7 @@ namespace Crash.Commands
 			var uriResult = TryGetCleanUri(url, out var uri);
 			if (!ParseConnectionResult(crashDoc, uriResult, url, headless)) return false;
 
-			var connectionResult = crashDoc.LocalClient.RegisterConnection(userName, uri);
+			var connectionResult = await crashDoc.LocalClient.RegisterConnection(userName, uri);
 			if (!ParseConnectionResult(crashDoc, connectionResult, url, headless)) return false;
 
 			var startResult = await crashDoc.LocalClient.StartLocalClientAsync();
