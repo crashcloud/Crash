@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Net.NetworkInformation;
@@ -11,6 +11,7 @@ using Eto.Drawing;
 using Eto.Forms;
 
 using Rhino.Runtime;
+using Rhino.UI;
 
 namespace Crash.UI;
 
@@ -49,7 +50,7 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 
 		AllowDrop = false;
 
-		AbortButton = null;
+		AbortButton = null; 
 		DefaultButton = null;
 
 		Resizable = true;
@@ -64,6 +65,9 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 		InitLayout();
 		InitBindings();
 
+#if NET7_0_OR_GREATER
+		this.UseRhinoStyle();
+#endif
 		this.StyleChanged += (s, e) =>
 		{
 			foreach (var label in this.Children.OfType<TextControl>())
