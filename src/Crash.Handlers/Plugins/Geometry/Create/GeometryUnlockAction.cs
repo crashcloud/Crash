@@ -10,13 +10,13 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 		public ChangeAction Action => ChangeAction.Unlocked;
 
 
-		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
+		public bool CanConvert(object? sender, CreateRecieveArgs crashArgs)
 		{
 			return crashArgs.Args is CrashSelectionEventArgs cargs &&
 				   !cargs.Selected;
 		}
 
-		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
+		public bool TryConvert(object? sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
 		{
 			changes = Array.Empty<Change>();
 			if (crashArgs.Args is not CrashSelectionEventArgs cargs)

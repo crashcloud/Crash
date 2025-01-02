@@ -25,7 +25,7 @@ namespace Crash.Handlers.Plugins.Camera.Create
 		public ChangeAction Action => ChangeAction.Add;
 
 
-		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
+		public bool CanConvert(object? sender, CreateRecieveArgs crashArgs)
 		{
 			if (crashArgs.Args is not CrashViewArgs viewArgs)
 			{
@@ -53,7 +53,7 @@ namespace Crash.Handlers.Plugins.Camera.Create
 		}
 
 
-		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
+		public bool TryConvert(object? sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
 		{
 			changes = Array.Empty<Change>();
 			if (crashArgs.Args is not CrashViewArgs viewArgs)

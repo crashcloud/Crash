@@ -130,7 +130,7 @@ public class AddressInputDialog : Dialog<string>
 		return UriResult.Failure;
 	}
 
-	private async void ValidateText(object sender, EventArgs e)
+	private void ValidateText(object? sender, EventArgs e)
 	{
 		var result = GetResult(out var exception);
 		AddressInput.TextColor = result switch
@@ -156,18 +156,18 @@ public class AddressInputDialog : Dialog<string>
 		Invalidate(true);
 	}
 
-	private void ExitWithResult(object sender, EventArgs e)
+	private void ExitWithResult(object? sender, EventArgs e)
 	{
 		if (!DoneButton.Enabled) return;
 		Close(AddressInput.Text);
 	}
 
-	private void ExitWithNoResult(object sender, EventArgs e)
+	private void ExitWithNoResult(object? sender, EventArgs e)
 	{
 		Close(string.Empty);
 	}
 
-	private void HandleKeyDown(object sender, KeyEventArgs e)
+	private void HandleKeyDown(object? sender, KeyEventArgs e)
 	{
 		if (e.Key == Keys.Enter)
 			ExitWithResult(sender, e);

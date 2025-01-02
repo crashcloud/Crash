@@ -6,7 +6,7 @@ namespace Crash.Handlers.Plugins.Layers.Create
 	{
 		public ChangeAction Action => ChangeAction.Remove;
 
-		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
+		public bool TryConvert(object? sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
 		{
 			changes = Array.Empty<Change>();
 			if (crashArgs.Args is not CrashLayerArgs layerArgs)
@@ -29,7 +29,7 @@ namespace Crash.Handlers.Plugins.Layers.Create
 			return true;
 		}
 
-		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
+		public bool CanConvert(object? sender, CreateRecieveArgs crashArgs)
 		{
 			return crashArgs.Args is CrashLayerArgs cargs && cargs.Action == Action;
 		}

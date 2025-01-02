@@ -35,7 +35,7 @@ public sealed partial class CrashClient
 		{
 			_user = userName;
 			_connection = GetHubConnection(url, RetryPolicy);
-			_connection.Reconnecting += InformUserOfReconnect;
+			_connection.Reconnecting += HandleReconnectAttempt;
 			Url = url.AbsoluteUri;
 			RegisterConnections();
 		}

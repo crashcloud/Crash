@@ -110,7 +110,7 @@ namespace Crash
 		}
 
 #pragma warning disable VSTHRD100 // Avoid async void methods
-		private async void ClientOnOnServerClosed(object sender, CrashEventArgs args)
+		private async void ClientOnOnServerClosed(object? sender, CrashEventArgs args)
 
 		{
 			var message = "The server connection has been lost.\n" +
@@ -205,7 +205,7 @@ namespace Crash
 		}
 
 #pragma warning disable VSTHRD100 // Avoid async void methods
-		private static async void ScreenshotView(object sender, CrashEventArgs e)
+		private static async void ScreenshotView(object? sender, CrashEventArgs e)
 #pragma warning restore VSTHRD100 // Avoid async void methods
 		{
 			if (e.CrashDoc is null) return;

@@ -9,14 +9,14 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 		public ChangeAction Action => ChangeAction.Remove;
 
 
-		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
+		public bool CanConvert(object? sender, CreateRecieveArgs crashArgs)
 		{
 			return crashArgs.Args is CrashObjectEventArgs rargs &&
 			       rargs.ChangeId != Guid.Empty;
 		}
 
 
-		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
+		public bool TryConvert(object? sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
 		{
 			changes = Array.Empty<Change>();
 			if (crashArgs.Args is not CrashObjectEventArgs rargs)

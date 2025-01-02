@@ -42,7 +42,7 @@ namespace Crash.Handlers.Plugins
 			}
 		}
 
-		internal async Task<List<Change>> TryGetChangeFromEvent(ChangeAction changeAction, object sender, EventArgs args)
+		internal async Task<List<Change>> TryGetChangeFromEvent(ChangeAction changeAction, object? sender, EventArgs args)
 		{
 			if (!_createActions.TryGetValue(changeAction, out var actionChain))
 			{

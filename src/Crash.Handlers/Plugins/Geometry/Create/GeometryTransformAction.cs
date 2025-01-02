@@ -11,14 +11,14 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 	{
 		public ChangeAction Action => ChangeAction.Transform;
 
-		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
+		public bool CanConvert(object? sender, CreateRecieveArgs crashArgs)
 		{
 			return crashArgs.Args is CrashTransformEventArgs transformArgs &&
 				!transformArgs.Transform.Equals(CTransform.Unset);
 		}
 
 
-		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
+		public bool TryConvert(object? sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
 		{
 			// TODO : Transform such as stretch creates new Change!
 			changes = Array.Empty<Change>();

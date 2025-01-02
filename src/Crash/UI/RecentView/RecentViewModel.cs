@@ -129,7 +129,7 @@ namespace Crash.UI.JoinView
 			Host.ParentWindow.Invalidate(true);
 		}
 
-		internal async void JoinSelected()
+		internal void JoinSelected()
 		{
 			try
 			{
