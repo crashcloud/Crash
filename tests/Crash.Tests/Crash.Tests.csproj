@@ -13,7 +13,6 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="NUnit3TestAdapter" Version="4.5.0"/>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0"/>
 		<PackageReference Include="RhinoCommon" Version="7.21.22208.13001" IncludeAssets="compile;build">
 			<NoWarn>NU5104,NU1903,NU1701,NU1608</NoWarn>

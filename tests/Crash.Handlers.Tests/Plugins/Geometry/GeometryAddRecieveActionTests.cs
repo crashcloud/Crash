@@ -10,7 +10,7 @@ using Rhino;
 
 namespace Crash.Handlers.Tests.Plugins.Geometry
 {
-	[RhinoFixture]
+	[RhinoTestFixture]
 	public sealed class GeometryAddRecieveActionTests
 	{
 		private readonly CrashDoc _cdoc;

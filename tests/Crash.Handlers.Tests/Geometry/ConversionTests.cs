@@ -6,7 +6,7 @@ using Rhino.Geometry;
 
 namespace Crash.Handlers.Tests.Geometry
 {
-	[RhinoFixture]
+	[RhinoTestFixture]
 	public sealed class ConversionTests
 	{
 		public static IEnumerable Valid_VectorPairs

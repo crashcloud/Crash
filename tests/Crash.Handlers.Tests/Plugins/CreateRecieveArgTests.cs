@@ -5,7 +5,7 @@ using Crash.Handlers.Plugins;
 
 namespace Crash.Handlers.Tests.Plugins
 {
-	[RhinoFixture]
+	[RhinoTestFixture]
 	public sealed class CreateRecieveArgTests
 	{
 		[Test]

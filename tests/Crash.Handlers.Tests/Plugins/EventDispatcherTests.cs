@@ -15,7 +15,7 @@ using Rhino.Geometry;
 
 namespace Crash.Handlers.Tests.Plugins
 {
-	[RhinoFixture]
+	[RhinoTestFixture]
 	public sealed class EventDispatcherTests
 	{
 		private static readonly RhinoDoc rhinoDoc = RhinoDoc.CreateHeadless(null);

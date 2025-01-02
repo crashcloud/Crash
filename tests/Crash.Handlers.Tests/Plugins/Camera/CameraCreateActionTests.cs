@@ -9,7 +9,7 @@ using Crash.Handlers.Plugins.Camera.Create;
 
 namespace Crash.Handlers.Tests.Plugins
 {
-	[RhinoFixture]
+	[RhinoTestFixture]
 	public sealed class CameraCreateActionTests
 	{
 		private readonly CrashDoc _cdoc;
