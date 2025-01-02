@@ -1,17 +1,13 @@
-﻿using System.Collections;
-
-using Crash.Changes;
-using Crash.Common.Document;
+﻿using Crash.Common.Document;
 using Crash.Common.Tables;
 using Crash.Handlers.Changes;
 using Crash.Handlers.InternalEvents;
 using Crash.Handlers.Plugins;
 using Crash.Handlers.Plugins.Geometry.Create;
 
-using Rhino;
-
 namespace Crash.Handlers.Tests.Plugins
 {
+
 	[RhinoTestFixture]
 	public sealed class GeometryCreateRemoveActionTests
 	{
@@ -23,7 +19,6 @@ namespace Crash.Handlers.Tests.Plugins
 			RhinoDoc.ActiveDoc = _rdoc = RhinoDoc.CreateHeadless(null);
 			_cdoc = CrashDocRegistry.CreateAndRegisterDocument(_rdoc);
 		}
-
 
 		public static IEnumerable GeometryCreateArgs
 		{
@@ -96,7 +91,7 @@ namespace Crash.Handlers.Tests.Plugins
 		}
 
 		[TestCaseSource(nameof(GeometryRemoveArgs))]
-		public async Task GeometryRemoveAction_TryConvert(Func<RhinoDoc, CrashObjectEventArgs> argsFunction)
+		public void GeometryRemoveAction_TryConvert(Func<RhinoDoc, CrashObjectEventArgs> argsFunction)
 		{
 			var createRecieveArgs = argsFunction(_rdoc);
 			var createArgs = new CreateRecieveArgs(ChangeAction.Remove, createRecieveArgs, _cdoc);

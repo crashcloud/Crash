@@ -1,10 +1,4 @@
-﻿using System.Collections;
-
-using Crash.Geometry;
-
-using Rhino.Geometry;
-
-namespace Crash.Handlers.Tests.Geometry
+﻿namespace Crash.Handlers.Tests.Geometry
 {
 	[RhinoTestFixture]
 	public sealed class ConversionTests
