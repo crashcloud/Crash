@@ -1,9 +1,10 @@
-using Eto.Drawing;
+﻿using Eto.Drawing;
 using Eto.Forms;
 
 using Crash.Resources;
 
 using Crash.UI.RecentView;
+using Rhino.Runtime;
 
 namespace Crash.UI
 {
@@ -49,7 +50,7 @@ namespace Crash.UI
 			e.Graphics.FillPath(ParentWindow.BackgroundColor, InsetPath);
 			e.Graphics.TranslateTransform(Inset, Inset);
 
-			var textBounds = new RectangleF(IconSize + (Inset * 3f), 12f, InsetBounds.Width, RowHeight);
+			var textBounds = new RectangleF(RowHeight + (Inset * 3f), 12f, InsetBounds.Width, RowHeight);
 
 			for (int i = 0; i < Items.Count; i++)
 			{
@@ -60,11 +61,18 @@ namespace Crash.UI
 				if (command.Hover)
 					e.Graphics.FillRectangle(Palette.Shadow, menuBounds);
 
-				var image = command.GetIcon(IconSize, colour);
+				if (HostUtils.RunningOnWindows)
+					e.Graphics.TranslateTransform(0f, -6f);
+
+				var image = command.GetIcon(RowHeight, colour);
 				var imagePoint = new PointF(Inset, (RowHeight - IconSize) / 2f);
 				e.Graphics.DrawImage(image, imagePoint);
 
 				e.Graphics.DrawText(font, new SolidBrush(colour), textBounds, command.MenuText);
+
+				if (HostUtils.RunningOnWindows)
+					e.Graphics.TranslateTransform(0f, 6f);
+
 				e.Graphics.TranslateTransform(0f, RowHeight);
 			}
 

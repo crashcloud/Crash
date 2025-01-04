@@ -42,11 +42,17 @@ public class AddressInputDialog : Dialog<string>
 #endif
 	}
 
-	private float FontSize => HostUtils.RunningOnOSX ? 24f : 20f;
+	private float FontSize => HostUtils.RunningOnOSX ? 24f : 18f;
 
 	private void InitLayout(Control parent)
 	{
-		AddressInput = new TextBox() { TextAlignment = TextAlignment.Center, Font = SystemFonts.Bold(FontSize), Height = 40 };
+		AddressInput = new TextBox()
+		{
+			TextAlignment = TextAlignment.Center,
+			Font = SystemFonts.Default(FontSize),
+			Height = 40, 
+			PlaceholderText = "Please enter a model address"
+		};
 		Message = new Label() { Height = 20, TextAlignment = TextAlignment.Center };
 		DoneButton = new Button() { Text = "Done", Enabled = false };
 

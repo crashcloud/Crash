@@ -271,6 +271,7 @@ namespace Crash.UI
 				point.Y -= RightClickMenu.Height;
 
 			Add(RightClickMenu, (int)point.X, (int)point.Y);
+			// RepositionLayout();
 			Invalidate(true);
 		}
 	}

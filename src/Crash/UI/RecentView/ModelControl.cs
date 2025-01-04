@@ -1,4 +1,4 @@
-using System.Diagnostics.Eventing.Reader;
+﻿using System.Diagnostics.Eventing.Reader;
 
 using Crash.Handlers.Data;
 using Crash.UI.JoinView;
@@ -309,7 +309,7 @@ internal class ModelControl : Drawable
 		if (string.IsNullOrEmpty(address)) return;
 		var textContainer = new RectangleF(PreviewRect.Left, PreviewRect.Bottom + 10f, PreviewRect.Width, MaximumRectangle.Bottom - PreviewRect.Bottom);
 
-		var font = SystemFonts.Default(16f);
+		var font = SystemFonts.Default(HostUtils.RunningOnOSX ? 16f : 12f);
 		var brush = new SolidBrush(Palette.TextColour);
 
 		var fullSize = e.Graphics.MeasureString(font, address);
