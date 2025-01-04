@@ -48,7 +48,7 @@ namespace Crash.UI.JoinView
 		internal bool ModelIsNew(ISharedModel model)
 		{
 			var alreadyExists = SharedModels.Select(sm => sm.ModelAddress?.ToUpperInvariant() ?? string.Empty)
-											.Contains(model.ModelAddress.ToUpperInvariant());
+											.Contains(model.ModelAddress?.ToUpperInvariant() ?? string.Empty);
 			if (alreadyExists)
 			{
 				return false;

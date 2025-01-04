@@ -34,6 +34,9 @@ public sealed partial class CrashClient
 		try
 		{
 			_user = userName;
+			if (GetHubConnection is null)
+				return new Exception("Connection has not been injected");
+
 			_connection = GetHubConnection(url, RetryPolicy);
 			_connection.Reconnecting += HandleReconnectAttempt;
 			Url = url.AbsoluteUri;

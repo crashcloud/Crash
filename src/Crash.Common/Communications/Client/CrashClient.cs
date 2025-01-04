@@ -103,6 +103,9 @@ public sealed partial class CrashClient : ICrashClient
 
 		try
 		{
+			if (_connection is null)
+				return new Exception("Connection is Null");
+
 			await _connection.StartAsync();
 		}
 		catch (Exception ex)
@@ -116,7 +119,8 @@ public sealed partial class CrashClient : ICrashClient
 	/// <summary>Stops the Connection</summary>
 	public async Task StopAsync()
 	{
-		await _connection?.StopAsync();
+		if (_connection is null) return;
+		await _connection.StopAsync();
 	}
 
 	#endregion

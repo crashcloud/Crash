@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq.Expressions;
 using System.Reflection.Metadata;
 
@@ -7,6 +7,9 @@ using Crash.UI.JoinView;
 
 using Eto.Drawing;
 using Eto.Forms;
+
+using Rhino.Runtime;
+using Rhino.UI;
 
 namespace Crash.UI.RecentView;
 
@@ -33,11 +36,17 @@ public class AddressInputDialog : Dialog<string>
 		InitLayout(parent);
 		SetLocation(parent);
 		InitBindings(parent);
+
+#if NET7_0_OR_GREATER
+		this.UseRhinoStyle();
+#endif
 	}
+
+	private float FontSize => HostUtils.RunningOnOSX ? 24f : 20f;
 
 	private void InitLayout(Control parent)
 	{
-		AddressInput = new TextBox() { TextAlignment = TextAlignment.Center, Font = SystemFonts.Bold(24f), Height = 40 };
+		AddressInput = new TextBox() { TextAlignment = TextAlignment.Center, Font = SystemFonts.Bold(FontSize), Height = 40 };
 		Message = new Label() { Height = 20, TextAlignment = TextAlignment.Center };
 		DoneButton = new Button() { Text = "Done", Enabled = false };
 

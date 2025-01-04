@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -144,8 +144,8 @@ namespace Crash.UI
 					if (index >= controls.Count) break;
 
 					var control = controls[index];
-					int x = (i * (ControlWidth + Padding)) + Padding;
-					int y = (j * (ControlHeight + Padding)) + Padding;
+					int x = (i * (ControlWidth + Padding));
+					int y = (j * (ControlHeight + Padding));
 					var point = new Point(x, y);
 					SetLocation(control, point);
 				}

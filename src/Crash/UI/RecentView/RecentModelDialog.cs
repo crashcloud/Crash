@@ -44,7 +44,7 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 
 	public RecentModelDialog()
 	{
-		WindowStyle = WindowStyle.Utility;
+		WindowStyle = HostUtils.RunningOnOSX ? WindowStyle.Utility : WindowStyle.Default;
 		Minimizable = false;
 		Maximizable = false;
 
@@ -84,7 +84,7 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 			Text = " Recent Models",
 			TextColor = Palette.White,
 			Font = SystemFonts.Default(24),
-			Height = 32,
+			Height = 42,
 			TextAlignment = TextAlignment.Left,
 		};
 
@@ -152,9 +152,8 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 	{
 		StatusBar = new DynamicLayout()
 		{
-			Spacing = new Size(32, 0),
 			BackgroundColor = HostUtils.RunningInDarkMode ? Palette.DarkGray : Palette.LightGray,
-			Padding = 4,
+			Padding = new Padding(12, 4, 12, 6),
 		};
 		StatusBar.BeginHorizontal();
 
@@ -174,13 +173,14 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 		versionLabel.BindDataContext(c => c.Text, Binding.Property((RecentViewModel m) => m.VersionText));
 
 		StatusBar.Add(copyrightLabel, false);
+		StatusBar.Add(" / ", false);
 		StatusBar.Add(versionLabel, false);
 
 		StatusBar.AddSpace(true, false);
 
 		var status1 = new Label()
 		{
-			Text = "AAA",
+			Text = "Ping: ~ ms",
 			TextColor = Palette.White,
 			Font = SystemFonts.Default(12),
 			TextAlignment = TextAlignment.Left
@@ -209,7 +209,9 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 		};
 
 		StatusBar.Add(status1, false);
+		StatusBar.Add(" / ", false);
 		StatusBar.Add(status2, false);
+		StatusBar.Add(" / ", false);
 		StatusBar.Add(status3, false);
 
 		StatusBar.EndHorizontal();
