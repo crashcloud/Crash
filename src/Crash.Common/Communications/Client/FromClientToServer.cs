@@ -4,6 +4,11 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Crash.Common.Communications;
 
+public class MissingHubConnection : Exception
+{
+	public MissingHubConnection() : base("Hub Connection could not be found or created!") {}
+}
+
 /// <summary>
 ///     Crash client class
 /// </summary>
@@ -35,9 +40,12 @@ public sealed partial class CrashClient
 		{
 			_user = userName;
 			if (GetHubConnection is null)
-				return new Exception("Connection has not been injected");
+				return new MissingHubConnection();
 
 			_connection = await GetHubConnection(url, RetryPolicy);
+			if (_connection is null)
+				return new MissingHubConnection();
+
 			_connection.Reconnecting += HandleReconnectAttempt;
 			Url = url.AbsoluteUri;
 			RegisterConnections();
