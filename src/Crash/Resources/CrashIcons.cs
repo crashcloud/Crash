@@ -100,7 +100,16 @@ public static class CrashIcons
 					if (pixel.Ab < 10) continue;
 					if (pixel.Rb < 50 && pixel.Gb < 50 && pixel.Bb < 50)
 					{
-						data.SetPixel(x, y, color);
+						if (pixel.Ab < 255)
+						{
+							var colCopy = color;
+							colCopy.Ab = pixel.Ab;
+							data.SetPixel(x, y, colCopy);
+						}
+						else
+						{
+							data.SetPixel(x, y, color);
+						}
 					}
 				}
 			}

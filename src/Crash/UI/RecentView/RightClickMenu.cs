@@ -44,13 +44,15 @@ namespace Crash.UI
 		{
 			if (Items is null) return;
 
-			var font = SystemFonts.Default(18f);
+			var fontSize = 18f;
+			var font = SystemFonts.Default(fontSize);
 
 			e.Graphics.FillPath(Palette.Shadow, FullPath);
 			e.Graphics.FillPath(ParentWindow.BackgroundColor, InsetPath);
 			e.Graphics.TranslateTransform(Inset, Inset);
 
-			var textBounds = new RectangleF(RowHeight + (Inset * 3f), 12f, InsetBounds.Width, RowHeight);
+			float fontOffset = (RowHeight - fontSize) / 2f;
+			var textBounds = new RectangleF(RowHeight + (Inset * 3f), fontOffset, InsetBounds.Width, RowHeight);
 
 			for (int i = 0; i < Items.Count; i++)
 			{
@@ -58,20 +60,17 @@ namespace Crash.UI
 				var colour = GetColor(command);
 
 				var menuBounds = new RectangleF(0f, 0f, InsetBounds.Width, RowHeight);
+				
 				if (command.Hover)
 					e.Graphics.FillRectangle(Palette.Shadow, menuBounds);
 
-				if (HostUtils.RunningOnWindows)
-					e.Graphics.TranslateTransform(0f, -6f);
+				var imageBounds = new RectangleF(0, 0, RowHeight, RowHeight);
+				imageBounds.Inset(6f);
 
 				var image = command.GetIcon(RowHeight, colour);
-				var imagePoint = new PointF(Inset, (RowHeight - IconSize) / 2f);
-				e.Graphics.DrawImage(image, imagePoint);
+				e.Graphics.DrawImage(image, imageBounds);
 
 				e.Graphics.DrawText(font, new SolidBrush(colour), textBounds, command.MenuText);
-
-				if (HostUtils.RunningOnWindows)
-					e.Graphics.TranslateTransform(0f, 6f);
 
 				e.Graphics.TranslateTransform(0f, RowHeight);
 			}
@@ -104,12 +103,15 @@ namespace Crash.UI
 
 		protected override void OnMouseDown(MouseEventArgs e)
 		{
-			e.Handled = true;
-			TryGetItemAtLocation(e.Location, out var command);
-			Visible = false;
-			Invalidate();
-			command?.Execute();
-
+			if (e.Buttons == MouseButtons.Primary)
+			{
+				e.Handled = true;
+				TryGetItemAtLocation(e.Location, out var command);
+				Visible = false;
+				Invalidate();
+				command?.Execute();
+			}
+			
 			base.OnMouseDown(e);
 		}
 

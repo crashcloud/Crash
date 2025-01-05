@@ -51,7 +51,7 @@ internal class CrashCommands : ICrashInstance
 
 		Add = new("Add", "plus", Host.ShowNewModelDialog);
 		Join = new("Join", "join", Host.Model.JoinSelected);
-		ReloadAll = new("Reload All", "reload", Host.Model.ReloadAll);
+		ReloadAll = new("Reload All", "reload-all", Host.Model.ReloadAll);
 		Reload = new("Reload", "reload", Host.Model.ReloadSelected);
 		Remove = new("Remove", "close", Host.Model.RemoveSelected) { ColourOverride = Palette.Red };
 		// TODO : Add Pin command
