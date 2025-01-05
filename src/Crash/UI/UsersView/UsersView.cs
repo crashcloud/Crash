@@ -9,6 +9,8 @@ using Crash.Resources;
 using Eto.Drawing;
 using Eto.Forms;
 
+using Rhino.Runtime;
+
 using Rhino.UI;
 
 using Color = System.Drawing.Color;
@@ -98,7 +100,7 @@ namespace Crash.UI.UsersView
 			// TOOD : Loading .ico as png causes issue on windows
 			// Icon = new Icon(1f, CrashIcons.Icon("logo", 16));
 			Title = "Collaborators";
-			Padding = 6;
+			Padding = HostUtils.RunningOnOSX ? 6 : 0;
 			Topmost = false;
 			AutoSize = false;
 			Resizable = true;
