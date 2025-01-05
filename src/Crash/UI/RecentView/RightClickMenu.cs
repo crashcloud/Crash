@@ -24,6 +24,7 @@ namespace Crash.UI
 		public RightClickMenu(List<CrashCommands.CrashCommand> commands)
 		{
 			AddItems(commands);
+			Height = (RowHeight * commands.Count) + (Inset * 2);
 		}
 
 		public void AddItem(CrashCommands.CrashCommand command)
@@ -51,24 +52,28 @@ namespace Crash.UI
 			e.Graphics.FillPath(ParentWindow.BackgroundColor, InsetPath);
 			e.Graphics.TranslateTransform(Inset, Inset);
 
-			float fontOffset = (RowHeight - fontSize) / 2f;
+			float fontOffset = HostUtils.RunningOnOSX ? 12f : 4f;
 			var textBounds = new RectangleF(RowHeight + (Inset * 3f), fontOffset, InsetBounds.Width, RowHeight);
+
+			var menuBounds = new RectangleF(0f, 0f, InsetBounds.Width, RowHeight);
+
+			var imageBounds = new RectangleF(Inset, Inset, RowHeight, RowHeight);
+			if (HostUtils.RunningOnOSX)
+			{
+				imageBounds = new RectangleF(0f, 0f, RowHeight, RowHeight);
+				imageBounds.Inset(Inset);
+			}
 
 			for (int i = 0; i < Items.Count; i++)
 			{
 				var command = Items[i];
 				var colour = GetColor(command);
 
-				var menuBounds = new RectangleF(0f, 0f, InsetBounds.Width, RowHeight);
-				
 				if (command.Hover)
 					e.Graphics.FillRectangle(Palette.Shadow, menuBounds);
 
-				var imageBounds = new RectangleF(0, 0, RowHeight, RowHeight);
-				imageBounds.Inset(6f);
-
-				var image = command.GetIcon(RowHeight, colour);
-				e.Graphics.DrawImage(image, imageBounds);
+				var image = command.GetIcon(256, colour);
+				e.Graphics.DrawImage(image, new RectangleF(0, 0, image.Width, image.Height), imageBounds);
 
 				e.Graphics.DrawText(font, new SolidBrush(colour), textBounds, command.MenuText);
 
@@ -111,7 +116,7 @@ namespace Crash.UI
 				Invalidate();
 				command?.Execute();
 			}
-			
+
 			base.OnMouseDown(e);
 		}
 
