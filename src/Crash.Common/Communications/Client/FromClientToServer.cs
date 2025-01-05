@@ -10,7 +10,7 @@ namespace Crash.Common.Communications;
 public sealed partial class CrashClient
 {
 
-	internal Func<Uri, IRetryPolicy, HubConnection> GetHubConnection { get; set; }
+	internal Func<Uri, IRetryPolicy, Task<HubConnection>> GetHubConnection { get; set; }
 
 	internal static IRetryPolicy RetryPolicy => new CrashRetryPolicy();
 
@@ -37,7 +37,7 @@ public sealed partial class CrashClient
 			if (GetHubConnection is null)
 				return new Exception("Connection has not been injected");
 
-			_connection = GetHubConnection(url, RetryPolicy);
+			_connection = await GetHubConnection(url, RetryPolicy);
 			_connection.Reconnecting += HandleReconnectAttempt;
 			Url = url.AbsoluteUri;
 			RegisterConnections();
