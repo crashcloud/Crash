@@ -33,7 +33,7 @@ namespace Crash.Commands
 					return Result.Cancel;
 				case true:
 					var doneChange = DoneChange.GetDoneChange(crashDoc.Users.CurrentUser.Name);
-					await crashDoc.LocalClient.StreamChangesAsync(new List<Change> { doneChange }.ToAsyncEnumerable());
+					await crashDoc.LocalClient.SendChangesToServerAsync(new List<Change> { doneChange }.ToAsyncEnumerable());
 					break;
 			}
 

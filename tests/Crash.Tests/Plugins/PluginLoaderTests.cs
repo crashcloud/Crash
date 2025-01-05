@@ -4,7 +4,7 @@ using Crash.Plugins;
 
 namespace Crash.Tests.Plugins
 {
-	[RhinoFixture]
+	[RhinoTestFixture]
 	public sealed class PluginLoaderTests
 	{
 		public static IEnumerable PluginSources

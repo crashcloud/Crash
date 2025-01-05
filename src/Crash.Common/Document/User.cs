@@ -17,8 +17,6 @@ namespace Crash.Common.Document
 	{
 		public static readonly Color DefaultColour = Color.Gray;
 
-		private string _name;
-
 		/// <summary>Is this user Visible?</summary>
 		public bool Visible { get; set; } = true;
 

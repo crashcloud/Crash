@@ -66,10 +66,11 @@ namespace Crash
 		{
 			var dispatcher = new EventDispatcher(e.CrashDoc);
 			dispatcher.RegisterDefaultServerNotifiers();
-			dispatcher.RegisterDefaultServerCalls(e.CrashDoc);
 			RegisterDefinitions(e.CrashDoc, dispatcher);
 			e.CrashDoc.Dispatcher = dispatcher;
-			RegisterExceptions(e.CrashDoc.LocalClient as CrashClient);
+			if (e.CrashDoc.LocalClient is CrashClient crashClient)
+				RegisterExceptions(crashClient);
+
 			var pipe = InteractivePipe.GetActive(e.CrashDoc);
 			pipe.Enabled = true;
 			badPipe = new BadChangePipeline(e.CrashDoc);
@@ -109,7 +110,7 @@ namespace Crash
 		}
 
 #pragma warning disable VSTHRD100 // Avoid async void methods
-		private async void ClientOnOnServerClosed(object sender, CrashEventArgs args)
+		private async void ClientOnOnServerClosed(object? sender, CrashEventArgs args)
 
 		{
 			var message = "The server connection has been lost.\n" +
@@ -204,7 +205,7 @@ namespace Crash
 		}
 
 #pragma warning disable VSTHRD100 // Avoid async void methods
-		private static async void ScreenshotView(object sender, CrashEventArgs e)
+		private static async void ScreenshotView(object? sender, CrashEventArgs e)
 #pragma warning restore VSTHRD100 // Avoid async void methods
 		{
 			if (e.CrashDoc is null) return;

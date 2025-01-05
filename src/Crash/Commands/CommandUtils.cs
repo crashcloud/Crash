@@ -1,5 +1,6 @@
 ﻿using System.Net.Http;
 
+using Crash.Common.Communications;
 using Crash.Common.Document;
 using Crash.Handlers;
 
@@ -93,7 +94,7 @@ namespace Crash.Commands
 			var uriResult = TryGetCleanUri(url, out var uri);
 			if (!ParseConnectionResult(crashDoc, uriResult, url, headless)) return false;
 
-			var connectionResult = crashDoc.LocalClient.RegisterConnection(userName, uri);
+			var connectionResult = await crashDoc.LocalClient.RegisterConnection(userName, uri);
 			if (!ParseConnectionResult(crashDoc, connectionResult, url, headless)) return false;
 
 			var startResult = await crashDoc.LocalClient.StartLocalClientAsync();
@@ -111,6 +112,7 @@ namespace Crash.Commands
 				UriFormatException => $"The given address ({url}) was invalid! Please try retying the address",
 				NotSupportedException => $"The given address ({url}) was invalid! Please try retying the address",
 				InvalidOperationException => "There was an issue with the local client",
+				MissingHubConnection => "There was an issue with your Rhino Account Login, please try agian.",
 				Exception ex => $"An unexplained exception occured, try again. ({ex.Message}), please contact a developer for assistance.",
 				_ => string.Empty
 			};

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Net.NetworkInformation;
@@ -11,6 +11,7 @@ using Eto.Drawing;
 using Eto.Forms;
 
 using Rhino.Runtime;
+using Rhino.UI;
 
 namespace Crash.UI;
 
@@ -43,13 +44,13 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 
 	public RecentModelDialog()
 	{
-		WindowStyle = WindowStyle.Utility;
+		WindowStyle = HostUtils.RunningOnOSX ? WindowStyle.Utility : WindowStyle.Default;
 		Minimizable = false;
 		Maximizable = false;
 
 		AllowDrop = false;
 
-		AbortButton = null;
+		AbortButton = null; 
 		DefaultButton = null;
 
 		Resizable = true;
@@ -64,6 +65,9 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 		InitLayout();
 		InitBindings();
 
+#if NET7_0_OR_GREATER
+		this.UseRhinoStyle();
+#endif
 		this.StyleChanged += (s, e) =>
 		{
 			foreach (var label in this.Children.OfType<TextControl>())
@@ -80,7 +84,7 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 			Text = " Recent Models",
 			TextColor = Palette.White,
 			Font = SystemFonts.Default(24),
-			Height = 32,
+			Height = 42,
 			TextAlignment = TextAlignment.Left,
 		};
 
@@ -148,9 +152,8 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 	{
 		StatusBar = new DynamicLayout()
 		{
-			Spacing = new Size(32, 0),
 			BackgroundColor = HostUtils.RunningInDarkMode ? Palette.DarkGray : Palette.LightGray,
-			Padding = 4,
+			Padding = new Padding(12, 4, 12, 6),
 		};
 		StatusBar.BeginHorizontal();
 
@@ -170,19 +173,23 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 		versionLabel.BindDataContext(c => c.Text, Binding.Property((RecentViewModel m) => m.VersionText));
 
 		StatusBar.Add(copyrightLabel, false);
+		StatusBar.Add(" / ", false);
 		StatusBar.Add(versionLabel, false);
 
 		StatusBar.AddSpace(true, false);
 
 		var status1 = new Label()
 		{
-			Text = "AAA",
+			Text = "Ping: ~ ms",
 			TextColor = Palette.White,
 			Font = SystemFonts.Default(12),
 			TextAlignment = TextAlignment.Left
 		};
 
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 		UpdateStatusOne(status1);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+
 
 		var status2 = new Label()
 		{
@@ -202,7 +209,9 @@ internal sealed class RecentModelDialog : Dialog<ISharedModel>
 		};
 
 		StatusBar.Add(status1, false);
+		StatusBar.Add(" / ", false);
 		StatusBar.Add(status2, false);
+		StatusBar.Add(" / ", false);
 		StatusBar.Add(status3, false);
 
 		StatusBar.EndHorizontal();

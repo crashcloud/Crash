@@ -1,9 +1,10 @@
-using Eto.Drawing;
+﻿using Eto.Drawing;
 using Eto.Forms;
 
 using Crash.Resources;
 
 using Crash.UI.RecentView;
+using Rhino.Runtime;
 
 namespace Crash.UI
 {
@@ -23,6 +24,7 @@ namespace Crash.UI
 		public RightClickMenu(List<CrashCommands.CrashCommand> commands)
 		{
 			AddItems(commands);
+			Height = (RowHeight * commands.Count) + (Inset * 2);
 		}
 
 		public void AddItem(CrashCommands.CrashCommand command)
@@ -43,28 +45,38 @@ namespace Crash.UI
 		{
 			if (Items is null) return;
 
-			var font = SystemFonts.Default(18f);
+			var fontSize = 18f;
+			var font = SystemFonts.Default(fontSize);
 
 			e.Graphics.FillPath(Palette.Shadow, FullPath);
 			e.Graphics.FillPath(ParentWindow.BackgroundColor, InsetPath);
 			e.Graphics.TranslateTransform(Inset, Inset);
 
-			var textBounds = new RectangleF(IconSize + (Inset * 3f), 12f, InsetBounds.Width, RowHeight);
+			float fontOffset = HostUtils.RunningOnOSX ? 12f : 4f;
+			var textBounds = new RectangleF(RowHeight + (Inset * 3f), fontOffset, InsetBounds.Width, RowHeight);
+
+			var menuBounds = new RectangleF(0f, 0f, InsetBounds.Width, RowHeight);
+
+			var imageBounds = new RectangleF(Inset, Inset, RowHeight, RowHeight);
+			if (HostUtils.RunningOnOSX)
+			{
+				imageBounds = new RectangleF(0f, 0f, RowHeight, RowHeight);
+				imageBounds.Inset(Inset);
+			}
 
 			for (int i = 0; i < Items.Count; i++)
 			{
 				var command = Items[i];
 				var colour = GetColor(command);
 
-				var menuBounds = new RectangleF(0f, 0f, InsetBounds.Width, RowHeight);
 				if (command.Hover)
 					e.Graphics.FillRectangle(Palette.Shadow, menuBounds);
 
-				var image = command.GetIcon(IconSize, colour);
-				var imagePoint = new PointF(Inset, (RowHeight - IconSize) / 2f);
-				e.Graphics.DrawImage(image, imagePoint);
+				var image = command.GetIcon(256, colour);
+				e.Graphics.DrawImage(image, new RectangleF(0, 0, image.Width, image.Height), imageBounds);
 
 				e.Graphics.DrawText(font, new SolidBrush(colour), textBounds, command.MenuText);
+
 				e.Graphics.TranslateTransform(0f, RowHeight);
 			}
 
@@ -96,11 +108,14 @@ namespace Crash.UI
 
 		protected override void OnMouseDown(MouseEventArgs e)
 		{
-			e.Handled = true;
-			TryGetItemAtLocation(e.Location, out var command);
-			Visible = false;
-			Invalidate();
-			command?.Execute();
+			if (e.Buttons == MouseButtons.Primary)
+			{
+				e.Handled = true;
+				TryGetItemAtLocation(e.Location, out var command);
+				Visible = false;
+				Invalidate();
+				command?.Execute();
+			}
 
 			base.OnMouseDown(e);
 		}

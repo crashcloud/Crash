@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq.Expressions;
 using System.Reflection.Metadata;
 
@@ -7,6 +7,9 @@ using Crash.UI.JoinView;
 
 using Eto.Drawing;
 using Eto.Forms;
+
+using Rhino.Runtime;
+using Rhino.UI;
 
 namespace Crash.UI.RecentView;
 
@@ -33,11 +36,23 @@ public class AddressInputDialog : Dialog<string>
 		InitLayout(parent);
 		SetLocation(parent);
 		InitBindings(parent);
+
+#if NET7_0_OR_GREATER
+		this.UseRhinoStyle();
+#endif
 	}
+
+	private float FontSize => HostUtils.RunningOnOSX ? 24f : 18f;
 
 	private void InitLayout(Control parent)
 	{
-		AddressInput = new TextBox() { TextAlignment = TextAlignment.Center, Font = SystemFonts.Bold(24f), Height = 40 };
+		AddressInput = new TextBox()
+		{
+			TextAlignment = TextAlignment.Center,
+			Font = SystemFonts.Default(FontSize),
+			Height = 40, 
+			PlaceholderText = "Please enter a model address"
+		};
 		Message = new Label() { Height = 20, TextAlignment = TextAlignment.Center };
 		DoneButton = new Button() { Text = "Done", Enabled = false };
 
@@ -130,7 +145,7 @@ public class AddressInputDialog : Dialog<string>
 		return UriResult.Failure;
 	}
 
-	private async void ValidateText(object sender, EventArgs e)
+	private void ValidateText(object? sender, EventArgs e)
 	{
 		var result = GetResult(out var exception);
 		AddressInput.TextColor = result switch
@@ -156,18 +171,18 @@ public class AddressInputDialog : Dialog<string>
 		Invalidate(true);
 	}
 
-	private void ExitWithResult(object sender, EventArgs e)
+	private void ExitWithResult(object? sender, EventArgs e)
 	{
 		if (!DoneButton.Enabled) return;
 		Close(AddressInput.Text);
 	}
 
-	private void ExitWithNoResult(object sender, EventArgs e)
+	private void ExitWithNoResult(object? sender, EventArgs e)
 	{
 		Close(string.Empty);
 	}
 
-	private void HandleKeyDown(object sender, KeyEventArgs e)
+	private void HandleKeyDown(object? sender, KeyEventArgs e)
 	{
 		if (e.Key == Keys.Enter)
 			ExitWithResult(sender, e);

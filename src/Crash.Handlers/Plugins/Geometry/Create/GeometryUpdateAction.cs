@@ -9,12 +9,12 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 	{
 		public ChangeAction Action => ChangeAction.Update;
 
-		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
+		public bool CanConvert(object? sender, CreateRecieveArgs crashArgs)
 		{
 			return crashArgs.Args is CrashUpdateArgs args && args.Updates.Count > 0;
 		}
 
-		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
+		public bool TryConvert(object? sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
 		{
 			if (crashArgs.Args is not CrashUpdateArgs args)
 			{

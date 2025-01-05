@@ -38,7 +38,7 @@ namespace Crash.Handlers.Plugins.Layers
 			return BoundingBox.Empty;
 		}
 
-		private void RegisterLayersTable(object sender, CrashEventArgs e)
+		private void RegisterLayersTable(object? sender, CrashEventArgs e)
 		{
 			e.CrashDoc.Tables.AddTable(new LayerTable(e.CrashDoc));
 		}

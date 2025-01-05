@@ -1,4 +1,4 @@
-using Eto.Drawing;
+﻿using Eto.Drawing;
 
 using Rhino.Runtime;
 
@@ -25,24 +25,28 @@ public static class CrashIcons
 
 		foreach (var resourceName in resourceNames)
 		{
-			var splitName = resourceName.Split(new[] { "Crash.Resources." }, StringSplitOptions.RemoveEmptyEntries)?.LastOrDefault();
-			if (string.IsNullOrEmpty(splitName)) continue;
-			bool validExtension = false;
-			foreach (var ext in Extensions)
+			try
 			{
-				if (!string.Equals(Path.GetExtension(splitName), ext, StringComparison.OrdinalIgnoreCase)) continue;
-				validExtension = true;
-				break;
-			}
-			if (!validExtension) continue;
+				var splitName = resourceName.Split(new[] { "Crash.Resources." }, StringSplitOptions.RemoveEmptyEntries)?.LastOrDefault();
+				if (string.IsNullOrEmpty(splitName)) continue;
+				bool validExtension = false;
+				foreach (var ext in Extensions)
+				{
+					if (!string.Equals(Path.GetExtension(splitName), ext, StringComparison.OrdinalIgnoreCase)) continue;
+					validExtension = true;
+					break;
+				}
+				if (!validExtension) continue;
 
-			var key = Path.GetFileNameWithoutExtension(splitName);
+				var key = Path.GetFileNameWithoutExtension(splitName);
 
-			using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-			{
-				var bitmap = new Bitmap(stream);
-				Icons.Add(new(key, DefaultSize, Colors.Transparent), bitmap);
+				using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+				{
+					var bitmap = new Bitmap(stream);
+					Icons.Add(new(key, DefaultSize, Colors.Transparent), bitmap);
+				}
 			}
+			catch { }
 		}
 
 	}
@@ -96,7 +100,16 @@ public static class CrashIcons
 					if (pixel.Ab < 10) continue;
 					if (pixel.Rb < 50 && pixel.Gb < 50 && pixel.Bb < 50)
 					{
-						data.SetPixel(x, y, color);
+						if (pixel.Ab < 255)
+						{
+							var colCopy = color;
+							colCopy.Ab = pixel.Ab;
+							data.SetPixel(x, y, colCopy);
+						}
+						else
+						{
+							data.SetPixel(x, y, color);
+						}
 					}
 				}
 			}

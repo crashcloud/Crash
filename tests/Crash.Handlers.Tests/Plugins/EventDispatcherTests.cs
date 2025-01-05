@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 
-using Crash.Changes;
 using Crash.Common.Communications;
 using Crash.Common.Document;
 using Crash.Common.Events;
@@ -15,7 +14,7 @@ using Rhino.Geometry;
 
 namespace Crash.Handlers.Tests.Plugins
 {
-	[RhinoFixture]
+	[RhinoTestFixture]
 	public sealed class EventDispatcherTests
 	{
 		private static readonly RhinoDoc rhinoDoc = RhinoDoc.CreateHeadless(null);
@@ -32,26 +31,26 @@ namespace Crash.Handlers.Tests.Plugins
 				var addArgs = new CrashObjectEventArgs(null, point, rhinoId, Guid.NewGuid());
 				yield return new object[]
 							 {
-								 nameof(ICrashClient.StreamChangesAsync), ChangeAction.Add | ChangeAction.Temporary,
+								 nameof(ICrashClient.SendChangesToServerAsync), ChangeAction.Add | ChangeAction.Temporary,
 								 addArgs
 							 };
 
 				var deleteArgs = new CrashObjectEventArgs(null, null, Guid.NewGuid(), Guid.NewGuid());
-				yield return new object[] { nameof(ICrashClient.StreamChangesAsync), ChangeAction.Remove, deleteArgs };
+				yield return new object[] { nameof(ICrashClient.SendChangesToServerAsync), ChangeAction.Remove, deleteArgs };
 
 				var crashObject = new CrashObject(Guid.NewGuid(), Guid.NewGuid());
 				var selectArgs = CrashSelectionEventArgs.CreateSelectionEvent(null, new[] { crashObject });
-				yield return new object[] { nameof(ICrashClient.StreamChangesAsync), ChangeAction.Locked, selectArgs };
+				yield return new object[] { nameof(ICrashClient.SendChangesToServerAsync), ChangeAction.Locked, selectArgs };
 
 
 				var deSelectArgs = CrashSelectionEventArgs.CreateDeSelectionEvent(null, new[] { crashObject });
-				yield return new object[] { nameof(ICrashClient.StreamChangesAsync), ChangeAction.Unlocked, deSelectArgs };
+				yield return new object[] { nameof(ICrashClient.SendChangesToServerAsync), ChangeAction.Unlocked, deSelectArgs };
 
 				// Where do Transforms go?
 				// nameof(ICrashClient)
 
 				//
-				yield return new object[] { nameof(ICrashClient.StreamChangesAsync), ChangeAction.Update, null };
+				yield return new object[] { nameof(ICrashClient.SendChangesToServerAsync), ChangeAction.Update, null };
 
 				/*
 				var args = EventArgs.Empty;
@@ -124,9 +123,7 @@ namespace Crash.Handlers.Tests.Plugins
 												   {
 													   { nameof(ICrashClient.StopAsync), 0 },
 													   { nameof(ICrashClient.StartLocalClientAsync), 0 },
-													   { nameof(ICrashClient.StreamChangesAsync), 0 },
-													   { nameof(ICrashClient.OnInitializeChanges), 0 },
-													   { nameof(ICrashClient.OnInitializeUsers), 0 }
+													   { nameof(ICrashClient.SendChangesToServerAsync), 0 },
 												   };
 
 		public string Url { get; }
@@ -134,13 +131,13 @@ namespace Crash.Handlers.Tests.Plugins
 		internal DispatcherTestClient()
 		{
 			// On InitialiseChanges
-			OnInitializeUsers += async args => { IncrementCallCount(nameof(ICrashClient.OnInitializeUsers)); };
+			OnInitializeUsers += async args => { IncrementCallCount(nameof(ICrashClient.OnStartInitialization)); };
 		}
 
 		public bool IsConnected { get; } = true;
 		public event EventHandler<CrashInitArgs>? OnInit;
 
-		public Exception RegisterConnection(string userName, Uri url)
+		public async Task<Exception> RegisterConnection(string userName, Uri url)
 		{
 			throw new NotImplementedException();
 		}
@@ -158,27 +155,16 @@ namespace Crash.Handlers.Tests.Plugins
 			return null;
 		}
 
-		public async Task StreamChangesAsync(IAsyncEnumerable<Change> changes)
+		public async Task SendChangesToServerAsync(IAsyncEnumerable<Change> changeStream)
 		{
-			IncrementCallCount(nameof(ICrashClient.StreamChangesAsync));
+			IncrementCallCount(nameof(ICrashClient.SendChangesToServerAsync));
 			await Task.CompletedTask;
 		}
 
 		public event Func<IEnumerable<string>, Task>? OnInitializeUsers;
-		public event Func<IEnumerable<Guid>, Change, Task> OnRecieveIdentical;
-		public event Func<Change, Task> OnRecieveChange;
-		public event Func<IEnumerable<Change>, Task> OnRecieveChanges;
-		public event Func<IEnumerable<Change>, Task> OnInitializeChanges;
+		public event EventHandler<CrashInitArgs> OnStartInitialization;
 
-		public event Action<string>? OnDone;
-		public event Action<IEnumerable<Guid>>? OnDoneRange;
-		public event Action<Change>? OnAdd;
-		public event Action<Guid>? OnDelete;
-		public event Action<Change>? OnUpdate;
-		public event Action<string, Guid>? OnLock;
-		public event Action<string, Guid>? OnUnlock;
-		public event Action<IEnumerable<Change>>? OnInitialize;
-		public event Action<Change>? OnCameraChange;
+		public event EventHandler OnFinishInitialization;
 
 		private void IncrementCallCount(string name)
 		{

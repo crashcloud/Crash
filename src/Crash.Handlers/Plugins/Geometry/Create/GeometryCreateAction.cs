@@ -13,13 +13,13 @@ namespace Crash.Handlers.Plugins.Geometry.Create
 	{
 		public ChangeAction Action => ChangeAction.Add | ChangeAction.Temporary;
 
-		public bool CanConvert(object sender, CreateRecieveArgs crashArgs)
+		public bool CanConvert(object? sender, CreateRecieveArgs crashArgs)
 		{
 			return crashArgs.Args is CrashObjectEventArgs rargs &&
 				   rargs.Geometry is not null;
 		}
 
-		public bool TryConvert(object sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
+		public bool TryConvert(object? sender, CreateRecieveArgs crashArgs, out IEnumerable<Change> changes)
 		{
 			if (crashArgs.Args is not CrashObjectEventArgs cargs)
 			{

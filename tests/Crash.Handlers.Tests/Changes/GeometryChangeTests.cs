@@ -6,7 +6,8 @@ using Rhino.Geometry;
 
 namespace Crash.Handlers.Tests.Changes
 {
-	[RhinoFixture]
+	
+	[RhinoTestFixture]
 	public sealed class GeometryChangeTests
 	{
 		public static IEnumerable ValidGeometry

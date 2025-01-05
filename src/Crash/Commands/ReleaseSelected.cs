@@ -36,7 +36,7 @@ namespace Crash.Commands
 				changes.Add(change);
 			}
 
-			await crashDoc.LocalClient.StreamChangesAsync(changes.ToAsyncEnumerable());
+			await crashDoc.LocalClient.SendChangesToServerAsync(changes.ToAsyncEnumerable());
 
 			doc.Objects.UnselectAll();
 			doc.Views.Redraw();

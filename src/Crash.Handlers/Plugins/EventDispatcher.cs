@@ -30,12 +30,11 @@ namespace Crash.Handlers.Plugins
 
 		// TODO : How can we prevent the same events being subscribed multiple times?
 
-
-		public async Task NotifyServerAsync(List<Change> changes)
+		public async Task NotifyServerAsync(IEnumerable<Change> changes)
 		{
 			try
 			{
-				await _crashDoc.LocalClient.StreamChangesAsync(changes.ToAsyncEnumerable());
+				await _crashDoc.LocalClient.SendChangesToServerAsync(changes.ToAsyncEnumerable());
 			}
 			catch (Exception ex)
 			{
@@ -43,7 +42,7 @@ namespace Crash.Handlers.Plugins
 			}
 		}
 
-		internal async Task<List<Change>> TryGetChangeFromEvent(ChangeAction changeAction, object sender, EventArgs args)
+		internal async Task<List<Change>> TryGetChangeFromEvent(ChangeAction changeAction, object? sender, EventArgs args)
 		{
 			if (!_createActions.TryGetValue(changeAction, out var actionChain))
 			{
@@ -109,40 +108,37 @@ namespace Crash.Handlers.Plugins
 		/// </summary>
 		/// <param name="doc">The related Crash Doc</param>
 		/// <param name="change">The Change from the Server</param>
-		public async Task NotifyClientAsync(CrashDoc doc, Change change)
+		public async Task NotifyClientAsync(IEnumerable<Change> changes)
 		{
-			if (!_recieveActions.TryGetValue(change.Type, out var recievers) ||
+			foreach (var change in changes)
+			{
+
+				if (!_recieveActions.TryGetValue(change.Type, out var recievers) ||
 				recievers is null)
-			{
-				CrashLogger.Logger.LogDebug($"Could not find a Recieve Action for {change.Type}, {change.Id}");
-				return;
-			}
-
-			RegisterUser(doc, change);
-
-			foreach (var recieveAction in recievers)
-			{
-				if (!recieveAction.CanRecieve(change))
 				{
-					continue;
+					CrashLogger.Logger.LogDebug($"Could not find a Recieve Action for {change.Type}, {change.Id}");
+					return;
 				}
 
-				CrashLogger.Logger
+				RegisterUser(_crashDoc, change);
+
+				foreach (var recieveAction in recievers)
+				{
+					if (!recieveAction.CanRecieve(change)) continue;
+
+					CrashLogger.Logger
 						   .LogDebug(
 									 $"Calling action {recieveAction.GetType().Name}, {change.Action}, {change.Type}, {change.Id}");
 
-				await recieveAction.OnRecieveAsync(doc, change);
-				return;
+					await recieveAction.OnRecieveAsync(_crashDoc, change);
+					return;
+				}
 			}
 		}
 
 		private static void RegisterUser(CrashDoc doc, Change change)
 		{
-			if (!doc.Users.Add(change.Owner))
-			{
-				return;
-			}
-
+			if (!doc.Users.Add(change.Owner)) return;
 			CrashApp.Log($"User {change.Owner} registered.", LogLevel.Trace);
 		}
 
@@ -211,27 +207,5 @@ namespace Crash.Handlers.Plugins
 			_eventWrapper.Dispose();
 		}
 
-		/// <summary>
-		///     Registers all default server calls.
-		///     If you need to create custom calls do this elsewhere.
-		///     These calls cannot currently be overriden or switched off
-		/// </summary>
-		public void RegisterDefaultServerCalls(CrashDoc doc)
-		{
-			// OnInit is called on reconnect as well
-			doc.LocalClient.OnInitializeChanges += InitializeChangesAsync;
-		}
-
-		private async Task InitializeChangesAsync(IEnumerable<Change> changeStream)
-		{
-			_crashDoc.LocalClient.OnInitializeChanges -= InitializeChangesAsync;
-
-			CrashLogger.Logger.LogDebug($"{nameof(_crashDoc.LocalClient.OnInitializeChanges)}");
-
-			foreach (var change in changeStream)
-			{
-				await NotifyClientAsync(_crashDoc, change);
-			}
-		}
 	}
 }
