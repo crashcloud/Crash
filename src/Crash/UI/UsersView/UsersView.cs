@@ -98,7 +98,7 @@ namespace Crash.UI.UsersView
 			// TOOD : Loading .ico as png causes issue on windows
 			// Icon = new Icon(1f, CrashIcons.Icon("logo", 16));
 			Title = "Collaborators";
-			Padding = 0;
+			Padding = 6;
 			Topmost = false;
 			AutoSize = false;
 			Resizable = true;
@@ -127,26 +127,30 @@ namespace Crash.UI.UsersView
 				ShowHeader = false,
 				Border = BorderType.None,
 				RowHeight = 24,
+				GridLines = GridLines.None,
+				BackgroundColor = Colors.Transparent,
+				CanDeleteItem = (_) => false,
+				AllowColumnReordering = false,
+				AllowDrop = false,
 				Columns =
-							   {
-								   CreateCameraColumn(),
-								   CreateVisibleColumn(),
-								   CreateColourColumn(),
-								   CreateUsersColumn()
-							   }
+						{
+							CreateCameraColumn(),
+							CreateVisibleColumn(),
+							CreateColourColumn(),
+							CreateUsersColumn(),
+						}
 			};
 
 			gridView.CellClick += Model.CycleCameraSetting;
 
+			Content = gridView;
+			/* Unsure why this was.
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-			{
 				Content = new Scrollable { Content = gridView, ScrollSize = new Size(0, 0) };
-			}
-			else
-			{
-				Content = gridView;
-			}
+			*/
 
+
+			// We don't want focus by default on the Users View, we want it on Rhino so the user can click and pan.
 			this.Shown += (sender, args) =>
 						  {
 							  RhinoApp.InvokeOnUiThread(() => Owner?.Focus());
@@ -175,6 +179,8 @@ namespace Crash.UI.UsersView
 				}
 
 				int padding = 5;
+
+				// Should only really work when there is no previous location
 				Location = new Point(point.X - padding - Size.Width, point.Y + padding);
 			}
 			catch { }
@@ -186,13 +192,13 @@ namespace Crash.UI.UsersView
 			{
 				DataCell = new TextBoxCell
 				{
-					Binding =
-										  Binding.Property<UserObject, string>(u => u.Name)
+					Binding = Binding.Property<UserObject, string>(u => u.Name)
 				},
 				AutoSize = true,
 				Editable = false,
 				HeaderText = "Name",
 				Resizable = false,
+				Expand = true,
 			};
 		}
 
@@ -232,8 +238,7 @@ namespace Crash.UI.UsersView
 			{
 				DataCell = new ImageViewCell
 				{
-					Binding =
-										  Binding.Property<UserObject, Image>(u => u.Image)
+					Binding = Binding.Property<UserObject, Image>(u => u.Image)
 				},
 				AutoSize = false,
 				Editable = false,
