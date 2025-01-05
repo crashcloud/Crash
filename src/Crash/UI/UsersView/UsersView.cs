@@ -53,9 +53,11 @@ namespace Crash.UI.UsersView
 			if (!CrashInstances.TryGetInstance<UsersForm>(crashDoc, out var usersForm))
 			{
 				usersForm = new UsersForm(crashDoc);
+				usersForm.SavePosition();
 				var rhinoDoc = CrashDocRegistry.GetRelatedDocument(crashDoc);
 				CrashInstances.TrySetInstance(crashDoc, usersForm);
 				usersForm.Show(rhinoDoc);
+				usersForm.RestorePosition();
 			}
 
 			usersForm.BringToFront();
@@ -113,6 +115,8 @@ namespace Crash.UI.UsersView
 
 #if NET7_0
 			this.UseRhinoStyle();
+#else
+			// Rhino 7 Styling
 #endif
 
 			var gridView = new GridView
