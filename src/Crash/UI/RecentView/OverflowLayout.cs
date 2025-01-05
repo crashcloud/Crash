@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
+﻿using System.Collections.ObjectModel;
 
 using Crash.Handlers.Data;
 using Crash.UI.JoinView;
@@ -9,8 +6,6 @@ using Crash.UI.RecentView;
 
 using Eto.Drawing;
 using Eto.Forms;
-
-using Rhino.UI;
 
 using static Crash.UI.RecentView.CrashCommands;
 
@@ -46,6 +41,10 @@ namespace Crash.UI
 
 			InitLayout();
 			InitBindings();
+
+			// C Sykes 5th Jan 2025
+			// If I don't set this Right Click doesn't work on Windows ...
+			BackgroundColor = Colors.Transparent;
 		}
 
 		// TODO : Use Parent to get the width
