@@ -61,9 +61,14 @@ public sealed partial class CrashClient
 
 	private async Task HandleReconnectAttempt(Exception? exception)
 	{
-		var timeoutTime = TimeSpan.FromSeconds(8);
-		await Task.Delay(timeoutTime.Seconds / 2);
-		if (_connection.State == HubConnectionState.Connected) return;
+		var timeoutTime = TimeSpan.FromSeconds(8).TotalSeconds / 2.0;
+		var timeoutChunk = timeoutTime / 10.0;
+		
+		for(double i = 0; i < timeoutTime; i+=timeoutChunk)
+		{
+			await Task.Delay((int)timeoutChunk);
+			if (_connection.State == HubConnectionState.Connected) return;
+		}
 
 		CrashApp.InformUser("Attempting to reconnect to Server ...");
 		_connection.Reconnected += InformUserOfReconnection;
